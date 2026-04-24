@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Download, Package } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Download, ExternalLink, Link as LinkIcon, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
-import { fetchSiteByRestaurant } from "@/lib/site/queries";
-import { buildProjectZip } from "@/lib/site/exportZip";
 
 export const Route = createFileRoute("/export/$id")({
   component: ExportPage,
@@ -15,6 +13,7 @@ function ExportPage() {
   const [r, setR] = useState<RestaurantRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     supabase
@@ -30,19 +29,42 @@ function ExportPage() {
     setBusy(true);
     setMsg("Empacotando projeto...");
     try {
+      const [{ fetchSiteByRestaurant }, { buildProjectZip }] = await Promise.all([
+        import("@/lib/site/queries"),
+        import("@/lib/site/exportZip"),
+      ]);
       const data = await fetchSiteByRestaurant(r);
       const blob = await buildProjectZip(data);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
       a.download = `${r.slug || "site"}.zip`;
+      document.body.appendChild(a);
       a.click();
+      a.remove();
       URL.revokeObjectURL(url);
       setMsg("Download concluído!");
     } catch (e) {
-      setMsg("Erro: " + String(e));
+      console.error("Erro ao exportar:", e);
+      setMsg("Erro ao gerar o ZIP: " + (e instanceof Error ? e.message : String(e)));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const shareUrl =
+    r && typeof window !== "undefined"
+      ? `${window.location.origin}/s/${r.slug}`
+      : "";
+
+  const handleCopyShare = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
     }
   };
 
@@ -97,6 +119,47 @@ function ExportPage() {
           {msg && (
             <p className="text-sm text-muted-foreground mt-3">{msg}</p>
           )}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-card">
+          <div className="flex items-center gap-2 mb-2 text-sm font-bold">
+            <LinkIcon className="h-4 w-4 text-primary" />
+            Link de preview para compartilhar
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Envie ao cliente para visualizar o site antes da exportação ou conexão
+            de domínio próprio.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              readOnly
+              value={shareUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="flex-1 px-3 py-2 rounded-lg bg-input border border-border text-sm font-mono"
+            />
+            <button
+              onClick={handleCopyShare}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition text-sm"
+            >
+              {copied ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4" /> Copiado!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" /> Copiar
+                </>
+              )}
+            </button>
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-muted transition text-sm font-semibold"
+            >
+              <ExternalLink className="h-4 w-4" /> Abrir
+            </a>
+          </div>
         </div>
       </main>
     </div>
