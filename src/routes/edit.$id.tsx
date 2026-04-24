@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
+  Copy,
   Download,
   ExternalLink,
   Eye,
   FileText,
+  Link as LinkIcon,
   Pencil,
   Sparkles,
   Tag,
@@ -35,6 +37,7 @@ function EditPage() {
   const [notFound, setNotFound] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const [finalized, setFinalized] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     supabase
@@ -67,6 +70,22 @@ function EditPage() {
     if (error) return;
     setRestaurant({ ...restaurant, published: true });
     setFinalized(true);
+  };
+
+  const shareUrl =
+    restaurant && typeof window !== "undefined"
+      ? `${window.location.origin}/s/${restaurant.slug}`
+      : "";
+
+  const handleCopyShare = async () => {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
   };
 
   if (notFound) {
