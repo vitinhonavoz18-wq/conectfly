@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
+import { Route as ExportIdRouteImport } from './routes/export.$id'
 import { Route as EditIdRouteImport } from './routes/edit.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -23,6 +24,11 @@ const SSlugRoute = SSlugRouteImport.update({
   path: '/s/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExportIdRoute = ExportIdRouteImport.update({
+  id: '/export/$id',
+  path: '/export/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EditIdRoute = EditIdRouteImport.update({
   id: '/edit/$id',
   path: '/edit/$id',
@@ -32,30 +38,34 @@ const EditIdRoute = EditIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/edit/$id': typeof EditIdRoute
+  '/export/$id': typeof ExportIdRoute
   '/s/$slug': typeof SSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/edit/$id': typeof EditIdRoute
+  '/export/$id': typeof ExportIdRoute
   '/s/$slug': typeof SSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/edit/$id': typeof EditIdRoute
+  '/export/$id': typeof ExportIdRoute
   '/s/$slug': typeof SSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/edit/$id' | '/s/$slug'
+  fullPaths: '/' | '/edit/$id' | '/export/$id' | '/s/$slug'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/edit/$id' | '/s/$slug'
-  id: '__root__' | '/' | '/edit/$id' | '/s/$slug'
+  to: '/' | '/edit/$id' | '/export/$id' | '/s/$slug'
+  id: '__root__' | '/' | '/edit/$id' | '/export/$id' | '/s/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   EditIdRoute: typeof EditIdRoute
+  ExportIdRoute: typeof ExportIdRoute
   SSlugRoute: typeof SSlugRoute
 }
 
@@ -75,6 +85,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/export/$id': {
+      id: '/export/$id'
+      path: '/export/$id'
+      fullPath: '/export/$id'
+      preLoaderRoute: typeof ExportIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/edit/$id': {
       id: '/edit/$id'
       path: '/edit/$id'
@@ -88,8 +105,18 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   EditIdRoute: EditIdRoute,
+  ExportIdRoute: ExportIdRoute,
   SSlugRoute: SSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
