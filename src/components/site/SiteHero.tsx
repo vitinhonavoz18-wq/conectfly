@@ -4,17 +4,37 @@ interface Props {
   description: string | null;
   logoUrl: string | null;
   heroImageUrl: string | null;
+  heroMediaType?: string;
+  heroVideoUrl?: string | null;
 }
 
-export function SiteHero({ name, tagline, description, logoUrl, heroImageUrl }: Props) {
+export function SiteHero({
+  name,
+  tagline,
+  description,
+  logoUrl,
+  heroImageUrl,
+  heroMediaType = "image",
+  heroVideoUrl,
+}: Props) {
+  const showVideo = heroMediaType === "video" && heroVideoUrl;
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
-      {heroImageUrl && (
+      {showVideo ? (
+        <video
+          src={heroVideoUrl ?? undefined}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : heroImageUrl ? (
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${heroImageUrl})` }}
         />
-      )}
+      ) : null}
       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.7)] via-[hsl(var(--site-bg)/0.85)] to-[hsl(var(--site-bg))]" />
       <div className="relative z-10 text-center px-4 py-20">
         {logoUrl ? (

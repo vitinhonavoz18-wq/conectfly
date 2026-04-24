@@ -214,6 +214,8 @@ body {
       city: r.city,
       logo_url: r.logo_url,
       hero_image_url: r.hero_image_url,
+      hero_media_type: r.hero_media_type,
+      hero_video_url: r.hero_video_url,
     })} as const;
 `,
   );
@@ -427,7 +429,9 @@ const HERO_TSX = `import { restaurant } from "../data/restaurant";
 export function Hero() {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
-      {restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
+      {restaurant.hero_media_type === "video" && restaurant.hero_video_url
+        ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+        : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
       <div className="absolute inset-0 bg-gradient-to-b from-site-bg/70 via-site-bg/85 to-site-bg" />
       <div className="relative z-10 text-center px-4 py-20">
         {restaurant.logo_url

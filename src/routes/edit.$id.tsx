@@ -1,6 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ExternalLink, Eye, FileText, Tag, Utensils } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Download,
+  ExternalLink,
+  Eye,
+  FileText,
+  Pencil,
+  Sparkles,
+  Tag,
+  Utensils,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
 import { fetchSiteByRestaurant } from "@/lib/site/queries";
@@ -22,6 +33,8 @@ function EditPage() {
   const [preview, setPreview] = useState<SiteData | null>(null);
   const [previewBust, setPreviewBust] = useState(0);
   const [notFound, setNotFound] = useState(false);
+  const [finalizing, setFinalizing] = useState(false);
+  const [finalized, setFinalized] = useState(false);
 
   useEffect(() => {
     supabase
@@ -42,6 +55,19 @@ function EditPage() {
     if (tab !== "preview" || !restaurant) return;
     fetchSiteByRestaurant(restaurant).then(setPreview);
   }, [tab, restaurant, previewBust]);
+
+  const handleFinalize = async () => {
+    if (!restaurant) return;
+    setFinalizing(true);
+    const { error } = await supabase
+      .from("restaurants")
+      .update({ published: true })
+      .eq("id", restaurant.id);
+    setFinalizing(false);
+    if (error) return;
+    setRestaurant({ ...restaurant, published: true });
+    setFinalized(true);
+  };
 
   if (notFound) {
     return (
@@ -127,14 +153,89 @@ function EditPage() {
         {tab === "menu" && <MenuManager restaurantId={restaurant.id} />}
         {tab === "combo" && <ComboManager restaurantId={restaurant.id} />}
         {tab === "preview" && (
-          <div className="rounded-2xl overflow-hidden border border-border shadow-card">
-            {preview ? (
-              <div className="h-[80vh] overflow-y-auto bg-black">
-                <DeliverySite data={preview} />
+          <div className="space-y-5">
+            <div className="rounded-2xl overflow-hidden border border-border shadow-card">
+              {preview ? (
+                <div className="h-[70vh] overflow-y-auto bg-black">
+                  <DeliverySite data={preview} />
+                </div>
+              ) : (
+                <div className="h-[70vh] flex items-center justify-center text-muted-foreground">
+                  Carregando preview...
+                </div>
+              )}
+            </div>
+
+            {!finalized && !restaurant.published ? (
+              <div className="rounded-2xl border border-border bg-gradient-card p-6 shadow-card flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                    <Sparkles className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Tudo pronto?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Finalize o projeto para publicar e liberar a exportação.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleFinalize}
+                  disabled={finalizing}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-primary text-primary-foreground font-bold hover:opacity-90 transition shadow-glow disabled:opacity-50"
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  {finalizing ? "Finalizando..." : "Finalizar projeto"}
+                </button>
               </div>
             ) : (
-              <div className="h-[80vh] flex items-center justify-center text-muted-foreground">
-                Carregando preview...
+              <div className="rounded-2xl border border-success/40 bg-success/10 p-6 shadow-card">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-xl bg-success flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="h-5 w-5 text-success-foreground" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold">Projeto finalizado!</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Seu site está publicado. Escolha o próximo passo:
+                    </p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <Link
+                    to="/s/$slug"
+                    params={{ slug: restaurant.slug }}
+                    target="_blank"
+                    className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-card hover:border-primary transition"
+                  >
+                    <ExternalLink className="h-5 w-5 text-primary" />
+                    <span className="font-bold text-sm">Ver em nova aba</span>
+                    <span className="text-xs text-muted-foreground">
+                      Abre o site público
+                    </span>
+                  </Link>
+                  <Link
+                    to="/export/$id"
+                    params={{ id: restaurant.id }}
+                    className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-card hover:border-primary transition"
+                  >
+                    <Download className="h-5 w-5 text-primary" />
+                    <span className="font-bold text-sm">Exportar projeto</span>
+                    <span className="text-xs text-muted-foreground">
+                      Baixar código-fonte (.zip)
+                    </span>
+                  </Link>
+                  <button
+                    onClick={() => setTab("info")}
+                    className="flex flex-col items-start gap-2 p-4 rounded-xl border border-border bg-card hover:border-primary transition text-left"
+                  >
+                    <Pencil className="h-5 w-5 text-primary" />
+                    <span className="font-bold text-sm">Continuar editando</span>
+                    <span className="text-xs text-muted-foreground">
+                      Voltar para as informações
+                    </span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

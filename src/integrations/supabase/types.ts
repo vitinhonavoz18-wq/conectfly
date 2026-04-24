@@ -190,6 +190,8 @@ export type Database = {
           created_at: string
           description: string | null
           hero_image_url: string | null
+          hero_media_type: string
+          hero_video_url: string | null
           hours: string | null
           id: string
           logo_url: string | null
@@ -209,6 +211,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           hero_image_url?: string | null
+          hero_media_type?: string
+          hero_video_url?: string | null
           hours?: string | null
           id?: string
           logo_url?: string | null
@@ -228,6 +232,8 @@ export type Database = {
           created_at?: string
           description?: string | null
           hero_image_url?: string | null
+          hero_media_type?: string
+          hero_video_url?: string | null
           hours?: string | null
           id?: string
           logo_url?: string | null

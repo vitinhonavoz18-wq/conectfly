@@ -50,6 +50,8 @@ export interface RestaurantRow {
   city: string | null;
   logo_url: string | null;
   hero_image_url: string | null;
+  hero_media_type: string;
+  hero_video_url: string | null;
   primary_color: string;
   secondary_color: string;
   published: boolean;
