@@ -220,6 +220,46 @@ function EditPage() {
                     </p>
                   </div>
                 </div>
+                <div className="mb-4 rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center gap-2 mb-2 text-sm font-bold">
+                    <LinkIcon className="h-4 w-4 text-primary" />
+                    Link de preview para compartilhar com o cliente
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Envie este endereço para o cliente visualizar o site antes da
+                    exportação ou conexão de domínio próprio.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      readOnly
+                      value={shareUrl}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="flex-1 px-3 py-2 rounded-lg bg-input border border-border text-sm font-mono"
+                    />
+                    <button
+                      onClick={handleCopyShare}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition text-sm"
+                    >
+                      {copied ? (
+                        <>
+                          <CheckCircle2 className="h-4 w-4" /> Copiado!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" /> Copiar link
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href={shareUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-muted transition text-sm font-semibold"
+                    >
+                      <ExternalLink className="h-4 w-4" /> Abrir
+                    </a>
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Link
                     to="/s/$slug"
