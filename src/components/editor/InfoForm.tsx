@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Save, Upload } from "lucide-react";
+import { Image as ImageIcon, Save, Upload, Video as VideoIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify } from "@/lib/site/format";
@@ -47,6 +47,26 @@ export function InfoForm({ restaurant, onChange }: Props) {
     set("hero_image_url", pub.publicUrl);
   };
 
+  const handleHeroVideoUpload = async (file: File) => {
+    if (file.size > 25 * 1024 * 1024) {
+      setMsg("Vídeo muito grande (máx. 25MB). Comprima antes de enviar.");
+      return;
+    }
+    const ext = file.name.split(".").pop() ?? "mp4";
+    const path = `${r.id}/hero-video-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("logos").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (error) {
+      setMsg("Erro no upload: " + error.message);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("logos").getPublicUrl(path);
+    set("hero_video_url", pub.publicUrl);
+    set("hero_media_type", "video");
+  };
+
   const save = async () => {
     setSaving(true);
     setMsg("");
@@ -66,6 +86,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
         city: r.city,
         logo_url: r.logo_url,
         hero_image_url: r.hero_image_url,
+        hero_media_type: r.hero_media_type,
+        hero_video_url: r.hero_video_url,
         primary_color: r.primary_color,
         secondary_color: r.secondary_color,
       })
@@ -215,28 +237,83 @@ export function InfoForm({ restaurant, onChange }: Props) {
             </label>
           </div>
         </Field>
-        <Field label="Imagem de fundo do Hero (opcional)">
-          <div className="flex items-center gap-3">
-            {r.hero_image_url && (
-              <img
-                src={r.hero_image_url}
-                alt="Hero"
-                className="h-16 w-24 object-cover rounded-lg"
-              />
+        <Field label="Mídia do Hero" hint="Escolha imagem ou vídeo animado para o fundo">
+          <div className="space-y-3">
+            <div className="inline-flex rounded-lg border border-border overflow-hidden text-sm">
+              <button
+                type="button"
+                onClick={() => set("hero_media_type", "image")}
+                className={`px-3 py-1.5 inline-flex items-center gap-1.5 transition ${
+                  r.hero_media_type !== "video"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary hover:bg-muted"
+                }`}
+              >
+                <ImageIcon className="h-3.5 w-3.5" /> Imagem
+              </button>
+              <button
+                type="button"
+                onClick={() => set("hero_media_type", "video")}
+                className={`px-3 py-1.5 inline-flex items-center gap-1.5 transition ${
+                  r.hero_media_type === "video"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-secondary hover:bg-muted"
+                }`}
+              >
+                <VideoIcon className="h-3.5 w-3.5" /> Vídeo
+              </button>
+            </div>
+
+            {r.hero_media_type === "video" ? (
+              <div className="flex items-center gap-3">
+                {r.hero_video_url && (
+                  <video
+                    src={r.hero_video_url}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    className="h-16 w-24 object-cover rounded-lg bg-black"
+                  />
+                )}
+                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm">Enviar vídeo (mp4/webm)</span>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/webm,video/*"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleHeroVideoUpload(f);
+                    }}
+                  />
+                </label>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                {r.hero_image_url && (
+                  <img
+                    src={r.hero_image_url}
+                    alt="Hero"
+                    className="h-16 w-24 object-cover rounded-lg"
+                  />
+                )}
+                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm">Enviar imagem</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleHeroUpload(f);
+                    }}
+                  />
+                </label>
+              </div>
             )}
-            <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-              <Upload className="h-4 w-4" />
-              <span className="text-sm">Enviar imagem</span>
-              <input
-                type="file"
-                accept="image/*"
-                hidden
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleHeroUpload(f);
-                }}
-              />
-            </label>
           </div>
         </Field>
       </div>
