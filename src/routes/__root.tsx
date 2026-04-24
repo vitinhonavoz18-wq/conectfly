@@ -32,11 +32,15 @@ export const Route = createRootRoute({
       { title: "SiteCreatorFly — Plataforma de sites de delivery" },
       { name: "description", content: "Crie sites de delivery prontos com cardápio, combos e checkout via WhatsApp." },
       { name: "author", content: "SiteCreatorFly" },
-      { property: "og:title", content: "SiteCreatorFly" },
-      { property: "og:description", content: "Sites de delivery prontos para decolar." },
+      { property: "og:title", content: "SiteCreatorFly — Plataforma de sites de delivery" },
+      { property: "og:description", content: "Crie sites de delivery prontos com cardápio, combos e checkout via WhatsApp." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "SiteCreatorFly — Plataforma de sites de delivery" },
+      { name: "twitter:description", content: "Crie sites de delivery prontos com cardápio, combos e checkout via WhatsApp." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/75e080c6-c0b8-42da-bc3d-fd2c3abf4b64/id-preview-d7ba83c7--eeff7af8-ac85-41f1-a86d-80cbb25eeee0.lovable.app-1777036804868.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/75e080c6-c0b8-42da-bc3d-fd2c3abf4b64/id-preview-d7ba83c7--eeff7af8-ac85-41f1-a86d-80cbb25eeee0.lovable.app-1777036804868.png" },
     ],
     links: [
       {
