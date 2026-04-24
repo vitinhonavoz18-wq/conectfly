@@ -24,6 +24,8 @@ export function DeliverySite({ data }: { data: SiteData }) {
             description={r.description}
             logoUrl={r.logo_url}
             heroImageUrl={r.hero_image_url}
+            heroMediaType={r.hero_media_type}
+            heroVideoUrl={r.hero_video_url}
           />
           <SiteComboSection groups={data.comboGroups} />
           <SiteMenuSection categories={data.categories} />
