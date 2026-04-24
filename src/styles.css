@@ -166,3 +166,18 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+
+@layer components {
+  .input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: var(--input);
+    border: 1px solid var(--border);
+    color: var(--foreground);
+    outline: none;
+  }
+  .input:focus {
+    border-color: var(--primary);
+  }
+}
