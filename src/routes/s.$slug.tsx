@@ -12,6 +12,11 @@ function PublicSite() {
   const { slug } = Route.useParams();
   const router = useRouter();
   const [data, setData] = useState<SiteData | null | "loading" | "error">("loading");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let alive = true;
@@ -31,6 +36,10 @@ function PublicSite() {
       document.title = data.restaurant.name;
     }
   }, [data]);
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-background" />;
+  }
 
   if (data === "loading") {
     return (
