@@ -14,7 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      combo_groups: {
+        Row: {
+          created_at: string
+          id: string
+          restaurant_id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          restaurant_id: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          restaurant_id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combo_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      combos: {
+        Row: {
+          badge: string | null
+          created_at: string
+          group_id: string
+          id: string
+          items: string[]
+          name: string
+          price: number
+          restaurant_id: string
+          sort_order: number
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          items?: string[]
+          name: string
+          price?: number
+          restaurant_id: string
+          sort_order?: number
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          items?: string[]
+          name?: string
+          price?: number
+          restaurant_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "combos_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "combo_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combos_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          restaurant_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          restaurant_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          restaurant_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          category_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price: number
+          restaurant_id: string
+          sizes: Json | null
+          sort_order: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price?: number
+          restaurant_id: string
+          sizes?: Json | null
+          sort_order?: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+          restaurant_id?: string
+          sizes?: Json | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          description: string | null
+          hero_image_url: string | null
+          hours: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          primary_color: string
+          published: boolean
+          secondary_color: string
+          slug: string
+          tagline: string | null
+          updated_at: string
+          whatsapp_display: string | null
+          whatsapp_number: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          hero_image_url?: string | null
+          hours?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          primary_color?: string
+          published?: boolean
+          secondary_color?: string
+          slug: string
+          tagline?: string | null
+          updated_at?: string
+          whatsapp_display?: string | null
+          whatsapp_number?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          hero_image_url?: string | null
+          hours?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          primary_color?: string
+          published?: boolean
+          secondary_color?: string
+          slug?: string
+          tagline?: string | null
+          updated_at?: string
+          whatsapp_display?: string | null
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
