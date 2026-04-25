@@ -363,6 +363,7 @@ export interface CartLine {
   unitPrice: number;
   quantity: number;
   sizeLabel?: string;
+  flavors?: string[];
 }
 
 interface Ctx {
