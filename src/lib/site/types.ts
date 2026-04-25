@@ -11,6 +11,8 @@ export interface MenuItemRow {
   price: number;
   sizes: Size[] | null;
   sort_order: number;
+  is_special: boolean;
+  special_extra: number;
 }
 
 export interface MenuCategoryRow {
@@ -78,4 +80,6 @@ export interface CartLine {
   quantity: number;
   sizeLabel?: string;
   flavors?: string[];
+  specialFlavors?: string[];
+  extras?: number;
 }

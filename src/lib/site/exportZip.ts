@@ -230,6 +230,8 @@ export interface MenuItem {
   description: string;
   price: number;
   sizes?: Size[];
+  is_special?: boolean;
+  special_extra?: number;
 }
 export interface MenuCategory {
   id: string;
@@ -255,6 +257,8 @@ export const menuCategories: MenuCategory[] = ${json(
           description: i.description ?? "",
           price: i.price,
           sizes: i.sizes ?? undefined,
+          is_special: i.is_special || undefined,
+          special_extra: i.special_extra || undefined,
         })),
       })),
     )};
@@ -495,7 +499,7 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
 `;
 
 const MENU_SECTION_TSX = `import { useState } from "react";
-import { ImageIcon, Check, Plus } from "lucide-react";
+import { ImageIcon, Check, Plus, Sparkles, Info } from "lucide-react";
 import { menuCategories, type MenuCategory } from "../data/menuData";
 import { MenuItemCard } from "./MenuItemCard";
 import { formatBRL } from "../lib/format";
@@ -570,18 +574,26 @@ function PizzaBuilder({ category }: { category: MenuCategory }) {
   const max = size?.max_flavors ?? 0;
   const remaining = Math.max(0, max - flavorIds.length);
   const flavorMap = new Map(category.items.map((i) => [i.id, i] as const));
+  const selectedItems = flavorIds.map((id) => flavorMap.get(id)).filter(Boolean) as typeof category.items;
+  const specialExtras = selectedItems.filter((it) => it.is_special).reduce((s, it) => s + (Number(it.special_extra) || 0), 0);
+  const finalPrice = (size?.price ?? 0) + specialExtras;
+  const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
   const selectSize = (i: number) => { setSizeIdx(i); setFlavorIds((c) => c.slice(0, sizes[i].max_flavors)); };
   const toggle = (id: string) => setFlavorIds((c) => c.includes(id) ? c.filter((x) => x !== id) : c.length >= max ? c : [...c, id]);
   const add = () => {
     if (!size || flavorIds.length === 0) return;
     const names = flavorIds.map((id) => flavorMap.get(id)?.name).filter(Boolean) as string[];
+    const descParts = [names.length === 1 ? \`Sabor: \${names[0]}\` : \`Sabores: \${names.join(" + ")}\`];
+    if (specialNames.length > 0) descParts.push(\`Especiais (+\${formatBRL(specialExtras)}): \${specialNames.join(", ")}\`);
     addLine({
       itemId: \`pizza-\${category.id}-\${size.label}-\${flavorIds.join("_")}\`,
       name: \`Pizza \${size.label}\`,
-      description: names.length === 1 ? \`Sabor: \${names[0]}\` : \`Sabores: \${names.join(" + ")}\`,
-      unitPrice: size.price,
+      description: descParts.join(" • "),
+      unitPrice: finalPrice,
       sizeLabel: size.label,
       flavors: names,
+      specialFlavors: specialNames,
+      extras: specialExtras,
     });
     setConfirm(\`Pizza \${size.label} adicionada!\`);
     setFlavorIds([]);
@@ -607,6 +619,10 @@ function PizzaBuilder({ category }: { category: MenuCategory }) {
             );
           })}
         </div>
+        <div className="mt-3 flex items-start gap-2 text-xs sm:text-sm rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 p-3">
+          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>Ao selecionar <strong>sabores especiais</strong>, o valor final da pizza poderá ser alterado.</span>
+        </div>
       </div>
       <div>
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
@@ -624,7 +640,10 @@ function PizzaBuilder({ category }: { category: MenuCategory }) {
                     {c && <Check className="h-3 w-3" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold leading-tight">{it.name}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold leading-tight">{it.name}</p>
+                      {it.is_special && <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold"><Sparkles className="h-3 w-3" /> Especial{it.special_extra ? \` +\${formatBRL(it.special_extra)}\` : ""}</span>}
+                    </div>
                     {it.description && <p className="text-xs text-site-fg/60 mt-1">{it.description}</p>}
                   </div>
                 </button>
@@ -639,10 +658,11 @@ function PizzaBuilder({ category }: { category: MenuCategory }) {
           <ul className="text-sm text-site-fg/70 space-y-1">
             <li><strong>Tamanho:</strong> {size.label} — {formatBRL(size.price)}</li>
             <li><strong>Sabores:</strong> {flavorIds.length === 0 ? "nenhum selecionado" : flavorIds.map((id) => flavorMap.get(id)?.name).filter(Boolean).join(" + ")}</li>
+            {specialExtras > 0 && <li><strong className="text-amber-300">Adicional especial:</strong> +{formatBRL(specialExtras)}{specialNames.length > 0 ? \` (\${specialNames.join(", ")})\` : ""}</li>}
           </ul>
         ) : <p className="text-sm text-site-fg/60">Selecione um tamanho.</p>}
         <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
-          <span className="text-2xl font-black text-site-secondary">{size ? formatBRL(size.price) : "—"}</span>
+          <div className="flex flex-col"><span className="text-[10px] uppercase tracking-wide text-site-fg/60">Total</span><span className="text-2xl font-black text-site-secondary">{size ? formatBRL(finalPrice) : "—"}</span></div>
           <button onClick={add} disabled={!size || flavorIds.length === 0} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-site-primary text-white font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed">
             <Plus className="h-4 w-4" /> Adicionar pizza
           </button>

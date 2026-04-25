@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, Sparkles, Info } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -26,6 +26,15 @@ export function SitePizzaBuilder({ category }: Props) {
     return m;
   }, [category.items]);
 
+  const selectedItems = selectedFlavors
+    .map((id) => flavorMap.get(id))
+    .filter(Boolean) as MenuItemRow[];
+  const specialExtras = selectedItems
+    .filter((it) => it.is_special)
+    .reduce((sum, it) => sum + (Number(it.special_extra) || 0), 0);
+  const finalPrice = (size?.price ?? 0) + specialExtras;
+  const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
+
   const toggleFlavor = (id: string) => {
     setSelectedFlavors((cur) => {
       if (cur.includes(id)) return cur.filter((x) => x !== id);
@@ -45,16 +54,23 @@ export function SitePizzaBuilder({ category }: Props) {
     const flavorNames = selectedFlavors
       .map((id) => flavorMap.get(id)?.name)
       .filter(Boolean) as string[];
+    const descParts = [
+      flavorNames.length === 1
+        ? `Sabor: ${flavorNames[0]}`
+        : `Sabores: ${flavorNames.join(" + ")}`,
+    ];
+    if (specialNames.length > 0) {
+      descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
+    }
     addLine({
       itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
       name: `Pizza ${size.label}`,
-      description:
-        flavorNames.length === 1
-          ? `Sabor: ${flavorNames[0]}`
-          : `Sabores: ${flavorNames.join(" + ")}`,
-      unitPrice: size.price,
+      description: descParts.join(" • "),
+      unitPrice: finalPrice,
       sizeLabel: size.label,
       flavors: flavorNames,
+      specialFlavors: specialNames,
+      extras: specialExtras,
     });
     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
     setSelectedFlavors([]);
@@ -108,6 +124,13 @@ export function SitePizzaBuilder({ category }: Props) {
             );
           })}
         </div>
+        <div className="mt-3 flex items-start gap-2 text-xs sm:text-sm rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 p-3">
+          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            Ao selecionar <strong>sabores especiais</strong>, o valor final da pizza poderá ser
+            alterado.
+          </span>
+        </div>
       </div>
 
       {/* Step 2 — Flavors */}
@@ -135,7 +158,7 @@ export function SitePizzaBuilder({ category }: Props) {
                   key={it.id}
                   onClick={() => toggleFlavor(it.id)}
                   disabled={!size || disabled}
-                  className={`text-left rounded-xl border p-3 transition flex items-start gap-3 ${
+                  className={`relative text-left rounded-xl border p-3 transition flex items-start gap-3 ${
                     checked
                       ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary))]/10"
                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))]"
@@ -151,7 +174,15 @@ export function SitePizzaBuilder({ category }: Props) {
                     {checked && <Check className="h-3 w-3" />}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold leading-tight">{it.name}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold leading-tight">{it.name}</p>
+                      {it.is_special && (
+                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
+                          <Sparkles className="h-3 w-3" /> Especial
+                          {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
+                        </span>
+                      )}
+                    </div>
                     {it.description && (
                       <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
                         {it.description}
@@ -183,14 +214,28 @@ export function SitePizzaBuilder({ category }: Props) {
                     .filter(Boolean)
                     .join(" + ")}
             </li>
+            {specialExtras > 0 && (
+              <li>
+                <strong className="text-amber-300">Adicional especial:</strong>{" "}
+                +{formatBRL(specialExtras)}
+                {specialNames.length > 0 && (
+                  <span className="text-xs"> ({specialNames.join(", ")})</span>
+                )}
+              </li>
+            )}
           </ul>
         ) : (
           <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
         )}
         <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
-          <span className="text-2xl font-black text-[hsl(var(--site-secondary))]">
-            {size ? formatBRL(size.price) : "—"}
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wide text-[hsl(var(--site-muted-fg))]">
+              Total
+            </span>
+            <span className="text-2xl font-black text-[hsl(var(--site-secondary))]">
+              {size ? formatBRL(finalPrice) : "—"}
+            </span>
+          </div>
           <button
             onClick={handleAddToCart}
             disabled={!canAdd}

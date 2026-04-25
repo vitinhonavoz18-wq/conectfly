@@ -147,33 +147,39 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_special: boolean
           name: string
           price: number
           restaurant_id: string
           sizes: Json | null
           sort_order: number
+          special_extra: number
         }
         Insert: {
           category_id: string
           created_at?: string
           description?: string | null
           id?: string
+          is_special?: boolean
           name: string
           price?: number
           restaurant_id: string
           sizes?: Json | null
           sort_order?: number
+          special_extra?: number
         }
         Update: {
           category_id?: string
           created_at?: string
           description?: string | null
           id?: string
+          is_special?: boolean
           name?: string
           price?: number
           restaurant_id?: string
           sizes?: Json | null
           sort_order?: number
+          special_extra?: number
         }
         Relationships: [
           {
