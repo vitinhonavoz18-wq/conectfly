@@ -225,6 +225,42 @@ body {
 
 .scrollbar-hide { scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* Scroll-driven animations */
+@keyframes site-hero-enter {
+  0% { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(6px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.site-hero-enter > * { animation: site-hero-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.site-hero-enter > *:nth-child(1) { animation-delay: 80ms; }
+.site-hero-enter > *:nth-child(2) { animation-delay: 220ms; }
+.site-hero-enter > *:nth-child(3) { animation-delay: 340ms; }
+.site-hero-enter > *:nth-child(4) { animation-delay: 460ms; }
+.site-hero-enter > *:nth-child(5) { animation-delay: 580ms; }
+
+@keyframes site-stagger-in {
+  0% { opacity: 0; transform: translateY(24px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.site-stagger > * { opacity: 0; animation: site-stagger-in 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.site-stagger > *:nth-child(1) { animation-delay: 60ms; }
+.site-stagger > *:nth-child(2) { animation-delay: 140ms; }
+.site-stagger > *:nth-child(3) { animation-delay: 220ms; }
+.site-stagger > *:nth-child(4) { animation-delay: 300ms; }
+.site-stagger > *:nth-child(5) { animation-delay: 380ms; }
+.site-stagger > *:nth-child(6) { animation-delay: 460ms; }
+.site-stagger > *:nth-child(7) { animation-delay: 540ms; }
+.site-stagger > *:nth-child(8) { animation-delay: 620ms; }
+.site-stagger > *:nth-child(n+9) { animation-delay: 700ms; }
+
+.reveal { opacity: 0; transform: translateY(32px); transition: opacity 700ms cubic-bezier(0.22,1,0.36,1), transform 700ms cubic-bezier(0.22,1,0.36,1); will-change: opacity, transform; }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .site-hero-enter > *, .site-stagger > *, .reveal {
+    animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important;
+  }
+}
 `,
   );
 
@@ -334,6 +370,7 @@ export const comboGroups: ComboGroup[] = ${json(
   zip.file("src/components/ComboSection.tsx", COMBO_SECTION_TSX);
   zip.file("src/components/CartDrawer.tsx", CART_DRAWER_TSX);
   zip.file("src/components/Footer.tsx", FOOTER_TSX);
+  zip.file("src/components/Reveal.tsx", REVEAL_TSX);
 
   return zip.generateAsync({ type: "blob" });
 }
@@ -356,18 +393,20 @@ import { ComboSection } from "./components/ComboSection";
 import { MenuSection } from "./components/MenuSection";
 import { CartDrawer } from "./components/CartDrawer";
 import { Footer } from "./components/Footer";
+import { Reveal, ScrollProgress } from "./components/Reveal";
 
 export function App() {
   const [cartOpen, setCartOpen] = useState(false);
   return (
     <CartProvider>
+      <ScrollProgress />
       <Header onOpenCart={() => setCartOpen(true)} />
       <main>
         <Hero />
-        <ComboSection />
-        <MenuSection />
+        <Reveal><ComboSection /></Reveal>
+        <Reveal delay={80}><MenuSection /></Reveal>
       </main>
-      <Footer />
+      <Reveal><Footer /></Reveal>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </CartProvider>
   );
@@ -472,18 +511,76 @@ export function Hero() {
         ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
         : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
       <div className="absolute inset-0 bg-gradient-to-b from-site-bg/70 via-site-bg/85 to-site-bg" />
-      <div className="relative z-10 text-center px-4 py-20">
+      <div className="relative z-10 text-center px-4 py-20 site-hero-enter">
         {restaurant.logo_url
           ? <img src={restaurant.logo_url} alt={restaurant.name} className="mx-auto mb-6 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-2xl" />
           : <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6">{restaurant.name}</h1>}
         {restaurant.tagline && <p className="text-xl sm:text-2xl font-semibold text-site-secondary mb-3">{restaurant.tagline}</p>}
         {restaurant.description && <p className="max-w-xl mx-auto text-site-fg/70">{restaurant.description}</p>}
         <div className="mt-8 flex gap-3 justify-center flex-wrap">
-          <a href="#combos" className="px-6 py-3 rounded-full bg-site-secondary text-black font-bold hover:opacity-90">Ver combos</a>
-          <a href="#cardapio" className="px-6 py-3 rounded-full border border-site-border font-bold hover:bg-site-card">Cardápio</a>
+          <a href="#combos" className="px-6 py-3 rounded-full bg-site-secondary text-black font-bold transition transform hover:-translate-y-0.5 hover:shadow-lg hover:opacity-95">Ver combos</a>
+          <a href="#cardapio" className="px-6 py-3 rounded-full border border-site-border font-bold transition transform hover:-translate-y-0.5 hover:bg-site-card">Cardápio</a>
         </div>
       </div>
     </section>
+  );
+}
+`;
+
+const REVEAL_TSX = `import { useEffect, useRef, useState, type ReactNode } from "react";
+
+interface RevealProps {
+  children: ReactNode;
+  delay?: number;
+  threshold?: number;
+  className?: string;
+}
+
+export function Reveal({ children, delay = 0, threshold = 0.15, className = "" }: RevealProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) { setVisible(true); return; }
+    const node = ref.current;
+    if (!node) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(e.target); } });
+    }, { threshold, rootMargin: "0px 0px -10% 0px" });
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return (
+    <div ref={ref} className={\`reveal \${visible ? "is-visible" : ""} \${className}\`} style={{ transitionDelay: \`\${delay}ms\` }}>
+      {children}
+    </div>
+  );
+}
+
+export function ScrollProgress() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      const h = document.documentElement;
+      const max = (h.scrollHeight - h.clientHeight) || 1;
+      setP(Math.min(100, Math.max(0, (h.scrollTop / max) * 100)));
+      raf = 0;
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <div aria-hidden style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 60, pointerEvents: "none" }}>
+      <div style={{ height: "100%", width: \`\${p}%\`, background: "hsl(var(--site-primary))", boxShadow: "0 0 8px hsl(var(--site-primary))", transition: "width 75ms ease-out" }} />
+    </div>
   );
 }
 `;
@@ -544,7 +641,7 @@ export function MenuSection() {
           <p className="text-site-fg/70 mt-2">{cur ? "Escolha seus pratos favoritos" : "Toque em uma categoria para ver os produtos"}</p>
         </div>
         {!cur ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
             {menuCategories.map((c) => (
               <button key={c.id} onClick={() => setAct(c.id)} className="group relative aspect-square rounded-2xl overflow-hidden border border-site-border bg-site-card hover:border-site-primary transition shadow-lg">
                 {c.image_url
@@ -580,7 +677,7 @@ export function MenuSection() {
             {cur.is_pizza && cur.pizza_sizes && cur.pizza_sizes.length > 0 ? (
               <PizzaBuilder category={cur} />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
                 {cur.items.map((it) => <MenuItemCard key={it.id} item={it} />)}
               </div>
             )}
@@ -726,7 +823,7 @@ export function ComboSection() {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
           {cur.combos.map((c) => (
             <div key={c.id} className="rounded-xl border border-site-secondary/40 bg-site-card p-5 flex flex-col gap-3 relative">
               {c.badge && <span className="absolute -top-2 right-4 px-2 py-1 rounded-full bg-site-secondary text-black text-xs font-bold">{c.badge}</span>}

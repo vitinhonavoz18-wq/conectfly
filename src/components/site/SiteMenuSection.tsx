@@ -24,7 +24,7 @@ export function SiteMenuSection({ categories }: Props) {
         </div>
 
         {!current ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
             {categories.map((c) => (
               <button
                 key={c.id}
@@ -103,7 +103,7 @@ export function SiteMenuSection({ categories }: Props) {
             {current.is_pizza ? (
               <SitePizzaBuilder category={current} />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
                 {current.items.map((it) => (
                   <SiteMenuItemCard key={it.id} item={it} />
                 ))}
