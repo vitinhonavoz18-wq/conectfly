@@ -847,3 +847,315 @@ export function Footer() {
   );
 }
 `;
+
+/* ===========  DOCUMENTACAO.md generator  =========== */
+
+function buildDocumentacao(data: SiteData): string {
+  const r = data.restaurant;
+  const totalItems = data.categories.reduce((s, c) => s + c.items.length, 0);
+  const totalCombos = data.comboGroups.reduce((s, g) => s + g.combos.length, 0);
+  const pizzaCats = data.categories.filter((c) => c.is_pizza).length;
+
+  const categoriesList = data.categories.length === 0
+    ? "_Nenhuma categoria cadastrada._"
+    : data.categories
+        .map(
+          (c) =>
+            `- **${c.icon ? c.icon + " " : ""}${c.name}**${c.is_pizza ? " 🍕 _(categoria de pizza)_" : ""} — ${c.items.length} ${c.items.length === 1 ? "item" : "itens"}${c.image_url ? " · com imagem" : ""}`,
+        )
+        .join("\n");
+
+  const combosList = data.comboGroups.length === 0
+    ? "_Nenhum combo cadastrado._"
+    : data.comboGroups
+        .map((g) => `- **${g.title}** — ${g.combos.length} ${g.combos.length === 1 ? "combo" : "combos"}`)
+        .join("\n");
+
+  return `# 📘 DOCUMENTAÇÃO — ${r.name}
+
+> Documentação técnica completa do projeto exportado pela plataforma **SiteCreatorFly**.
+> Esta versão é **100% estática (frontend-only)** e funciona sem servidor backend dedicado:
+> os pedidos são enviados diretamente para o WhatsApp do restaurante.
+
+---
+
+## 1. 🎯 Visão geral do projeto
+
+**${r.name}** é um site de delivery completo, gerado dinamicamente a partir das
+configurações feitas no painel da plataforma SiteCreatorFly. O cliente final
+navega pelo cardápio, monta seu pedido (incluindo pizzas com múltiplos sabores)
+e finaliza enviando uma mensagem pré-formatada via WhatsApp.
+
+- **Nome:** ${r.name}
+${r.tagline ? `- **Tagline:** ${r.tagline}\n` : ""}${r.description ? `- **Descrição:** ${r.description}\n` : ""}- **WhatsApp:** ${r.whatsapp_display || r.whatsapp_number || "—"}
+- **Endereço:** ${r.address || "—"}${r.city ? " · " + r.city : ""}
+- **Categorias do cardápio:** ${data.categories.length}${pizzaCats > 0 ? ` (${pizzaCats} de pizza)` : ""}
+- **Itens cadastrados:** ${totalItems}
+- **Grupos de combos:** ${data.comboGroups.length} (${totalCombos} combos no total)
+
+---
+
+## 2. 🛠️ Tecnologias utilizadas
+
+### Frontend
+| Tecnologia | Versão | Função |
+|------------|--------|--------|
+| **React** | 18.3 | Biblioteca de UI |
+| **TypeScript** | 5.5 | Tipagem estática |
+| **Vite** | 5.4 | Build tool / dev server |
+| **Tailwind CSS** | 3.4 | Estilização utility-first |
+| **lucide-react** | 0.462 | Ícones |
+
+### Backend
+Este pacote é **frontend-only**. Toda a "lógica de backend" (recebimento de
+pedidos) é delegada ao **WhatsApp** via deep link \`https://wa.me/\`.
+Os dados do cardápio ficam embutidos no código (\`src/data/*.ts\`) e podem ser
+editados diretamente — não há banco de dados externo necessário para rodar.
+
+> 💡 Caso queira adicionar um backend completo (pagamentos, persistência de
+> pedidos, painel admin), recomendamos integrar **Supabase**, **Firebase** ou
+> uma API Node.js/Express. Veja a seção **8. Pontos de customização**.
+
+---
+
+## 3. 📁 Estrutura de pastas (árvore)
+
+\`\`\`
+${r.slug || "delivery-site"}/
+├── DOCUMENTACAO.md           ← este arquivo
+├── README.md                 ← guia rápido de uso
+├── start.sh                  ← script de inicialização (npm install + dev)
+├── package.json              ← dependências e scripts npm
+├── tsconfig.json             ← configuração do TypeScript
+├── vite.config.ts            ← configuração do Vite
+├── tailwind.config.ts        ← tema e tokens do Tailwind
+├── postcss.config.js         ← pipeline PostCSS (Tailwind + autoprefixer)
+├── index.html                ← HTML raiz (entry point do Vite)
+├── .gitignore
+└── src/
+    ├── main.tsx              ← bootstrap do React
+    ├── App.tsx               ← composição das seções principais
+    ├── index.css             ← estilos globais + variáveis de tema
+    ├── data/
+    │   ├── restaurant.ts     ← dados do restaurante (nome, contato, hero)
+    │   ├── menuData.ts       ← categorias e itens do cardápio
+    │   └── comboData.ts      ← grupos de combos promocionais
+    ├── lib/
+    │   └── format.ts         ← utilitários (BRL, máscara de telefone)
+    ├── context/
+    │   └── CartContext.tsx   ← estado global do carrinho (React Context)
+    └── components/
+        ├── Header.tsx        ← cabeçalho fixo com botão do carrinho
+        ├── Hero.tsx          ← seção principal (logo, título, CTA)
+        ├── ComboSection.tsx  ← combos promocionais com tabs
+        ├── MenuSection.tsx   ← cardápio + montador de pizza
+        ├── MenuItemCard.tsx  ← card individual de item do cardápio
+        ├── CartDrawer.tsx    ← drawer lateral do carrinho + checkout
+        └── Footer.tsx        ← rodapé com contato e endereço
+\`\`\`
+
+---
+
+## 4. 📂 Explicação de cada arquivo principal
+
+### Configuração
+- **\`package.json\`** — define dependências (\`react\`, \`react-dom\`,
+  \`lucide-react\`) e scripts (\`dev\`, \`build\`, \`preview\`).
+- **\`vite.config.ts\`** — habilita o plugin oficial do React.
+- **\`tailwind.config.ts\`** — registra os tokens de cor \`site-bg\`,
+  \`site-fg\`, \`site-card\`, \`site-border\`, \`site-primary\`, \`site-secondary\`,
+  todos baseados em CSS variables.
+- **\`tsconfig.json\`** — TypeScript em modo estrito + JSX automático.
+- **\`index.html\`** — contém o \`<div id="root">\` onde o React monta a app.
+
+### Dados (\`src/data/\`)
+Toda a personalização do site fica concentrada aqui — edite estes arquivos
+para alterar conteúdo sem mexer em componentes:
+- **\`restaurant.ts\`** — nome, tagline, descrição, WhatsApp, endereço,
+  horários, logo e mídia do hero (imagem ou vídeo).
+- **\`menuData.ts\`** — array de categorias. Cada categoria pode ser uma
+  categoria normal **ou** uma categoria de pizza (\`is_pizza: true\`).
+  Pizzas têm tamanhos (\`pizza_sizes\`) com preço fixo e número máximo de
+  sabores. Itens podem ser marcados como \`is_special\` com \`special_extra\`
+  (acréscimo no preço final da pizza).
+- **\`comboData.ts\`** — grupos de combos promocionais com badge opcional
+  (ex: "MAIS VENDIDO").
+
+### Componentes (\`src/components/\`)
+- **\`Header.tsx\`** — fixed top, fica transparente até o scroll passar de
+  50px; mostra o badge com a quantidade de itens no carrinho.
+- **\`Hero.tsx\`** — banner principal com suporte a imagem **ou** vídeo de
+  fundo (controlado por \`hero_media_type\` em \`restaurant.ts\`).
+- **\`MenuSection.tsx\`** — primeiro mostra um grid de categorias (com
+  imagem); ao clicar, faz drill-down para os itens. Para categorias de
+  pizza renderiza o componente interno **\`PizzaBuilder\`**.
+- **\`PizzaBuilder\`** (dentro de \`MenuSection.tsx\`) — fluxo em 3 passos:
+  (1) escolher tamanho, (2) selecionar sabores respeitando o limite,
+  (3) ver resumo + total dinâmico (incluindo acréscimo de sabores especiais).
+- **\`ComboSection.tsx\`** — combos agrupados por tabs.
+- **\`CartDrawer.tsx\`** — drawer lateral com lista, controle de quantidade
+  e formulário de checkout (nome, telefone, endereço) que dispara o WhatsApp.
+- **\`Footer.tsx\`** — informações de contato.
+
+### Estado (\`src/context/CartContext.tsx\`)
+Carrinho global via React Context. Cada \`CartLine\` guarda \`itemId\`,
+\`name\`, \`unitPrice\`, \`quantity\` e opcionalmente \`sizeLabel\`, \`flavors\`
+e \`specialFlavors\` (para pizzas). A chave de unicidade combina
+\`itemId + sizeLabel\`.
+
+---
+
+## 5. 🔄 Fluxo da aplicação
+
+\`\`\`
+┌─────────────┐   browse    ┌─────────────────┐   add    ┌──────────────┐
+│  Hero/Menu  │ ──────────► │  MenuItemCard / │ ───────► │ CartContext  │
+│  (escolha)  │             │  PizzaBuilder   │          │  (estado)    │
+└─────────────┘             └─────────────────┘          └──────┬───────┘
+                                                                │ open
+                                                                ▼
+                                                         ┌──────────────┐
+                                                         │ CartDrawer   │
+                                                         │ (checkout)   │
+                                                         └──────┬───────┘
+                                                                │ submit
+                                                                ▼
+                                                       ┌────────────────┐
+                                                       │ wa.me/<number> │
+                                                       │ (WhatsApp)     │
+                                                       └────────────────┘
+\`\`\`
+
+1. O usuário entra no site → \`Hero\` é renderizado.
+2. Navega até combos ou cardápio → componentes leem de \`menuData.ts\` /
+   \`comboData.ts\`.
+3. Ao clicar em "Adicionar", o item entra no \`CartContext\`.
+4. O \`Header\` reflete a quantidade total em tempo real.
+5. O usuário abre o \`CartDrawer\`, preenche dados e clica em "Finalizar
+   pedido".
+6. O drawer monta uma mensagem markdown e abre uma nova aba para
+   \`https://wa.me/${r.whatsapp_number || "<numero>"}?text=...\`
+
+---
+
+## 6. 🌐 Rotas e endpoints
+
+Este projeto **não expõe rotas HTTP próprias** — é uma SPA (Single Page
+Application) servida estaticamente. A única rota é \`/\` (\`index.html\`).
+
+**Único "endpoint externo" usado:**
+
+| Método | URL | Função |
+|--------|-----|--------|
+| GET | \`https://wa.me/<numero>?text=<mensagem>\` | Abre o WhatsApp com a mensagem do pedido pré-preenchida |
+
+---
+
+## 7. 🚀 Como rodar o projeto localmente
+
+### Pré-requisitos
+- **Node.js** 18 ou superior — https://nodejs.org
+- **npm** (vem com o Node) ou **yarn** / **pnpm** / **bun**
+
+### Passo a passo
+
+\`\`\`bash
+# 1. Descompacte o ZIP e entre na pasta
+cd ${r.slug || "delivery-site"}
+
+# 2. Instale as dependências
+npm install
+
+# 3. Rode o servidor de desenvolvimento
+npm run dev
+
+# 4. Abra no navegador
+# → http://localhost:5173
+\`\`\`
+
+### Atalho (Linux/macOS)
+\`\`\`bash
+chmod +x start.sh
+./start.sh
+\`\`\`
+
+### Build de produção
+
+\`\`\`bash
+npm run build      # gera a pasta dist/
+npm run preview    # serve dist/ localmente para testar
+\`\`\`
+
+### Deploy
+Faça upload da pasta \`dist/\` em qualquer hospedagem estática:
+**Vercel**, **Netlify**, **Cloudflare Pages**, **GitHub Pages**,
+**Firebase Hosting** ou um servidor Nginx/Apache simples.
+
+---
+
+## 8. 📦 Dependências
+
+### Runtime
+- \`react\` ^18.3.1
+- \`react-dom\` ^18.3.1
+- \`lucide-react\` ^0.462.0 — ícones SVG
+
+### Desenvolvimento
+- \`vite\` ^5.4.0 + \`@vitejs/plugin-react\` ^4.3.1
+- \`typescript\` ^5.5.4
+- \`tailwindcss\` ^3.4.7 + \`postcss\` ^8.4.40 + \`autoprefixer\` ^10.4.19
+- \`@types/react\`, \`@types/react-dom\`
+
+---
+
+## 9. 🎨 Pontos de customização
+
+| O que mudar | Onde editar |
+|-------------|-------------|
+| Nome / contato / endereço | \`src/data/restaurant.ts\` |
+| Logo / imagem do hero / vídeo | campos \`logo_url\`, \`hero_image_url\`, \`hero_video_url\`, \`hero_media_type\` em \`restaurant.ts\` |
+| Adicionar / remover categoria | \`src/data/menuData.ts\` (array \`menuCategories\`) |
+| Adicionar / remover item | dentro de \`items\` de cada categoria em \`menuData.ts\` |
+| Configurar pizza | \`is_pizza: true\` + \`pizza_sizes: [{ label, price, max_flavors }]\` |
+| Marcar sabor especial | \`is_special: true, special_extra: <valor>\` no item |
+| Combos promocionais | \`src/data/comboData.ts\` |
+| Cores primária/secundária | variáveis \`--site-primary\` e \`--site-secondary\` em \`src/index.css\` (formato HSL: \`H S% L%\`) |
+| Fonte | propriedade \`font-family\` em \`body\` no \`src/index.css\` |
+| Número do WhatsApp | \`whatsapp_number\` em \`restaurant.ts\` (formato: \`5511999999999\`) |
+| Texto da mensagem | função \`finish()\` em \`src/components/CartDrawer.tsx\` |
+
+### Adicionar um backend de verdade
+Se precisar persistir pedidos, integrar pagamento ou ter um painel admin:
+
+1. Crie endpoints em **Supabase Edge Functions**, **Firebase Functions** ou
+   uma API Node/Express.
+2. Substitua a função \`finish()\` no \`CartDrawer.tsx\` por um \`fetch(POST)\`
+   para sua API antes (ou no lugar) do redirect para o WhatsApp.
+3. Para pagamentos online, integre **Stripe**, **Mercado Pago** ou **Pix**.
+
+---
+
+## 10. 📋 Conteúdo atual cadastrado
+
+### Categorias (${data.categories.length})
+${categoriesList}
+
+### Combos (${data.comboGroups.length} grupos)
+${combosList}
+
+---
+
+## 11. ✅ Checklist pós-exportação
+
+- [ ] Rodei \`npm install\` sem erros
+- [ ] Rodei \`npm run dev\` e o site abriu em \`http://localhost:5173\`
+- [ ] Conferi o número do WhatsApp em \`src/data/restaurant.ts\`
+- [ ] Testei adicionar um item ao carrinho
+- [ ] Testei finalizar um pedido (abre o WhatsApp)
+- [ ] Rodei \`npm run build\` e fiz deploy da pasta \`dist/\`
+
+---
+
+_Documentação gerada automaticamente em ${new Date().toISOString().slice(0, 10)} pela plataforma **SiteCreatorFly**._
+`;
+}
