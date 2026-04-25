@@ -8,6 +8,7 @@ import { SiteMenuSection } from "./SiteMenuSection";
 import { SitePizzaSection } from "./SitePizzaSection";
 import { SiteCartDrawer } from "./SiteCartDrawer";
 import { SiteFooter } from "./SiteFooter";
+import { Reveal, ScrollProgress } from "./Reveal";
 import type { SiteData } from "@/lib/site/types";
 
 export function DeliverySite({ data }: { data: SiteData }) {
@@ -18,6 +19,7 @@ export function DeliverySite({ data }: { data: SiteData }) {
   return (
     <SiteThemeWrapper primaryColor={r.primary_color} secondaryColor={r.secondary_color}>
       <CartProvider>
+        <ScrollProgress />
         <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
         <main>
           <SiteHero
@@ -29,17 +31,25 @@ export function DeliverySite({ data }: { data: SiteData }) {
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
           />
-          <SitePizzaSection categories={data.categories} />
-          <SiteComboSection groups={data.comboGroups} />
-          <SiteMenuSection categories={nonPizzaCategories} />
+          <Reveal variant="fade-up">
+            <SitePizzaSection categories={data.categories} />
+          </Reveal>
+          <Reveal variant="fade-up" delay={80}>
+            <SiteComboSection groups={data.comboGroups} />
+          </Reveal>
+          <Reveal variant="fade-up" delay={80}>
+            <SiteMenuSection categories={nonPizzaCategories} />
+          </Reveal>
         </main>
-        <SiteFooter
-          name={r.name}
-          phoneDisplay={r.whatsapp_display}
-          hours={r.hours}
-          address={r.address}
-          city={r.city}
-        />
+        <Reveal variant="fade">
+          <SiteFooter
+            name={r.name}
+            phoneDisplay={r.whatsapp_display}
+            hours={r.hours}
+            address={r.address}
+            city={r.city}
+          />
+        </Reveal>
         <SiteCartDrawer
           open={cartOpen}
           onClose={() => setCartOpen(false)}
