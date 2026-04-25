@@ -720,8 +720,10 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     if (!name.trim() || !phone.trim() || !address.trim()) return setError("Preencha nome, telefone e localização");
     const lines = items.map((l) => {
       const sz = l.sizeLabel ? \` (\${l.sizeLabel})\` : "";
-      const desc = l.description ? \`\\n_\${l.description}_\` : "";
-      return \`- \${l.quantity}x \${l.name}\${sz} — \${formatBRL(l.unitPrice * l.quantity)}\${desc}\`;
+      const flavorLine = l.flavors && l.flavors.length > 0
+        ? \`\\n   Sabores: \${l.flavors.join(" + ")}\`
+        : l.description ? \`\\n_\${l.description}_\` : "";
+      return \`- \${l.quantity}x \${l.name}\${sz} — \${formatBRL(l.unitPrice * l.quantity)}\${flavorLine}\`;
     });
     const msg = \`Olá, gostaria de fazer um pedido!\\n\\n*Nome:* \${name}\\n*Telefone:* \${phone}\\n*Localização:* \${address}\\n\\n*Pedido:*\\n\${lines.join("\\n")}\\n\\n*Total: \${formatBRL(totalPrice)}*\`;
     window.open(\`https://wa.me/\${restaurant.whatsapp_number}?text=\${encodeURIComponent(msg)}\`, "_blank");
@@ -742,7 +744,9 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               <div className="flex justify-between gap-2">
                 <div className="flex-1">
                   <p className="font-semibold">{l.name}{l.sizeLabel ? \` (\${l.sizeLabel})\` : ""}</p>
-                  {l.description && <p className="text-xs text-site-fg/60 mt-1">{l.description}</p>}
+                  {l.flavors && l.flavors.length > 0
+                    ? <p className="text-xs text-site-fg/60 mt-1">Sabores: {l.flavors.join(" + ")}</p>
+                    : l.description ? <p className="text-xs text-site-fg/60 mt-1">{l.description}</p> : null}
                 </div>
                 <button onClick={() => removeLine(l.itemId, l.sizeLabel)} className="p-1 text-site-fg/60 hover:text-red-400"><Trash2 className="h-4 w-4" /></button>
               </div>
