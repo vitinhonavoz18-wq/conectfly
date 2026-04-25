@@ -495,9 +495,11 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
 `;
 
 const MENU_SECTION_TSX = `import { useState } from "react";
-import { ImageIcon } from "lucide-react";
-import { menuCategories } from "../data/menuData";
+import { ImageIcon, Check, Plus } from "lucide-react";
+import { menuCategories, type MenuCategory } from "../data/menuData";
 import { MenuItemCard } from "./MenuItemCard";
+import { formatBRL } from "../lib/format";
+import { useCart } from "../context/CartContext";
 
 export function MenuSection() {
   const [act, setAct] = useState<string | null>(null);
@@ -520,7 +522,7 @@ export function MenuSection() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-left">
                   <h3 className="text-white font-black text-base sm:text-lg leading-tight drop-shadow">{c.icon ? \`\${c.icon} \` : ""}{c.name}</h3>
-                  <p className="text-white/80 text-xs mt-0.5">{c.items.length} {c.items.length === 1 ? "item" : "itens"}</p>
+                  <p className="text-white/80 text-xs mt-0.5">{c.is_pizza ? \`\${c.items.length} \${c.items.length === 1 ? "sabor" : "sabores"}\` : \`\${c.items.length} \${c.items.length === 1 ? "item" : "itens"}\`}</p>
                 </div>
               </button>
             ))}
@@ -544,13 +546,110 @@ export function MenuSection() {
                 <h3 className="absolute bottom-4 left-4 text-3xl font-black text-white drop-shadow">{cur.icon ? \`\${cur.icon} \` : ""}{cur.name}</h3>
               </div>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {cur.items.map((it) => <MenuItemCard key={it.id} item={it} />)}
-            </div>
+            {cur.is_pizza && cur.pizza_sizes && cur.pizza_sizes.length > 0 ? (
+              <PizzaBuilder category={cur} />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {cur.items.map((it) => <MenuItemCard key={it.id} item={it} />)}
+              </div>
+            )}
           </>
         )}
       </div>
     </section>
+  );
+}
+
+function PizzaBuilder({ category }: { category: MenuCategory }) {
+  const sizes = category.pizza_sizes ?? [];
+  const { addLine } = useCart();
+  const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
+  const [flavorIds, setFlavorIds] = useState<string[]>([]);
+  const [confirm, setConfirm] = useState<string | null>(null);
+  const size = sizeIdx !== null ? sizes[sizeIdx] : null;
+  const max = size?.max_flavors ?? 0;
+  const remaining = Math.max(0, max - flavorIds.length);
+  const flavorMap = new Map(category.items.map((i) => [i.id, i] as const));
+  const selectSize = (i: number) => { setSizeIdx(i); setFlavorIds((c) => c.slice(0, sizes[i].max_flavors)); };
+  const toggle = (id: string) => setFlavorIds((c) => c.includes(id) ? c.filter((x) => x !== id) : c.length >= max ? c : [...c, id]);
+  const add = () => {
+    if (!size || flavorIds.length === 0) return;
+    const names = flavorIds.map((id) => flavorMap.get(id)?.name).filter(Boolean) as string[];
+    addLine({
+      itemId: \`pizza-\${category.id}-\${size.label}-\${flavorIds.join("_")}\`,
+      name: \`Pizza \${size.label}\`,
+      description: names.length === 1 ? \`Sabor: \${names[0]}\` : \`Sabores: \${names.join(" + ")}\`,
+      unitPrice: size.price,
+      sizeLabel: size.label,
+      flavors: names,
+    });
+    setConfirm(\`Pizza \${size.label} adicionada!\`);
+    setFlavorIds([]);
+    setTimeout(() => setConfirm(null), 2200);
+  };
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-baseline justify-between mb-3">
+          <h4 className="text-lg font-bold">1. Escolha o tamanho</h4>
+          <span className="text-xs text-site-fg/60">preço definido pelo tamanho</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {sizes.map((s, i) => {
+            const a = sizeIdx === i;
+            return (
+              <button key={i} onClick={() => selectSize(i)} className={\`relative rounded-xl border p-3 text-left transition \${a ? "border-site-primary bg-site-primary/10 shadow-lg" : "border-site-border bg-site-card hover:border-site-primary"}\`}>
+                {a && <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-site-primary text-white inline-flex items-center justify-center"><Check className="h-3 w-3" /></span>}
+                <p className="font-bold leading-tight">{s.label}</p>
+                <p className="text-site-secondary font-bold mt-1">{formatBRL(s.price)}</p>
+                <p className="text-[11px] text-site-fg/60 mt-0.5">até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div>
+        <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+          <h4 className="text-lg font-bold">2. Escolha os sabores</h4>
+          {size && <span className="text-xs px-2 py-1 rounded-full bg-site-card border border-site-border">{flavorIds.length}/{max} selecionados{remaining > 0 ? \` · \${remaining} restante\${remaining > 1 ? "s" : ""}\` : ""}</span>}
+        </div>
+        {category.items.length === 0 ? <p className="text-sm text-site-fg/60">Nenhum sabor cadastrado.</p> : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {category.items.map((it) => {
+              const c = flavorIds.includes(it.id);
+              const d = !c && flavorIds.length >= max;
+              return (
+                <button key={it.id} onClick={() => toggle(it.id)} disabled={!size || d} className={\`text-left rounded-xl border p-3 transition flex items-start gap-3 \${c ? "border-site-primary bg-site-primary/10" : "border-site-border bg-site-card hover:border-site-primary"} \${d ? "opacity-40 cursor-not-allowed" : ""}\`}>
+                  <div className={\`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center \${c ? "bg-site-primary border-site-primary text-white" : "border-site-border"}\`}>
+                    {c && <Check className="h-3 w-3" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-tight">{it.name}</p>
+                    {it.description && <p className="text-xs text-site-fg/60 mt-1">{it.description}</p>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <div className="rounded-xl border border-site-border bg-site-card p-4">
+        <h4 className="text-lg font-bold mb-2">3. Resumo</h4>
+        {size ? (
+          <ul className="text-sm text-site-fg/70 space-y-1">
+            <li><strong>Tamanho:</strong> {size.label} — {formatBRL(size.price)}</li>
+            <li><strong>Sabores:</strong> {flavorIds.length === 0 ? "nenhum selecionado" : flavorIds.map((id) => flavorMap.get(id)?.name).filter(Boolean).join(" + ")}</li>
+          </ul>
+        ) : <p className="text-sm text-site-fg/60">Selecione um tamanho.</p>}
+        <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
+          <span className="text-2xl font-black text-site-secondary">{size ? formatBRL(size.price) : "—"}</span>
+          <button onClick={add} disabled={!size || flavorIds.length === 0} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-site-primary text-white font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed">
+            <Plus className="h-4 w-4" /> Adicionar pizza
+          </button>
+        </div>
+        {confirm && <p className="mt-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center">✓ {confirm}</p>}
+      </div>
+    </div>
   );
 }
 `;
