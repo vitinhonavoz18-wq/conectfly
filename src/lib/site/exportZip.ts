@@ -230,6 +230,8 @@ export interface MenuItem {
   description: string;
   price: number;
   sizes?: Size[];
+  is_special?: boolean;
+  special_extra?: number;
 }
 export interface MenuCategory {
   id: string;
@@ -255,6 +257,8 @@ export const menuCategories: MenuCategory[] = ${json(
           description: i.description ?? "",
           price: i.price,
           sizes: i.sizes ?? undefined,
+          is_special: i.is_special || undefined,
+          special_extra: i.special_extra || undefined,
         })),
       })),
     )};
