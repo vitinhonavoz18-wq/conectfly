@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { MenuCategoryRow, MenuItemRow, Size } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size } from "@/lib/site/types";
 
 interface Props {
   restaurantId: string;
@@ -53,7 +53,10 @@ export function MenuManager({ restaurantId }: Props) {
   };
 
   const updateCategory = async (id: string, patch: Partial<MenuCategoryRow>) => {
-    await supabase.from("menu_categories").update(patch).eq("id", id);
+    await supabase
+      .from("menu_categories")
+      .update(patch as never)
+      .eq("id", id);
     setCats((cur) => cur.map((c) => (c.id === id ? { ...c, ...patch } : c)));
   };
 
@@ -181,12 +184,23 @@ export function MenuManager({ restaurantId }: Props) {
                 </p>
               </div>
             )}
+            <div className="px-3 pb-3 -mt-1">
+              <PizzaSettings category={c} onUpdate={(p) => updateCategory(c.id, p)} />
+            </div>
             {isOpen && (
               <div className="border-t border-border p-3 space-y-3">
+                {c.is_pizza && (
+                  <div className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3 text-xs text-muted-foreground">
+                    🍕 Categoria <strong>pizza</strong>: o preço vem do <strong>tamanho</strong>.
+                    Cadastre apenas o nome e descrição de cada <strong>sabor</strong> abaixo — o
+                    campo de preço dos sabores é ignorado.
+                  </div>
+                )}
                 {its.map((it) => (
                   <ItemRow
                     key={it.id}
                     item={it}
+                    hidePrice={c.is_pizza}
                     onUpdate={(p) => updateItem(it.id, p)}
                     onRemove={() => removeItem(it.id)}
                   />
@@ -195,7 +209,7 @@ export function MenuManager({ restaurantId }: Props) {
                   onClick={() => addItem(c.id)}
                   className="w-full py-2 rounded-lg border border-dashed border-border hover:border-primary text-sm text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
                 >
-                  <Plus className="h-4 w-4" /> Adicionar item
+                  <Plus className="h-4 w-4" /> {c.is_pizza ? "Adicionar sabor" : "Adicionar item"}
                 </button>
               </div>
             )}
@@ -208,10 +222,12 @@ export function MenuManager({ restaurantId }: Props) {
 
 function ItemRow({
   item,
+  hidePrice = false,
   onUpdate,
   onRemove,
 }: {
   item: MenuItemRow;
+  hidePrice?: boolean;
   onUpdate: (p: Partial<MenuItemRow>) => void;
   onRemove: () => void;
 }) {
@@ -245,22 +261,28 @@ function ItemRow({
 
   return (
     <div className="rounded-lg border border-border bg-background p-3 grid gap-2">
-      <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_auto] gap-2">
+      <div
+        className={`grid grid-cols-1 ${
+          hidePrice ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-[1fr_120px_auto]"
+        } gap-2`}
+      >
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={commit}
-          placeholder="Nome do item"
+          placeholder={hidePrice ? "Nome do sabor" : "Nome do item"}
           className="input"
         />
-        <input
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          onBlur={commit}
-          placeholder="0.00"
-          inputMode="decimal"
-          className="input"
-        />
+        {!hidePrice && (
+          <input
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            onBlur={commit}
+            placeholder="0.00"
+            inputMode="decimal"
+            className="input"
+          />
+        )}
         <button
           onClick={onRemove}
           className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
@@ -276,14 +298,136 @@ function ItemRow({
         placeholder="Descrição (opcional)"
         className="input resize-none text-sm"
       />
-      <textarea
-        value={sizesText}
-        onChange={(e) => setSizesText(e.target.value)}
-        onBlur={commit}
-        rows={2}
-        placeholder={"Tamanhos opcionais — uma linha por tamanho:\n500g|35\n1kg|55"}
-        className="input resize-none text-xs font-mono"
-      />
+      {!hidePrice && (
+        <textarea
+          value={sizesText}
+          onChange={(e) => setSizesText(e.target.value)}
+          onBlur={commit}
+          rows={2}
+          placeholder={"Tamanhos opcionais — uma linha por tamanho:\n500g|35\n1kg|55"}
+          className="input resize-none text-xs font-mono"
+        />
+      )}
+    </div>
+  );
+}
+
+const DEFAULT_PIZZA_SIZES: PizzaSize[] = [
+  { label: "Pequena", price: 0, max_flavors: 1 },
+  { label: "Média", price: 0, max_flavors: 2 },
+  { label: "Grande", price: 0, max_flavors: 3 },
+  { label: "Família", price: 0, max_flavors: 4 },
+];
+
+function PizzaSettings({
+  category,
+  onUpdate,
+}: {
+  category: MenuCategoryRow;
+  onUpdate: (p: Partial<MenuCategoryRow>) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const sizes: PizzaSize[] =
+    category.pizza_sizes && category.pizza_sizes.length > 0
+      ? category.pizza_sizes
+      : DEFAULT_PIZZA_SIZES;
+
+  const togglePizza = (checked: boolean) => {
+    onUpdate({
+      is_pizza: checked,
+      pizza_sizes: checked
+        ? category.pizza_sizes && category.pizza_sizes.length > 0
+          ? category.pizza_sizes
+          : DEFAULT_PIZZA_SIZES
+        : category.pizza_sizes,
+    });
+    if (checked) setOpen(true);
+  };
+
+  const updateSize = (idx: number, patch: Partial<PizzaSize>) => {
+    const next = sizes.map((s, i) => (i === idx ? { ...s, ...patch } : s));
+    onUpdate({ pizza_sizes: next });
+  };
+
+  const addSize = () => {
+    const next = [...sizes, { label: "Novo tamanho", price: 0, max_flavors: 1 }];
+    onUpdate({ pizza_sizes: next });
+  };
+
+  const removeSize = (idx: number) => {
+    const next = sizes.filter((_, i) => i !== idx);
+    onUpdate({ pizza_sizes: next.length > 0 ? next : null });
+  };
+
+  return (
+    <div className="rounded-lg border border-border bg-background/40">
+      <div className="flex items-center justify-between gap-2 p-2">
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={category.is_pizza}
+            onChange={(e) => togglePizza(e.target.checked)}
+            className="h-4 w-4 accent-primary"
+          />
+          <span>🍕 Categoria de pizza (preço por tamanho, sabores selecionáveis)</span>
+        </label>
+        {category.is_pizza && (
+          <button
+            onClick={() => setOpen((o) => !o)}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            {open ? "Ocultar tamanhos" : "Editar tamanhos"}
+          </button>
+        )}
+      </div>
+      {category.is_pizza && open && (
+        <div className="border-t border-border p-3 space-y-2">
+          <div className="grid grid-cols-[1fr_100px_120px_auto] gap-2 text-[11px] uppercase tracking-wide text-muted-foreground px-1">
+            <span>Tamanho</span>
+            <span>Preço (R$)</span>
+            <span>Máx. sabores</span>
+            <span></span>
+          </div>
+          {sizes.map((s, i) => (
+            <div key={i} className="grid grid-cols-[1fr_100px_120px_auto] gap-2">
+              <input
+                value={s.label}
+                onChange={(e) => updateSize(i, { label: e.target.value })}
+                className="input"
+                placeholder="Pequena"
+              />
+              <input
+                value={String(s.price)}
+                onChange={(e) => updateSize(i, { price: Number(e.target.value) || 0 })}
+                className="input"
+                inputMode="decimal"
+                placeholder="0.00"
+              />
+              <input
+                value={String(s.max_flavors)}
+                onChange={(e) =>
+                  updateSize(i, { max_flavors: Math.max(1, Number(e.target.value) || 1) })
+                }
+                className="input"
+                inputMode="numeric"
+                placeholder="1"
+              />
+              <button
+                onClick={() => removeSize(i)}
+                className="p-2 text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={addSize}
+            className="w-full py-2 rounded-lg border border-dashed border-border hover:border-primary text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
+          >
+            <Plus className="h-3 w-3" /> Adicionar tamanho
+          </button>
+        </div>
+      )}
     </div>
   );
 }
