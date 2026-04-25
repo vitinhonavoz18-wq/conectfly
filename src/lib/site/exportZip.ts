@@ -370,6 +370,7 @@ export const comboGroups: ComboGroup[] = ${json(
   zip.file("src/components/ComboSection.tsx", COMBO_SECTION_TSX);
   zip.file("src/components/CartDrawer.tsx", CART_DRAWER_TSX);
   zip.file("src/components/Footer.tsx", FOOTER_TSX);
+  zip.file("src/components/Reveal.tsx", REVEAL_TSX);
 
   return zip.generateAsync({ type: "blob" });
 }
