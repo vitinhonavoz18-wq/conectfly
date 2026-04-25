@@ -223,6 +223,7 @@ body {
   zip.file(
     "src/data/menuData.ts",
     `export interface Size { label: string; price: number }
+export interface PizzaSize { label: string; price: number; max_flavors: number }
 export interface MenuItem {
   id: string;
   name: string;
@@ -235,6 +236,8 @@ export interface MenuCategory {
   name: string;
   icon?: string;
   image_url?: string;
+  is_pizza?: boolean;
+  pizza_sizes?: PizzaSize[];
   items: MenuItem[];
 }
 
@@ -244,6 +247,8 @@ export const menuCategories: MenuCategory[] = ${json(
         name: c.name,
         icon: c.icon ?? undefined,
         image_url: c.image_url ?? undefined,
+        is_pizza: c.is_pizza || undefined,
+        pizza_sizes: c.pizza_sizes ?? undefined,
         items: c.items.map((i) => ({
           id: i.id,
           name: i.name,
