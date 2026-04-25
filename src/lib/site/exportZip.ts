@@ -157,6 +157,33 @@ npm run dev
 `,
   );
 
+  zip.file("DOCUMENTACAO.md", buildDocumentacao(data));
+
+  zip.file(
+    "start.sh",
+    `#!/usr/bin/env bash
+# Script de inicialização rápida para o projeto ${r.name}
+set -e
+
+echo "📦 Instalando dependências..."
+npm install
+
+echo "🚀 Iniciando servidor de desenvolvimento..."
+npm run dev
+`,
+  );
+
+  zip.file(
+    ".gitignore",
+    `node_modules
+dist
+.DS_Store
+*.log
+.env
+.env.local
+`,
+  );
+
   zip.file(
     "src/main.tsx",
     `import React from "react";
