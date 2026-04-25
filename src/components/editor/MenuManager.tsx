@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, Size } from "@/lib/site/types";
 
@@ -52,6 +52,26 @@ export function MenuManager({ restaurantId }: Props) {
     reload();
   };
 
+  const updateCategory = async (id: string, patch: Partial<MenuCategoryRow>) => {
+    await supabase.from("menu_categories").update(patch).eq("id", id);
+    setCats((cur) => cur.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  };
+
+  const handleCategoryImageUpload = async (categoryId: string, file: File) => {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${restaurantId}/category-${categoryId}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("logos").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (error) {
+      alert("Erro no upload: " + error.message);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("logos").getPublicUrl(path);
+    await updateCategory(categoryId, { image_url: pub.publicUrl });
+  };
+
   const addItem = async (categoryId: string) => {
     await supabase.from("menu_items").insert({
       restaurant_id: restaurantId,
@@ -99,29 +119,68 @@ export function MenuManager({ restaurantId }: Props) {
         const its = items.filter((i) => i.category_id === c.id);
         return (
           <div key={c.id} className="rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between p-3">
-              <button
-                onClick={() => setOpenCat(isOpen ? null : c.id)}
-                className="flex items-center gap-2 font-bold flex-1 text-left"
-              >
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                {c.icon ? `${c.icon} ` : ""}
-                {c.name}
-                <span className="text-xs text-muted-foreground font-normal ml-2">
-                  ({its.length} {its.length === 1 ? "item" : "itens"})
-                </span>
-              </button>
+            <div className="flex items-center justify-between gap-3 p-3">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="relative shrink-0">
+                  {c.image_url ? (
+                    <img
+                      src={c.image_url}
+                      alt={c.name}
+                      className="h-14 w-14 object-cover rounded-lg border border-border bg-muted"
+                    />
+                  ) : (
+                    <div className="h-14 w-14 rounded-lg border border-dashed border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+                      <ImageIcon className="h-5 w-5" />
+                    </div>
+                  )}
+                  <label
+                    title="Enviar imagem da categoria"
+                    className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow hover:opacity-90"
+                  >
+                    <Upload className="h-3 w-3" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleCategoryImageUpload(c.id, f);
+                      }}
+                    />
+                  </label>
+                </div>
+                <button
+                  onClick={() => setOpenCat(isOpen ? null : c.id)}
+                  className="flex items-center gap-2 font-bold flex-1 text-left min-w-0"
+                >
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 shrink-0" />
+                  )}
+                  <span className="truncate">
+                    {c.icon ? `${c.icon} ` : ""}
+                    {c.name}
+                  </span>
+                  <span className="text-xs text-muted-foreground font-normal ml-2 shrink-0">
+                    ({its.length} {its.length === 1 ? "item" : "itens"})
+                  </span>
+                </button>
+              </div>
               <button
                 onClick={() => removeCategory(c.id)}
-                className="p-2 text-muted-foreground hover:text-destructive"
+                className="p-2 text-muted-foreground hover:text-destructive shrink-0"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
+            {!c.image_url && (
+              <div className="px-3 pb-2 -mt-1">
+                <p className="text-xs text-muted-foreground">
+                  ⚠️ Adicione uma imagem para exibir como destaque da categoria no site.
+                </p>
+              </div>
+            )}
             {isOpen && (
               <div className="border-t border-border p-3 space-y-3">
                 {its.map((it) => (
