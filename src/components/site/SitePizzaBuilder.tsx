@@ -1,0 +1,210 @@
+import { useMemo, useState } from "react";
+import { Check, Plus } from "lucide-react";
+import type { MenuCategoryRow, MenuItemRow, PizzaSize } from "@/lib/site/types";
+import { formatBRL } from "@/lib/site/format";
+import { useCart } from "./CartContext";
+
+interface Props {
+  category: MenuCategoryRow & { items: MenuItemRow[] };
+}
+
+export function SitePizzaBuilder({ category }: Props) {
+  const sizes: PizzaSize[] = category.pizza_sizes ?? [];
+  const { addLine } = useCart();
+  const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
+  const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+  const [confirm, setConfirm] = useState<string | null>(null);
+
+  const size = sizeIdx !== null ? sizes[sizeIdx] : null;
+  const maxFlavors = size?.max_flavors ?? 0;
+  const remaining = Math.max(0, maxFlavors - selectedFlavors.length);
+  const canAdd = !!size && selectedFlavors.length > 0;
+
+  const flavorMap = useMemo(() => {
+    const m = new Map<string, MenuItemRow>();
+    category.items.forEach((it) => m.set(it.id, it));
+    return m;
+  }, [category.items]);
+
+  const toggleFlavor = (id: string) => {
+    setSelectedFlavors((cur) => {
+      if (cur.includes(id)) return cur.filter((x) => x !== id);
+      if (cur.length >= maxFlavors) return cur;
+      return [...cur, id];
+    });
+  };
+
+  const handleSelectSize = (i: number) => {
+    setSizeIdx(i);
+    const newMax = sizes[i].max_flavors;
+    setSelectedFlavors((cur) => cur.slice(0, newMax));
+  };
+
+  const handleAddToCart = () => {
+    if (!size || selectedFlavors.length === 0) return;
+    const flavorNames = selectedFlavors
+      .map((id) => flavorMap.get(id)?.name)
+      .filter(Boolean) as string[];
+    addLine({
+      itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+      name: `Pizza ${size.label}`,
+      description:
+        flavorNames.length === 1
+          ? `Sabor: ${flavorNames[0]}`
+          : `Sabores: ${flavorNames.join(" + ")}`,
+      unitPrice: size.price,
+      sizeLabel: size.label,
+      flavors: flavorNames,
+    });
+    setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
+    setSelectedFlavors([]);
+    setTimeout(() => setConfirm(null), 2200);
+  };
+
+  if (sizes.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-[hsl(var(--site-border))] p-6 text-center text-[hsl(var(--site-muted-fg))]">
+        Nenhum tamanho cadastrado para esta categoria.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Step 1 — Sizes */}
+      <div>
+        <div className="flex items-baseline justify-between mb-3">
+          <h4 className="text-lg font-bold">1. Escolha o tamanho</h4>
+          <span className="text-xs text-[hsl(var(--site-muted-fg))]">
+            preço definido pelo tamanho
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {sizes.map((s, i) => {
+            const active = sizeIdx === i;
+            return (
+              <button
+                key={`${s.label}-${i}`}
+                onClick={() => handleSelectSize(i)}
+                className={`relative rounded-xl border p-3 text-left transition ${
+                  active
+                    ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary))]/10 shadow-lg"
+                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))]"
+                }`}
+              >
+                {active && (
+                  <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
+                <p className="font-bold leading-tight">{s.label}</p>
+                <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
+                  {formatBRL(s.price)}
+                </p>
+                <p className="text-[11px] text-[hsl(var(--site-muted-fg))] mt-0.5">
+                  até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Step 2 — Flavors */}
+      <div>
+        <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
+          <h4 className="text-lg font-bold">2. Escolha os sabores</h4>
+          {size && (
+            <span className="text-xs px-2 py-1 rounded-full bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))]">
+              {selectedFlavors.length}/{maxFlavors} selecionados
+              {remaining > 0 && ` · ${remaining} restante${remaining > 1 ? "s" : ""}`}
+            </span>
+          )}
+        </div>
+        {category.items.length === 0 ? (
+          <p className="text-sm text-[hsl(var(--site-muted-fg))]">
+            Nenhum sabor cadastrado ainda.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {category.items.map((it) => {
+              const checked = selectedFlavors.includes(it.id);
+              const disabled = !checked && selectedFlavors.length >= maxFlavors;
+              return (
+                <button
+                  key={it.id}
+                  onClick={() => toggleFlavor(it.id)}
+                  disabled={!size || disabled}
+                  className={`text-left rounded-xl border p-3 transition flex items-start gap-3 ${
+                    checked
+                      ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary))]/10"
+                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))]"
+                  } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
+                >
+                  <div
+                    className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center ${
+                      checked
+                        ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white"
+                        : "border-[hsl(var(--site-border))]"
+                    }`}
+                  >
+                    {checked && <Check className="h-3 w-3" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold leading-tight">{it.name}</p>
+                    {it.description && (
+                      <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+                        {it.description}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Step 3 — Summary + add */}
+      <div className="rounded-xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-4">
+        <h4 className="text-lg font-bold mb-2">3. Resumo</h4>
+        {size ? (
+          <ul className="text-sm text-[hsl(var(--site-muted-fg))] space-y-1">
+            <li>
+              <strong className="text-[hsl(var(--site-fg,var(--site-muted-fg)))]">Tamanho:</strong>{" "}
+              {size.label} — {formatBRL(size.price)}
+            </li>
+            <li>
+              <strong className="text-[hsl(var(--site-fg,var(--site-muted-fg)))]">Sabores:</strong>{" "}
+              {selectedFlavors.length === 0
+                ? "nenhum selecionado"
+                : selectedFlavors
+                    .map((id) => flavorMap.get(id)?.name)
+                    .filter(Boolean)
+                    .join(" + ")}
+            </li>
+          </ul>
+        ) : (
+          <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
+        )}
+        <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
+          <span className="text-2xl font-black text-[hsl(var(--site-secondary))]">
+            {size ? formatBRL(size.price) : "—"}
+          </span>
+          <button
+            onClick={handleAddToCart}
+            disabled={!canAdd}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[hsl(var(--site-primary))] text-white font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Plus className="h-4 w-4" /> Adicionar pizza
+          </button>
+        </div>
+        {confirm && (
+          <p className="mt-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center">
+            ✓ {confirm}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
