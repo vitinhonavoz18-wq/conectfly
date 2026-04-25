@@ -103,7 +103,9 @@ export type Database = {
           icon: string | null
           id: string
           image_url: string | null
+          is_pizza: boolean
           name: string
+          pizza_sizes: Json | null
           restaurant_id: string
           sort_order: number
         }
@@ -112,7 +114,9 @@ export type Database = {
           icon?: string | null
           id?: string
           image_url?: string | null
+          is_pizza?: boolean
           name: string
+          pizza_sizes?: Json | null
           restaurant_id: string
           sort_order?: number
         }
@@ -121,7 +125,9 @@ export type Database = {
           icon?: string | null
           id?: string
           image_url?: string | null
+          is_pizza?: boolean
           name?: string
+          pizza_sizes?: Json | null
           restaurant_id?: string
           sort_order?: number
         }

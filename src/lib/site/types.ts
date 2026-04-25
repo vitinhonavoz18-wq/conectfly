@@ -1,5 +1,7 @@
 export type Size = { label: string; price: number };
 
+export type PizzaSize = { label: string; price: number; max_flavors: number };
+
 export interface MenuItemRow {
   id: string;
   category_id: string;
@@ -18,6 +20,8 @@ export interface MenuCategoryRow {
   icon: string | null;
   image_url: string | null;
   sort_order: number;
+  is_pizza: boolean;
+  pizza_sizes: PizzaSize[] | null;
 }
 
 export interface ComboRow {
@@ -73,4 +77,5 @@ export interface CartLine {
   unitPrice: number;
   quantity: number;
   sizeLabel?: string;
+  flavors?: string[];
 }

@@ -34,10 +34,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
 
     const lines = items.map((l) => {
       const sizeLabel = l.sizeLabel ? ` (${l.sizeLabel})` : "";
-      const desc = l.description ? `\n_${l.description}_` : "";
+      const flavorLine =
+        l.flavors && l.flavors.length > 0
+          ? `\n   Sabores: ${l.flavors.join(" + ")}`
+          : l.description
+            ? `\n_${l.description}_`
+            : "";
       return `- ${l.quantity}x ${l.name}${sizeLabel} — ${formatBRL(
         l.unitPrice * l.quantity,
-      )}${desc}`;
+      )}${flavorLine}`;
     });
 
     const message =
@@ -98,11 +103,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
                       {l.name}
                       {l.sizeLabel ? ` (${l.sizeLabel})` : ""}
                     </p>
-                    {l.description && (
+                    {l.flavors && l.flavors.length > 0 ? (
+                      <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+                        Sabores: {l.flavors.join(" + ")}
+                      </p>
+                    ) : l.description ? (
                       <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
                         {l.description}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                   <button
                     onClick={() => removeLine(l.itemId, l.sizeLabel)}

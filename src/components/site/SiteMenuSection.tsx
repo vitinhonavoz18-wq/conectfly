@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ImageIcon } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
+import { SitePizzaBuilder } from "./SitePizzaBuilder";
 
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
@@ -49,7 +50,9 @@ export function SiteMenuSection({ categories }: Props) {
                     {c.name}
                   </h3>
                   <p className="text-white/80 text-xs mt-0.5">
-                    {c.items.length} {c.items.length === 1 ? "item" : "itens"}
+                    {c.is_pizza
+                      ? `${c.items.length} ${c.items.length === 1 ? "sabor" : "sabores"}`
+                      : `${c.items.length} ${c.items.length === 1 ? "item" : "itens"}`}
                   </p>
                 </div>
               </button>
@@ -97,11 +100,15 @@ export function SiteMenuSection({ categories }: Props) {
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {current.items.map((it) => (
-                <SiteMenuItemCard key={it.id} item={it} />
-              ))}
-            </div>
+            {current.is_pizza ? (
+              <SitePizzaBuilder category={current} />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {current.items.map((it) => (
+                  <SiteMenuItemCard key={it.id} item={it} />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
