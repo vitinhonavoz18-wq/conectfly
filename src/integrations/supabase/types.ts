@@ -102,6 +102,7 @@ export type Database = {
           created_at: string
           icon: string | null
           id: string
+          image_url: string | null
           name: string
           restaurant_id: string
           sort_order: number
@@ -110,6 +111,7 @@ export type Database = {
           created_at?: string
           icon?: string | null
           id?: string
+          image_url?: string | null
           name: string
           restaurant_id: string
           sort_order?: number
@@ -118,6 +120,7 @@ export type Database = {
           created_at?: string
           icon?: string | null
           id?: string
+          image_url?: string | null
           name?: string
           restaurant_id?: string
           sort_order?: number
