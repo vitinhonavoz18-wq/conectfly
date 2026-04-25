@@ -96,8 +96,11 @@ function ExportPage() {
           </div>
           <h2 className="text-2xl font-black mb-2">{r.name}</h2>
           <p className="text-muted-foreground mb-6">
-            Baixe o código-fonte completo do site (Vite + React + Tailwind +
-            TypeScript). Após o download, basta:
+            Baixe o <strong className="text-foreground">projeto completo</strong>{" "}
+            (Vite + React + Tailwind + TypeScript) com todos os arquivos
+            necessários, scripts de inicialização e a documentação técnica
+            detalhada (<code className="text-foreground">DOCUMENTACAO.md</code>).
+            Após o download, basta:
           </p>
           <ol className="list-decimal list-inside text-sm space-y-1 mb-8 text-muted-foreground">
             <li>Descompactar o arquivo ZIP</li>
@@ -107,6 +110,10 @@ function ExportPage() {
               Para deploy: <code className="text-foreground">npm run build</code> e
               hospedar a pasta <code className="text-foreground">dist/</code>
             </li>
+            <li>
+              Leia o <code className="text-foreground">DOCUMENTACAO.md</code>{" "}
+              dentro do ZIP para entender toda a estrutura
+            </li>
           </ol>
           <button
             onClick={handleDownload}
@@ -114,8 +121,13 @@ function ExportPage() {
             className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-primary text-primary-foreground font-bold hover:opacity-90 transition shadow-glow disabled:opacity-50"
           >
             <Download className="h-5 w-5" />
-            {busy ? "Gerando..." : "Baixar projeto (.zip)"}
+            {busy ? "Gerando..." : "Exportar Projeto (.ZIP)"}
           </button>
+          <p className="text-xs text-muted-foreground mt-3">
+            Inclui: frontend completo · dados do cardápio · combos · configurações
+            · <code>start.sh</code> · <code>README.md</code> ·{" "}
+            <code>DOCUMENTACAO.md</code>
+          </p>
           {msg && (
             <p className="text-sm text-muted-foreground mt-3">{msg}</p>
           )}
