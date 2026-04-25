@@ -511,18 +511,76 @@ export function Hero() {
         ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
         : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
       <div className="absolute inset-0 bg-gradient-to-b from-site-bg/70 via-site-bg/85 to-site-bg" />
-      <div className="relative z-10 text-center px-4 py-20">
+      <div className="relative z-10 text-center px-4 py-20 site-hero-enter">
         {restaurant.logo_url
           ? <img src={restaurant.logo_url} alt={restaurant.name} className="mx-auto mb-6 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-2xl" />
           : <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6">{restaurant.name}</h1>}
         {restaurant.tagline && <p className="text-xl sm:text-2xl font-semibold text-site-secondary mb-3">{restaurant.tagline}</p>}
         {restaurant.description && <p className="max-w-xl mx-auto text-site-fg/70">{restaurant.description}</p>}
         <div className="mt-8 flex gap-3 justify-center flex-wrap">
-          <a href="#combos" className="px-6 py-3 rounded-full bg-site-secondary text-black font-bold hover:opacity-90">Ver combos</a>
-          <a href="#cardapio" className="px-6 py-3 rounded-full border border-site-border font-bold hover:bg-site-card">Cardápio</a>
+          <a href="#combos" className="px-6 py-3 rounded-full bg-site-secondary text-black font-bold transition transform hover:-translate-y-0.5 hover:shadow-lg hover:opacity-95">Ver combos</a>
+          <a href="#cardapio" className="px-6 py-3 rounded-full border border-site-border font-bold transition transform hover:-translate-y-0.5 hover:bg-site-card">Cardápio</a>
         </div>
       </div>
     </section>
+  );
+}
+`;
+
+const REVEAL_TSX = `import { useEffect, useRef, useState, type ReactNode } from "react";
+
+interface RevealProps {
+  children: ReactNode;
+  delay?: number;
+  threshold?: number;
+  className?: string;
+}
+
+export function Reveal({ children, delay = 0, threshold = 0.15, className = "" }: RevealProps) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) { setVisible(true); return; }
+    const node = ref.current;
+    if (!node) return;
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { setVisible(true); obs.unobserve(e.target); } });
+    }, { threshold, rootMargin: "0px 0px -10% 0px" });
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return (
+    <div ref={ref} className={\`reveal \${visible ? "is-visible" : ""} \${className}\`} style={{ transitionDelay: \`\${delay}ms\` }}>
+      {children}
+    </div>
+  );
+}
+
+export function ScrollProgress() {
+  const [p, setP] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      const h = document.documentElement;
+      const max = (h.scrollHeight - h.clientHeight) || 1;
+      setP(Math.min(100, Math.max(0, (h.scrollTop / max) * 100)));
+      raf = 0;
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return (
+    <div aria-hidden style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 60, pointerEvents: "none" }}>
+      <div style={{ height: "100%", width: \`\${p}%\`, background: "hsl(var(--site-primary))", boxShadow: "0 0 8px hsl(var(--site-primary))", transition: "width 75ms ease-out" }} />
+    </div>
   );
 }
 `;
