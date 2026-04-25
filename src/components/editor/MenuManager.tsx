@@ -239,6 +239,10 @@ function ItemRow({
       ? item.sizes.map((s) => `${s.label}|${s.price}`).join("\n")
       : "",
   );
+  const [isSpecial, setIsSpecial] = useState<boolean>(item.is_special ?? false);
+  const [specialExtra, setSpecialExtra] = useState<string>(
+    String(item.special_extra ?? 0),
+  );
 
   const commit = () => {
     const sizes: Size[] = sizesText
@@ -256,6 +260,8 @@ function ItemRow({
       description: desc,
       price: Number(price) || 0,
       sizes: sizes.length > 0 ? sizes : null,
+      is_special: isSpecial,
+      special_extra: Number(specialExtra) || 0,
     });
   };
 
@@ -298,6 +304,38 @@ function ItemRow({
         placeholder="Descrição (opcional)"
         className="input resize-none text-sm"
       />
+      {hidePrice && (
+        <div className="flex items-center gap-3 flex-wrap rounded-md bg-muted/40 border border-dashed border-border p-2">
+          <label className="inline-flex items-center gap-2 text-xs cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={isSpecial}
+              onChange={(e) => {
+                setIsSpecial(e.target.checked);
+                onUpdate({
+                  is_special: e.target.checked,
+                  special_extra: Number(specialExtra) || 0,
+                });
+              }}
+              className="h-4 w-4 accent-primary"
+            />
+            <span>✨ Sabor especial (acréscimo no preço final)</span>
+          </label>
+          {isSpecial && (
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-muted-foreground">+ R$</span>
+              <input
+                value={specialExtra}
+                onChange={(e) => setSpecialExtra(e.target.value)}
+                onBlur={commit}
+                placeholder="5.00"
+                inputMode="decimal"
+                className="input h-8 w-24"
+              />
+            </div>
+          )}
+        </div>
+      )}
       {!hidePrice && (
         <textarea
           value={sizesText}
