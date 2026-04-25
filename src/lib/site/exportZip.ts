@@ -393,18 +393,20 @@ import { ComboSection } from "./components/ComboSection";
 import { MenuSection } from "./components/MenuSection";
 import { CartDrawer } from "./components/CartDrawer";
 import { Footer } from "./components/Footer";
+import { Reveal, ScrollProgress } from "./components/Reveal";
 
 export function App() {
   const [cartOpen, setCartOpen] = useState(false);
   return (
     <CartProvider>
+      <ScrollProgress />
       <Header onOpenCart={() => setCartOpen(true)} />
       <main>
         <Hero />
-        <ComboSection />
-        <MenuSection />
+        <Reveal><ComboSection /></Reveal>
+        <Reveal delay={80}><MenuSection /></Reveal>
       </main>
-      <Footer />
+      <Reveal><Footer /></Reveal>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </CartProvider>
   );
