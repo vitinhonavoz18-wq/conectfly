@@ -5,6 +5,7 @@ import { SiteHeader } from "./SiteHeader";
 import { SiteHero } from "./SiteHero";
 import { SiteComboSection } from "./SiteComboSection";
 import { SiteMenuSection } from "./SiteMenuSection";
+import { SitePizzaSection } from "./SitePizzaSection";
 import { SiteCartDrawer } from "./SiteCartDrawer";
 import { SiteFooter } from "./SiteFooter";
 import type { SiteData } from "@/lib/site/types";
@@ -12,6 +13,7 @@ import type { SiteData } from "@/lib/site/types";
 export function DeliverySite({ data }: { data: SiteData }) {
   const [cartOpen, setCartOpen] = useState(false);
   const r = data.restaurant;
+  const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza);
 
   return (
     <SiteThemeWrapper primaryColor={r.primary_color} secondaryColor={r.secondary_color}>
@@ -27,8 +29,9 @@ export function DeliverySite({ data }: { data: SiteData }) {
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
           />
+          <SitePizzaSection categories={data.categories} />
           <SiteComboSection groups={data.comboGroups} />
-          <SiteMenuSection categories={data.categories} />
+          <SiteMenuSection categories={nonPizzaCategories} />
         </main>
         <SiteFooter
           name={r.name}
