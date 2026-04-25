@@ -234,6 +234,7 @@ export interface MenuCategory {
   id: string;
   name: string;
   icon?: string;
+  image_url?: string;
   items: MenuItem[];
 }
 
