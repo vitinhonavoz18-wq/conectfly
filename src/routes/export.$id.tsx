@@ -38,7 +38,7 @@ function ExportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${r.slug || "site"}.zip`;
+      a.download = `projeto-site-completo-${r.slug || "site"}.zip`;
       document.body.appendChild(a);
       a.click();
       a.remove();
