@@ -242,6 +242,7 @@ export const menuCategories: MenuCategory[] = ${json(
         id: c.id,
         name: c.name,
         icon: c.icon ?? undefined,
+        image_url: c.image_url ?? undefined,
         items: c.items.map((i) => ({
           id: i.id,
           name: i.name,
