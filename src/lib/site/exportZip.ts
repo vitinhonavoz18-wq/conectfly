@@ -641,7 +641,7 @@ export function MenuSection() {
           <p className="text-site-fg/70 mt-2">{cur ? "Escolha seus pratos favoritos" : "Toque em uma categoria para ver os produtos"}</p>
         </div>
         {!cur ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
             {menuCategories.map((c) => (
               <button key={c.id} onClick={() => setAct(c.id)} className="group relative aspect-square rounded-2xl overflow-hidden border border-site-border bg-site-card hover:border-site-primary transition shadow-lg">
                 {c.image_url
@@ -677,7 +677,7 @@ export function MenuSection() {
             {cur.is_pizza && cur.pizza_sizes && cur.pizza_sizes.length > 0 ? (
               <PizzaBuilder category={cur} />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
                 {cur.items.map((it) => <MenuItemCard key={it.id} item={it} />)}
               </div>
             )}
@@ -823,7 +823,7 @@ export function ComboSection() {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
           {cur.combos.map((c) => (
             <div key={c.id} className="rounded-xl border border-site-secondary/40 bg-site-card p-5 flex flex-col gap-3 relative">
               {c.badge && <span className="absolute -top-2 right-4 px-2 py-1 rounded-full bg-site-secondary text-black text-xs font-bold">{c.badge}</span>}
