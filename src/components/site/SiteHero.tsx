@@ -1,5 +1,3 @@
-import { useParallax } from "./Reveal";
-
 interface Props {
   name: string;
   tagline: string | null;
@@ -20,14 +18,9 @@ export function SiteHero({
   heroVideoUrl,
 }: Props) {
   const showVideo = heroMediaType === "video" && heroVideoUrl;
-  const { ref: bgRef, offset } = useParallax(0.18);
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
-      <div
-        ref={bgRef as any}
-        className="absolute inset-0 will-change-transform"
-        style={{ transform: `translate3d(0, ${offset}px, 0) scale(1.08)` }}
-      >
+    <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
+      <div className="absolute inset-0 site-scroll-parallax-bg">
         {showVideo ? (
           <video
             src={heroVideoUrl ?? undefined}
@@ -86,6 +79,6 @@ export function SiteHero({
           <span className="block w-px h-6 bg-[hsl(var(--site-muted-fg))]" />
         </div>
       </div>
-    </section>
+    </div>
   );
 }
