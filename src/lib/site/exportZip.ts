@@ -256,9 +256,57 @@ body {
 .reveal { opacity: 0; transform: translateY(32px); transition: opacity 700ms cubic-bezier(0.22,1,0.36,1), transform 700ms cubic-bezier(0.22,1,0.36,1); will-change: opacity, transform; }
 .reveal.is-visible { opacity: 1; transform: none; }
 
+/* Scroll-driven per-section progress utilities */
+.site-section-scroll {
+  --section-progress: 0;
+  --section-progress-in: 0;
+  --section-progress-out: 0;
+  --section-progress-center: 0;
+}
+.site-scroll-fade { opacity: var(--section-progress-in); will-change: opacity; }
+.site-scroll-rise {
+  transform: translate3d(0, calc((1 - var(--section-progress-in)) * 60px), 0);
+  opacity: var(--section-progress-in);
+  will-change: transform, opacity;
+}
+.site-scroll-zoom {
+  transform: scale(calc(0.92 + var(--section-progress-in) * 0.08));
+  opacity: var(--section-progress-in);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.site-scroll-blur {
+  filter: blur(calc((1 - var(--section-progress-in)) * 8px));
+  opacity: calc(0.4 + var(--section-progress-in) * 0.6);
+  will-change: filter, opacity;
+}
+.site-scroll-parallax-bg {
+  transform: translate3d(0, calc((var(--section-progress) - 0.5) * -80px), 0) scale(1.08);
+  will-change: transform;
+}
+.site-scroll-slide-left {
+  transform: translate3d(calc((1 - var(--section-progress-in)) * -48px), 0, 0);
+  opacity: var(--section-progress-in);
+  will-change: transform, opacity;
+}
+.site-scroll-slide-right {
+  transform: translate3d(calc((1 - var(--section-progress-in)) * 48px), 0, 0);
+  opacity: var(--section-progress-in);
+  will-change: transform, opacity;
+}
+.site-scroll-headline {
+  transform: translate3d(0, calc((1 - var(--section-progress-center)) * 16px), 0);
+  opacity: calc(0.55 + var(--section-progress-center) * 0.45);
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .site-hero-enter > *, .site-stagger > *, .reveal {
     animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important;
+  }
+  .site-scroll-fade, .site-scroll-rise, .site-scroll-zoom, .site-scroll-blur,
+  .site-scroll-parallax-bg, .site-scroll-slide-left, .site-scroll-slide-right, .site-scroll-headline {
+    opacity: 1 !important; transform: none !important; filter: none !important;
   }
 }
 `,
