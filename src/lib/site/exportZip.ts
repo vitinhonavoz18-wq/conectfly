@@ -441,7 +441,7 @@ import { ComboSection } from "./components/ComboSection";
 import { MenuSection } from "./components/MenuSection";
 import { CartDrawer } from "./components/CartDrawer";
 import { Footer } from "./components/Footer";
-import { Reveal, ScrollProgress } from "./components/Reveal";
+import { Reveal, ScrollProgress, SectionScroll } from "./components/Reveal";
 
 export function App() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -450,9 +450,13 @@ export function App() {
       <ScrollProgress />
       <Header onOpenCart={() => setCartOpen(true)} />
       <main>
-        <Hero />
-        <Reveal><ComboSection /></Reveal>
-        <Reveal delay={80}><MenuSection /></Reveal>
+        <SectionScroll className="site-hero-section"><Hero /></SectionScroll>
+        <SectionScroll>
+          <Reveal><div className="site-scroll-rise"><ComboSection /></div></Reveal>
+        </SectionScroll>
+        <SectionScroll>
+          <Reveal delay={80}><div className="site-scroll-rise"><MenuSection /></div></Reveal>
+        </SectionScroll>
       </main>
       <Reveal><Footer /></Reveal>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
