@@ -8,7 +8,7 @@ import { SiteMenuSection } from "./SiteMenuSection";
 import { SitePizzaSection } from "./SitePizzaSection";
 import { SiteCartDrawer } from "./SiteCartDrawer";
 import { SiteFooter } from "./SiteFooter";
-import { Reveal, ScrollProgress } from "./Reveal";
+import { Reveal, ScrollProgress, SectionScroll } from "./Reveal";
 import type { SiteData } from "@/lib/site/types";
 
 export function DeliverySite({ data }: { data: SiteData }) {
@@ -22,7 +22,8 @@ export function DeliverySite({ data }: { data: SiteData }) {
         <ScrollProgress />
         <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
         <main>
-          <SiteHero
+          <SectionScroll className="site-hero-section">
+            <SiteHero
             name={r.name}
             tagline={r.tagline}
             description={r.description}
@@ -30,16 +31,29 @@ export function DeliverySite({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
-          />
-          <Reveal variant="fade-up">
-            <SitePizzaSection categories={data.categories} />
-          </Reveal>
-          <Reveal variant="fade-up" delay={80}>
-            <SiteComboSection groups={data.comboGroups} />
-          </Reveal>
-          <Reveal variant="fade-up" delay={80}>
-            <SiteMenuSection categories={nonPizzaCategories} />
-          </Reveal>
+            />
+          </SectionScroll>
+          <SectionScroll>
+            <Reveal variant="fade-up">
+              <div className="site-scroll-rise">
+                <SitePizzaSection categories={data.categories} />
+              </div>
+            </Reveal>
+          </SectionScroll>
+          <SectionScroll>
+            <Reveal variant="fade-up" delay={80}>
+              <div className="site-scroll-rise">
+                <SiteComboSection groups={data.comboGroups} />
+              </div>
+            </Reveal>
+          </SectionScroll>
+          <SectionScroll>
+            <Reveal variant="fade-up" delay={80}>
+              <div className="site-scroll-rise">
+                <SiteMenuSection categories={nonPizzaCategories} />
+              </div>
+            </Reveal>
+          </SectionScroll>
         </main>
         <Reveal variant="fade">
           <SiteFooter

@@ -256,9 +256,57 @@ body {
 .reveal { opacity: 0; transform: translateY(32px); transition: opacity 700ms cubic-bezier(0.22,1,0.36,1), transform 700ms cubic-bezier(0.22,1,0.36,1); will-change: opacity, transform; }
 .reveal.is-visible { opacity: 1; transform: none; }
 
+/* Scroll-driven per-section progress utilities */
+.site-section-scroll {
+  --section-progress: 0;
+  --section-progress-in: 0;
+  --section-progress-out: 0;
+  --section-progress-center: 0;
+}
+.site-scroll-fade { opacity: var(--section-progress-in); will-change: opacity; }
+.site-scroll-rise {
+  transform: translate3d(0, calc((1 - var(--section-progress-in)) * 60px), 0);
+  opacity: var(--section-progress-in);
+  will-change: transform, opacity;
+}
+.site-scroll-zoom {
+  transform: scale(calc(0.92 + var(--section-progress-in) * 0.08));
+  opacity: var(--section-progress-in);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+.site-scroll-blur {
+  filter: blur(calc((1 - var(--section-progress-in)) * 8px));
+  opacity: calc(0.4 + var(--section-progress-in) * 0.6);
+  will-change: filter, opacity;
+}
+.site-scroll-parallax-bg {
+  transform: translate3d(0, calc((var(--section-progress) - 0.5) * -80px), 0) scale(1.08);
+  will-change: transform;
+}
+.site-scroll-slide-left {
+  transform: translate3d(calc((1 - var(--section-progress-in)) * -48px), 0, 0);
+  opacity: var(--section-progress-in);
+  will-change: transform, opacity;
+}
+.site-scroll-slide-right {
+  transform: translate3d(calc((1 - var(--section-progress-in)) * 48px), 0, 0);
+  opacity: var(--section-progress-in);
+  will-change: transform, opacity;
+}
+.site-scroll-headline {
+  transform: translate3d(0, calc((1 - var(--section-progress-center)) * 16px), 0);
+  opacity: calc(0.55 + var(--section-progress-center) * 0.45);
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .site-hero-enter > *, .site-stagger > *, .reveal {
     animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; transition: none !important;
+  }
+  .site-scroll-fade, .site-scroll-rise, .site-scroll-zoom, .site-scroll-blur,
+  .site-scroll-parallax-bg, .site-scroll-slide-left, .site-scroll-slide-right, .site-scroll-headline {
+    opacity: 1 !important; transform: none !important; filter: none !important;
   }
 }
 `,
@@ -393,7 +441,7 @@ import { ComboSection } from "./components/ComboSection";
 import { MenuSection } from "./components/MenuSection";
 import { CartDrawer } from "./components/CartDrawer";
 import { Footer } from "./components/Footer";
-import { Reveal, ScrollProgress } from "./components/Reveal";
+import { Reveal, ScrollProgress, SectionScroll } from "./components/Reveal";
 
 export function App() {
   const [cartOpen, setCartOpen] = useState(false);
@@ -402,9 +450,13 @@ export function App() {
       <ScrollProgress />
       <Header onOpenCart={() => setCartOpen(true)} />
       <main>
-        <Hero />
-        <Reveal><ComboSection /></Reveal>
-        <Reveal delay={80}><MenuSection /></Reveal>
+        <SectionScroll className="site-hero-section"><Hero /></SectionScroll>
+        <SectionScroll>
+          <Reveal><div className="site-scroll-rise"><ComboSection /></div></Reveal>
+        </SectionScroll>
+        <SectionScroll>
+          <Reveal delay={80}><div className="site-scroll-rise"><MenuSection /></div></Reveal>
+        </SectionScroll>
       </main>
       <Reveal><Footer /></Reveal>
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
@@ -506,10 +558,12 @@ const HERO_TSX = `import { restaurant } from "../data/restaurant";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
-      {restaurant.hero_media_type === "video" && restaurant.hero_video_url
-        ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
-        : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
+    <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
+      <div className="absolute inset-0 site-scroll-parallax-bg">
+        {restaurant.hero_media_type === "video" && restaurant.hero_video_url
+          ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
+      </div>
       <div className="absolute inset-0 bg-gradient-to-b from-site-bg/70 via-site-bg/85 to-site-bg" />
       <div className="relative z-10 text-center px-4 py-20 site-hero-enter">
         {restaurant.logo_url
@@ -522,7 +576,7 @@ export function Hero() {
           <a href="#cardapio" className="px-6 py-3 rounded-full border border-site-border font-bold transition transform hover:-translate-y-0.5 hover:bg-site-card">Cardápio</a>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 `;
@@ -581,6 +635,71 @@ export function ScrollProgress() {
     <div aria-hidden style={{ position: "fixed", top: 0, left: 0, right: 0, height: 3, zIndex: 60, pointerEvents: "none" }}>
       <div style={{ height: "100%", width: \`\${p}%\`, background: "hsl(var(--site-primary))", boxShadow: "0 0 8px hsl(var(--site-primary))", transition: "width 75ms ease-out" }} />
     </div>
+  );
+}
+
+/**
+ * Per-section scroll progress (0 → 1) exposed as CSS variables so children
+ * can drive synchronized animations without extra JS:
+ *   --section-progress, --section-progress-in, --section-progress-out, --section-progress-center
+ */
+export function useSectionProgress() {
+  const ref = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      node.style.setProperty("--section-progress", "0.5");
+      node.style.setProperty("--section-progress-in", "1");
+      node.style.setProperty("--section-progress-out", "0");
+      node.style.setProperty("--section-progress-center", "1");
+      return;
+    }
+    let raf = 0;
+    let visible = false;
+    const update = () => {
+      raf = 0;
+      const rect = node.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      const total = rect.height + vh;
+      const traveled = vh - rect.top;
+      const raw = Math.min(1, Math.max(0, traveled / total));
+      const inPhase = Math.min(1, Math.max(0, (vh - rect.top) / vh));
+      const outPhase = Math.min(1, Math.max(0, -rect.top / Math.max(rect.height, 1)));
+      const sectionCenter = rect.top + rect.height / 2;
+      const dist = Math.abs(sectionCenter - vh / 2) / (vh / 2 + rect.height / 2);
+      const center = Math.max(0, 1 - dist);
+      node.style.setProperty("--section-progress", raw.toFixed(4));
+      node.style.setProperty("--section-progress-in", inPhase.toFixed(4));
+      node.style.setProperty("--section-progress-out", outPhase.toFixed(4));
+      node.style.setProperty("--section-progress-center", center.toFixed(4));
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { visible = e.isIntersecting; if (visible) schedule(); });
+    }, { rootMargin: "20% 0px 20% 0px" });
+    io.observe(node);
+    const onScroll = () => { if (visible) schedule(); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return ref;
+}
+
+export function SectionScroll({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const ref = useSectionProgress();
+  return (
+    <section ref={ref as any} className={\`site-section-scroll \${className}\`}>
+      {children}
+    </section>
   );
 }
 `;
