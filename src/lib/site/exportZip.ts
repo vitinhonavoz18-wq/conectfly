@@ -558,10 +558,12 @@ const HERO_TSX = `import { restaurant } from "../data/restaurant";
 
 export function Hero() {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
-      {restaurant.hero_media_type === "video" && restaurant.hero_video_url
-        ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
-        : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
+    <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
+      <div className="absolute inset-0 site-scroll-parallax-bg">
+        {restaurant.hero_media_type === "video" && restaurant.hero_video_url
+          ? <video src={restaurant.hero_video_url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          : restaurant.hero_image_url && <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: \`url(\${restaurant.hero_image_url})\` }} />}
+      </div>
       <div className="absolute inset-0 bg-gradient-to-b from-site-bg/70 via-site-bg/85 to-site-bg" />
       <div className="relative z-10 text-center px-4 py-20 site-hero-enter">
         {restaurant.logo_url
@@ -574,7 +576,7 @@ export function Hero() {
           <a href="#cardapio" className="px-6 py-3 rounded-full border border-site-border font-bold transition transform hover:-translate-y-0.5 hover:bg-site-card">Cardápio</a>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 `;
