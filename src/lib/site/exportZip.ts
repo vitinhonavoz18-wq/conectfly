@@ -637,6 +637,71 @@ export function ScrollProgress() {
     </div>
   );
 }
+
+/**
+ * Per-section scroll progress (0 → 1) exposed as CSS variables so children
+ * can drive synchronized animations without extra JS:
+ *   --section-progress, --section-progress-in, --section-progress-out, --section-progress-center
+ */
+export function useSectionProgress() {
+  const ref = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      node.style.setProperty("--section-progress", "0.5");
+      node.style.setProperty("--section-progress-in", "1");
+      node.style.setProperty("--section-progress-out", "0");
+      node.style.setProperty("--section-progress-center", "1");
+      return;
+    }
+    let raf = 0;
+    let visible = false;
+    const update = () => {
+      raf = 0;
+      const rect = node.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      const total = rect.height + vh;
+      const traveled = vh - rect.top;
+      const raw = Math.min(1, Math.max(0, traveled / total));
+      const inPhase = Math.min(1, Math.max(0, (vh - rect.top) / vh));
+      const outPhase = Math.min(1, Math.max(0, -rect.top / Math.max(rect.height, 1)));
+      const sectionCenter = rect.top + rect.height / 2;
+      const dist = Math.abs(sectionCenter - vh / 2) / (vh / 2 + rect.height / 2);
+      const center = Math.max(0, 1 - dist);
+      node.style.setProperty("--section-progress", raw.toFixed(4));
+      node.style.setProperty("--section-progress-in", inPhase.toFixed(4));
+      node.style.setProperty("--section-progress-out", outPhase.toFixed(4));
+      node.style.setProperty("--section-progress-center", center.toFixed(4));
+    };
+    const schedule = () => { if (!raf) raf = requestAnimationFrame(update); };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { visible = e.isIntersecting; if (visible) schedule(); });
+    }, { rootMargin: "20% 0px 20% 0px" });
+    io.observe(node);
+    const onScroll = () => { if (visible) schedule(); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return ref;
+}
+
+export function SectionScroll({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const ref = useSectionProgress();
+  return (
+    <section ref={ref as any} className={\`site-section-scroll \${className}\`}>
+      {children}
+    </section>
+  );
+}
 `;
 
 const MENU_CARD_TSX = `import { useState } from "react";
