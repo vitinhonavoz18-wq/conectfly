@@ -155,3 +155,103 @@ export function useParallax(speed = 0.2) {
   }, [speed]);
   return { ref, offset };
 }
+
+/**
+ * Scroll-driven per-section progress.
+ *
+ * Computes a continuous progress value (0 → 1) based on the section's position
+ * relative to the viewport. The progress is exposed via CSS custom properties
+ * on the section element, so any descendant can synchronize transforms,
+ * opacity, blur, color, etc. without extra JS.
+ *
+ * Exposed CSS variables (set on the section root):
+ *   --section-progress          raw 0 → 1 across the full enter→leave window
+ *   --section-progress-in       0 → 1 only during the enter phase (bottom→center)
+ *   --section-progress-out      0 → 1 only during the leave phase (center→top)
+ *   --section-progress-center   1 at center of viewport, 0 at edges (bell curve)
+ *
+ * Honors prefers-reduced-motion by locking values to a static "in view" state.
+ */
+export function useSectionProgress<T extends HTMLElement = HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const node = ref.current;
+    if (!node) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      node.style.setProperty("--section-progress", "0.5");
+      node.style.setProperty("--section-progress-in", "1");
+      node.style.setProperty("--section-progress-out", "0");
+      node.style.setProperty("--section-progress-center", "1");
+      return;
+    }
+    let raf = 0;
+    let visible = false;
+    const update = () => {
+      raf = 0;
+      const rect = node.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      // Window: section bottom enters viewport (top = vh) until top leaves viewport (bottom = 0)
+      const total = rect.height + vh;
+      const traveled = vh - rect.top;
+      const raw = Math.min(1, Math.max(0, traveled / total));
+      const inPhase = Math.min(1, Math.max(0, (vh - rect.top) / vh));
+      const outPhase = Math.min(1, Math.max(0, -rect.top / Math.max(rect.height, 1)));
+      // Bell curve peaking when section center is at viewport center
+      const sectionCenter = rect.top + rect.height / 2;
+      const dist = Math.abs(sectionCenter - vh / 2) / (vh / 2 + rect.height / 2);
+      const center = Math.max(0, 1 - dist);
+      node.style.setProperty("--section-progress", raw.toFixed(4));
+      node.style.setProperty("--section-progress-in", inPhase.toFixed(4));
+      node.style.setProperty("--section-progress-out", outPhase.toFixed(4));
+      node.style.setProperty("--section-progress-center", center.toFixed(4));
+    };
+    const schedule = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(update);
+    };
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        visible = e.isIntersecting;
+        if (visible) schedule();
+      });
+    }, { rootMargin: "20% 0px 20% 0px" });
+    io.observe(node);
+    const onScroll = () => { if (visible) schedule(); };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+  return ref;
+}
+
+interface SectionScrollProps {
+  children: ReactNode;
+  className?: string;
+  as?: ElementType;
+  id?: string;
+  style?: CSSProperties;
+}
+
+/**
+ * Wrapper that exposes per-section scroll progress as CSS variables
+ * (`--section-progress`, `--section-progress-in`, `--section-progress-out`,
+ * `--section-progress-center`) so children can drive synchronized animations
+ * via CSS without additional JS.
+ */
+export function SectionScroll({ children, className = "", as: Tag = "section", id, style }: SectionScrollProps) {
+  const ref = useSectionProgress<HTMLElement>();
+  const Component = Tag as any;
+  return (
+    <Component ref={ref as any} id={id} className={`site-section-scroll ${className}`} style={style}>
+      {children}
+    </Component>
+  );
+}
