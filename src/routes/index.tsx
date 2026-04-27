@@ -14,6 +14,7 @@ import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/site/format";
+import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -69,6 +70,12 @@ function Dashboard() {
     if (insErr || !data) {
       setError(insErr?.message ?? "Falha ao criar");
       return;
+    }
+    // Aplica o cardápio padrão pré-definido (ignora erros silenciosamente)
+    try {
+      await seedDefaultMenu(data.id);
+    } catch (e) {
+      console.warn("[seedDefaultMenu]", e);
     }
     setName("");
     setCreating(false);
