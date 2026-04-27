@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, Download, ExternalLink, Link as LinkIcon, Package } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Download, ExternalLink, FolderTree, Globe, Link as LinkIcon, Package, Server } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 
@@ -100,15 +100,47 @@ function ExportPage() {
             (Vite + React + Tailwind + TypeScript) com todos os arquivos
             necessários, scripts de inicialização e a documentação técnica
             detalhada (<code className="text-foreground">DOCUMENTACAO.md</code>).
-            Após o download, basta:
+            O ZIP contém uma pasta com{" "}
+            <strong className="text-foreground">100% do código-fonte</strong> do
+            site, pronta para você hospedar em qualquer servidor e conectar um{" "}
+            <strong className="text-foreground">domínio externo próprio</strong>{" "}
+            (Vercel, Netlify, Cloudflare Pages, Hostinger, AWS, etc.).
           </p>
+
+          <div className="rounded-xl border border-border bg-muted/30 p-4 mb-6 font-mono text-xs leading-relaxed">
+            <div className="flex items-center gap-2 mb-2 text-foreground font-sans font-bold text-sm">
+              <FolderTree className="h-4 w-4 text-primary" />
+              Estrutura da pasta exportada
+            </div>
+            <pre className="text-muted-foreground whitespace-pre overflow-x-auto">{`projeto-site-completo-${r.slug || "site"}/
+├── src/
+│   ├── components/      → todos os componentes do site
+│   ├── context/         → carrinho de pedidos
+│   ├── data/            → cardápio, combos, infos
+│   ├── lib/             → utilitários
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+├── start.sh             → instala e roda em 1 comando
+├── README.md
+└── DOCUMENTACAO.md      → manual completo`}</pre>
+          </div>
+
+          <p className="text-sm font-semibold mb-2">Como usar após o download:</p>
           <ol className="list-decimal list-inside text-sm space-y-1 mb-8 text-muted-foreground">
             <li>Descompactar o arquivo ZIP</li>
             <li>Rodar <code className="text-foreground">npm install</code></li>
             <li>Rodar <code className="text-foreground">npm run dev</code></li>
             <li>
-              Para deploy: <code className="text-foreground">npm run build</code> e
-              hospedar a pasta <code className="text-foreground">dist/</code>
+              Para hospedagem + domínio externo:{" "}
+              <code className="text-foreground">npm run build</code> e fazer
+              upload da pasta <code className="text-foreground">dist/</code> em
+              qualquer hospedagem estática
             </li>
             <li>
               Leia o <code className="text-foreground">DOCUMENTACAO.md</code>{" "}
@@ -131,6 +163,31 @@ function ExportPage() {
           {msg && (
             <p className="text-sm text-muted-foreground mt-3">{msg}</p>
           )}
+        </div>
+
+        <div className="mt-6 grid sm:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+            <div className="flex items-center gap-2 mb-2 text-sm font-bold">
+              <Server className="h-4 w-4 text-primary" />
+              Hospedagem livre
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Hospede o site em qualquer provedor: Vercel, Netlify, Cloudflare
+              Pages, Hostinger, GitHub Pages, AWS S3, Render, etc. Por ser
+              estático (Vite build), funciona em praticamente qualquer servidor.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+            <div className="flex items-center gap-2 mb-2 text-sm font-bold">
+              <Globe className="h-4 w-4 text-primary" />
+              Domínio externo próprio
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Cada projeto exportado é independente. Conecte seu próprio
+              domínio (ex: <code>seurestaurante.com.br</code>) diretamente na
+              hospedagem escolhida — sem nenhum vínculo com a plataforma.
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-card">
