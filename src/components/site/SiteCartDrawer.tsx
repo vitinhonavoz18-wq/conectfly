@@ -1,21 +1,29 @@
 import { useState } from "react";
-import { X, Minus, Plus, Trash2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
+import type { DeliveryZoneRow } from "@/lib/site/types";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   whatsappNumber: string;
   restaurantName: string;
+  deliveryZones?: DeliveryZoneRow[];
 }
 
-export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }: Props) {
+export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [] }: Props) {
   const { items, updateQty, removeLine, totalPrice, clear } = useCart();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [zoneId, setZoneId] = useState("");
   const [error, setError] = useState("");
+
+  const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
+  const deliveryFee = Number(selectedZone?.fee ?? 0);
+  const grandTotal = totalPrice + deliveryFee;
+  const hasZones = deliveryZones.length > 0;
 
   const handleFinish = () => {
     setError("");
@@ -24,7 +32,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
       return;
     }
     if (!name.trim() || !phone.trim() || !address.trim()) {
-      setError("Preencha nome, telefone e localização");
+      setError("Preencha nome, telefone e endereço");
+      return;
+    }
+    if (hasZones && !selectedZone) {
+      setError("Selecione o bairro para calcular a taxa de entrega");
       return;
     }
     if (!whatsappNumber) {
@@ -45,13 +57,21 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
       )}${flavorLine}`;
     });
 
+    const locationBlock = selectedZone
+      ? `*Bairro:* ${selectedZone.neighborhood}\n*Endereço:* ${address}\n`
+      : `*Localização:* ${address}\n`;
+    const feeLine = selectedZone
+      ? `*Subtotal:* ${formatBRL(totalPrice)}\n*Taxa de entrega (${selectedZone.neighborhood}):* ${formatBRL(deliveryFee)}\n`
+      : "";
+
     const message =
       `Olá, gostaria de fazer um pedido!\n\n` +
       `*Nome:* ${name}\n` +
       `*Telefone:* ${phone}\n` +
-      `*Localização:* ${address}\n\n` +
-      `*Pedido:*\n${lines.join("\n")}\n\n` +
-      `*Total: ${formatBRL(totalPrice)}*`;
+      locationBlock +
+      `\n*Pedido:*\n${lines.join("\n")}\n\n` +
+      feeLine +
+      `*Total: ${formatBRL(grandTotal)}*`;
 
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
@@ -59,6 +79,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
     setName("");
     setPhone("");
     setAddress("");
+    setZoneId("");
     onClose();
   };
 
@@ -161,10 +182,27 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
               inputMode="numeric"
               className="w-full px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))]"
             />
+            {hasZones && (
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                <select
+                  value={zoneId}
+                  onChange={(e) => setZoneId(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] appearance-none"
+                >
+                  <option value="">Selecione seu bairro *</option>
+                  {deliveryZones.map((z) => (
+                    <option key={z.id} value={z.id}>
+                      {z.neighborhood} — {formatBRL(Number(z.fee) || 0)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <textarea
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Endereço completo / localização"
+              placeholder="Rua, número, complemento..."
               rows={2}
               className="w-full px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] resize-none"
             />
@@ -174,11 +212,23 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName }
               {error}
             </p>
           )}
-          <div className="flex justify-between items-center">
-            <span className="text-[hsl(var(--site-muted-fg))]">Total</span>
-            <span className="text-xl font-black text-[hsl(var(--site-secondary))]">
-              {formatBRL(totalPrice)}
-            </span>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between items-center text-[hsl(var(--site-muted-fg))]">
+              <span>Subtotal</span>
+              <span>{formatBRL(totalPrice)}</span>
+            </div>
+            {hasZones && (
+              <div className="flex justify-between items-center text-[hsl(var(--site-muted-fg))]">
+                <span>Taxa de entrega {selectedZone ? `(${selectedZone.neighborhood})` : ""}</span>
+                <span>{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center pt-1 border-t border-[hsl(var(--site-border))]">
+              <span className="text-[hsl(var(--site-muted-fg))]">Total</span>
+              <span className="text-xl font-black text-[hsl(var(--site-secondary))]">
+                {formatBRL(grandTotal)}
+              </span>
+            </div>
           </div>
           <button
             onClick={handleFinish}

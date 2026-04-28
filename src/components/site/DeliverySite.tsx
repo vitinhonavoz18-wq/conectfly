@@ -69,6 +69,7 @@ export function DeliverySite({ data }: { data: SiteData }) {
           onClose={() => setCartOpen(false)}
           whatsappNumber={r.whatsapp_number}
           restaurantName={r.name}
+          deliveryZones={data.deliveryZones ?? []}
         />
       </CartProvider>
     </SiteThemeWrapper>
