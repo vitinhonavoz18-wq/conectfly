@@ -980,20 +980,27 @@ export function ComboSection() {
 `;
 
 const CART_DRAWER_TSX = `import { useState } from "react";
-import { X, Minus, Plus, Trash2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { formatBRL, formatPhoneMask } from "../lib/format";
 import { restaurant } from "../data/restaurant";
+import { deliveryZones } from "../data/deliveryZones";
 
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { items, updateQty, removeLine, totalPrice, clear } = useCart();
   const [name, setName] = useState(""); const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState(""); const [error, setError] = useState("");
+  const [address, setAddress] = useState(""); const [zoneId, setZoneId] = useState("");
+  const [error, setError] = useState("");
+  const selectedZone = deliveryZones.find((z) => z.id === zoneId) || null;
+  const deliveryFee = selectedZone ? selectedZone.fee : 0;
+  const grandTotal = totalPrice + deliveryFee;
+  const hasZones = deliveryZones.length > 0;
 
   const finish = () => {
     setError("");
     if (items.length === 0) return setError("Seu carrinho está vazio");
-    if (!name.trim() || !phone.trim() || !address.trim()) return setError("Preencha nome, telefone e localização");
+    if (!name.trim() || !phone.trim() || !address.trim()) return setError("Preencha nome, telefone e endereço");
+    if (hasZones && !selectedZone) return setError("Selecione o bairro para calcular a taxa de entrega");
     const lines = items.map((l) => {
       const sz = l.sizeLabel ? \` (\${l.sizeLabel})\` : "";
       const flavorLine = l.flavors && l.flavors.length > 0
@@ -1001,9 +1008,15 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         : l.description ? \`\\n_\${l.description}_\` : "";
       return \`- \${l.quantity}x \${l.name}\${sz} — \${formatBRL(l.unitPrice * l.quantity)}\${flavorLine}\`;
     });
-    const msg = \`Olá, gostaria de fazer um pedido!\\n\\n*Nome:* \${name}\\n*Telefone:* \${phone}\\n*Localização:* \${address}\\n\\n*Pedido:*\\n\${lines.join("\\n")}\\n\\n*Total: \${formatBRL(totalPrice)}*\`;
+    const locationBlock = selectedZone
+      ? \`*Bairro:* \${selectedZone.neighborhood}\\n*Endereço:* \${address}\\n\`
+      : \`*Localização:* \${address}\\n\`;
+    const feeLine = selectedZone
+      ? \`*Subtotal:* \${formatBRL(totalPrice)}\\n*Taxa de entrega (\${selectedZone.neighborhood}):* \${formatBRL(deliveryFee)}\\n\`
+      : "";
+    const msg = \`Olá, gostaria de fazer um pedido!\\n\\n*Nome:* \${name}\\n*Telefone:* \${phone}\\n\${locationBlock}\\n*Pedido:*\\n\${lines.join("\\n")}\\n\\n\${feeLine}*Total: \${formatBRL(grandTotal)}*\`;
     window.open(\`https://wa.me/\${restaurant.whatsapp_number}?text=\${encodeURIComponent(msg)}\`, "_blank");
-    clear(); setName(""); setPhone(""); setAddress(""); onClose();
+    clear(); setName(""); setPhone(""); setAddress(""); setZoneId(""); onClose();
   };
 
   return (
@@ -1040,11 +1053,23 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="p-4 border-t border-site-border space-y-3">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" className="w-full px-3 py-2 rounded-lg bg-site-card border border-site-border focus:outline-none focus:border-site-primary" />
           <input value={phone} onChange={(e) => setPhone(formatPhoneMask(e.target.value))} placeholder="(00) 00000-0000" inputMode="numeric" className="w-full px-3 py-2 rounded-lg bg-site-card border border-site-border focus:outline-none focus:border-site-primary" />
-          <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Endereço completo / localização" rows={2} className="w-full px-3 py-2 rounded-lg bg-site-card border border-site-border focus:outline-none focus:border-site-primary resize-none" />
+          {hasZones && (
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-site-fg/60" />
+              <select value={zoneId} onChange={(e) => setZoneId(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg bg-site-card border border-site-border focus:outline-none focus:border-site-primary appearance-none">
+                <option value="">Selecione seu bairro *</option>
+                {deliveryZones.map((z) => (
+                  <option key={z.id} value={z.id}>{z.neighborhood} — {formatBRL(z.fee)}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <textarea value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rua, número, complemento..." rows={2} className="w-full px-3 py-2 rounded-lg bg-site-card border border-site-border focus:outline-none focus:border-site-primary resize-none" />
           {error && <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-2">{error}</p>}
-          <div className="flex justify-between items-center">
-            <span className="text-site-fg/60">Total</span>
-            <span className="text-xl font-black text-site-secondary">{formatBRL(totalPrice)}</span>
+          <div className="space-y-1 text-sm">
+            <div className="flex justify-between text-site-fg/60"><span>Subtotal</span><span>{formatBRL(totalPrice)}</span></div>
+            {hasZones && <div className="flex justify-between text-site-fg/60"><span>Taxa de entrega{selectedZone ? \` (\${selectedZone.neighborhood})\` : ""}</span><span>{selectedZone ? formatBRL(deliveryFee) : "—"}</span></div>}
+            <div className="flex justify-between pt-1 border-t border-site-border"><span className="text-site-fg/60">Total</span><span className="text-xl font-black text-site-secondary">{formatBRL(grandTotal)}</span></div>
           </div>
           <button onClick={finish} className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition">Finalizar pedido</button>
         </div>
