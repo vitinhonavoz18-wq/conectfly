@@ -9,6 +9,7 @@ import {
   Eye,
   FileText,
   Link as LinkIcon,
+  MapPin,
   Pencil,
   Sparkles,
   Tag,
@@ -20,13 +21,14 @@ import { fetchSiteByRestaurant } from "@/lib/site/queries";
 import { InfoForm } from "@/components/editor/InfoForm";
 import { MenuManager } from "@/components/editor/MenuManager";
 import { ComboManager } from "@/components/editor/ComboManager";
+import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
 
 export const Route = createFileRoute("/edit/$id")({
   component: EditPage,
 });
 
-type Tab = "info" | "menu" | "combo" | "preview";
+type Tab = "info" | "menu" | "combo" | "delivery" | "preview";
 
 function EditPage() {
   const { id } = Route.useParams();
@@ -111,6 +113,7 @@ function EditPage() {
     { id: "info", label: "Informações", icon: <FileText className="h-4 w-4" /> },
     { id: "menu", label: "Cardápio", icon: <Utensils className="h-4 w-4" /> },
     { id: "combo", label: "Combos", icon: <Tag className="h-4 w-4" /> },
+    { id: "delivery", label: "Taxas de entrega", icon: <MapPin className="h-4 w-4" /> },
     { id: "preview", label: "Preview", icon: <Eye className="h-4 w-4" /> },
   ];
 
@@ -171,6 +174,7 @@ function EditPage() {
         )}
         {tab === "menu" && <MenuManager restaurantId={restaurant.id} />}
         {tab === "combo" && <ComboManager restaurantId={restaurant.id} />}
+        {tab === "delivery" && <DeliveryZonesManager restaurantId={restaurant.id} />}
         {tab === "preview" && (
           <div className="space-y-5">
             <div className="rounded-2xl overflow-hidden border border-border shadow-card">
