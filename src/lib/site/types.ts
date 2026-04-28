@@ -70,6 +70,7 @@ export interface SiteData {
   restaurant: RestaurantRow;
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   comboGroups: (ComboGroupRow & { combos: ComboRow[] })[];
+  deliveryZones?: DeliveryZoneRow[];
 }
 
 export interface CartLine {
@@ -82,4 +83,12 @@ export interface CartLine {
   flavors?: string[];
   specialFlavors?: string[];
   extras?: number;
+}
+
+export interface DeliveryZoneRow {
+  id: string;
+  restaurant_id: string;
+  neighborhood: string;
+  fee: number;
+  sort_order: number;
 }

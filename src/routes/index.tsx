@@ -14,7 +14,7 @@ import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/site/format";
-import { seedDefaultMenu } from "@/lib/site/defaultMenu";
+import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -74,6 +74,7 @@ function Dashboard() {
     // Aplica o cardápio padrão pré-definido (ignora erros silenciosamente)
     try {
       await seedDefaultMenu(data.id);
+      await seedDefaultDeliveryZones(data.id);
     } catch (e) {
       console.warn("[seedDefaultMenu]", e);
     }

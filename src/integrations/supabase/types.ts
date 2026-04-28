@@ -97,6 +97,33 @@ export type Database = {
           },
         ]
       }
+      delivery_zones: {
+        Row: {
+          created_at: string
+          fee: number
+          id: string
+          neighborhood: string
+          restaurant_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          fee?: number
+          id?: string
+          neighborhood: string
+          restaurant_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          fee?: number
+          id?: string
+          neighborhood?: string
+          restaurant_id?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
