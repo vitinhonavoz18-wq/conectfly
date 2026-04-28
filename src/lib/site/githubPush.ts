@@ -41,6 +41,19 @@ async function gh<T = unknown>(
     } catch {
       /* ignore */
     }
+    // Mensagens mais claras para erros comuns de PAT fine-grained.
+    if (res.status === 401) {
+      msg +=
+        " — Token inválido ou expirado. Gere um novo Personal Access Token em github.com/settings/tokens.";
+    } else if (res.status === 403) {
+      msg +=
+        " — O token não tem permissão para esta operação. Se for um token fine-grained, edite-o em github.com/settings/tokens e garanta: Repository access = este repositório (ou All repositories) e Repository permissions → Contents: Read and write, Administration: Read and write, Metadata: Read-only. Se o repositório pertence a uma organização, o admin da org precisa aprovar o token em Settings → Personal access tokens.";
+    } else if (res.status === 404) {
+      msg +=
+        " — Recurso não encontrado. Verifique o nome do repositório e, se for fine-grained token, confirme que ele tem acesso a este repositório específico.";
+    } else if (res.status === 422) {
+      msg += " — Dados inválidos (talvez o repositório já exista com outro dono).";
+    }
     throw new Error(msg);
   }
   if (res.status === 204) return undefined as T;
