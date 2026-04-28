@@ -1,6 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, Download, ExternalLink, FolderTree, Globe, Link as LinkIcon, Package, Server } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Copy,
+  Download,
+  ExternalLink,
+  FolderTree,
+  Github,
+  Globe,
+  KeyRound,
+  Link as LinkIcon,
+  Loader2,
+  Lock,
+  Package,
+  Server,
+  Unlock,
+  UploadCloud,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 
@@ -15,13 +32,25 @@ function ExportPage() {
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
 
+  // GitHub push state
+  const [ghToken, setGhToken] = useState("");
+  const [ghRepo, setGhRepo] = useState("");
+  const [ghPrivate, setGhPrivate] = useState(true);
+  const [ghBusy, setGhBusy] = useState(false);
+  const [ghMsg, setGhMsg] = useState("");
+  const [ghResult, setGhResult] = useState<{ repoUrl: string; branch: string; filesCount: number } | null>(null);
+
   useEffect(() => {
     supabase
       .from("restaurants")
       .select("*")
       .eq("id", id)
       .maybeSingle()
-      .then(({ data }) => setR(data as unknown as RestaurantRow | null));
+      .then(({ data }) => {
+        const row = data as unknown as RestaurantRow | null;
+        setR(row);
+        if (row && !ghRepo) setGhRepo(row.slug || "site-delivery");
+      });
   }, [id]);
 
   const handleDownload = async () => {
@@ -65,6 +94,43 @@ function ExportPage() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       /* ignore */
+    }
+  };
+
+  const handleGithubPush = async () => {
+    if (!r) return;
+    setGhResult(null);
+    if (!ghToken.trim()) {
+      setGhMsg("Informe seu Personal Access Token do GitHub.");
+      return;
+    }
+    const repoName = ghRepo.trim().replace(/[^a-zA-Z0-9._-]/g, "-").slice(0, 90);
+    if (!repoName) {
+      setGhMsg("Informe um nome válido para o repositório.");
+      return;
+    }
+    setGhBusy(true);
+    setGhMsg("Iniciando...");
+    try {
+      const [{ fetchSiteByRestaurant }, { pushProjectToGithub }] = await Promise.all([
+        import("@/lib/site/queries"),
+        import("@/lib/site/githubPush"),
+      ]);
+      const data = await fetchSiteByRestaurant(r);
+      const result = await pushProjectToGithub(data, {
+        token: ghToken.trim(),
+        repoName,
+        isPrivate: ghPrivate,
+        onProgress: setGhMsg,
+      });
+      setGhResult(result);
+      setGhMsg(`${result.filesCount} arquivos enviados para a branch ${result.branch}.`);
+      setGhToken(""); // limpa o token imediatamente após uso
+    } catch (e) {
+      console.error("[github push]", e);
+      setGhMsg("Erro: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setGhBusy(false);
     }
   };
 
@@ -188,6 +254,141 @@ function ExportPage() {
               hospedagem escolhida — sem nenhum vínculo com a plataforma.
             </p>
           </div>
+        </div>
+
+        {/* ================ GitHub section ================ */}
+        <div className="mt-6 rounded-2xl border border-border bg-gradient-card p-6 shadow-card">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="h-12 w-12 rounded-2xl bg-foreground flex items-center justify-center flex-shrink-0">
+              <Github className="h-6 w-6 text-background" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">Conectar ao GitHub</h3>
+              <p className="text-sm text-muted-foreground">
+                Envie o projeto diretamente para um repositório GitHub — pronto para
+                conectar hospedagem (Vercel, Netlify, Cloudflare Pages) e domínio
+                próprio em poucos cliques.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 mb-4 text-xs text-amber-200 flex items-start gap-2">
+            <KeyRound className="h-4 w-4 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold mb-1">Como gerar um Personal Access Token:</p>
+              <ol className="list-decimal list-inside space-y-0.5">
+                <li>
+                  Acesse{" "}
+                  <a
+                    href="https://github.com/settings/tokens?type=beta"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline font-mono"
+                  >
+                    github.com/settings/tokens
+                  </a>
+                  {" "}→ <strong>Generate new token (fine-grained)</strong>.
+                </li>
+                <li>Em <em>Repository access</em> escolha “All repositories” (ou crie o repo antes e selecione-o).</li>
+                <li>Em <em>Repository permissions</em> marque <strong>Contents: Read and write</strong> e <strong>Administration: Read and write</strong> (para criar o repo).</li>
+                <li>Copie o token (começa com <code>github_pat_…</code>) e cole abaixo. O token é usado uma vez e NÃO é salvo.</li>
+              </ol>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <label className="block">
+              <span className="text-xs font-semibold block mb-1">
+                Personal Access Token *
+              </span>
+              <input
+                type="password"
+                value={ghToken}
+                onChange={(e) => setGhToken(e.target.value)}
+                placeholder="github_pat_..."
+                autoComplete="off"
+                className="w-full px-3 py-2 rounded-lg bg-input border border-border text-sm font-mono"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-semibold block mb-1">
+                Nome do repositório
+              </span>
+              <input
+                value={ghRepo}
+                onChange={(e) => setGhRepo(e.target.value)}
+                placeholder="meu-site-pizzaria"
+                className="w-full px-3 py-2 rounded-lg bg-input border border-border text-sm font-mono"
+              />
+            </label>
+          </div>
+
+          <div className="inline-flex rounded-lg border border-border overflow-hidden text-sm mb-4">
+            <button
+              type="button"
+              onClick={() => setGhPrivate(true)}
+              className={`px-3 py-1.5 inline-flex items-center gap-1.5 transition ${
+                ghPrivate
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-muted"
+              }`}
+            >
+              <Lock className="h-3.5 w-3.5" /> Privado
+            </button>
+            <button
+              type="button"
+              onClick={() => setGhPrivate(false)}
+              className={`px-3 py-1.5 inline-flex items-center gap-1.5 transition ${
+                !ghPrivate
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary hover:bg-muted"
+              }`}
+            >
+              <Unlock className="h-3.5 w-3.5" /> Público
+            </button>
+          </div>
+
+          <button
+            onClick={handleGithubPush}
+            disabled={ghBusy}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-background font-bold hover:opacity-90 transition disabled:opacity-50"
+          >
+            {ghBusy ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" /> Enviando...
+              </>
+            ) : (
+              <>
+                <UploadCloud className="h-5 w-5" /> Salvar projeto no GitHub
+              </>
+            )}
+          </button>
+
+          {ghMsg && (
+            <p className="text-xs text-muted-foreground mt-3 break-words">{ghMsg}</p>
+          )}
+
+          {ghResult && (
+            <div className="mt-4 rounded-xl border border-success/40 bg-success/10 p-4">
+              <div className="flex items-center gap-2 mb-2 text-sm font-bold">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                Projeto enviado com sucesso!
+              </div>
+              <a
+                href={ghResult.repoUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 text-sm text-primary hover:underline font-mono"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> {ghResult.repoUrl}
+              </a>
+              <p className="text-xs text-muted-foreground mt-2">
+                Próximo passo: acesse Vercel/Netlify → <em>Import Git Repository</em> →
+                selecione este repo. O deploy é automático e você pode conectar seu
+                domínio próprio logo em seguida.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-card">
