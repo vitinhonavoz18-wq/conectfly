@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type {
   ComboGroupRow,
   ComboRow,
+  DeliveryZoneRow,
   MenuCategoryRow,
   MenuItemRow,
   RestaurantRow,
@@ -22,7 +23,7 @@ export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
 export async function fetchSiteByRestaurant(
   restaurant: RestaurantRow,
 ): Promise<SiteData> {
-  const [catsRes, itemsRes, groupsRes, combosRes] = await Promise.all([
+  const [catsRes, itemsRes, groupsRes, combosRes, zonesRes] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("*")
@@ -43,6 +44,11 @@ export async function fetchSiteByRestaurant(
       .select("*")
       .eq("restaurant_id", restaurant.id)
       .order("sort_order"),
+    supabase
+      .from("delivery_zones")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("sort_order"),
   ]);
   if (catsRes.error) throw catsRes.error;
   if (itemsRes.error) throw itemsRes.error;
@@ -53,6 +59,7 @@ export async function fetchSiteByRestaurant(
   const items = (itemsRes.data ?? []) as unknown as MenuItemRow[];
   const groups = (groupsRes.data ?? []) as unknown as ComboGroupRow[];
   const combos = (combosRes.data ?? []) as unknown as ComboRow[];
+  const zones = (zonesRes.data ?? []) as unknown as DeliveryZoneRow[];
 
   return {
     restaurant,
@@ -64,6 +71,7 @@ export async function fetchSiteByRestaurant(
       ...g,
       combos: combos.filter((cb) => cb.group_id === g.id),
     })),
+    deliveryZones: zones,
   };
 }
 
