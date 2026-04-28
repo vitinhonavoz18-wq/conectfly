@@ -275,24 +275,27 @@ function ExportPage() {
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 mb-4 text-xs text-amber-200 flex items-start gap-2">
             <KeyRound className="h-4 w-4 shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold mb-1">Como gerar um Personal Access Token:</p>
+              <p className="font-semibold mb-1">Como gerar um Personal Access Token (recomendado: clássico — mais simples):</p>
               <ol className="list-decimal list-inside space-y-0.5">
                 <li>
                   Acesse{" "}
                   <a
-                    href="https://github.com/settings/tokens?type=beta"
+                    href="https://github.com/settings/tokens/new?scopes=repo&description=SiteCreatorFly"
                     target="_blank"
                     rel="noreferrer"
                     className="underline font-mono"
                   >
-                    github.com/settings/tokens
+                    github.com/settings/tokens/new
                   </a>
-                  {" "}→ <strong>Generate new token (fine-grained)</strong>.
+                  {" "}(Tokens classic).
                 </li>
-                <li>Em <em>Repository access</em> escolha “All repositories” (ou crie o repo antes e selecione-o).</li>
-                <li>Em <em>Repository permissions</em> marque <strong>Contents: Read and write</strong> e <strong>Administration: Read and write</strong> (para criar o repo).</li>
-                <li>Copie o token (começa com <code>github_pat_…</code>) e cole abaixo. O token é usado uma vez e NÃO é salvo.</li>
+                <li>Em <em>Select scopes</em> marque apenas <strong>repo</strong> (dá leitura e escrita nos seus repositórios).</li>
+                <li>Defina uma expiração (ex: 30 dias), clique em <strong>Generate token</strong> e copie (começa com <code>ghp_…</code>).</li>
+                <li>Cole abaixo. O token é usado uma vez e NÃO é salvo pela plataforma.</li>
               </ol>
+              <p className="mt-2 text-[11px] opacity-80">
+                Se preferir fine-grained (<code>github_pat_…</code>): em <em>Repository access</em> selecione o repositório alvo (ou All), e em <em>Repository permissions</em> marque <strong>Contents: Read and write</strong>, <strong>Administration: Read and write</strong> e <strong>Metadata: Read-only</strong>. Tokens fine-grained em repositórios de organização precisam ser aprovados pelo admin da org.
+              </p>
             </div>
           </div>
 

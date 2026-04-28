@@ -41,6 +41,19 @@ async function gh<T = unknown>(
     } catch {
       /* ignore */
     }
+    // Mensagens mais claras para erros comuns de PAT fine-grained.
+    if (res.status === 401) {
+      msg +=
+        " — Token inválido ou expirado. Gere um novo Personal Access Token em github.com/settings/tokens.";
+    } else if (res.status === 403) {
+      msg +=
+        " — O token não tem permissão para esta operação. Se for um token fine-grained, edite-o em github.com/settings/tokens e garanta: Repository access = este repositório (ou All repositories) e Repository permissions → Contents: Read and write, Administration: Read and write, Metadata: Read-only. Se o repositório pertence a uma organização, o admin da org precisa aprovar o token em Settings → Personal access tokens.";
+    } else if (res.status === 404) {
+      msg +=
+        " — Recurso não encontrado. Verifique o nome do repositório e, se for fine-grained token, confirme que ele tem acesso a este repositório específico.";
+    } else if (res.status === 422) {
+      msg += " — Dados inválidos (talvez o repositório já exista com outro dono).";
+    }
     throw new Error(msg);
   }
   if (res.status === 204) return undefined as T;
@@ -94,6 +107,7 @@ export async function pushProjectToGithub(
 
   progress(`Conectado como @${me.login}. Localizando repositório...`);
   let repo: GhRepo;
+  let repoJustCreated = false;
   try {
     repo = await gh<GhRepo>(token, `/repos/${me.login}/${repoName}`);
   } catch {
@@ -107,8 +121,22 @@ export async function pushProjectToGithub(
         description: `Site de delivery gerado pela plataforma — ${data.restaurant.name}`,
       }),
     });
+    repoJustCreated = true;
     // Pequena espera para o GitHub provisionar o branch inicial
     await new Promise((r) => setTimeout(r, 1200));
+  }
+
+  // Valida permissões de escrita antes de gastar tempo gerando o ZIP.
+  // Repositório recém-criado pelo próprio token implicitamente tem permissão.
+  if (!repoJustCreated) {
+    const perm = (repo as unknown as { permissions?: { push?: boolean; admin?: boolean } }).permissions;
+    if (perm && perm.push === false) {
+      throw new Error(
+        `O token não tem permissão de escrita (push) no repositório "${repo.full_name}". ` +
+          `Se for um token fine-grained: edite-o em github.com/settings/tokens, selecione este repositório em "Repository access" e marque "Contents: Read and write". ` +
+          `Alternativa mais simples: use um token clássico (github.com/settings/tokens/new) marcando o escopo "repo".`,
+      );
+    }
   }
 
   const branch = repo.default_branch || "main";
