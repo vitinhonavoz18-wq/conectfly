@@ -73,6 +73,59 @@ export const DEFAULT_MENU: DefaultCategory[] = [
   },
 ];
 
+/** Bairros padrão de Salvador (baseado no arquivo de taxas fornecido). */
+export const DEFAULT_DELIVERY_ZONES: { neighborhood: string; fee: number }[] = [
+  { neighborhood: "ACUPE DE BROTAS", fee: 26 }, { neighborhood: "ALPHAVILLE I", fee: 14 },
+  { neighborhood: "ALPHAVILLE II", fee: 16 }, { neighborhood: "AMARALINA", fee: 20 },
+  { neighborhood: "ARMAÇÃO", fee: 15 }, { neighborhood: "BARBALHO", fee: 32 },
+  { neighborhood: "BARRA", fee: 36 }, { neighborhood: "BARREIRAS", fee: 20 },
+  { neighborhood: "BARRIS", fee: 35 }, { neighborhood: "BOCA DO RIO", fee: 16 },
+  { neighborhood: "BROTAS", fee: 26 }, { neighborhood: "BURAQUINHO", fee: 36 },
+  { neighborhood: "CABULA", fee: 20 }, { neighborhood: "CABULA VI", fee: 20 },
+  { neighborhood: "CAJAZEIRAS", fee: 18 }, { neighborhood: "CAJAZEIRAS 2", fee: 18 },
+  { neighborhood: "CAMINHO DAS ÁRVORES", fee: 19 }, { neighborhood: "CAMPO GRANDE", fee: 55 },
+  { neighborhood: "CANABRAVA", fee: 16 }, { neighborhood: "CANDEAL", fee: 20 },
+  { neighborhood: "CANELA", fee: 36 }, { neighborhood: "COSTA AZUL", fee: 16 },
+  { neighborhood: "DANIEL LISBOA", fee: 25 }, { neighborhood: "DORON", fee: 16 },
+  { neighborhood: "FEDERAÇÃO", fee: 29 }, { neighborhood: "GRAÇA", fee: 35 },
+  { neighborhood: "HORTO BELA VISTA", fee: 20 }, { neighborhood: "HORTO FLORESTAL", fee: 24 },
+  { neighborhood: "IMBUÍ", fee: 15 }, { neighborhood: "ITAIGARA", fee: 19 },
+  { neighborhood: "ITAPUÃ", fee: 15 }, { neighborhood: "JAGUARIBE", fee: 8 },
+  { neighborhood: "JARDIM DAS MARGARIDAS", fee: 25 }, { neighborhood: "JARDIM NOVA ESPERANÇA", fee: 17 },
+  { neighborhood: "JARDIM PLACAFORD", fee: 10 }, { neighborhood: "LAURO DE FREITAS", fee: 33 },
+  { neighborhood: "MATA ESCURA", fee: 20 }, { neighborhood: "MUSSURUNGA I", fee: 18 },
+  { neighborhood: "MUSSURUNGA II", fee: 18 }, { neighborhood: "NAZARÉ", fee: 32 },
+  { neighborhood: "NOVA BRASÍLIA", fee: 18 }, { neighborhood: "NOVA BRASÍLIA DE ITAPUÃ", fee: 15 },
+  { neighborhood: "NOVO MAROTINHO", fee: 17 }, { neighborhood: "ONDINA", fee: 26 },
+  { neighborhood: "PARALELA", fee: 14 }, { neighborhood: "PATAMARES", fee: 10 },
+  { neighborhood: "PERNAMBUÉS", fee: 20 }, { neighborhood: "PIATÃ", fee: 10 },
+  { neighborhood: "PITUAÇU", fee: 10 }, { neighborhood: "PITUBA", fee: 19 },
+  { neighborhood: "PRAIA DO FLAMENGO", fee: 20 }, { neighborhood: "RESGATE", fee: 20 },
+  { neighborhood: "RIO VERMELHO", fee: 26 }, { neighborhood: "SABOEIRO", fee: 16 },
+  { neighborhood: "SANTA CRUZ", fee: 18 }, { neighborhood: "SANTA TERESA", fee: 18.9 },
+  { neighborhood: "STELLA MARIS", fee: 18 }, { neighborhood: "STIEP", fee: 15 },
+  { neighborhood: "SUSSUARANA", fee: 16 }, { neighborhood: "SÃO CRISTÓVÃO", fee: 16 },
+  { neighborhood: "SÃO MARCOS", fee: 13.9 }, { neighborhood: "TROBOGY", fee: 16 },
+  { neighborhood: "VILA LAURA", fee: 26 }, { neighborhood: "VILA PRAIANA", fee: 25 },
+  { neighborhood: "VILAS DO ATLÂNTICO", fee: 35 }, { neighborhood: "VITÓRIA", fee: 40 },
+];
+
+export async function seedDefaultDeliveryZones(restaurantId: string): Promise<void> {
+  const { data: existing } = await supabase
+    .from("delivery_zones")
+    .select("id")
+    .eq("restaurant_id", restaurantId)
+    .limit(1);
+  if (existing && existing.length > 0) return;
+  const rows = DEFAULT_DELIVERY_ZONES.map((z, i) => ({
+    restaurant_id: restaurantId,
+    neighborhood: z.neighborhood,
+    fee: z.fee,
+    sort_order: i,
+  }));
+  await supabase.from("delivery_zones").insert(rows);
+}
+
 /**
  * Semeia o cardápio padrão para um restaurante.
  * Não faz nada se o restaurante já tiver categorias (a menos que `force` seja true,
