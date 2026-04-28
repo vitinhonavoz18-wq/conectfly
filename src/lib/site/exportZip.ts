@@ -407,6 +407,19 @@ export const comboGroups: ComboGroup[] = ${json(
 `,
   );
 
+  zip.file(
+    "src/data/deliveryZones.ts",
+    `export interface DeliveryZone { id: string; neighborhood: string; fee: number }
+export const deliveryZones: DeliveryZone[] = ${json(
+      (data.deliveryZones ?? []).map((z) => ({
+        id: z.id,
+        neighborhood: z.neighborhood,
+        fee: Number(z.fee) || 0,
+      })),
+    )};
+`,
+  );
+
   // App + components
   zip.file("src/App.tsx", APP_TSX);
   zip.file("src/lib/format.ts", FORMAT_TS);
