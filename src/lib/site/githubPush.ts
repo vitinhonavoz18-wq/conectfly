@@ -107,6 +107,7 @@ export async function pushProjectToGithub(
 
   progress(`Conectado como @${me.login}. Localizando repositório...`);
   let repo: GhRepo;
+  let repoJustCreated = false;
   try {
     repo = await gh<GhRepo>(token, `/repos/${me.login}/${repoName}`);
   } catch {
@@ -120,8 +121,22 @@ export async function pushProjectToGithub(
         description: `Site de delivery gerado pela plataforma — ${data.restaurant.name}`,
       }),
     });
+    repoJustCreated = true;
     // Pequena espera para o GitHub provisionar o branch inicial
     await new Promise((r) => setTimeout(r, 1200));
+  }
+
+  // Valida permissões de escrita antes de gastar tempo gerando o ZIP.
+  // Repositório recém-criado pelo próprio token implicitamente tem permissão.
+  if (!repoJustCreated) {
+    const perm = (repo as unknown as { permissions?: { push?: boolean; admin?: boolean } }).permissions;
+    if (perm && perm.push === false) {
+      throw new Error(
+        `O token não tem permissão de escrita (push) no repositório "${repo.full_name}". ` +
+          `Se for um token fine-grained: edite-o em github.com/settings/tokens, selecione este repositório em "Repository access" e marque "Contents: Read and write". ` +
+          `Alternativa mais simples: use um token clássico (github.com/settings/tokens/new) marcando o escopo "repo".`,
+      );
+    }
   }
 
   const branch = repo.default_branch || "main";
