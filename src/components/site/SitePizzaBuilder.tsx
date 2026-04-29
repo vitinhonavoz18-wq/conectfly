@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, Plus, Sparkles, Info } from "lucide-react";
+import { Check, Plus, Sparkles, Info, ImageIcon } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -158,12 +158,24 @@ export function SitePizzaBuilder({ category }: Props) {
                   key={it.id}
                   onClick={() => toggleFlavor(it.id)}
                   disabled={!size || disabled}
-                  className={`relative text-left rounded-xl border p-3 transition flex items-start gap-3 ${
+                  className={`relative text-left rounded-xl border p-3 transition flex items-start gap-3 overflow-hidden ${
                     checked
                       ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary))]/10"
                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))]"
                   } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
                 >
+                  {it.image_url ? (
+                    <img
+                      src={it.image_url}
+                      alt={it.name}
+                      loading="lazy"
+                      className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[hsl(var(--site-border))]"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-[hsl(var(--site-border))] bg-black/20 flex items-center justify-center text-[hsl(var(--site-muted-fg))]">
+                      <ImageIcon className="h-6 w-6 opacity-40" />
+                    </div>
+                  )}
                   <div
                     className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center ${
                       checked

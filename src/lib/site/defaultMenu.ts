@@ -71,6 +71,24 @@ export const DEFAULT_MENU: DefaultCategory[] = [
     pizza_sizes: DEFAULT_PIZZA_SIZES,
     flavors: DEFAULT_PIZZA_FLAVORS,
   },
+  {
+    name: "BEBIDAS",
+    icon: "🥤",
+    is_pizza: false,
+    pizza_sizes: null,
+    flavors: [
+      { name: "Coca-Cola Lata 350ml", description: "Refrigerante gelado.", is_special: false, special_extra: 0 },
+      { name: "Coca-Cola 2L", description: "Refrigerante gelado.", is_special: false, special_extra: 0 },
+      { name: "Guaraná Antarctica Lata 350ml", description: "Refrigerante gelado.", is_special: false, special_extra: 0 },
+      { name: "Guaraná Antarctica 2L", description: "Refrigerante gelado.", is_special: false, special_extra: 0 },
+      { name: "Sprite Lata 350ml", description: "Refrigerante gelado.", is_special: false, special_extra: 0 },
+      { name: "Suco Del Valle 1L", description: "Sabores diversos.", is_special: false, special_extra: 0 },
+      { name: "Água Mineral 500ml", description: "Sem gás.", is_special: false, special_extra: 0 },
+      { name: "Água com Gás 500ml", description: "Com gás.", is_special: false, special_extra: 0 },
+      { name: "Cerveja Heineken Long Neck", description: "330ml gelada.", is_special: false, special_extra: 0 },
+      { name: "Cerveja Brahma Lata 350ml", description: "Gelada.", is_special: false, special_extra: 0 },
+    ],
+  },
 ];
 
 /** Bairros padrão de Salvador (baseado no arquivo de taxas fornecido). */
@@ -173,7 +191,7 @@ export async function seedDefaultMenu(
         category_id: catRow.id,
         name: f.name,
         description: f.description,
-        price: 0,
+        price: cat.is_pizza ? 0 : 0,
         is_special: f.is_special,
         special_extra: f.special_extra,
         sort_order: idx,

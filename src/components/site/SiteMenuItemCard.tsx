@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ImageIcon } from "lucide-react";
 import type { MenuItemRow, Size } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -23,7 +23,22 @@ export function SiteMenuItemCard({ item }: { item: MenuItemRow }) {
   };
 
   return (
-    <div className="rounded-xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-5 flex flex-col gap-3 hover:border-[hsl(var(--site-primary))] transition">
+    <div className="rounded-xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-3 hover:border-[hsl(var(--site-primary))] transition overflow-hidden shadow-lg group">
+      {item.image_url ? (
+        <div className="relative aspect-[4/3] overflow-hidden bg-black/30">
+          <img
+            src={item.image_url}
+            alt={item.name}
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        </div>
+      ) : (
+        <div className="relative aspect-[4/3] flex items-center justify-center bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))]">
+          <ImageIcon className="h-10 w-10 opacity-30" />
+        </div>
+      )}
+      <div className="p-5 pt-2 flex flex-col gap-3 flex-1">
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-bold text-lg leading-tight">{item.name}</h3>
         <span className="text-[hsl(var(--site-secondary))] font-bold whitespace-nowrap">
@@ -57,6 +72,7 @@ export function SiteMenuItemCard({ item }: { item: MenuItemRow }) {
       >
         <Plus className="h-4 w-4" /> Adicionar
       </button>
+      </div>
     </div>
   );
 }

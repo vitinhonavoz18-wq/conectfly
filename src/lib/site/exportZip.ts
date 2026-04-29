@@ -343,6 +343,7 @@ export interface MenuItem {
   sizes?: Size[];
   is_special?: boolean;
   special_extra?: number;
+  image_url?: string;
 }
 export interface MenuCategory {
   id: string;
@@ -370,6 +371,7 @@ export const menuCategories: MenuCategory[] = ${json(
           sizes: i.sizes ?? undefined,
           is_special: i.is_special || undefined,
           special_extra: i.special_extra || undefined,
+          image_url: i.image_url ?? undefined,
         })),
       })),
     )};
@@ -718,7 +720,7 @@ export function SectionScroll({ children, className = "" }: { children: ReactNod
 `;
 
 const MENU_CARD_TSX = `import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, ImageIcon } from "lucide-react";
 import type { MenuItem, Size } from "../data/menuData";
 import { formatBRL } from "../lib/format";
 import { useCart } from "../context/CartContext";
@@ -730,7 +732,17 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
   const price = sel ? sel.price : item.price;
   const consult = !sel && item.price === 0;
   return (
-    <div className="rounded-xl border border-site-border bg-site-card p-5 flex flex-col gap-3 hover:border-site-primary transition">
+    <div className="rounded-xl border border-site-border bg-site-card flex flex-col gap-3 hover:border-site-primary transition overflow-hidden shadow-lg group">
+      {item.image_url ? (
+        <div className="relative aspect-[4/3] overflow-hidden bg-black/30">
+          <img src={item.image_url} alt={item.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        </div>
+      ) : (
+        <div className="relative aspect-[4/3] flex items-center justify-center bg-site-card text-site-fg/40">
+          <ImageIcon className="h-10 w-10 opacity-40" />
+        </div>
+      )}
+      <div className="p-5 pt-2 flex flex-col gap-3 flex-1">
       <div className="flex items-start justify-between gap-3">
         <h3 className="font-bold text-lg leading-tight">{item.name}</h3>
         <span className="text-site-secondary font-bold whitespace-nowrap">{consult ? "Consultar" : formatBRL(price)}</span>
@@ -749,6 +761,7 @@ export function MenuItemCard({ item }: { item: MenuItem }) {
         className="mt-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-site-primary text-white font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
         <Plus className="h-4 w-4" /> Adicionar
       </button>
+      </div>
     </div>
   );
 }
@@ -892,6 +905,13 @@ function PizzaBuilder({ category }: { category: MenuCategory }) {
               const d = !c && flavorIds.length >= max;
               return (
                 <button key={it.id} onClick={() => toggle(it.id)} disabled={!size || d} className={\`text-left rounded-xl border p-3 transition flex items-start gap-3 \${c ? "border-site-primary bg-site-primary/10" : "border-site-border bg-site-card hover:border-site-primary"} \${d ? "opacity-40 cursor-not-allowed" : ""}\`}>
+                  {it.image_url ? (
+                    <img src={it.image_url} alt={it.name} loading="lazy" className="h-20 w-20 rounded-lg object-cover shrink-0 border border-site-border" />
+                  ) : (
+                    <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-site-border bg-black/20 flex items-center justify-center text-site-fg/40">
+                      <ImageIcon className="h-6 w-6 opacity-40" />
+                    </div>
+                  )}
                   <div className={\`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center \${c ? "bg-site-primary border-site-primary text-white" : "border-site-border"}\`}>
                     {c && <Check className="h-3 w-3" />}
                   </div>
