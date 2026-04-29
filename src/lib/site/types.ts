@@ -13,6 +13,7 @@ export interface MenuItemRow {
   sort_order: number;
   is_special: boolean;
   special_extra: number;
+  image_url?: string | null;
 }
 
 export interface MenuCategoryRow {
