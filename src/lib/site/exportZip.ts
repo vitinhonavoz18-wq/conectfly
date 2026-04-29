@@ -343,6 +343,7 @@ export interface MenuItem {
   sizes?: Size[];
   is_special?: boolean;
   special_extra?: number;
+  image_url?: string;
 }
 export interface MenuCategory {
   id: string;
@@ -370,6 +371,7 @@ export const menuCategories: MenuCategory[] = ${json(
           sizes: i.sizes ?? undefined,
           is_special: i.is_special || undefined,
           special_extra: i.special_extra || undefined,
+          image_url: i.image_url ?? undefined,
         })),
       })),
     )};
