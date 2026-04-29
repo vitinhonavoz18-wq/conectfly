@@ -99,6 +99,21 @@ export function MenuManager({ restaurantId }: Props) {
     reload();
   };
 
+  const handleItemImageUpload = async (itemId: string, file: File) => {
+    const ext = file.name.split(".").pop() ?? "jpg";
+    const path = `${restaurantId}/item-${itemId}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("logos").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    });
+    if (error) {
+      alert("Erro no upload: " + error.message);
+      return;
+    }
+    const { data: pub } = supabase.storage.from("logos").getPublicUrl(path);
+    await updateItem(itemId, { image_url: pub.publicUrl });
+  };
+
   const applyDefaultMenu = async () => {
     const hasContent = cats.length > 0 || items.length > 0;
     const msg = hasContent
@@ -232,6 +247,7 @@ export function MenuManager({ restaurantId }: Props) {
                     hidePrice={c.is_pizza}
                     onUpdate={(p) => updateItem(it.id, p)}
                     onRemove={() => removeItem(it.id)}
+                    onUploadImage={(f) => handleItemImageUpload(it.id, f)}
                   />
                 ))}
                 <button
