@@ -270,11 +270,13 @@ function ItemRow({
   hidePrice = false,
   onUpdate,
   onRemove,
+  onUploadImage,
 }: {
   item: MenuItemRow;
   hidePrice?: boolean;
   onUpdate: (p: Partial<MenuItemRow>) => void;
   onRemove: () => void;
+  onUploadImage: (file: File) => void;
 }) {
   const [name, setName] = useState(item.name);
   const [desc, setDesc] = useState(item.description ?? "");
@@ -312,6 +314,39 @@ function ItemRow({
 
   return (
     <div className="rounded-lg border border-border bg-background p-3 grid gap-2">
+      <div className="flex items-center gap-3">
+        <div className="relative shrink-0">
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.name}
+              className="h-16 w-16 object-cover rounded-lg border border-border bg-muted"
+            />
+          ) : (
+            <div className="h-16 w-16 rounded-lg border border-dashed border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
+              <ImageIcon className="h-5 w-5" />
+            </div>
+          )}
+          <label
+            title="Enviar foto do item"
+            className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow hover:opacity-90"
+          >
+            <Upload className="h-3 w-3" />
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onUploadImage(f);
+              }}
+            />
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Adicione uma foto profissional do {hidePrice ? "sabor" : "item"} para destacá-lo no cardápio.
+        </p>
+      </div>
       <div
         className={`grid grid-cols-1 ${
           hidePrice ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-[1fr_120px_auto]"
