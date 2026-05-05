@@ -17,9 +17,14 @@ import {
   Server,
   Unlock,
   UploadCloud,
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
+import {
+  FLYCONTROL_EDGE_FUNCTION_TS,
+  FLYCONTROL_SCHEMA_SQL,
+} from "@/lib/site/flycontrolEdgeFunction";
 
 export const Route = createFileRoute("/export/$id")({
   component: ExportPage,
@@ -95,6 +100,18 @@ function ExportPage() {
     } catch {
       /* ignore */
     }
+  };
+
+  const downloadText = (filename: string, content: string) => {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handleGithubPush = async () => {
@@ -254,6 +271,59 @@ function ExportPage() {
               hospedagem escolhida — sem nenhum vínculo com a plataforma.
             </p>
           </div>
+        </div>
+
+        {/* ================ FLYCONTROL section ================ */}
+        <div className="mt-6 rounded-2xl border border-border bg-gradient-card p-6 shadow-card">
+          <div className="flex items-center gap-2 mb-2">
+            <Zap className="h-5 w-5 text-primary" />
+            <h3 className="font-bold">Integração FLYCONTROL</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Esta pizzaria já está pronta para enviar pedidos em tempo real para o painel FLYCONTROL.
+            Configure a URL e a API Key na aba <strong>Informações</strong> do editor.
+            Cada site (preview e exportado) usa essa mesma configuração.
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-3 text-xs mb-4">
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <div className="text-muted-foreground mb-1">Status</div>
+              <div className="font-bold">
+                {r.flycontrol_enabled ? "🟢 Ativo" : "⚪ Desativado"}
+              </div>
+            </div>
+            <div className="rounded-lg border border-border bg-muted/30 p-3">
+              <div className="text-muted-foreground mb-1">API Key</div>
+              <div className="font-mono break-all">
+                {r.flycontrol_api_key
+                  ? r.flycontrol_api_key.slice(0, 12) + "…"
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          <p className="text-sm font-semibold mb-2">Templates para o projeto FLYCONTROL:</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() =>
+                downloadText("create-order.ts", FLYCONTROL_EDGE_FUNCTION_TS)
+              }
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm transition"
+            >
+              <Download className="h-4 w-4" /> Edge Function (Deno)
+            </button>
+            <button
+              onClick={() => downloadText("flycontrol-schema.sql", FLYCONTROL_SCHEMA_SQL)}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm transition"
+            >
+              <Download className="h-4 w-4" /> Schema SQL (pizzarias + orders)
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            No FLYCONTROL: rode o SQL, crie a função <code>create-order</code> com
+            o conteúdo baixado, cadastre esta pizzaria com a mesma API Key acima e
+            assine a tabela <code>orders</code> via Supabase Realtime.
+          </p>
         </div>
 
         {/* ================ GitHub section ================ */}

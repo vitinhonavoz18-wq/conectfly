@@ -2,7 +2,8 @@ import { useState } from "react";
 import { X, Minus, Plus, Trash2, MapPin } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
-import type { DeliveryZoneRow } from "@/lib/site/types";
+import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
+import { buildOrderPayload, sendOrderToFlycontrol } from "@/lib/site/flycontrol";
 
 interface Props {
   open: boolean;
@@ -10,22 +11,27 @@ interface Props {
   whatsappNumber: string;
   restaurantName: string;
   deliveryZones?: DeliveryZoneRow[];
+  restaurant?: RestaurantRow;
 }
 
-export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [] }: Props) {
+export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
   const { items, updateQty, removeLine, totalPrice, clear } = useCart();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [zoneId, setZoneId] = useState("");
   const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
   const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
   const deliveryFee = Number(selectedZone?.fee ?? 0);
   const grandTotal = totalPrice + deliveryFee;
   const hasZones = deliveryZones.length > 0;
 
-  const handleFinish = () => {
+  const flycontrolOn = !!restaurant?.flycontrol_enabled;
+  const whatsappOn = restaurant?.whatsapp_enabled !== false;
+
+  const handleFinish = async () => {
     setError("");
     if (items.length === 0) {
       setError("Seu carrinho está vazio");
@@ -39,9 +45,34 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setError("Selecione o bairro para calcular a taxa de entrega");
       return;
     }
-    if (!whatsappNumber) {
+    if (whatsappOn && !whatsappNumber && !flycontrolOn) {
       setError("Loja sem WhatsApp configurado");
       return;
+    }
+
+    if (flycontrolOn && restaurant) {
+      try {
+        setSending(true);
+        const payload = buildOrderPayload({
+          name,
+          phone,
+          address,
+          neighborhood: selectedZone?.neighborhood ?? null,
+          deliveryFee,
+          items,
+          subtotal: totalPrice,
+        });
+        await sendOrderToFlycontrol(restaurant, payload);
+      } catch (err) {
+        setSending(false);
+        setError(
+          "Não foi possível enviar o pedido para o painel. " +
+            (err instanceof Error ? err.message : ""),
+        );
+        return;
+      } finally {
+        setSending(false);
+      }
     }
 
     const lines = items.map((l) => {
@@ -73,8 +104,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       feeLine +
       `*Total: ${formatBRL(grandTotal)}*`;
 
-    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    if (whatsappOn && whatsappNumber) {
+      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
+    }
     clear();
     setName("");
     setPhone("");
@@ -232,12 +265,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           </div>
           <button
             onClick={handleFinish}
-            className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition"
+            disabled={sending}
+            className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition disabled:opacity-60"
           >
-            Finalizar pedido
+            {sending ? "Enviando..." : "Finalizar pedido"}
           </button>
           <p className="text-[10px] text-center text-[hsl(var(--site-muted-fg))]">
-            O pedido será enviado para o WhatsApp do {restaurantName}
+            {flycontrolOn && whatsappOn
+              ? `Pedido enviado para o painel e WhatsApp do ${restaurantName}`
+              : flycontrolOn
+                ? `Pedido enviado direto para o painel do ${restaurantName}`
+                : `O pedido será enviado para o WhatsApp do ${restaurantName}`}
           </p>
         </div>
       </aside>

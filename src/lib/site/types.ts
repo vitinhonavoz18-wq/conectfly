@@ -65,6 +65,10 @@ export interface RestaurantRow {
   published: boolean;
   created_at: string;
   updated_at: string;
+  flycontrol_enabled?: boolean;
+  flycontrol_api_url?: string | null;
+  flycontrol_api_key?: string | null;
+  whatsapp_enabled?: boolean;
 }
 
 export interface SiteData {

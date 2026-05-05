@@ -70,6 +70,7 @@ export function DeliverySite({ data }: { data: SiteData }) {
           whatsappNumber={r.whatsapp_number}
           restaurantName={r.name}
           deliveryZones={data.deliveryZones ?? []}
+          restaurant={r}
         />
       </CartProvider>
     </SiteThemeWrapper>

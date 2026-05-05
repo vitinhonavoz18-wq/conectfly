@@ -234,6 +234,9 @@ export type Database = {
           city: string | null
           created_at: string
           description: string | null
+          flycontrol_api_key: string | null
+          flycontrol_api_url: string | null
+          flycontrol_enabled: boolean
           hero_image_url: string | null
           hero_media_type: string
           hero_video_url: string | null
@@ -248,6 +251,7 @@ export type Database = {
           tagline: string | null
           updated_at: string
           whatsapp_display: string | null
+          whatsapp_enabled: boolean
           whatsapp_number: string
         }
         Insert: {
@@ -255,6 +259,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          flycontrol_api_key?: string | null
+          flycontrol_api_url?: string | null
+          flycontrol_enabled?: boolean
           hero_image_url?: string | null
           hero_media_type?: string
           hero_video_url?: string | null
@@ -269,6 +276,7 @@ export type Database = {
           tagline?: string | null
           updated_at?: string
           whatsapp_display?: string | null
+          whatsapp_enabled?: boolean
           whatsapp_number?: string
         }
         Update: {
@@ -276,6 +284,9 @@ export type Database = {
           city?: string | null
           created_at?: string
           description?: string | null
+          flycontrol_api_key?: string | null
+          flycontrol_api_url?: string | null
+          flycontrol_enabled?: boolean
           hero_image_url?: string | null
           hero_media_type?: string
           hero_video_url?: string | null
@@ -290,6 +301,7 @@ export type Database = {
           tagline?: string | null
           updated_at?: string
           whatsapp_display?: string | null
+          whatsapp_enabled?: boolean
           whatsapp_number?: string
         }
         Relationships: []

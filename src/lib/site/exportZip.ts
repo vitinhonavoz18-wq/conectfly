@@ -327,6 +327,10 @@ body {
       hero_image_url: r.hero_image_url,
       hero_media_type: r.hero_media_type,
       hero_video_url: r.hero_video_url,
+      flycontrol_enabled: !!r.flycontrol_enabled,
+      flycontrol_api_url: r.flycontrol_api_url ?? "",
+      flycontrol_api_key: r.flycontrol_api_key ?? "",
+      whatsapp_enabled: r.whatsapp_enabled !== false,
     })} as const;
 `,
   );
@@ -1021,6 +1025,33 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     if (items.length === 0) return setError("Seu carrinho está vazio");
     if (!name.trim() || !phone.trim() || !address.trim()) return setError("Preencha nome, telefone e endereço");
     if (hasZones && !selectedZone) return setError("Selecione o bairro para calcular a taxa de entrega");
+    const sendFly = async () => {
+      if (!restaurant.flycontrol_enabled || !restaurant.flycontrol_api_url || !restaurant.flycontrol_api_key) return;
+      const payload = {
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: address,
+        neighborhood: selectedZone ? selectedZone.neighborhood : null,
+        delivery_fee: deliveryFee,
+        items: items.map((l) => ({
+          name: l.name + (l.sizeLabel ? \` (\${l.sizeLabel})\` : ""),
+          quantity: l.quantity,
+          price: l.unitPrice,
+          notes: l.flavors && l.flavors.length > 0 ? \`Sabores: \${l.flavors.join(" + ")}\` : (l.description || undefined),
+        })),
+        total: totalPrice + deliveryFee,
+        payment_method: null,
+        change_for: null,
+        notes: "",
+        created_at: new Date().toISOString(),
+      };
+      const res = await fetch(restaurant.flycontrol_api_url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: \`Bearer \${restaurant.flycontrol_api_key}\` },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Falha ao enviar pedido para o painel.");
+    };
     const lines = items.map((l) => {
       const sz = l.sizeLabel ? \` (\${l.sizeLabel})\` : "";
       const flavorLine = l.flavors && l.flavors.length > 0
@@ -1035,8 +1066,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       ? \`*Subtotal:* \${formatBRL(totalPrice)}\\n*Taxa de entrega (\${selectedZone.neighborhood}):* \${formatBRL(deliveryFee)}\\n\`
       : "";
     const msg = \`Olá, gostaria de fazer um pedido!\\n\\n*Nome:* \${name}\\n*Telefone:* \${phone}\\n\${locationBlock}\\n*Pedido:*\\n\${lines.join("\\n")}\\n\\n\${feeLine}*Total: \${formatBRL(grandTotal)}*\`;
-    window.open(\`https://wa.me/\${restaurant.whatsapp_number}?text=\${encodeURIComponent(msg)}\`, "_blank");
-    clear(); setName(""); setPhone(""); setAddress(""); setZoneId(""); onClose();
+    sendFly().catch((e) => { setError(e.message || "Erro ao enviar pedido"); throw e; }).then(() => {
+      if (restaurant.whatsapp_enabled !== false && restaurant.whatsapp_number) {
+        window.open(\`https://wa.me/\${restaurant.whatsapp_number}?text=\${encodeURIComponent(msg)}\`, "_blank");
+      }
+      clear(); setName(""); setPhone(""); setAddress(""); setZoneId(""); onClose();
+    }).catch(() => {});
   };
 
   return (
