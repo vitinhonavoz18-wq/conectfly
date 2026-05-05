@@ -327,6 +327,10 @@ body {
       hero_image_url: r.hero_image_url,
       hero_media_type: r.hero_media_type,
       hero_video_url: r.hero_video_url,
+      flycontrol_enabled: !!r.flycontrol_enabled,
+      flycontrol_api_url: r.flycontrol_api_url ?? "",
+      flycontrol_api_key: r.flycontrol_api_key ?? "",
+      whatsapp_enabled: r.whatsapp_enabled !== false,
     })} as const;
 `,
   );
