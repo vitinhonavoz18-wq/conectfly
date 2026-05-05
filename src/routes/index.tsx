@@ -15,6 +15,7 @@ import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/site/format";
 import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
+import { generateApiKey } from "@/lib/site/flycontrol";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -64,7 +65,7 @@ function Dashboard() {
 
     const { data, error: insErr } = await supabase
       .from("restaurants")
-      .insert({ name: trimmed, slug })
+      .insert({ name: trimmed, slug, flycontrol_api_key: generateApiKey() })
       .select()
       .single();
     if (insErr || !data) {
