@@ -17,9 +17,14 @@ import {
   Server,
   Unlock,
   UploadCloud,
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
+import {
+  FLYCONTROL_EDGE_FUNCTION_TS,
+  FLYCONTROL_SCHEMA_SQL,
+} from "@/lib/site/flycontrolEdgeFunction";
 
 export const Route = createFileRoute("/export/$id")({
   component: ExportPage,
@@ -95,6 +100,18 @@ function ExportPage() {
     } catch {
       /* ignore */
     }
+  };
+
+  const downloadText = (filename: string, content: string) => {
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   };
 
   const handleGithubPush = async () => {
