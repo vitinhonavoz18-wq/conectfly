@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Image as ImageIcon, Save, Upload, Video as VideoIcon } from "lucide-react";
+import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify } from "@/lib/site/format";
+import { generateApiKey } from "@/lib/site/flycontrol";
 
 interface Props {
   restaurant: RestaurantRow;
@@ -90,6 +91,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
         hero_video_url: r.hero_video_url,
         primary_color: r.primary_color,
         secondary_color: r.secondary_color,
+        flycontrol_enabled: r.flycontrol_enabled ?? false,
+        flycontrol_api_url: r.flycontrol_api_url ?? null,
+        flycontrol_api_key: r.flycontrol_api_key ?? null,
+        whatsapp_enabled: r.whatsapp_enabled ?? true,
       })
       .eq("id", r.id);
     setSaving(false);
@@ -100,6 +105,11 @@ export function InfoForm({ restaurant, onChange }: Props) {
     setMsg("Informações salvas!");
     onChange({ ...r, slug });
     setTimeout(() => setMsg(""), 2500);
+  };
+
+  const regenerateKey = () => set("flycontrol_api_key", generateApiKey());
+  const copyKey = () => {
+    if (r.flycontrol_api_key) navigator.clipboard.writeText(r.flycontrol_api_key);
   };
 
   return (
@@ -327,6 +337,78 @@ export function InfoForm({ restaurant, onChange }: Props) {
           <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar informações"}
         </button>
         {msg && <span className="text-sm text-muted-foreground">{msg}</span>}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card/40 p-5 space-y-4">
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-primary" />
+          <h3 className="font-bold">Integração FLYCONTROL</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Envia cada pedido em tempo real para o painel FLYCONTROL desta pizzaria.
+        </p>
+
+        <label className="flex items-center gap-3 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={!!r.flycontrol_enabled}
+            onChange={(e) => set("flycontrol_enabled", e.target.checked)}
+            className="h-4 w-4"
+          />
+          <span className="font-semibold">Ativar envio para FLYCONTROL</span>
+        </label>
+
+        <label className="flex items-center gap-3 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={r.whatsapp_enabled !== false}
+            onChange={(e) => set("whatsapp_enabled", e.target.checked)}
+            className="h-4 w-4"
+          />
+          <span>Continuar abrindo WhatsApp ao finalizar pedido</span>
+        </label>
+
+        <Field
+          label="URL da API (Edge Function FLYCONTROL)"
+          hint="Ex: https://SEU-PROJETO.supabase.co/functions/v1/create-order"
+        >
+          <input
+            value={r.flycontrol_api_url ?? ""}
+            onChange={(e) => set("flycontrol_api_url", e.target.value)}
+            placeholder="https://....supabase.co/functions/v1/create-order"
+            className="input"
+          />
+        </Field>
+
+        <Field label="API Key da pizzaria" hint="Cole esta chave no cadastro da pizzaria dentro do FLYCONTROL.">
+          <div className="flex gap-2">
+            <input
+              value={r.flycontrol_api_key ?? ""}
+              onChange={(e) => set("flycontrol_api_key", e.target.value)}
+              placeholder="fc_..."
+              className="input flex-1 font-mono text-xs"
+            />
+            <button
+              type="button"
+              onClick={copyKey}
+              className="px-3 rounded-lg bg-secondary hover:bg-muted transition"
+              title="Copiar"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={regenerateKey}
+              className="px-3 rounded-lg bg-secondary hover:bg-muted transition"
+              title="Gerar nova chave"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
+          </div>
+        </Field>
+        <p className="text-xs text-muted-foreground">
+          ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
+        </p>
       </div>
     </div>
   );
