@@ -50,6 +50,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
+    // Envia para FLYCONTROL ANTES do WhatsApp; falhas NÃO quebram o fluxo
     if (flycontrolOn && restaurant) {
       try {
         setSending(true);
@@ -64,12 +65,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         });
         await sendOrderToFlycontrol(restaurant, payload);
       } catch (err) {
-        setSending(false);
-        setError(
-          "Não foi possível enviar o pedido para o painel. " +
-            (err instanceof Error ? err.message : ""),
-        );
-        return;
+        console.error("[FLYCONTROL] envio falhou:", err);
       } finally {
         setSending(false);
       }
