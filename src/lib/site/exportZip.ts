@@ -330,6 +330,8 @@ body {
       flycontrol_enabled: !!r.flycontrol_enabled,
       flycontrol_api_url: r.flycontrol_api_url ?? "",
       flycontrol_api_key: r.flycontrol_api_key ?? "",
+      flycontrol_base_url: r.flycontrol_base_url ?? "",
+      flycontrol_tenant_id: r.flycontrol_tenant_id ?? "",
       whatsapp_enabled: r.whatsapp_enabled !== false,
     })} as const;
 `,
