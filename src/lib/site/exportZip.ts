@@ -330,6 +330,8 @@ body {
       flycontrol_enabled: !!r.flycontrol_enabled,
       flycontrol_api_url: r.flycontrol_api_url ?? "",
       flycontrol_api_key: r.flycontrol_api_key ?? "",
+      flycontrol_base_url: r.flycontrol_base_url ?? "",
+      flycontrol_tenant_id: r.flycontrol_tenant_id ?? "",
       whatsapp_enabled: r.whatsapp_enabled !== false,
     })} as const;
 `,
@@ -1026,12 +1028,13 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     if (!name.trim() || !phone.trim() || !address.trim()) return setError("Preencha nome, telefone e endereço");
     if (hasZones && !selectedZone) return setError("Selecione o bairro para calcular a taxa de entrega");
     const sendFly = async () => {
-      if (!restaurant.flycontrol_enabled || !restaurant.flycontrol_api_url || !restaurant.flycontrol_api_key) return;
+      const base = (restaurant.flycontrol_base_url || "").replace(/\\/+$/, "");
+      const url = base ? base + "/api/orders" : restaurant.flycontrol_api_url;
+      if (!restaurant.flycontrol_enabled || !url || !restaurant.flycontrol_api_key) return;
       const payload = {
-        customer_name: name,
-        customer_phone: phone,
-        customer_address: address,
-        neighborhood: selectedZone ? selectedZone.neighborhood : null,
+        order_id: (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : "ord_" + Date.now(),
+        customer: { name, phone },
+        address: { street: address, number: "", neighborhood: selectedZone ? selectedZone.neighborhood : "" },
         delivery_fee: deliveryFee,
         items: items.map((l) => ({
           name: l.name + (l.sizeLabel ? \` (\${l.sizeLabel})\` : ""),
@@ -1045,9 +1048,9 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         notes: "",
         created_at: new Date().toISOString(),
       };
-      const res = await fetch(restaurant.flycontrol_api_url, {
+      const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: \`Bearer \${restaurant.flycontrol_api_key}\` },
+        headers: { "Content-Type": "application/json", "x-api-key": restaurant.flycontrol_api_key, Authorization: \`Bearer \${restaurant.flycontrol_api_key}\` },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Falha ao enviar pedido para o painel.");
@@ -1066,12 +1069,13 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       ? \`*Subtotal:* \${formatBRL(totalPrice)}\\n*Taxa de entrega (\${selectedZone.neighborhood}):* \${formatBRL(deliveryFee)}\\n\`
       : "";
     const msg = \`Olá, gostaria de fazer um pedido!\\n\\n*Nome:* \${name}\\n*Telefone:* \${phone}\\n\${locationBlock}\\n*Pedido:*\\n\${lines.join("\\n")}\\n\\n\${feeLine}*Total: \${formatBRL(grandTotal)}*\`;
-    sendFly().catch((e) => { setError(e.message || "Erro ao enviar pedido"); throw e; }).then(() => {
+    // Envia para FLYCONTROL antes do WhatsApp; falhas NÃO bloqueiam o fluxo
+    sendFly().catch((e) => { console.error("[FLYCONTROL]", e); }).finally(() => {
       if (restaurant.whatsapp_enabled !== false && restaurant.whatsapp_number) {
         window.open(\`https://wa.me/\${restaurant.whatsapp_number}?text=\${encodeURIComponent(msg)}\`, "_blank");
       }
       clear(); setName(""); setPhone(""); setAddress(""); setZoneId(""); onClose();
-    }).catch(() => {});
+    });
   };
 
   return (

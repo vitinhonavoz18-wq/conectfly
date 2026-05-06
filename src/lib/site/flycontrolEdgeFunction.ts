@@ -1,8 +1,8 @@
 /**
- * Conteúdo pronto da Edge Function `create-order` para colar no projeto FLYCONTROL.
+ * Edge Function `create-order` (FLYCONTROL).
  * Cole em: supabase/functions/create-order/index.ts
- * Lembre de configurar `verify_jwt = false` no supabase/config.toml para essa função
- * (ela é chamada por sites públicos com Bearer = api_key da pizzaria).
+ * Configure `verify_jwt = false` em supabase/config.toml para esta função.
+ * Aceita header `x-api-key` (preferido) ou `Authorization: Bearer <key>`.
  */
 export const FLYCONTROL_EDGE_FUNCTION_TS = `// supabase/functions/create-order/index.ts
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
@@ -10,7 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -25,16 +25,18 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  const headerKey = req.headers.get("x-api-key") ?? "";
   const auth = req.headers.get("Authorization") ?? "";
-  const apiKey = auth.replace(/^Bearer\\s+/i, "").trim();
+  const apiKey = (headerKey || auth.replace(/^Bearer\\s+/i, "")).trim();
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "API Key ausente" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
   const { data: pizzaria, error: pErr } = await supabase
-    .from("pizzarias")
+    .from("pizzerias")
     .select("id")
     .eq("api_key", apiKey)
+    .eq("status", "active")
     .maybeSingle();
 
   if (pErr || !pizzaria) {
@@ -46,13 +48,24 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "JSON inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
+  const customerName = body?.customer?.name ?? body?.customer_name ?? "";
+  const customerPhone = body?.customer?.phone ?? body?.customer_phone ?? "";
+  const addr = body?.address ?? {};
+  const customerAddress = typeof addr === "string"
+    ? addr
+    : [addr.street, addr.number].filter(Boolean).join(", ");
+  const neighborhood = (typeof addr === "object" ? addr.neighborhood : null) ?? body?.neighborhood ?? null;
+
   const { error } = await supabase.from("orders").insert({
-    pizzaria_id: pizzaria.id,
-    customer_name: body.customer_name,
-    customer_phone: body.customer_phone,
-    customer_address: body.customer_address,
-    items: body.items,
-    total: body.total,
+    tenant_id: pizzaria.id,
+    order_id: body.order_id ?? null,
+    customer_name: customerName,
+    customer_phone: customerPhone,
+    customer_address: customerAddress,
+    neighborhood,
+    items: body.items ?? [],
+    total: Number(body.total ?? 0),
+    delivery_fee: Number(body.delivery_fee ?? 0),
     payment_method: body.payment_method ?? null,
     change_for: body.change_for ?? null,
     notes: body.notes ?? "",
@@ -67,24 +80,106 @@ serve(async (req) => {
 });
 `;
 
+/**
+ * Edge Function `create-pizzeria` — auto-cadastro de pizzaria.
+ * Cole em: supabase/functions/create-pizzeria/index.ts
+ * Configure `verify_jwt = false` em supabase/config.toml.
+ * Recebe { name, phone, address, slug } e retorna { tenant_id, api_key }.
+ */
+export const FLYCONTROL_CREATE_PIZZERIA_TS = `// supabase/functions/create-pizzeria/index.ts
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function generateApiKey(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return "fc_" + Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Método não permitido" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  let body: any;
+  try { body = await req.json(); } catch {
+    return new Response(JSON.stringify({ error: "JSON inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+  const name = String(body?.name ?? "").trim();
+  const slug = String(body?.slug ?? "").trim();
+  const phone = String(body?.phone ?? "").trim();
+  const address = String(body?.address ?? "").trim();
+  if (!name || !slug) {
+    return new Response(JSON.stringify({ error: "name e slug obrigatórios" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // Idempotência por slug: se já existe, devolve as mesmas credenciais
+  const { data: existing } = await supabase
+    .from("pizzerias")
+    .select("id, api_key")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (existing) {
+    return new Response(JSON.stringify({ tenant_id: existing.id, api_key: existing.api_key }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const api_key = generateApiKey();
+  const { data, error } = await supabase
+    .from("pizzerias")
+    .insert({ name, slug, phone, address, api_key, status: "active" })
+    .select("id, api_key")
+    .single();
+
+  if (error || !data) {
+    return new Response(JSON.stringify({ error: error?.message ?? "Falha ao criar" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  return new Response(JSON.stringify({ tenant_id: data.id, api_key: data.api_key }), {
+    status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+});
+`;
+
 export const FLYCONTROL_SCHEMA_SQL = `-- Cole no SQL Editor da Supabase do FLYCONTROL
 create extension if not exists pgcrypto;
 
-create table if not exists public.pizzarias (
+create table if not exists public.pizzerias (
   id uuid primary key default gen_random_uuid(),
-  nome text not null,
+  name text not null,
+  slug text not null unique,
+  phone text,
+  address text,
   api_key text not null unique,
+  status text not null default 'active',
   created_at timestamptz not null default now()
 );
 
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
-  pizzaria_id uuid not null references public.pizzarias(id) on delete cascade,
+  tenant_id uuid not null references public.pizzerias(id) on delete cascade,
+  order_id text,
   customer_name text not null,
   customer_phone text not null,
   customer_address text not null,
+  neighborhood text,
   items jsonb not null default '[]'::jsonb,
   total numeric not null default 0,
+  delivery_fee numeric not null default 0,
   payment_method text,
   change_for numeric,
   notes text default '',
@@ -92,13 +187,19 @@ create table if not exists public.orders (
   created_at timestamptz not null default now()
 );
 
+create index if not exists orders_tenant_created_idx on public.orders(tenant_id, created_at desc);
+
 alter publication supabase_realtime add table public.orders;
 
 alter table public.orders enable row level security;
-alter table public.pizzarias enable row level security;
+alter table public.pizzerias enable row level security;
 
--- Painel autenticado lê apenas pedidos da sua pizzaria (ajuste conforme seu modelo de auth/admin)
+-- Service role (Edge Functions) bypassa RLS automaticamente.
+-- Ajuste estas policies conforme o modelo de auth do seu painel:
 create policy if not exists "orders read for authenticated"
   on public.orders for select
+  to authenticated using (true);
+create policy if not exists "pizzerias read for authenticated"
+  on public.pizzerias for select
   to authenticated using (true);
 `;

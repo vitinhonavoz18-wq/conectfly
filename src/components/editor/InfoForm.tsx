@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy } from "lucide-react";
+import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify } from "@/lib/site/format";
-import { generateApiKey } from "@/lib/site/flycontrol";
+import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
 
 interface Props {
   restaurant: RestaurantRow;
@@ -14,6 +14,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [r, setR] = useState(restaurant);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const [regMsg, setRegMsg] = useState("");
 
   const set = <K extends keyof RestaurantRow>(k: K, v: RestaurantRow[K]) =>
     setR((p) => ({ ...p, [k]: v }));
@@ -94,6 +96,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
         flycontrol_enabled: r.flycontrol_enabled ?? false,
         flycontrol_api_url: r.flycontrol_api_url ?? null,
         flycontrol_api_key: r.flycontrol_api_key ?? null,
+        flycontrol_base_url: r.flycontrol_base_url ?? null,
+        flycontrol_tenant_id: r.flycontrol_tenant_id ?? null,
         whatsapp_enabled: r.whatsapp_enabled ?? true,
       })
       .eq("id", r.id);
@@ -110,6 +114,44 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const regenerateKey = () => set("flycontrol_api_key", generateApiKey());
   const copyKey = () => {
     if (r.flycontrol_api_key) navigator.clipboard.writeText(r.flycontrol_api_key);
+  };
+
+  const handleAutoRegister = async () => {
+    setRegMsg("");
+    const baseUrl = (r.flycontrol_base_url ?? "").trim();
+    if (!baseUrl) {
+      setRegMsg("Informe a URL base do FLYCONTROL primeiro.");
+      return;
+    }
+    setRegistering(true);
+    try {
+      const out = await registerPizzeriaInFlycontrol(baseUrl, {
+        name: r.name,
+        phone: r.whatsapp_number ?? "",
+        address: r.address ?? "",
+        slug: r.slug || slugify(r.name),
+      });
+      const updates: Partial<RestaurantRow> = {
+        flycontrol_tenant_id: out.tenant_id,
+        flycontrol_api_key: out.api_key,
+        flycontrol_enabled: true,
+        flycontrol_api_url: baseUrl.replace(/\/+$/, "") + "/api/orders",
+      };
+      const next = { ...r, ...updates } as RestaurantRow;
+      setR(next);
+      // Persist immediately so the credentials don't get lost on page refresh
+      const { error } = await supabase
+        .from("restaurants")
+        .update(updates)
+        .eq("id", r.id);
+      if (error) throw error;
+      onChange(next);
+      setRegMsg("Pizzaria registrada no FLYCONTROL com sucesso!");
+    } catch (err) {
+      setRegMsg("Falha: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setRegistering(false);
+    }
   };
 
   return (
@@ -369,8 +411,38 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </label>
 
         <Field
-          label="URL da API (Edge Function FLYCONTROL)"
-          hint="Ex: https://SEU-PROJETO.supabase.co/functions/v1/create-order"
+          label="URL base do FLYCONTROL"
+          hint="Ex: https://SEU-PROJETO.supabase.co/functions/v1 — endpoints /api/pizzerias/create e /api/orders são derivados a partir dela."
+        >
+          <input
+            value={r.flycontrol_base_url ?? ""}
+            onChange={(e) => set("flycontrol_base_url", e.target.value)}
+            placeholder="https://....supabase.co/functions/v1"
+            className="input"
+          />
+        </Field>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleAutoRegister}
+            disabled={registering}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-50"
+          >
+            <Wand2 className="h-4 w-4" />
+            {registering ? "Registrando..." : "Registrar pizzaria no FLYCONTROL"}
+          </button>
+          {r.flycontrol_tenant_id && (
+            <span className="text-xs text-muted-foreground">
+              Tenant: <span className="font-mono">{r.flycontrol_tenant_id}</span>
+            </span>
+          )}
+          {regMsg && <span className="text-xs">{regMsg}</span>}
+        </div>
+
+        <Field
+          label="URL final de envio de pedidos (opcional)"
+          hint="Preenchida automaticamente após o registro. Sobrescreve a base se preenchida."
         >
           <input
             value={r.flycontrol_api_url ?? ""}
