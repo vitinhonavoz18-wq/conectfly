@@ -68,6 +68,8 @@ export interface RestaurantRow {
   flycontrol_enabled?: boolean;
   flycontrol_api_url?: string | null;
   flycontrol_api_key?: string | null;
+  flycontrol_base_url?: string | null;
+  flycontrol_tenant_id?: string | null;
   whatsapp_enabled?: boolean;
 }
 
