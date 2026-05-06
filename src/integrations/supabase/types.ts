@@ -236,7 +236,9 @@ export type Database = {
           description: string | null
           flycontrol_api_key: string | null
           flycontrol_api_url: string | null
+          flycontrol_base_url: string | null
           flycontrol_enabled: boolean
+          flycontrol_tenant_id: string | null
           hero_image_url: string | null
           hero_media_type: string
           hero_video_url: string | null
@@ -261,7 +263,9 @@ export type Database = {
           description?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
+          flycontrol_base_url?: string | null
           flycontrol_enabled?: boolean
+          flycontrol_tenant_id?: string | null
           hero_image_url?: string | null
           hero_media_type?: string
           hero_video_url?: string | null
@@ -286,7 +290,9 @@ export type Database = {
           description?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
+          flycontrol_base_url?: string | null
           flycontrol_enabled?: boolean
+          flycontrol_tenant_id?: string | null
           hero_image_url?: string | null
           hero_media_type?: string
           hero_video_url?: string | null
