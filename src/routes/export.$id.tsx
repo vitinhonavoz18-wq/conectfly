@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import {
   FLYCONTROL_EDGE_FUNCTION_TS,
+  FLYCONTROL_CREATE_PIZZERIA_TS,
   FLYCONTROL_SCHEMA_SQL,
 } from "@/lib/site/flycontrolEdgeFunction";
 
@@ -313,16 +314,26 @@ function ExportPage() {
               <Download className="h-4 w-4" /> Edge Function (Deno)
             </button>
             <button
+              onClick={() =>
+                downloadText("create-pizzeria.ts", FLYCONTROL_CREATE_PIZZERIA_TS)
+              }
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm transition"
+            >
+              <Download className="h-4 w-4" /> Edge Function — create-pizzeria
+            </button>
+            <button
               onClick={() => downloadText("flycontrol-schema.sql", FLYCONTROL_SCHEMA_SQL)}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm transition"
             >
-              <Download className="h-4 w-4" /> Schema SQL (pizzarias + orders)
+              <Download className="h-4 w-4" /> Schema SQL (pizzerias + orders)
             </button>
           </div>
           <p className="text-xs text-muted-foreground mt-3">
-            No FLYCONTROL: rode o SQL, crie a função <code>create-order</code> com
-            o conteúdo baixado, cadastre esta pizzaria com a mesma API Key acima e
-            assine a tabela <code>orders</code> via Supabase Realtime.
+            No FLYCONTROL: rode o SQL, crie as funções <code>create-pizzeria</code>{" "}
+            e <code>create-order</code> com os arquivos baixados, e assine{" "}
+            <code>orders</code> filtrando por <code>tenant_id</code> via Supabase
+            Realtime. Depois, no editor desta pizzaria, informe a URL base do
+            FLYCONTROL e clique em <em>Registrar pizzaria no FLYCONTROL</em>.
           </p>
         </div>
 
