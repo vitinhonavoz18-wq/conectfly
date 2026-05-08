@@ -174,13 +174,4 @@ export async function registerPizzeriaInFlycontrol(
      }
    }
    throw lastErr || new Error("Falha ao registrar");
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
-  }
-  const data = (await res.json()) as Partial<FlycontrolRegisterResponse>;
-  if (!data.tenant_id || !data.api_key) {
-    throw new Error("Resposta inválida do FLYCONTROL (faltando tenant_id/api_key).");
-  }
-  return { tenant_id: data.tenant_id, api_key: data.api_key };
-}
+ }
