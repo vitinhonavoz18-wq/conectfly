@@ -111,12 +111,21 @@ export function InfoForm({ restaurant, onChange }: Props) {
     setTimeout(() => setMsg(""), 2500);
   };
 
-  const regenerateKey = () => set("flycontrol_api_key", generateApiKey());
-  const copyKey = () => {
-    if (r.flycontrol_api_key) navigator.clipboard.writeText(r.flycontrol_api_key);
-  };
+   const regenerateKey = () => {
+     if (confirm("Isso invalidará a chave atual no FLYCONTROL. Deseja continuar?")) {
+       set("flycontrol_api_key", generateApiKey());
+     }
+   };
 
-  const handleAutoRegister = async () => {
+   const copyKey = () => {
+     if (r.flycontrol_api_key) {
+       navigator.clipboard.writeText(r.flycontrol_api_key);
+       setMsg("Chave copiada!");
+       setTimeout(() => setMsg(""), 2000);
+     }
+   };
+
+   const handleAutoRegister = async () => {
     setRegMsg("");
     const baseUrl = (r.flycontrol_base_url ?? "").trim();
     if (!baseUrl) {
@@ -410,74 +419,82 @@ export function InfoForm({ restaurant, onChange }: Props) {
           <span>Continuar abrindo WhatsApp ao finalizar pedido</span>
         </label>
 
-        <Field
-          label="URL base do FLYCONTROL"
-          hint="Ex: https://SEU-PROJETO.supabase.co/functions/v1 — endpoints /api/pizzerias/create e /api/orders são derivados a partir dela."
-        >
-          <input
-            value={r.flycontrol_base_url ?? ""}
-            onChange={(e) => set("flycontrol_base_url", e.target.value)}
-            placeholder="https://....supabase.co/functions/v1"
-            className="input"
-          />
-        </Field>
+         <div className="space-y-4 pt-2">
+           <Field
+             label="URL do Painel FLYCONTROL"
+             hint="Copie a URL do seu painel aberto (ex: https://flycontrol-xxxx.lovable.app)"
+           >
+             <input
+               value={r.flycontrol_base_url ?? ""}
+               onChange={(e) => set("flycontrol_base_url", e.target.value)}
+               placeholder="https://sua-url-do-flycontrol.lovable.app"
+               className="input"
+             />
+           </Field>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleAutoRegister}
-            disabled={registering}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:opacity-90 transition disabled:opacity-50"
-          >
-            <Wand2 className="h-4 w-4" />
-            {registering ? "Registrando..." : "Registrar pizzaria no FLYCONTROL"}
-          </button>
-          {r.flycontrol_tenant_id && (
-            <span className="text-xs text-muted-foreground">
-              Tenant: <span className="font-mono">{r.flycontrol_tenant_id}</span>
-            </span>
-          )}
-          {regMsg && <span className="text-xs">{regMsg}</span>}
-        </div>
+           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-3">
+             <div className="flex items-center justify-between">
+               <span className="text-sm font-semibold">Identificação da Pizzaria</span>
+               {r.flycontrol_tenant_id && (
+                 <span className="text-[10px] font-mono bg-secondary px-1.5 py-0.5 rounded uppercase">
+                   ID: {r.flycontrol_tenant_id}
+                 </span>
+               )}
+             </div>
+             
+             <div className="space-y-1">
+               <div className="text-xs text-muted-foreground mb-1 flex justify-between">
+                 <span>API Key (Copie para o FLYCONTROL)</span>
+               </div>
+               <div className="flex gap-2">
+                 <div className="flex-1 font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg truncate select-all">
+                   {r.flycontrol_api_key || "Nenhuma chave gerada"}
+                 </div>
+                 <button
+                   type="button"
+                   onClick={copyKey}
+                   className="p-2 rounded-lg bg-secondary hover:bg-muted transition"
+                   title="Copiar Chave"
+                 >
+                   <Copy className="h-4 w-4" />
+                 </button>
+                 <button
+                   type="button"
+                   onClick={regenerateKey}
+                   className="p-2 rounded-lg bg-secondary hover:bg-muted transition"
+                   title="Gerar Nova Chave"
+                 >
+                   <RefreshCw className="h-4 w-4" />
+                 </button>
+               </div>
+             </div>
 
-        <Field
-          label="URL final de envio de pedidos (opcional)"
-          hint="Preenchida automaticamente após o registro. Sobrescreve a base se preenchida."
-        >
-          <input
-            value={r.flycontrol_api_url ?? ""}
-            onChange={(e) => set("flycontrol_api_url", e.target.value)}
-            placeholder="https://....supabase.co/functions/v1/create-order"
-            className="input"
-          />
-        </Field>
+             <div className="flex flex-wrap items-center gap-2 pt-1">
+               <button
+                 type="button"
+                 onClick={handleAutoRegister}
+                 disabled={registering}
+                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
+               >
+                 <Wand2 className="h-3.5 w-3.5" />
+                 {registering ? "Conectando..." : "Conectar Automaticamente"}
+               </button>
+               {regMsg && <span className="text-xs font-medium text-primary animate-pulse">{regMsg}</span>}
+             </div>
+           </div>
 
-        <Field label="API Key da pizzaria" hint="Cole esta chave no cadastro da pizzaria dentro do FLYCONTROL.">
-          <div className="flex gap-2">
-            <input
-              value={r.flycontrol_api_key ?? ""}
-              onChange={(e) => set("flycontrol_api_key", e.target.value)}
-              placeholder="fc_..."
-              className="input flex-1 font-mono text-xs"
-            />
-            <button
-              type="button"
-              onClick={copyKey}
-              className="px-3 rounded-lg bg-secondary hover:bg-muted transition"
-              title="Copiar"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={regenerateKey}
-              className="px-3 rounded-lg bg-secondary hover:bg-muted transition"
-              title="Gerar nova chave"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </button>
-          </div>
-        </Field>
+           <Field
+             label="Endpoint de Pedidos (Avançado)"
+             hint="Preenchido automaticamente. Sobrescreve o padrão se preenchido."
+           >
+             <input
+               value={r.flycontrol_api_url ?? ""}
+               onChange={(e) => set("flycontrol_api_url", e.target.value)}
+               placeholder="https://.../api/orders"
+               className="input text-xs"
+             />
+           </Field>
+         </div>
         <p className="text-xs text-muted-foreground">
           ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
         </p>
