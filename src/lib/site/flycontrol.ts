@@ -60,13 +60,20 @@ function joinUrl(base: string, path: string): string {
   return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
 }
 
-function resolveOrdersUrl(
-  restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
-): string {
-  const base = (restaurant.flycontrol_base_url ?? "").trim();
-  if (base) return joinUrl(base, "api/orders");
-  return (restaurant.flycontrol_api_url ?? "").trim();
-}
+ function resolveOrdersUrl(
+   restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
+ ): string {
+   const specific = (restaurant.flycontrol_api_url ?? "").trim();
+   if (specific) return specific;
+   
+   const base = (restaurant.flycontrol_base_url ?? "").trim();
+   if (base) {
+     // Se a base já parece um endpoint completo (termina em create-order ou api/orders), usa ela
+     if (base.endsWith("/api/orders") || base.endsWith("/create-order")) return base;
+     return joinUrl(base, "api/orders");
+   }
+   return "";
+ }
 
 /** Sends an order to FLYCONTROL with simple retry. Throws on final failure. */
 export async function sendOrderToFlycontrol(
