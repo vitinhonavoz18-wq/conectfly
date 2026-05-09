@@ -484,8 +484,12 @@ export function InfoForm({ restaurant, onChange }: Props) {
                  disabled={registering}
                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
                >
-                 <Wand2 className="h-3.5 w-3.5" />
-                 {registering ? "Conectando..." : "Conectar Automaticamente"}
+                 {registering ? (
+                   <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                 ) : (
+                   <Wand2 className="h-3.5 w-3.5" />
+                 )}
+                 {registering ? "Vinculando..." : "Vincular / Registrar no FLYCONTROL"}
                </button>
                {regMsg && <span className="text-xs font-medium text-primary animate-pulse">{regMsg}</span>}
              </div>
