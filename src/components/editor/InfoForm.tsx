@@ -449,12 +449,15 @@ export function InfoForm({ restaurant, onChange }: Props) {
              
              <div className="space-y-1">
                <div className="text-xs text-muted-foreground mb-1 flex justify-between">
-                 <span>API Key (Copie para o FLYCONTROL)</span>
+                 <span>API Key (Gerada aqui ou colada do FLYCONTROL)</span>
                </div>
                <div className="flex gap-2">
-                 <div className="flex-1 font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg truncate select-all">
-                   {r.flycontrol_api_key || "Nenhuma chave gerada"}
-                 </div>
+                 <input
+                   value={r.flycontrol_api_key || ""}
+                   onChange={(e) => set("flycontrol_api_key", e.target.value)}
+                   placeholder="fc_..."
+                   className="flex-1 font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg"
+                 />
                  <button
                    type="button"
                    onClick={copyKey}
