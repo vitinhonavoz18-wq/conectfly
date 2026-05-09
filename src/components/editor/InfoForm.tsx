@@ -15,7 +15,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [registering, setRegistering] = useState(false);
-  const [regMsg, setRegMsg] = useState("");
+   const [regMsg, setRegMsg] = useState("");
+   const [testing, setTesting] = useState(false);
 
   const set = <K extends keyof RestaurantRow>(k: K, v: RestaurantRow[K]) =>
     setR((p) => ({ ...p, [k]: v }));
@@ -125,6 +126,36 @@ export function InfoForm({ restaurant, onChange }: Props) {
        setTimeout(() => setMsg(""), 2000);
      }
    };
+
+    const handleTestConnection = async () => {
+      setRegMsg("");
+      const baseUrl = (r.flycontrol_base_url ?? "").trim();
+      if (!baseUrl) {
+        setRegMsg("Informe a URL base do FLYCONTROL primeiro.");
+        return;
+      }
+      setTesting(true);
+      try {
+        // Tenta buscar o endpoint de pedidos resolvido
+        const { sendOrderToFlycontrol, buildOrderPayload } = await import("@/lib/site/flycontrol");
+        
+        // Payload de teste fake
+        const testPayload = buildOrderPayload({
+          name: "Teste de Conexão",
+          phone: "00000000000",
+          address: "Endereço de Teste",
+          items: [],
+          subtotal: 0
+        });
+
+        await sendOrderToFlycontrol(r, testPayload, { retries: 0 });
+        setRegMsg("Conexão bem-sucedida! O FLYCONTROL recebeu o sinal.");
+      } catch (err) {
+        setRegMsg("Falha no teste: " + (err instanceof Error ? err.message : String(err)));
+      } finally {
+        setTesting(false);
+      }
+    };
 
    const handleAutoRegister = async () => {
     setRegMsg("");
@@ -491,20 +522,40 @@ export function InfoForm({ restaurant, onChange }: Props) {
              </div>
 
              <div className="flex flex-wrap items-center gap-2 pt-1">
-               <button
-                 type="button"
-                 onClick={handleAutoRegister}
-                 disabled={registering}
-                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
-               >
-                 {registering ? (
-                   <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                 ) : (
-                   <Wand2 className="h-3.5 w-3.5" />
-                 )}
-                 {registering ? "Vinculando..." : "Vincular / Registrar no FLYCONTROL"}
-               </button>
-               {regMsg && <span className="text-xs font-medium text-primary animate-pulse">{regMsg}</span>}
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAutoRegister}
+                      disabled={registering}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {registering ? (
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3.5 w-3.5" />
+                      )}
+                      {registering ? "Vinculando..." : "Vincular / Registrar no FLYCONTROL"}
+                    </button>
+                    
+                    {r.flycontrol_api_key && (
+                      <button
+                        type="button"
+                        onClick={handleTestConnection}
+                        disabled={testing}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-muted transition disabled:opacity-50"
+                      >
+                        {testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                        Testar Conexão
+                      </button>
+                    )}
+                  </div>
+                  {regMsg && (
+                    <span className={`text-xs font-medium p-2 rounded bg-primary/10 border border-primary/20 ${regMsg.includes("Falha") || regMsg.includes("Erro") ? "text-destructive" : "text-primary"}`}>
+                      {regMsg}
+                    </span>
+                  )}
+                </div>
              </div>
            </div>
 

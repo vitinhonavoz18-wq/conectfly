@@ -60,32 +60,37 @@ function joinUrl(base: string, path: string): string {
   return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
 }
 
-function resolveOrdersUrl(
-  restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
-): string {
-  const specific = (restaurant.flycontrol_api_url ?? "").trim();
-  if (specific) return specific;
-
-  const base = (restaurant.flycontrol_base_url ?? "").trim();
-  if (!base) return "";
-
-  // Se já for um endpoint completo
-  if (
-    base.includes("/functions/v1/") ||
-    base.endsWith("/api/orders") ||
-    base.endsWith("/create-order")
-  ) {
-    return base;
-  }
-
-  // Se for uma URL da Supabase (Edge Function)
-  if (base.includes(".supabase.co")) {
-    return joinUrl(base, "functions/v1/create-order");
-  }
-
-  // Padrão Lovable Cloud Server Function
-  return joinUrl(base, "api/orders");
-}
+ function resolveOrdersUrl(
+   restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
+ ): string {
+   const specific = (restaurant.flycontrol_api_url ?? "").trim();
+   if (specific) return specific;
+ 
+   let base = (restaurant.flycontrol_base_url ?? "").trim();
+   if (!base) return "";
+ 
+   // Normalizar URL (remover barras extras e garantir protocolo)
+   if (!base.startsWith("http")) base = "https://" + base;
+   base = base.replace(/\/+$/, "");
+ 
+   // Se já for um endpoint completo
+   if (
+     base.includes("/functions/v1/") ||
+     base.endsWith("/api/orders") ||
+     base.endsWith("/create-order") ||
+     base.endsWith("/orders")
+   ) {
+     return base;
+   }
+ 
+   // Se for uma URL da Supabase (Edge Function)
+   if (base.includes(".supabase.co")) {
+     return joinUrl(base, "functions/v1/create-order");
+   }
+ 
+   // Padrão Lovable Cloud Server Function
+   return joinUrl(base, "api/orders");
+ }
 
 /** Sends an order to FLYCONTROL with simple retry. Throws on final failure. */
 export async function sendOrderToFlycontrol(
@@ -162,22 +167,24 @@ export interface FlycontrolRegisterResponse {
    },
    registerUrl?: string | null
  ): Promise<FlycontrolRegisterResponse & { order_endpoint?: string }> {
-   const base = (baseUrl ?? "").trim();
+   let base = (baseUrl ?? "").trim();
+   if (base && !base.startsWith("http")) base = "https://" + base;
+   base = base.replace(/\/+$/, "");
    
    // Try specific registerUrl first if provided
-   const endpoints = registerUrl ? [registerUrl] : [];
+   const endpoints = registerUrl ? [registerUrl.trim()] : [];
    
    if (base) {
-     // Try multiple possible endpoints for robustness
+     // Se base já for um endpoint de supabase mas não incluir /functions/v1
+     if (base.includes(".supabase.co") && !base.includes("/functions/v1/")) {
+       endpoints.push(joinUrl(base, "functions/v1/create-pizzeria"));
+     }
+ 
+     // Outras tentativas comuns
      endpoints.push(
        joinUrl(base, "api/pizzerias/create"),
        joinUrl(base, "create-pizzeria")
      );
-     
-     // If it's a supabase URL
-     if (base.includes(".supabase.co")) {
-       endpoints.push(joinUrl(base, "functions/v1/create-pizzeria"));
-     }
    }
  
    if (endpoints.length === 0) {
@@ -196,15 +203,21 @@ export interface FlycontrolRegisterResponse {
         const txt = await res.text().catch(() => "");
         throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
       }
-      const data = (await res.json()) as Partial<FlycontrolRegisterResponse> & {
-        order_endpoint?: string;
-      };
-      if (!data.tenant_id || !data.api_key) {
+      const data = (await res.json()) as any;
+      const tenant_id = data.tenant_id || data.id || data.pizzaria_id;
+      const api_key = data.api_key || data.key || data.apiKey;
+      
+      if (!tenant_id || !api_key) {
+        console.error("Flycontrol response missing fields:", data);
         throw new Error(
-          "Resposta inválida do FLYCONTROL (faltando tenant_id/api_key).",
+          "Resposta do FLYCONTROL incompleta. Verifique se o endpoint está correto.",
         );
       }
-      return data as FlycontrolRegisterResponse & { order_endpoint?: string };
+      return {
+        tenant_id,
+        api_key,
+        order_endpoint: data.order_endpoint || data.endpoint
+      };
     } catch (err) {
       lastErr = err instanceof Error ? err : new Error(String(err));
       continue;

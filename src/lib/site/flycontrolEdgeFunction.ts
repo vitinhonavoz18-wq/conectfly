@@ -119,9 +119,10 @@ serve(async (req) => {
   }
   const name = String(body?.name ?? "").trim();
   const slug = String(body?.slug ?? "").trim();
-  const phone = String(body?.phone ?? "").trim();
-  const address = String(body?.address ?? "").trim();
-  if (!name || !slug) {
+   const phone = String(body?.phone ?? "").trim();
+   const address = String(body?.address ?? "").trim();
+   const providedApiKey = String(body?.api_key ?? "").trim();
+   if (!name || !slug) {
     return new Response(JSON.stringify({ error: "name e slug obrigatórios" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
@@ -138,7 +139,7 @@ serve(async (req) => {
     });
   }
 
-  const api_key = generateApiKey();
+  const api_key = providedApiKey || generateApiKey();
   const { data, error } = await supabase
     .from("pizzerias")
     .insert({ name, slug, phone, address, api_key, status: "active" })
