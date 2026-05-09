@@ -151,28 +151,38 @@ export interface FlycontrolRegisterResponse {
 /**
  * Auto-registers a pizzaria on FLYCONTROL.
  */
-export async function registerPizzeriaInFlycontrol(
-  baseUrl: string,
-  body: {
-    name: string;
-    phone: string;
-    address: string;
-    slug: string;
-    api_key?: string;
-  },
-): Promise<FlycontrolRegisterResponse & { order_endpoint?: string }> {
-  const base = (baseUrl ?? "").trim();
-  if (!base) throw new Error("URL base do FLYCONTROL não configurada.");
-
-  // Try multiple possible endpoints for robustness
-  const endpoints = [
-    joinUrl(base, "api/pizzerias/create"),
-    joinUrl(base, "create-pizzeria"),
-    // If it's a supabase URL
-    ...(base.includes(".supabase.co")
-      ? [joinUrl(base, "functions/v1/create-pizzeria")]
-      : []),
-  ];
+ export async function registerPizzeriaInFlycontrol(
+   baseUrl: string,
+   body: {
+     name: string;
+     phone: string;
+     address: string;
+     slug: string;
+     api_key?: string;
+   },
+   registerUrl?: string | null
+ ): Promise<FlycontrolRegisterResponse & { order_endpoint?: string }> {
+   const base = (baseUrl ?? "").trim();
+   
+   // Try specific registerUrl first if provided
+   const endpoints = registerUrl ? [registerUrl] : [];
+   
+   if (base) {
+     // Try multiple possible endpoints for robustness
+     endpoints.push(
+       joinUrl(base, "api/pizzerias/create"),
+       joinUrl(base, "create-pizzeria")
+     );
+     
+     // If it's a supabase URL
+     if (base.includes(".supabase.co")) {
+       endpoints.push(joinUrl(base, "functions/v1/create-pizzeria"));
+     }
+   }
+ 
+   if (endpoints.length === 0) {
+     throw new Error("URL base ou Endpoint de Registro do FLYCONTROL não configurados.");
+   }
 
   let lastErr: Error | null = null;
   for (const url of endpoints) {
