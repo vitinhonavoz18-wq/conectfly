@@ -139,12 +139,17 @@ export function InfoForm({ restaurant, onChange }: Props) {
         phone: r.whatsapp_number ?? "",
         address: r.address ?? "",
         slug: r.slug || slugify(r.name),
+        api_key: r.flycontrol_api_key || undefined,
       });
+      
       const updates: Partial<RestaurantRow> = {
         flycontrol_tenant_id: out.tenant_id,
         flycontrol_api_key: out.api_key,
         flycontrol_enabled: true,
-        flycontrol_api_url: baseUrl.replace(/\/+$/, "") + "/api/orders",
+        // Se a API retornou um endpoint específico, usamos ele
+        flycontrol_api_url: out.order_endpoint || (baseUrl.includes(".supabase.co") 
+          ? baseUrl.replace(/\/+$/, "") + "/functions/v1/create-order"
+          : baseUrl.replace(/\/+$/, "") + "/api/orders"),
       };
       const next = { ...r, ...updates } as RestaurantRow;
       setR(next);
@@ -444,12 +449,15 @@ export function InfoForm({ restaurant, onChange }: Props) {
              
              <div className="space-y-1">
                <div className="text-xs text-muted-foreground mb-1 flex justify-between">
-                 <span>API Key (Copie para o FLYCONTROL)</span>
+                 <span>API Key (Gerada aqui ou colada do FLYCONTROL)</span>
                </div>
                <div className="flex gap-2">
-                 <div className="flex-1 font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg truncate select-all">
-                   {r.flycontrol_api_key || "Nenhuma chave gerada"}
-                 </div>
+                 <input
+                   value={r.flycontrol_api_key || ""}
+                   onChange={(e) => set("flycontrol_api_key", e.target.value)}
+                   placeholder="fc_..."
+                   className="flex-1 font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg"
+                 />
                  <button
                    type="button"
                    onClick={copyKey}
@@ -476,8 +484,12 @@ export function InfoForm({ restaurant, onChange }: Props) {
                  disabled={registering}
                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
                >
-                 <Wand2 className="h-3.5 w-3.5" />
-                 {registering ? "Conectando..." : "Conectar Automaticamente"}
+                 {registering ? (
+                   <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                 ) : (
+                   <Wand2 className="h-3.5 w-3.5" />
+                 )}
+                 {registering ? "Vinculando..." : "Vincular / Registrar no FLYCONTROL"}
                </button>
                {regMsg && <span className="text-xs font-medium text-primary animate-pulse">{regMsg}</span>}
              </div>
