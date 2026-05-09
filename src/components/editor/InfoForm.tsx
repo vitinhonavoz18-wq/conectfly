@@ -97,6 +97,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
         flycontrol_api_url: r.flycontrol_api_url ?? null,
         flycontrol_api_key: r.flycontrol_api_key ?? null,
         flycontrol_base_url: r.flycontrol_base_url ?? null,
+        flycontrol_register_url: r.flycontrol_register_url ?? null,
         flycontrol_tenant_id: r.flycontrol_tenant_id ?? null,
         whatsapp_enabled: r.whatsapp_enabled ?? true,
       })
@@ -134,13 +135,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
     }
     setRegistering(true);
     try {
-      const out = await registerPizzeriaInFlycontrol(baseUrl, {
+       const out = await registerPizzeriaInFlycontrol(baseUrl, {
         name: r.name,
         phone: r.whatsapp_number ?? "",
         address: r.address ?? "",
         slug: r.slug || slugify(r.name),
         api_key: r.flycontrol_api_key || undefined,
-      });
+       }, r.flycontrol_register_url);
       
       const updates: Partial<RestaurantRow> = {
         flycontrol_tenant_id: out.tenant_id,
@@ -433,6 +434,18 @@ export function InfoForm({ restaurant, onChange }: Props) {
                value={r.flycontrol_base_url ?? ""}
                onChange={(e) => set("flycontrol_base_url", e.target.value)}
                placeholder="https://sua-url-do-flycontrol.lovable.app"
+               className="input"
+             />
+           </Field>
+
+           <Field
+             label="Endpoint de Criação Automática"
+             hint="URL específica para registrar novas pizzarias no FLYCONTROL (Opcional)"
+           >
+             <input
+               value={r.flycontrol_register_url ?? ""}
+               onChange={(e) => set("flycontrol_register_url", e.target.value)}
+               placeholder="https://sua-url.lovable.app/api/pizzerias/create"
                className="input"
              />
            </Field>
