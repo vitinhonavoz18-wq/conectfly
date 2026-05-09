@@ -139,12 +139,17 @@ export function InfoForm({ restaurant, onChange }: Props) {
         phone: r.whatsapp_number ?? "",
         address: r.address ?? "",
         slug: r.slug || slugify(r.name),
+        api_key: r.flycontrol_api_key || undefined,
       });
+      
       const updates: Partial<RestaurantRow> = {
         flycontrol_tenant_id: out.tenant_id,
         flycontrol_api_key: out.api_key,
         flycontrol_enabled: true,
-        flycontrol_api_url: baseUrl.replace(/\/+$/, "") + "/api/orders",
+        // Se a API retornou um endpoint específico, usamos ele
+        flycontrol_api_url: out.order_endpoint || (baseUrl.includes(".supabase.co") 
+          ? baseUrl.replace(/\/+$/, "") + "/functions/v1/create-order"
+          : baseUrl.replace(/\/+$/, "") + "/api/orders"),
       };
       const next = { ...r, ...updates } as RestaurantRow;
       setR(next);
