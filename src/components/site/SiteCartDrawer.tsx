@@ -1,9 +1,10 @@
-import { useState } from "react";
+ import { useState, useMemo } from "react";
 import { X, Minus, Plus, Trash2, MapPin } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { buildOrderPayload, sendOrderToFlycontrol } from "@/lib/site/flycontrol";
+ import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -28,8 +29,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const grandTotal = totalPrice + deliveryFee;
   const hasZones = deliveryZones.length > 0;
 
-  const flycontrolOn = !!restaurant?.flycontrol_enabled;
-  const whatsappOn = restaurant?.whatsapp_enabled !== false;
+   const flycontrolOn = useMemo(() => !!restaurant?.flycontrol_enabled, [restaurant?.flycontrol_enabled]);
+   const whatsappOn = useMemo(() => restaurant?.whatsapp_enabled !== false, [restaurant?.whatsapp_enabled]);
+ 
+   const openWhatsAppOrder = (message: string) => {
+     if (!whatsappNumber) return;
+     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+     
+     // Try window.open first, fallback to location.href if blocked
+     const opened = window.open(url, "_blank");
+     if (!opened || opened.closed || typeof opened.closed === "undefined") {
+       window.location.href = url;
+     }
+   };
 
   const handleFinish = async () => {
     setError("");
@@ -48,27 +60,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if (whatsappOn && !whatsappNumber && !flycontrolOn) {
       setError("Loja sem WhatsApp configurado");
       return;
-    }
-
-    // Envia para FLYCONTROL ANTES do WhatsApp; falhas NÃO quebram o fluxo
-    if (flycontrolOn && restaurant) {
-      try {
-        setSending(true);
-        const payload = buildOrderPayload({
-          name,
-          phone,
-          address,
-          neighborhood: selectedZone?.neighborhood ?? null,
-          deliveryFee,
-          items,
-          subtotal: totalPrice,
-        });
-        await sendOrderToFlycontrol(restaurant, payload);
-      } catch (err) {
-        console.error("[FLYCONTROL] envio falhou:", err);
-      } finally {
-        setSending(false);
-      }
     }
 
     const lines = items.map((l) => {
@@ -100,17 +91,45 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       feeLine +
       `*Total: ${formatBRL(grandTotal)}*`;
 
-    if (whatsappOn && whatsappNumber) {
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-      window.open(url, "_blank");
-    }
-    clear();
-    setName("");
-    setPhone("");
-    setAddress("");
-    setZoneId("");
-    onClose();
-  };
+     setSending(true);
+     try {
+       if (flycontrolOn && restaurant) {
+         const payload = buildOrderPayload({
+           name,
+           phone,
+           address,
+           neighborhood: selectedZone?.neighborhood ?? null,
+           deliveryFee,
+           items,
+           subtotal: totalPrice,
+         });
+ 
+         try {
+           await sendOrderToFlycontrol(restaurant, payload);
+           toast.success("Pedido enviado para o painel!");
+         } catch (err) {
+           console.error("[FLYCONTROL] erro:", err);
+           toast.error("Erro ao enviar para o painel, mas continuaremos via WhatsApp.");
+         }
+       }
+ 
+       if (whatsappOn) {
+         openWhatsAppOrder(message);
+       }
+ 
+       clear();
+       setName("");
+       setPhone("");
+       setAddress("");
+       setZoneId("");
+       onClose();
+     } catch (err) {
+       console.error("Erro ao finalizar pedido:", err);
+       setError("Ocorreu um erro ao processar seu pedido.");
+     } finally {
+       setSending(false);
+     }
+   };
 
   return (
     <>
