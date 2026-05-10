@@ -12,8 +12,7 @@ import { Reveal, ScrollProgress, SectionScroll } from "./Reveal";
 import type { SiteData } from "@/lib/site/types";
 
 function DeliverySiteContent({ data }: { data: SiteData }) {
-  const [cartOpen, setCartOpen] = useState(false);
-  const { totalItems, totalPrice } = useCart();
+  const { totalItems, totalPrice, isCartOpen, setCartOpen } = useCart();
   const r = data.restaurant;
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza);
 
@@ -76,7 +75,7 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
       {/* Floating Checkout Bar */}
       <div 
         className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[50] w-[90%] max-w-md transition-all duration-500 transform ${
-          totalItems > 0 && !headerVisible ? "translate-y-0 opacity-100" : "translate-y-32 opacity-0 pointer-events-none"
+          totalItems > 0 && !headerVisible && !isCartOpen ? "translate-y-0 opacity-100" : "translate-y-32 opacity-0 pointer-events-none"
         }`}
       >
         <button
@@ -104,7 +103,7 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
       </div>
 
       <SiteCartDrawer
-        open={cartOpen}
+        open={isCartOpen}
         onClose={() => setCartOpen(false)}
         whatsappNumber={r.whatsapp_number}
         restaurantName={r.name}
