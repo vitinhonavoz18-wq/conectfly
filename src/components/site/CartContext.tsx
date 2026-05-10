@@ -9,6 +9,8 @@ interface CartCtx {
   clear: () => void;
   totalItems: number;
   totalPrice: number;
+  isCartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -19,6 +21,7 @@ function keyOf(itemId: string, sizeLabel?: string) {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
+  const [isCartOpen, setCartOpen] = useState(false);
 
   const addLine: CartCtx["addLine"] = (line, qty = 1) => {
     setItems((cur) => {
@@ -66,8 +69,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       clear: () => setItems([]),
       totalItems,
       totalPrice,
+      isCartOpen,
+      setCartOpen,
     };
-  }, [items]);
+  }, [items, isCartOpen]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
