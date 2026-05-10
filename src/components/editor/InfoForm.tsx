@@ -148,8 +148,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
           subtotal: 0
         });
 
-        await sendOrderToFlycontrol(r, testPayload, { retries: 0 });
-        setRegMsg("Conexão bem-sucedida! O FLYCONTROL recebeu o sinal.");
+         await sendOrderToFlycontrol(r, testPayload, { retries: 0 });
+         setRegMsg("STATUS: ONLINE - Conexão estabelecida com sucesso!");
       } catch (err) {
         setRegMsg("Falha no teste: " + (err instanceof Error ? err.message : String(err)));
       } finally {
