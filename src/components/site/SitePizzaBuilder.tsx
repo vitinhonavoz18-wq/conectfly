@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { Check, Plus, Sparkles, Info, ImageIcon, ShoppingBag } from "lucide-react";
+import { Check, Plus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -7,6 +7,83 @@ import { useCart } from "./CartContext";
 interface Props {
   category: MenuCategoryRow & { items: MenuItemRow[] };
   restaurant?: RestaurantRow;
+}
+
+interface FlavorCardProps {
+  it: MenuItemRow;
+  checked: boolean;
+  disabled: boolean;
+  size: any;
+  toggleFlavor: (id: string) => void;
+  restaurant?: RestaurantRow;
+  isSpecialSection?: boolean;
+}
+
+function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isSpecialSection }: FlavorCardProps) {
+  return (
+    <button
+      onClick={() => toggleFlavor(it.id)}
+      disabled={!size || disabled}
+      className={`relative text-left rounded-2xl border p-4 transition-all duration-500 flex items-start gap-4 overflow-hidden group ${
+        checked
+          ? isSpecialSection 
+            ? "border-red-500 bg-gradient-to-br from-red-600/20 to-transparent shadow-[0_0_25px_rgba(220,38,38,0.2)]"
+            : "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.15)] to-transparent"
+          : isSpecialSection
+            ? "border-red-900/30 bg-red-950/10 hover:border-red-500/50 hover:bg-red-900/10"
+            : "border-white/5 bg-white/5 hover:border-white/20"
+      } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01] hover:shadow-xl"}`}
+    >
+      {(restaurant?.show_item_images ?? true) && (
+        it.image_url ? (
+          <img
+            src={it.image_url}
+            alt={it.name}
+            loading="lazy"
+            className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[hsl(var(--site-border))]"
+          />
+        ) : (
+          <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-[hsl(var(--site-border))] bg-black/20 flex items-center justify-center text-[hsl(var(--site-muted-fg))]">
+            <ImageIcon className="h-6 w-6 opacity-40" />
+          </div>
+        )
+      )}
+      <div
+        className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center transition-colors duration-300 ${
+          checked
+            ? isSpecialSection ? "bg-red-600 border-red-600 text-white" : "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white"
+            : isSpecialSection ? "border-red-800" : "border-[hsl(var(--site-border))]"
+        }`}
+      >
+        {checked && <Check className="h-3 w-3" />}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="font-semibold leading-tight">{it.name}</p>
+          {it.is_special && (
+            <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full font-bold border ${
+              isSpecialSection 
+                ? "bg-red-600/30 text-red-200 border-red-500/40" 
+                : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+            }`}>
+              <Sparkles className="h-3 w-3" /> Especial
+              {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
+            </span>
+          )}
+        </div>
+        {it.description && (
+          <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+            {it.description}
+          </p>
+        )}
+      </div>
+      {isSpecialSection && !checked && !disabled && (
+        <div className="absolute -right-1 -bottom-1 opacity-10 group-hover:opacity-30 transition-opacity">
+          <Flame className="h-12 w-12 text-red-600" />
+        </div>
+      )}
+    </button>
+  );
 }
 
 export function SitePizzaBuilder({ category, restaurant }: Props) {
@@ -21,10 +98,21 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
   const remaining = Math.max(0, maxFlavors - selectedFlavors.length);
   const canAdd = !!size && selectedFlavors.length > 0;
 
-  const flavorMap = useMemo(() => {
+  const { flavorMap, classicFlavors, specialFlavors } = useMemo(() => {
     const m = new Map<string, MenuItemRow>();
-    category.items.forEach((it) => m.set(it.id, it));
-    return m;
+    const classic: MenuItemRow[] = [];
+    const special: MenuItemRow[] = [];
+    
+    category.items.forEach((it) => {
+      m.set(it.id, it);
+      if (it.is_special) {
+        special.push(it);
+      } else {
+        classic.push(it);
+      }
+    });
+    
+    return { flavorMap: m, classicFlavors: classic, specialFlavors: special };
   }, [category.items]);
 
   const selectedItems = selectedFlavors
@@ -153,63 +241,65 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
             Nenhum sabor cadastrado ainda.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {category.items.map((it) => {
-              const checked = selectedFlavors.includes(it.id);
-              const disabled = !checked && selectedFlavors.length >= maxFlavors;
-              return (
-                 <button
-                   key={it.id}
-                   onClick={() => toggleFlavor(it.id)}
-                   disabled={!size || disabled}
-                   className={`relative text-left rounded-2xl border p-4 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
-                     checked
-                       ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.15)] to-transparent"
-                       : "border-white/5 bg-white/5 hover:border-white/20"
-                   } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01]"}`}
-                 >
-                  {(restaurant?.show_item_images ?? true) && (
-                    it.image_url ? (
-                      <img
-                        src={it.image_url}
-                        alt={it.name}
-                        loading="lazy"
-                        className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[hsl(var(--site-border))]"
-                      />
-                    ) : (
-                      <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-[hsl(var(--site-border))] bg-black/20 flex items-center justify-center text-[hsl(var(--site-muted-fg))]">
-                        <ImageIcon className="h-6 w-6 opacity-40" />
-                      </div>
-                    )
-                  )}
-                  <div
-                    className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center ${
-                      checked
-                        ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white"
-                        : "border-[hsl(var(--site-border))]"
-                    }`}
-                  >
-                    {checked && <Check className="h-3 w-3" />}
+          <div className="space-y-12">
+            {/* Classic Flavors */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {classicFlavors.map((it) => (
+                <FlavorCard 
+                  key={it.id} 
+                  it={it} 
+                  checked={selectedFlavors.includes(it.id)}
+                  disabled={!size || (!selectedFlavors.includes(it.id) && selectedFlavors.length >= maxFlavors)}
+                  size={size}
+                  toggleFlavor={toggleFlavor}
+                  restaurant={restaurant}
+                />
+              ))}
+            </div>
+
+            {/* Special Flavors Section */}
+            {specialFlavors.length > 0 && (
+              <div className="space-y-6" id="sabores-especiais">
+                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-600 via-red-800 to-black p-8 shadow-[0_20px_50px_rgba(220,38,38,0.3)] border border-red-500/30">
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Flame className="h-32 w-32 text-white" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold leading-tight">{it.name}</p>
-                      {it.is_special && (
-                        <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold">
-                          <Sparkles className="h-3 w-3" /> Especial
-                          {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
+                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="flex items-center justify-center h-8 w-8 rounded-full bg-white/20 backdrop-blur-sm">
+                          <Flame className="h-5 w-5 text-red-400" />
                         </span>
-                      )}
-                    </div>
-                    {it.description && (
-                      <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
-                        {it.description}
+                        <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tighter uppercase">
+                          Sabores Especiais
+                        </h3>
+                      </div>
+                      <p className="text-red-100/80 font-medium max-w-lg italic">
+                        Experimente combinações premium e sabores exclusivos da casa.
                       </p>
-                    )}
+                    </div>
+                    <span className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-xs uppercase tracking-widest shadow-lg">
+                      Seleção Premium
+                    </span>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {specialFlavors.map((it) => (
+                    <FlavorCard 
+                      key={it.id} 
+                      it={it} 
+                      isSpecialSection
+                      checked={selectedFlavors.includes(it.id)}
+                      disabled={!size || (!selectedFlavors.includes(it.id) && selectedFlavors.length >= maxFlavors)}
+                      size={size}
+                      toggleFlavor={toggleFlavor}
+                      restaurant={restaurant}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

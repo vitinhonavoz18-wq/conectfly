@@ -39,24 +39,35 @@ export function SitePizzaSection({ categories, restaurant }: Props) {
           </p>
         </div>
 
-        {pizzaCats.length > 1 && (
-          <div className="flex flex-wrap justify-center gap-2 mb-8">
-            {pizzaCats.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActiveId(c.id)}
-                className={`px-5 py-2 rounded-full font-semibold text-sm transition ${
-                  active.id === c.id
-                    ? "bg-[hsl(var(--site-primary))] text-white"
-                    : "bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] hover:border-[hsl(var(--site-primary))]"
-                }`}
-              >
-                {c.icon ? `${c.icon} ` : ""}
-                {c.name}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {pizzaCats.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setActiveId(c.id)}
+              className={`px-5 py-2 rounded-full font-semibold text-sm transition ${
+                active.id === c.id
+                  ? "bg-[hsl(var(--site-primary))] text-white"
+                  : "bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] hover:border-[hsl(var(--site-primary))]"
+              }`}
+            >
+              {c.icon ? `${c.icon} ` : ""}
+              {c.name}
+            </button>
+          ))}
+          <button
+            onClick={() => {
+              const el = document.getElementById("sabores-especiais");
+              if (el) {
+                const offset = 100;
+                const pos = el.getBoundingClientRect().top + window.pageYOffset - offset;
+                window.scrollTo({ top: pos, behavior: "smooth" });
+              }
+            }}
+            className="px-5 py-2 rounded-full font-black text-sm transition bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600/30 shadow-[0_0_15px_rgba(220,38,38,0.2)]"
+          >
+            🔥 Especiais
+          </button>
+        </div>
 
         <SitePizzaBuilder category={active} restaurant={restaurant} />
       </div>
