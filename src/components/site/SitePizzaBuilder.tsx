@@ -289,7 +289,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
 
       {/* Floating Checkout Button */}
       <div 
-        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-md transition-all duration-500 transform ${
+        className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-md transition-all duration-500 transform ${
           showFloating ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-90 pointer-events-none"
         }`}
       >
