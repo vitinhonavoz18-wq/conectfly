@@ -11,7 +11,7 @@ interface Props {
 
 export function SitePizzaBuilder({ category, restaurant }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
-  const { addLine } = useCart();
+  const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
   const [confirm, setConfirm] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     setSelectedFlavors((cur) => cur.slice(0, newMax));
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (openCart = false) => {
     if (!size || selectedFlavors.length === 0) return;
     const flavorNames = selectedFlavors
       .map((id) => flavorMap.get(id)?.name)
@@ -75,6 +75,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     });
     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
     setSelectedFlavors([]);
+    if (openCart) setCartOpen(true);
     setTimeout(() => setConfirm(null), 2200);
   };
 
@@ -294,15 +295,15 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
         }`}
       >
         <button
-          onClick={handleAddToCart}
+          onClick={() => handleAddToCart(true)}
           className="btn-premium w-full py-5 rounded-2xl flex items-center justify-between px-8 shadow-[0_20px_50px_rgba(255,90,0,0.4)] border border-primary/30 group active:scale-95 transition-transform"
         >
           <div className="flex flex-col items-start">
-            <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Adicionar ao Pedido</span>
+            <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Finalizar Pizza</span>
             <span className="text-xl font-black text-primary-foreground tracking-tighter">{formatBRL(finalPrice)}</span>
           </div>
           <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl group-hover:bg-white/30 transition-colors">
-            <span className="font-bold text-sm uppercase tracking-tight">Confirmar</span>
+            <span className="font-bold text-sm uppercase tracking-tight">Finalizar</span>
             <Plus className="h-5 w-5" />
           </div>
         </button>
