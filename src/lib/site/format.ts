@@ -17,6 +17,14 @@ export function formatBRL(value: number): string {
   });
 }
 
+export const formatCurrency = formatBRL;
+  return value.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+  });
+}
+
 export function formatPhoneMask(v: string): string {
   const digits = v.replace(/\D/g, "").slice(0, 11);
   if (digits.length <= 2) return digits;
