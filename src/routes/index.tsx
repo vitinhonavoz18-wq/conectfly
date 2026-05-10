@@ -5,11 +5,12 @@ import {
   ExternalLink,
   Pencil,
   Trash2,
-  Download,
-  Globe,
-  Rocket,
-  Sparkles,
-} from "lucide-react";
+   Download,
+   Eye,
+   Globe,
+   Rocket,
+   Sparkles,
+ } from "lucide-react";
 import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
