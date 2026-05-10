@@ -99,15 +99,15 @@ export function SitePizzaBuilder({ category }: Props) {
           {sizes.map((s, i) => {
             const active = sizeIdx === i;
             return (
-              <button
-                key={`${s.label}-${i}`}
-                onClick={() => handleSelectSize(i)}
-                className={`relative rounded-xl border p-3 text-left transition ${
-                  active
-                    ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary))]/10 shadow-lg"
-                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))]"
-                }`}
-              >
+               <button
+                 key={`${s.label}-${i}`}
+                 onClick={() => handleSelectSize(i)}
+                 className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
+                   active
+                     ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent shadow-[0_0_20px_rgba(255,90,0,0.15)]"
+                     : "border-white/5 bg-white/5 hover:border-white/20"
+                 }`}
+               >
                 {active && (
                   <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
                     <Check className="h-3 w-3" />
@@ -154,16 +154,16 @@ export function SitePizzaBuilder({ category }: Props) {
               const checked = selectedFlavors.includes(it.id);
               const disabled = !checked && selectedFlavors.length >= maxFlavors;
               return (
-                <button
-                  key={it.id}
-                  onClick={() => toggleFlavor(it.id)}
-                  disabled={!size || disabled}
-                  className={`relative text-left rounded-xl border p-3 transition flex items-start gap-3 overflow-hidden ${
-                    checked
-                      ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary))]/10"
-                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))]"
-                  } ${disabled ? "opacity-40 cursor-not-allowed" : ""}`}
-                >
+                 <button
+                   key={it.id}
+                   onClick={() => toggleFlavor(it.id)}
+                   disabled={!size || disabled}
+                   className={`relative text-left rounded-2xl border p-4 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
+                     checked
+                       ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.15)] to-transparent"
+                       : "border-white/5 bg-white/5 hover:border-white/20"
+                   } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01]"}`}
+                 >
                   {it.image_url ? (
                     <img
                       src={it.image_url}
@@ -209,8 +209,11 @@ export function SitePizzaBuilder({ category }: Props) {
       </div>
 
       {/* Step 3 — Summary + add */}
-      <div className="rounded-xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-4">
-        <h4 className="text-lg font-bold mb-2">3. Resumo</h4>
+       <div className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden">
+         <div className="absolute top-0 right-0 p-8 opacity-5">
+           <Sparkles className="h-24 w-24 text-primary" />
+         </div>
+         <h4 className="text-2xl font-black mb-4 tracking-tight">Resumo da sua Pizza</h4>
         {size ? (
           <ul className="text-sm text-[hsl(var(--site-muted-fg))] space-y-1">
             <li>
@@ -248,13 +251,14 @@ export function SitePizzaBuilder({ category }: Props) {
               {size ? formatBRL(finalPrice) : "—"}
             </span>
           </div>
-          <button
-            onClick={handleAddToCart}
-            disabled={!canAdd}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[hsl(var(--site-primary))] text-white font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <Plus className="h-4 w-4" /> Adicionar pizza
-          </button>
+           <button
+             onClick={handleAddToCart}
+             disabled={!canAdd}
+             className="btn-fire px-8 py-4 rounded-2xl text-lg flex items-center gap-3 disabled:opacity-30 disabled:scale-100 disabled:shadow-none"
+           >
+             <Plus className="h-6 w-6" /> 
+             <span>Adicionar ao Carrinho</span>
+           </button>
         </div>
         {confirm && (
           <p className="mt-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center">
