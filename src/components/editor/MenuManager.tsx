@@ -11,11 +11,12 @@ interface Props {
 export function MenuManager({ restaurantId }: Props) {
   const [cats, setCats] = useState<MenuCategoryRow[]>([]);
   const [items, setItems] = useState<MenuItemRow[]>([]);
+  const [restaurant, setRestaurant] = useState<RestaurantRow | null>(null);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   const reload = async () => {
-    const [c, i] = await Promise.all([
+    const [c, i, r] = await Promise.all([
       supabase
         .from("menu_categories")
         .select("*")
@@ -26,9 +27,15 @@ export function MenuManager({ restaurantId }: Props) {
         .select("*")
         .eq("restaurant_id", restaurantId)
         .order("sort_order"),
+      supabase
+        .from("restaurants")
+        .select("*")
+        .eq("id", restaurantId)
+        .single(),
     ]);
     setCats((c.data ?? []) as unknown as MenuCategoryRow[]);
     setItems((i.data ?? []) as unknown as MenuItemRow[]);
+    setRestaurant(r.data as unknown as RestaurantRow);
   };
 
   useEffect(() => {
