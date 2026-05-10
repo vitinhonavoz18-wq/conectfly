@@ -104,12 +104,12 @@ function Dashboard() {
        <header className="border-b border-white/5 bg-background/80 backdrop-blur-xl sticky top-0 z-40">
          <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-             <div className="h-10 w-10 rounded-xl bg-gradient-fire flex items-center justify-center shadow-glow animate-pulse">
-               <Rocket className="h-6 w-6 text-primary-foreground glow-orange" />
+             <div className="h-11 w-11 rounded-xl bg-gradient-bronze flex items-center justify-center shadow-glow animate-pulse">
+               <Rocket className="h-6 w-6 text-primary-foreground glow-bronze" />
             </div>
             <div>
-              <h1 className="font-black tracking-tight text-lg leading-none">
-                SiteCreatorFly
+               <h1 className="font-black tracking-tight text-xl leading-none bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                 SuperCreatorFly
               </h1>
               <p className="text-xs text-muted-foreground">
                 Sites de delivery prontos para decolar
@@ -119,10 +119,10 @@ function Dashboard() {
            <div className="flex items-center gap-4">
              <button
                onClick={() => setCreating(true)}
-               className="btn-fire px-5 py-2.5 rounded-xl flex items-center gap-2 group"
+               className="btn-premium px-6 py-3 rounded-xl flex items-center gap-2 group shadow-2xl"
              >
-               <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform" />
-               <span>Novo Site</span>
+               <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform text-primary-foreground" />
+               <span className="uppercase text-xs tracking-[0.2em]">Novo Site Gourmet</span>
              </button>
            </div>
         </div>
@@ -130,8 +130,11 @@ function Dashboard() {
 
        <main className="max-w-7xl mx-auto px-6 py-12">
         {creating && (
-           <div className="mb-8 card-premium p-6 site-hero-enter">
-             <h3 className="text-xl font-black mb-4 flex items-center gap-2 text-primary">
+           <div className="mb-10 card-premium p-8 site-hero-enter border-primary/20 bg-primary/5 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-8 opacity-5">
+               <Sparkles className="h-32 w-32 text-primary" />
+             </div>
+             <h3 className="text-2xl font-black mb-6 flex items-center gap-3 text-primary tracking-tighter uppercase">
               <Sparkles className="h-4 w-4 text-accent" />
               Criar novo site
             </h3>
@@ -149,9 +152,9 @@ function Dashboard() {
                <div className="flex gap-3">
                  <button
                    onClick={handleCreate}
-                   className="btn-fire px-8 py-3 rounded-xl"
+                   className="btn-premium px-10 py-3 rounded-xl uppercase text-xs tracking-[0.2em]"
                  >
-                   Criar Agora
+                   Lançar Unidade
                  </button>
                  <button
                    onClick={() => {
@@ -187,7 +190,7 @@ function Dashboard() {
                            className="h-14 w-14 rounded-xl object-cover bg-white/5 flex-shrink-0 border border-white/10 group-hover:border-primary/50 transition-colors"
                          />
                        ) : (
-                         <div className="h-14 w-14 rounded-xl bg-gradient-fire flex-shrink-0 flex items-center justify-center font-black text-xl text-primary-foreground shadow-glow group-hover:scale-110 transition-transform">
+                       <div className="h-14 w-14 rounded-xl bg-gradient-bronze flex-shrink-0 flex items-center justify-center font-black text-xl text-primary-foreground shadow-glow group-hover:scale-110 transition-transform">
                            {r.name.charAt(0).toUpperCase()}
                          </div>
                        )}
