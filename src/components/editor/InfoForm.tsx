@@ -457,17 +457,35 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </label>
 
          <div className="space-y-4 pt-2">
-           <Field
-             label="URL do Painel FLYCONTROL"
-             hint="Copie a URL do seu painel aberto (ex: https://flycontrol-xxxx.lovable.app)"
-           >
-             <input
-               value={r.flycontrol_base_url ?? ""}
-               onChange={(e) => set("flycontrol_base_url", e.target.value)}
-               placeholder="https://sua-url-do-flycontrol.lovable.app"
-               className="input"
-             />
-           </Field>
+            <Field
+              label="URL do Painel FLYCONTROL"
+              hint="Copie a URL do seu painel aberto (ex: https://flycontrol-xxxx.lovable.app)"
+            >
+              <input
+                value={r.flycontrol_base_url ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  set("flycontrol_base_url", val);
+                  
+                  // Requirement 3: Auto-generate endpoint if base URL is pasted
+                  if (val && !r.flycontrol_api_url) {
+                    let base = val.trim();
+                    if (!base.startsWith("http")) base = "https://" + base;
+                    base = base.replace(/\/+$/, "");
+                    
+                    let autoEndpoint = "";
+                    if (base.includes(".supabase.co")) {
+                      autoEndpoint = base + "/functions/v1/create-order";
+                    } else {
+                      autoEndpoint = base + "/api/orders";
+                    }
+                    set("flycontrol_api_url", autoEndpoint);
+                  }
+                }}
+                placeholder="https://sua-url-do-flycontrol.lovable.app"
+                className="input"
+              />
+            </Field>
 
            <Field
              label="Endpoint de Criação Automática"
@@ -559,17 +577,17 @@ export function InfoForm({ restaurant, onChange }: Props) {
              </div>
            </div>
 
-           <Field
-             label="Endpoint de Pedidos (Avançado)"
-             hint="Preenchido automaticamente. Sobrescreve o padrão se preenchido."
-           >
-             <input
-               value={r.flycontrol_api_url ?? ""}
-               onChange={(e) => set("flycontrol_api_url", e.target.value)}
-               placeholder="https://.../api/orders"
-               className="input text-xs"
-             />
-           </Field>
+            <Field
+              label="Endpoint de Pedidos"
+              hint="Preenchido automaticamente ao colar a URL do Painel."
+            >
+              <input
+                value={r.flycontrol_api_url ?? ""}
+                onChange={(e) => set("flycontrol_api_url", e.target.value)}
+                placeholder="https://.../api/orders"
+                className="input text-xs"
+              />
+            </Field>
          </div>
         <p className="text-xs text-muted-foreground">
           ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
