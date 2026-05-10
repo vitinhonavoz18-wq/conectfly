@@ -149,8 +149,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
             address: "Rua das Flores, 123",
           },
           items: [
-            { itemId: "t1", name: "Pizza Calabresa", quantity: 1, unitPrice: 49.9, categoryId: "c1" },
-            { itemId: "t2", name: "Coca-Cola 2L", quantity: 2, unitPrice: 12.0, categoryId: "c2" }
+            { itemId: "t1", name: "Pizza Calabresa", quantity: 1, unitPrice: 49.9, description: "" },
+            { itemId: "t2", name: "Coca-Cola 2L", quantity: 2, unitPrice: 12.0, description: "" }
           ],
           subtotal: 73.9,
           deliveryFee: 0,
