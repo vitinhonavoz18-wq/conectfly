@@ -145,26 +145,63 @@
     border-color: var(--color-border);
   }
 
-  body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    -webkit-font-smoothing: antialiased;
-  }
-}
-
-@utility bg-gradient-primary {
-  background-image: var(--gradient-primary);
-}
-@utility bg-gradient-card {
-  background-image: var(--gradient-card);
-}
-@utility shadow-glow {
-  box-shadow: var(--shadow-glow);
-}
-@utility shadow-card {
-  box-shadow: var(--shadow-card);
-}
+   body {
+     background-color: var(--background);
+     background-image: 
+       radial-gradient(circle at 0% 0%, oklch(0.65 0.25 35 / 0.08) 0%, transparent 40%),
+       radial-gradient(circle at 100% 100%, oklch(0.6 0.2 250 / 0.08) 0%, transparent 40%),
+       radial-gradient(circle at 50% 50%, oklch(0.15 0.01 270 / 1) 0%, var(--background) 100%);
+     background-attachment: fixed;
+     color: var(--foreground);
+     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+     -webkit-font-smoothing: antialiased;
+   }
+ }
+ 
+ @utility bg-gradient-primary {
+   background-image: var(--gradient-primary);
+ }
+ @utility bg-gradient-fire {
+   background-image: var(--gradient-fire);
+ }
+ @utility bg-gradient-blue {
+   background-image: var(--gradient-blue);
+ }
+ @utility bg-gradient-dark {
+   background-image: var(--gradient-dark);
+ }
+ @utility shadow-glow {
+   box-shadow: var(--shadow-glow);
+ }
+ @utility shadow-blue {
+   box-shadow: var(--shadow-blue);
+ }
+ @utility shadow-card {
+   box-shadow: var(--shadow-card);
+ }
+ @utility glass-card {
+   background: oklch(1 1 0 / 3%);
+   backdrop-filter: blur(12px);
+   border: 1px solid oklch(1 1 0 / 10%);
+ }
+ @utility glow-orange {
+   filter: drop-shadow(0 0 8px oklch(0.65 0.25 35 / 0.4));
+ }
+ @utility glow-blue {
+   filter: drop-shadow(0 0 8px oklch(0.6 0.2 250 / 0.4));
+ }
+ 
+ @layer components {
+   .card-premium {
+     @apply glass-card rounded-2xl shadow-card transition-all duration-300 hover:shadow-glow hover:border-primary/30;
+   }
+   .btn-fire {
+     @apply bg-gradient-fire text-primary-foreground font-bold shadow-glow hover:scale-[1.02] active:scale-[0.98] transition-all;
+   }
+   .btn-blue {
+     @apply bg-gradient-blue text-white font-bold shadow-blue hover:scale-[1.02] active:scale-[0.98] transition-all;
+   }
+ }
 @utility scrollbar-hide {
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
