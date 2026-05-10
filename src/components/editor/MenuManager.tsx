@@ -148,9 +148,9 @@ export function MenuManager({ restaurantId }: Props) {
            </button>
            <button
              onClick={addCategory}
-             className="btn-fire px-5 py-2.5 rounded-xl flex items-center gap-2"
+             className="btn-premium px-6 py-2.5 rounded-xl flex items-center gap-2 uppercase text-xs tracking-widest shadow-xl"
            >
-             <Plus className="h-4 w-4" /> 
+             <Plus className="h-4 w-4 text-primary-foreground" /> 
              <span>Nova Categoria</span>
            </button>
          </div>
@@ -183,9 +183,9 @@ export function MenuManager({ restaurantId }: Props) {
                   )}
                    <label
                      title="Enviar imagem da categoria"
-                     className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-gradient-fire text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                     className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-bronze text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
                    >
-                     <Upload className="h-3.5 w-3.5" />
+                     <Upload className="h-4 w-4" />
                     <input
                       type="file"
                       accept="image/*"
@@ -332,7 +332,7 @@ function ItemRow({
           )}
            <label
              title="Enviar foto do item"
-             className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-fire text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                   className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-bronze text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
            >
              <Upload className="h-4 w-4" />
             <input
