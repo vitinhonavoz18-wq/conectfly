@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Check, Plus, Sparkles, Info, ImageIcon } from "lucide-react";
+import { useMemo, useState, useEffect } from "react";
+import { Check, Plus, Sparkles, Info, ImageIcon, ShoppingBag } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -86,8 +86,22 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     );
   }
 
+  // Monitor scroll to show floating button only when summary is not visible
+  const [summaryVisible, setSummaryVisible] = useState(true);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setSummaryVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    const summaryEl = document.getElementById(`summary-${category.id}`);
+    if (summaryEl) observer.observe(summaryEl);
+    return () => observer.disconnect();
+  }, [category.id]);
+
+  const showFloating = canAdd && !summaryVisible;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative" id={`pizza-builder-${category.id}`}>
       {/* Step 1 — Sizes */}
       <div>
         <div className="flex items-baseline justify-between mb-3">
@@ -212,7 +226,10 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
       </div>
 
       {/* Step 3 — Summary + add */}
-       <div className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden">
+       <div 
+         id={`summary-${category.id}`}
+         className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden"
+       >
          <div className="absolute top-0 right-0 p-8 opacity-5">
            <Sparkles className="h-24 w-24 text-primary" />
          </div>
@@ -268,6 +285,27 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
             ✓ {confirm}
           </p>
         )}
+      </div>
+
+      {/* Floating Checkout Button */}
+      <div 
+        className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-md transition-all duration-500 transform ${
+          showFloating ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-90 pointer-events-none"
+        }`}
+      >
+        <button
+          onClick={handleAddToCart}
+          className="btn-premium w-full py-5 rounded-2xl flex items-center justify-between px-8 shadow-[0_20px_50px_rgba(255,90,0,0.4)] border border-primary/30 group active:scale-95 transition-transform"
+        >
+          <div className="flex flex-col items-start">
+            <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Adicionar ao Pedido</span>
+            <span className="text-xl font-black text-primary-foreground tracking-tighter">{formatBRL(finalPrice)}</span>
+          </div>
+          <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl group-hover:bg-white/30 transition-colors">
+            <span className="font-bold text-sm uppercase tracking-tight">Confirmar</span>
+            <Plus className="h-5 w-5" />
+          </div>
+        </button>
       </div>
     </div>
   );
