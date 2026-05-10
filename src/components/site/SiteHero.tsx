@@ -64,20 +64,20 @@ export function SiteHero({
              {description}
            </p>
          )}
-        <div className="mt-8 flex gap-3 justify-center flex-wrap">
-          <a
-            href="#combos"
-            className="px-6 py-3 rounded-full bg-[hsl(var(--site-secondary))] text-black font-bold transition transform hover:-translate-y-0.5 hover:shadow-lg hover:opacity-95"
-          >
-            Ver combos
-          </a>
-          <a
-            href="#cardapio"
-            className="px-6 py-3 rounded-full border border-[hsl(var(--site-border))] font-bold transition transform hover:-translate-y-0.5 hover:bg-[hsl(var(--site-card))]"
-          >
-            Cardápio
-          </a>
-        </div>
+         <div className="mt-12 flex gap-4 justify-center flex-wrap">
+           <a
+             href="#combos"
+             className="px-8 py-4 rounded-2xl bg-gradient-fire text-black font-black text-lg transition-all transform hover:scale-110 hover:shadow-[0_0_30px_rgba(255,90,0,0.4)] active:scale-95 shadow-2xl"
+           >
+             Cardápio de Combos
+           </a>
+           <a
+             href="#cardapio"
+             className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg transition-all transform hover:scale-110 hover:bg-white/10 active:scale-95 shadow-2xl backdrop-blur-md"
+           >
+             Explorar Pizzas
+           </a>
+         </div>
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-1 text-[hsl(var(--site-muted-fg))] animate-bounce">
           <span className="text-[10px] uppercase tracking-[0.2em]">Role</span>
           <span className="block w-px h-6 bg-[hsl(var(--site-muted-fg))]" />
