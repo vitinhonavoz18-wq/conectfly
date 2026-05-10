@@ -1,17 +1,27 @@
 import type { CartLine, RestaurantRow } from "./types";
 
-export interface FlycontrolOrderPayload {
-  order_id: string;
-  customer: { name: string; phone: string };
-  address: { street: string; number: string; neighborhood: string };
-  items: { name: string; quantity: number; price: number; notes?: string }[];
-  total: number;
-  delivery_fee: number;
-  payment_method?: string | null;
-  change_for?: number | null;
-  notes?: string;
-  created_at: string;
-}
+ export interface FlycontrolOrderPayload {
+   api_key?: string;
+   order_id: string;
+   customer: { 
+     name: string; 
+     phone: string; 
+     address: string;
+     neighborhood?: string;
+   };
+   items: { 
+     name: string; 
+     qty: number; 
+     price: number; 
+     notes?: string 
+   }[];
+   total: number;
+   delivery_fee?: number;
+   payment_method?: string | null;
+   change_for?: number | null;
+   notes?: string;
+   created_at: string;
+ }
 
 export function buildOrderPayload(args: {
   name: string;
@@ -25,35 +35,35 @@ export function buildOrderPayload(args: {
   paymentMethod?: string;
   changeFor?: number;
 }): FlycontrolOrderPayload {
-  const items = args.items.map((l) => ({
-    name: `${l.name}${l.sizeLabel ? ` (${l.sizeLabel})` : ""}`,
-    quantity: l.quantity,
-    price: l.unitPrice,
-    notes:
-      l.flavors && l.flavors.length > 0
-        ? `Sabores: ${l.flavors.join(" + ")}`
-        : l.description || undefined,
-  }));
-  const fee = args.deliveryFee ?? 0;
-  return {
-    order_id:
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : `ord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    customer: { name: args.name, phone: args.phone },
-    address: {
-      street: args.address,
-      number: "",
-      neighborhood: args.neighborhood ?? "",
-    },
-    delivery_fee: fee,
-    items,
-    total: args.subtotal + fee,
-    payment_method: args.paymentMethod ?? null,
-    change_for: args.changeFor ?? null,
-    notes: args.notes ?? "",
-    created_at: new Date().toISOString(),
-  };
+   const items = args.items.map((l) => ({
+     name: `${l.name}${l.sizeLabel ? ` (${l.sizeLabel})` : ""}`,
+     qty: l.quantity,
+     price: l.unitPrice,
+     notes:
+       l.flavors && l.flavors.length > 0
+         ? `Sabores: ${l.flavors.join(" + ")}`
+         : l.description || undefined,
+   }));
+   const fee = args.deliveryFee ?? 0;
+   return {
+     order_id:
+       typeof crypto !== "undefined" && "randomUUID" in crypto
+         ? crypto.randomUUID()
+         : `ord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+     customer: { 
+       name: args.name, 
+       phone: args.phone,
+       address: args.address,
+       neighborhood: args.neighborhood ?? undefined
+     },
+     items,
+     total: args.subtotal + fee,
+     delivery_fee: fee,
+     payment_method: args.paymentMethod ?? null,
+     change_for: args.changeFor ?? null,
+     notes: args.notes ?? "",
+     created_at: new Date().toISOString(),
+   };
 }
 
 function joinUrl(base: string, path: string): string {
@@ -105,23 +115,29 @@ export async function sendOrderToFlycontrol(
   opts: { retries?: number } = {},
 ): Promise<void> {
   if (!restaurant.flycontrol_enabled) return;
-  const url = resolveOrdersUrl(restaurant);
-  const key = (restaurant.flycontrol_api_key ?? "").trim();
-  if (!url || !key) throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
+   const url = resolveOrdersUrl(restaurant);
+   const key = (restaurant.flycontrol_api_key ?? "").trim();
+   if (!url || !key) {
+     console.error("[FLYCONTROL] Integração incompleta:", { url, key });
+     throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
+   }
+ 
+   const finalPayload = { ...payload, api_key: key };
 
   const retries = Math.max(0, opts.retries ?? 2);
   let lastErr: unknown;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": key,
-          Authorization: `Bearer ${key}`,
-        },
-        body: JSON.stringify(payload),
-      });
+       console.log(`[FLYCONTROL] Enviando pedido para ${url} (tentativa ${attempt + 1})`);
+       const res = await fetch(url, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+           "x-api-key": key,
+           Authorization: `Bearer ${key}`,
+         },
+         body: JSON.stringify(finalPayload),
+       });
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
@@ -171,19 +187,16 @@ export interface FlycontrolRegisterResponse {
    if (base && !base.startsWith("http")) base = "https://" + base;
    base = base.replace(/\/+$/, "");
    
-   // Try specific registerUrl first if provided
    const endpoints = registerUrl ? [registerUrl.trim()] : [];
    
    if (base) {
-     // Se base já for um endpoint de supabase mas não incluir /functions/v1
      if (base.includes(".supabase.co") && !base.includes("/functions/v1/")) {
        endpoints.push(joinUrl(base, "functions/v1/create-pizzeria"));
      }
- 
-     // Outras tentativas comuns
      endpoints.push(
        joinUrl(base, "api/pizzerias/create"),
-       joinUrl(base, "create-pizzeria")
+       joinUrl(base, "create-pizzeria"),
+       joinUrl(base, "api/pizzerias/vincular")
      );
    }
  
