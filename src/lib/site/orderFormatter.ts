@@ -44,7 +44,8 @@ export function buildOrderMessage(order: OrderData, version: "compact" | "comple
     
     // Specific handling for flavors (Meio a Meio)
     if (item.flavors && item.flavors.length > 0) {
-      line += `\n🍕 Meio a Meio:\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
+      const flavorTitle = item.flavors.length > 1 ? "🍕 Meio a Meio:" : "🍕 Sabor:";
+      line += `\n${flavorTitle}\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
     }
     
     // Additional info/notes
@@ -52,7 +53,7 @@ export function buildOrderMessage(order: OrderData, version: "compact" | "comple
       // Try to detect if it's a list of ingredients/extras
       if (item.description.includes(",") || item.description.includes("\n")) {
         const extras = item.description.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
-        line += `\n✨ Adicionais:\n${extras.map(e => `* ${e}`).join("\n")}`;
+        line += `\n✨ Opções:\n${extras.map(e => `* ${e}`).join("\n")}`;
       } else {
         line += `\n📝 Obs: ${item.description}`;
       }
