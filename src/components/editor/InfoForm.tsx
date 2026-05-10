@@ -140,12 +140,34 @@ export function InfoForm({ restaurant, onChange }: Props) {
         const { sendOrderToFlycontrol, buildOrderPayload } = await import("@/lib/site/flycontrol");
         
         // Payload de teste fake
+        const { buildOrderMessage } = await import("@/lib/site/orderFormatter");
+        
+        const testOrderData = {
+          customer: {
+            name: "João Silva (TESTE)",
+            phone: "71999999999",
+            address: "Rua das Flores, 123",
+          },
+          items: [
+            { itemId: "t1", name: "Pizza Calabresa", quantity: 1, unitPrice: 49.9, categoryId: "c1" },
+            { itemId: "t2", name: "Coca-Cola 2L", quantity: 2, unitPrice: 12.0, categoryId: "c2" }
+          ],
+          subtotal: 73.9,
+          deliveryFee: 0,
+          total: 73.9,
+          paymentMethod: "PIX",
+          notes: "Sem cebola\nBorda recheada",
+          createdAt: new Date().toISOString(),
+        };
+
+        const messageFull = buildOrderMessage(testOrderData, "complete");
+
         const testPayload = buildOrderPayload({
-          name: "Teste de Conexão",
-          phone: "00000000000",
-          address: "Endereço de Teste",
-          items: [],
-          subtotal: 0
+          ...testOrderData.customer,
+          items: testOrderData.items,
+          subtotal: testOrderData.subtotal,
+          paymentMethod: testOrderData.paymentMethod,
+          notes: messageFull,
         });
 
        console.log("[FLYCONTROL] Testando conexão com payload fake...");
