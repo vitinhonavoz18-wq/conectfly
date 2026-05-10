@@ -344,9 +344,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                 className="h-16 w-16 object-contain bg-muted rounded-lg p-1"
               />
             )}
-            <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-              <Upload className="h-4 w-4" />
-              <span className="text-sm">Enviar logo</span>
+             <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
+               <Upload className="h-4 w-4 text-primary" />
+               <span>Enviar Emblema</span>
               <input
                 type="file"
                 accept="image/*"
@@ -398,9 +398,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                     className="h-16 w-24 object-cover rounded-lg bg-black"
                   />
                 )}
-                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm">Enviar vídeo (mp4/webm)</span>
+                 <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
+                   <Upload className="h-4 w-4 text-primary" />
+                   <span>Upload Vídeo Gourmet</span>
                   <input
                     type="file"
                     accept="video/mp4,video/webm,video/*"
@@ -421,9 +421,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                     className="h-16 w-24 object-cover rounded-lg"
                   />
                 )}
-                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm">Enviar imagem</span>
+                 <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
+                   <Upload className="h-4 w-4 text-primary" />
+                   <span>Upload Cenário (Hero)</span>
                   <input
                     type="file"
                     accept="image/*"
