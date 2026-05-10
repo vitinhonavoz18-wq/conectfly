@@ -87,8 +87,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     );
   }
 
-  const isFullySelected = selectedFlavors.length === maxFlavors;
-  const showFloating = isFullySelected;
+  const showFloating = canAdd;
 
   return (
     <div className="space-y-6 relative" id={`pizza-builder-${category.id}`}>
