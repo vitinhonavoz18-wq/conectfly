@@ -19,6 +19,10 @@ export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
@@ -28,7 +32,10 @@ export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
       }`}
     >
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-         <div className="flex items-center gap-4 group cursor-pointer">
+          <div 
+            className="flex items-center gap-4 group cursor-pointer"
+            onClick={scrollToTop}
+          >
            {logoUrl ? (
              <img src={logoUrl} alt={name} className="h-11 w-11 object-contain group-hover:scale-110 transition-transform drop-shadow-lg" />
            ) : (

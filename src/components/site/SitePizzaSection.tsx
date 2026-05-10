@@ -21,7 +21,7 @@ export function SitePizzaSection({ categories }: Props) {
 
   return (
     <section
-      id="monte-sua-pizza"
+      id="pizzas"
       className="py-14 px-4 border-b border-[hsl(var(--site-border))]"
     >
       <div className="max-w-6xl mx-auto">

@@ -1,3 +1,5 @@
+import React from "react";
+
 interface Props {
   name: string;
   tagline: string | null;
@@ -18,6 +20,22 @@ export function SiteHero({
   heroVideoUrl,
 }: Props) {
   const showVideo = heroMediaType === "video" && heroVideoUrl;
+
+  const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
       <div className="absolute inset-0 site-scroll-parallax-bg">
@@ -64,21 +82,34 @@ export function SiteHero({
              {description}
            </p>
          )}
-         <div className="mt-12 flex gap-4 justify-center flex-wrap">
-           <a
-             href="#combos"
-             className="px-10 py-5 rounded-2xl bg-gradient-bronze text-primary-foreground font-black text-lg transition-all transform hover:scale-110 hover:shadow-[0_0_40px_rgba(205,127,50,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-primary/20"
-           >
-             Cardápio de Combos
-           </a>
-           <a
-             href="#cardapio"
-             className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg transition-all transform hover:scale-110 hover:bg-white/10 active:scale-95 shadow-2xl backdrop-blur-md"
-           >
-             Explorar Pizzas
-           </a>
-         </div>
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-1 text-[hsl(var(--site-muted-fg))] animate-bounce">
+          <div className="mt-12 flex gap-4 justify-center flex-wrap">
+            <a
+              href="#combos"
+              onClick={(e) => scrollTo(e, "combos")}
+              className="px-10 py-5 rounded-2xl bg-gradient-bronze text-primary-foreground font-black text-lg transition-all transform hover:scale-110 hover:shadow-[0_0_40px_rgba(205,127,50,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-primary/20"
+            >
+              Cardápio de Combos
+            </a>
+            <a
+              href="#pizzas"
+              onClick={(e) => scrollTo(e, "pizzas")}
+              className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg transition-all transform hover:scale-110 hover:bg-white/10 active:scale-95 shadow-2xl backdrop-blur-md"
+            >
+              Explorar Pizzas
+            </a>
+          </div>
+        <div 
+          onClick={() => {
+            const element = document.getElementById("pizzas");
+            if (element) {
+              const offset = 80;
+              const elementPosition = element.getBoundingClientRect().top;
+              const offsetPosition = elementPosition + window.pageYOffset - offset;
+              window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+            }
+          }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-1 text-[hsl(var(--site-muted-fg))] animate-bounce cursor-pointer group z-20"
+        >
           <span className="text-[10px] uppercase tracking-[0.2em]">Role</span>
           <span className="block w-px h-6 bg-[hsl(var(--site-muted-fg))]" />
         </div>
