@@ -87,19 +87,8 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     );
   }
 
-  // Monitor scroll to show floating button only when summary is not visible
-  const [summaryVisible, setSummaryVisible] = useState(true);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setSummaryVisible(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
-    const summaryEl = document.getElementById(`summary-${category.id}`);
-    if (summaryEl) observer.observe(summaryEl);
-    return () => observer.disconnect();
-  }, [category.id]);
-
-  const showFloating = canAdd && !summaryVisible;
+  const isFullySelected = selectedFlavors.length === maxFlavors;
+  const showFloating = isFullySelected;
 
   return (
     <div className="space-y-6 relative" id={`pizza-builder-${category.id}`}>
