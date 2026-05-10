@@ -205,18 +205,25 @@ export interface FlycontrolRegisterResponse {
    }
 
   let lastErr: Error | null = null;
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
-      }
-      const data = (await res.json()) as any;
+   console.log(`[FLYCONTROL] Iniciando registro/vinculação. Tentando ${endpoints.length} endpoints...`);
+   
+   for (const url of endpoints) {
+     try {
+       console.log(`[FLYCONTROL] Tentando endpoint: ${url}`);
+       const res = await fetch(url, {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ ...body, action: 'vincular_ou_criar' }),
+       });
+       
+       if (!res.ok) {
+         const txt = await res.text().catch(() => "");
+         console.warn(`[FLYCONTROL] Falha no endpoint ${url}: ${res.status} ${txt}`);
+         throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
+       }
+       
+       const data = (await res.json()) as any;
+       console.log(`[FLYCONTROL] Resposta recebida de ${url}:`, data);
       const tenant_id = data.tenant_id || data.id || data.pizzaria_id;
       const api_key = data.api_key || data.key || data.apiKey;
       
