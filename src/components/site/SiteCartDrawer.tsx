@@ -220,38 +220,38 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           )}
         </div>
 
-        <div className="p-4 border-t border-[hsl(var(--site-border))] space-y-3">
-          <div className="space-y-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Seu nome"
-              className="w-full px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))]"
-            />
-            <input
-              value={phone}
-              onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
-              placeholder="(00) 00000-0000"
-              inputMode="numeric"
-              className="w-full px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))]"
-            />
-            {hasZones && (
-              <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
-                <select
-                  value={zoneId}
-                  onChange={(e) => setZoneId(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] appearance-none"
-                >
-                  <option value="">Selecione seu bairro *</option>
-                  {deliveryZones.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.neighborhood} — {formatBRL(Number(z.fee) || 0)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+         <div className="p-6 border-t border-white/5 space-y-4 bg-black/20">
+           <div className="space-y-3">
+             <input
+               value={name}
+               onChange={(e) => setName(e.target.value)}
+               placeholder="Seu nome completo"
+               className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 transition-all font-bold"
+             />
+             <input
+               value={phone}
+               onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
+               placeholder="(00) 00000-0000"
+               inputMode="numeric"
+               className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 transition-all font-bold"
+             />
+             {hasZones && (
+               <div className="relative group">
+                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                 <select
+                   value={zoneId}
+                   onChange={(e) => setZoneId(e.target.value)}
+                   className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 transition-all font-black text-xs uppercase tracking-widest appearance-none"
+                 >
+                   <option value="" className="bg-[hsl(var(--site-bg))] text-white">Local de Entrega *</option>
+                   {deliveryZones.map((z) => (
+                     <option key={z.id} value={z.id} className="bg-[hsl(var(--site-bg))] text-white">
+                       {z.neighborhood} • {formatBRL(Number(z.fee) || 0)}
+                     </option>
+                   ))}
+                 </select>
+               </div>
+             )}
             <div className="relative">
               <MapPin className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
               <textarea
@@ -308,31 +308,36 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               {error}
             </p>
           )}
-          <div className="space-y-1 text-sm">
-            <div className="flex justify-between items-center text-[hsl(var(--site-muted-fg))]">
-              <span>Subtotal</span>
-              <span>{formatBRL(totalPrice)}</span>
-            </div>
-            {hasZones && (
-              <div className="flex justify-between items-center text-[hsl(var(--site-muted-fg))]">
-                <span>Taxa de entrega {selectedZone ? `(${selectedZone.neighborhood})` : ""}</span>
-                <span>{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-center pt-1 border-t border-[hsl(var(--site-border))]">
-              <span className="text-[hsl(var(--site-muted-fg))]">Total</span>
-              <span className="text-xl font-black text-[hsl(var(--site-secondary))]">
-                {formatBRL(grandTotal)}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={handleFinish}
-            disabled={sending}
-            className="w-full py-3 rounded-lg bg-green-600 hover:bg-green-500 text-white font-bold transition disabled:opacity-60"
-          >
-            {sending ? "Enviando..." : "Finalizar pedido"}
-          </button>
+           <div className="space-y-2 py-4 border-y border-white/5">
+             <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-widest">
+               <span>Subtotal</span>
+               <span>{formatBRL(totalPrice)}</span>
+             </div>
+             {hasZones && (
+               <div className="flex justify-between items-center text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                 <span>Logística {selectedZone ? <span className="text-primary italic ml-1">({selectedZone.neighborhood})</span> : ""}</span>
+                 <span>{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
+               </div>
+             )}
+             <div className="flex justify-between items-center pt-4">
+               <span className="font-black text-lg tracking-tighter uppercase">Total Final</span>
+               <span className="text-3xl font-black text-primary tracking-tighter glow-bronze">
+                 {formatBRL(grandTotal)}
+               </span>
+             </div>
+           </div>
+           <button
+             onClick={handleFinish}
+             disabled={sending}
+             className="btn-leaf w-full py-5 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 shadow-2xl group"
+           >
+             {sending ? "Transmitindo Cozinha..." : (
+               <>
+                 <span className="uppercase text-sm tracking-[0.2em]">Finalizar Pedido</span>
+                 <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform" />
+               </>
+             )}
+           </button>
           <p className="text-[10px] text-center text-[hsl(var(--site-muted-fg))]">
             {flycontrolOn && whatsappOn
               ? `Pedido enviado para o painel e WhatsApp do ${restaurantName}`
