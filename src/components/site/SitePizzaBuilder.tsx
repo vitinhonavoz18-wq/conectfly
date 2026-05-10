@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
 import { Check, Plus, Sparkles, Info, ImageIcon } from "lucide-react";
-import type { MenuCategoryRow, MenuItemRow, PizzaSize } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
 interface Props {
   category: MenuCategoryRow & { items: MenuItemRow[] };
+  restaurant?: RestaurantRow;
 }
 
-export function SitePizzaBuilder({ category }: Props) {
+export function SitePizzaBuilder({ category, restaurant }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
@@ -164,17 +165,19 @@ export function SitePizzaBuilder({ category }: Props) {
                        : "border-white/5 bg-white/5 hover:border-white/20"
                    } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01]"}`}
                  >
-                  {it.image_url ? (
-                    <img
-                      src={it.image_url}
-                      alt={it.name}
-                      loading="lazy"
-                      className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[hsl(var(--site-border))]"
-                    />
-                  ) : (
-                    <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-[hsl(var(--site-border))] bg-black/20 flex items-center justify-center text-[hsl(var(--site-muted-fg))]">
-                      <ImageIcon className="h-6 w-6 opacity-40" />
-                    </div>
+                  {(restaurant?.show_item_images ?? true) && (
+                    it.image_url ? (
+                      <img
+                        src={it.image_url}
+                        alt={it.name}
+                        loading="lazy"
+                        className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[hsl(var(--site-border))]"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-[hsl(var(--site-border))] bg-black/20 flex items-center justify-center text-[hsl(var(--site-muted-fg))]">
+                        <ImageIcon className="h-6 w-6 opacity-40" />
+                      </div>
+                    )
                   )}
                   <div
                     className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center ${

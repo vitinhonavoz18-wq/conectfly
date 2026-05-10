@@ -250,6 +250,7 @@ export type Database = {
           primary_color: string
           published: boolean
           secondary_color: string
+          show_item_images: boolean | null
           slug: string
           tagline: string | null
           updated_at: string
@@ -278,6 +279,7 @@ export type Database = {
           primary_color?: string
           published?: boolean
           secondary_color?: string
+          show_item_images?: boolean | null
           slug: string
           tagline?: string | null
           updated_at?: string
@@ -306,6 +308,7 @@ export type Database = {
           primary_color?: string
           published?: boolean
           secondary_color?: string
+          show_item_images?: boolean | null
           slug?: string
           tagline?: string | null
           updated_at?: string

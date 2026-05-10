@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 
 interface Props {
@@ -11,11 +11,12 @@ interface Props {
 export function MenuManager({ restaurantId }: Props) {
   const [cats, setCats] = useState<MenuCategoryRow[]>([]);
   const [items, setItems] = useState<MenuItemRow[]>([]);
+  const [restaurant, setRestaurant] = useState<RestaurantRow | null>(null);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   const reload = async () => {
-    const [c, i] = await Promise.all([
+    const [c, i, r] = await Promise.all([
       supabase
         .from("menu_categories")
         .select("*")
@@ -26,9 +27,15 @@ export function MenuManager({ restaurantId }: Props) {
         .select("*")
         .eq("restaurant_id", restaurantId)
         .order("sort_order"),
+      supabase
+        .from("restaurants")
+        .select("*")
+        .eq("id", restaurantId)
+        .single(),
     ]);
     setCats((c.data ?? []) as unknown as MenuCategoryRow[]);
     setItems((i.data ?? []) as unknown as MenuItemRow[]);
+    setRestaurant(r.data as unknown as RestaurantRow);
   };
 
   useEffect(() => {
@@ -248,6 +255,7 @@ export function MenuManager({ restaurantId }: Props) {
                     key={it.id}
                     item={it}
                     hidePrice={c.is_pizza}
+                    showImage={restaurant?.show_item_images ?? true}
                     onUpdate={(p) => updateItem(it.id, p)}
                     onRemove={() => removeItem(it.id)}
                     onUploadImage={(f) => handleItemImageUpload(it.id, f)}
@@ -271,12 +279,14 @@ export function MenuManager({ restaurantId }: Props) {
 function ItemRow({
   item,
   hidePrice = false,
+  showImage = true,
   onUpdate,
   onRemove,
   onUploadImage,
 }: {
   item: MenuItemRow;
   hidePrice?: boolean;
+  showImage?: boolean;
   onUpdate: (p: Partial<MenuItemRow>) => void;
   onRemove: () => void;
   onUploadImage: (file: File) => void;
@@ -317,39 +327,41 @@ function ItemRow({
 
    return (
      <div className="rounded-xl border border-white/5 bg-white/5 p-4 grid gap-4 hover:border-white/10 transition-colors">
-       <div className="flex items-center gap-4">
-         <div className="relative shrink-0 group">
-          {item.image_url ? (
-            <img
-              src={item.image_url}
-              alt={item.name}
-               className="h-20 w-20 object-cover rounded-xl border border-white/10 bg-white/5 group-hover:border-primary/50 transition-colors"
-             />
-           ) : (
-             <div className="h-20 w-20 rounded-xl border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground group-hover:border-primary/30 transition-colors">
-               <ImageIcon className="h-7 w-7" />
-             </div>
-          )}
-           <label
-             title="Enviar foto do item"
-                   className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-bronze text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
-           >
-             <Upload className="h-4 w-4" />
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) onUploadImage(f);
-              }}
-            />
-          </label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Adicione uma foto profissional do {hidePrice ? "sabor" : "item"} para destacá-lo no cardápio.
-        </p>
-      </div>
+       {showImage && (
+         <div className="flex items-center gap-4">
+           <div className="relative shrink-0 group">
+             {item.image_url ? (
+               <img
+                 src={item.image_url}
+                 alt={item.name}
+                 className="h-20 w-20 object-cover rounded-xl border border-white/10 bg-white/5 group-hover:border-primary/50 transition-colors"
+               />
+             ) : (
+               <div className="h-20 w-20 rounded-xl border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground group-hover:border-primary/30 transition-colors">
+                 <ImageIcon className="h-7 w-7" />
+               </div>
+             )}
+             <label
+               title="Enviar foto do item"
+               className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-bronze text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+             >
+               <Upload className="h-4 w-4" />
+               <input
+                 type="file"
+                 accept="image/*"
+                 hidden
+                 onChange={(e) => {
+                   const f = e.target.files?.[0];
+                   if (f) onUploadImage(f);
+                 }}
+               />
+             </label>
+           </div>
+           <p className="text-xs text-muted-foreground">
+             Adicione uma foto profissional do {hidePrice ? "sabor" : "item"} para destacá-lo no cardápio.
+           </p>
+         </div>
+       )}
        <div className={`grid grid-cols-1 ${hidePrice ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-[1fr_120px_auto]"} gap-3`}>
          <div className="relative">
            <input

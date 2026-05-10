@@ -72,6 +72,7 @@ export interface RestaurantRow {
   flycontrol_register_url?: string | null;
   flycontrol_tenant_id?: string | null;
   whatsapp_enabled?: boolean;
+  show_item_images?: boolean;
 }
 
 export interface SiteData {
