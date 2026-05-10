@@ -99,53 +99,56 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-border bg-gradient-card p-5 shadow-card">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-            <MapPin className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h3 className="font-bold">Taxas de entrega por bairro</h3>
-            <p className="text-sm text-muted-foreground">
-              O cliente escolhe o bairro no checkout e a taxa é somada automaticamente
-              ao valor do pedido antes de ir para o WhatsApp.
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={handleSeedDefaults}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm font-semibold"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Carregar bairros padrão (Salvador)
-        </button>
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-        <h4 className="font-bold mb-3">Adicionar novo bairro</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-[2fr,1fr,auto] gap-2">
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nome do bairro (ex: Vitória)"
-            className="input"
-          />
-          <input
-            value={newFee}
-            onChange={(e) => setNewFee(e.target.value)}
-            placeholder="Taxa (ex: 15)"
-            inputMode="decimal"
-            className="input"
-          />
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition shadow-glow"
-          >
-            <Plus className="h-4 w-4" /> Adicionar
-          </button>
-        </div>
-        {msg && <p className="text-sm text-muted-foreground mt-2">{msg}</p>}
-      </div>
+       <div className="card-premium p-6 border-primary/20 bg-primary/5">
+         <div className="flex items-start gap-4 mb-4">
+           <div className="h-12 w-12 rounded-xl bg-gradient-fire flex items-center justify-center shadow-glow flex-shrink-0">
+             <MapPin className="h-6 w-6 text-primary-foreground" />
+           </div>
+           <div>
+             <h3 className="text-xl font-black tracking-tight">Taxas de Entrega</h3>
+             <p className="text-sm text-muted-foreground">
+               Configure os bairros atendidos e suas respectivas taxas.
+             </p>
+           </div>
+         </div>
+         <button
+           onClick={handleSeedDefaults}
+           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold transition-all"
+         >
+           <RefreshCw className="h-4 w-4 text-primary" />
+           <span>Carregar Bairros Padrão (Salvador)</span>
+         </button>
+       </div>
+ 
+       <div className="card-premium p-6">
+         <h4 className="text-lg font-black mb-4 text-primary tracking-tight">Novo Bairro</h4>
+         <div className="grid grid-cols-1 sm:grid-cols-[2fr,1fr,auto] gap-3">
+           <input
+             value={newName}
+             onChange={(e) => setNewName(e.target.value)}
+             placeholder="Nome do bairro (ex: Vitória)"
+             className="input bg-black/20"
+           />
+           <div className="relative flex items-center">
+             <span className="absolute left-3 text-xs font-bold text-primary">R$</span>
+             <input
+               value={newFee}
+               onChange={(e) => setNewFee(e.target.value)}
+               placeholder="0.00"
+               inputMode="decimal"
+               className="input pl-9 bg-black/20"
+             />
+           </div>
+           <button
+             onClick={handleAdd}
+             className="btn-fire px-8 py-2.5 rounded-xl flex items-center gap-2"
+           >
+             <Plus className="h-5 w-5" /> 
+             <span>Adicionar</span>
+           </button>
+         </div>
+         {msg && <p className="text-sm font-bold text-primary mt-3 animate-pulse">{msg}</p>}
+       </div>
 
       <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
