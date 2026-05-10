@@ -79,12 +79,13 @@ export function ComboManager({ restaurantId }: Props) {
           Combos promocionais. Cada combo lista os itens inclusos — eles aparecem
           na mensagem do WhatsApp para o cliente saber tudo que vem no pedido.
         </p>
-        <button
-          onClick={addGroup}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground font-semibold text-sm hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> Novo grupo
-        </button>
+         <button
+           onClick={addGroup}
+           className="btn-fire px-5 py-2.5 rounded-xl flex items-center gap-2"
+         >
+           <Plus className="h-4 w-4" />
+           <span>Novo Grupo</span>
+         </button>
       </div>
 
       {groups.length === 0 && (
@@ -97,29 +98,31 @@ export function ComboManager({ restaurantId }: Props) {
         const isOpen = openGroup === g.id;
         const cs = combos.filter((c) => c.group_id === g.id);
         return (
-          <div key={g.id} className="rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between p-3">
-              <button
-                onClick={() => setOpenGroup(isOpen ? null : g.id)}
-                className="flex items-center gap-2 font-bold flex-1 text-left"
-              >
-                {isOpen ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-                {g.title}
-                <span className="text-xs text-muted-foreground font-normal ml-2">
-                  ({cs.length})
-                </span>
-              </button>
-              <button
-                onClick={() => removeGroup(g.id)}
-                className="p-2 text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
+           <div key={g.id} className="card-premium overflow-hidden group/cat">
+             <div className="flex items-center justify-between gap-4 p-4">
+               <button
+                 onClick={() => setOpenGroup(isOpen ? null : g.id)}
+                 className="flex items-center gap-3 font-black text-lg flex-1 text-left group-hover/cat:text-primary transition-colors"
+               >
+                 <div className={`p-1.5 rounded-lg bg-white/5 transition-colors ${isOpen ? 'bg-primary/20 text-primary' : ''}`}>
+                   {isOpen ? (
+                     <ChevronDown className="h-5 w-5 shrink-0" />
+                   ) : (
+                     <ChevronRight className="h-5 w-5 shrink-0" />
+                   )}
+                 </div>
+                 {g.title}
+                 <span className="text-xs text-muted-foreground font-bold ml-2 bg-white/5 px-2 py-1 rounded-md">
+                   {cs.length} combos
+                 </span>
+               </button>
+               <button
+                 onClick={() => removeGroup(g.id)}
+                 className="p-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
+               >
+                 <Trash2 className="h-5 w-5" />
+               </button>
+             </div>
             {isOpen && (
               <div className="border-t border-border p-3 space-y-3">
                 {cs.map((c) => (

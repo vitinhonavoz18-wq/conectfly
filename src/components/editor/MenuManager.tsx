@@ -136,23 +136,24 @@ export function MenuManager({ restaurantId }: Props) {
         <p className="text-sm text-muted-foreground">
           Organize seu cardápio em categorias. Use tamanhos para itens com preço variável (ex: 500g / 1kg).
         </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={applyDefaultMenu}
-            disabled={loadingTemplate}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:border-primary text-sm font-semibold disabled:opacity-50"
-            title="Carregar cardápio padrão (Pizzaria — 4 tamanhos e 32 sabores)"
-          >
-            <Sparkles className="h-4 w-4" />
-            {loadingTemplate ? "Carregando..." : "Cardápio padrão"}
-          </button>
-          <button
-            onClick={addCategory}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Nova categoria
-          </button>
-        </div>
+         <div className="flex items-center gap-3">
+           <button
+             onClick={applyDefaultMenu}
+             disabled={loadingTemplate}
+             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all disabled:opacity-50"
+             title="Carregar cardápio padrão (Pizzaria — 4 tamanhos e 32 sabores)"
+           >
+             <Sparkles className="h-4 w-4 text-primary" />
+             <span>{loadingTemplate ? "Carregando..." : "Cardápio Padrão"}</span>
+           </button>
+           <button
+             onClick={addCategory}
+             className="btn-fire px-5 py-2.5 rounded-xl flex items-center gap-2"
+           >
+             <Plus className="h-4 w-4" /> 
+             <span>Nova Categoria</span>
+           </button>
+         </div>
       </div>
 
       {cats.length === 0 && (
@@ -165,26 +166,26 @@ export function MenuManager({ restaurantId }: Props) {
         const isOpen = openCat === c.id;
         const its = items.filter((i) => i.category_id === c.id);
         return (
-          <div key={c.id} className="rounded-xl border border-border bg-card">
-            <div className="flex items-center justify-between gap-3 p-3">
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="relative shrink-0">
+           <div key={c.id} className="card-premium overflow-hidden group/cat">
+             <div className="flex items-center justify-between gap-4 p-4">
+               <div className="flex items-center gap-4 flex-1 min-w-0">
+                 <div className="relative shrink-0 group">
                   {c.image_url ? (
                     <img
                       src={c.image_url}
                       alt={c.name}
-                      className="h-14 w-14 object-cover rounded-lg border border-border bg-muted"
-                    />
-                  ) : (
-                    <div className="h-14 w-14 rounded-lg border border-dashed border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
-                      <ImageIcon className="h-5 w-5" />
-                    </div>
+                       className="h-16 w-16 object-cover rounded-xl border border-white/10 bg-white/5 group-hover/cat:border-primary/50 transition-colors"
+                     />
+                   ) : (
+                     <div className="h-16 w-16 rounded-xl border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground group-hover/cat:border-primary/30 transition-colors">
+                       <ImageIcon className="h-6 w-6" />
+                     </div>
                   )}
-                  <label
-                    title="Enviar imagem da categoria"
-                    className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow hover:opacity-90"
-                  >
-                    <Upload className="h-3 w-3" />
+                   <label
+                     title="Enviar imagem da categoria"
+                     className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-gradient-fire text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                   >
+                     <Upload className="h-3.5 w-3.5" />
                     <input
                       type="file"
                       accept="image/*"
@@ -196,30 +197,32 @@ export function MenuManager({ restaurantId }: Props) {
                     />
                   </label>
                 </div>
-                <button
-                  onClick={() => setOpenCat(isOpen ? null : c.id)}
-                  className="flex items-center gap-2 font-bold flex-1 text-left min-w-0"
-                >
-                  {isOpen ? (
-                    <ChevronDown className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 shrink-0" />
-                  )}
-                  <span className="truncate">
-                    {c.icon ? `${c.icon} ` : ""}
-                    {c.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground font-normal ml-2 shrink-0">
-                    ({its.length} {its.length === 1 ? "item" : "itens"})
-                  </span>
-                </button>
-              </div>
-              <button
-                onClick={() => removeCategory(c.id)}
-                className="p-2 text-muted-foreground hover:text-destructive shrink-0"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+                 <button
+                   onClick={() => setOpenCat(isOpen ? null : c.id)}
+                   className="flex items-center gap-3 font-black text-lg flex-1 text-left min-w-0 group-hover/cat:text-primary transition-colors"
+                 >
+                   <div className={`p-1.5 rounded-lg bg-white/5 transition-colors ${isOpen ? 'bg-primary/20 text-primary' : ''}`}>
+                     {isOpen ? (
+                       <ChevronDown className="h-5 w-5 shrink-0" />
+                     ) : (
+                       <ChevronRight className="h-5 w-5 shrink-0" />
+                     )}
+                   </div>
+                   <span className="truncate">
+                     {c.icon ? `${c.icon} ` : ""}
+                     {c.name}
+                   </span>
+                   <span className="text-xs text-muted-foreground font-bold ml-2 shrink-0 bg-white/5 px-2 py-1 rounded-md">
+                     {its.length} {its.length === 1 ? "item" : "itens"}
+                   </span>
+                 </button>
+               </div>
+               <button
+                 onClick={() => removeCategory(c.id)}
+                 className="p-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
+               >
+                 <Trash2 className="h-5 w-5" />
+               </button>
             </div>
             {!c.image_url && (
               <div className="px-3 pb-2 -mt-1">
@@ -312,26 +315,26 @@ function ItemRow({
     });
   };
 
-  return (
-    <div className="rounded-lg border border-border bg-background p-3 grid gap-2">
-      <div className="flex items-center gap-3">
-        <div className="relative shrink-0">
+   return (
+     <div className="rounded-xl border border-white/5 bg-white/5 p-4 grid gap-4 hover:border-white/10 transition-colors">
+       <div className="flex items-center gap-4">
+         <div className="relative shrink-0 group">
           {item.image_url ? (
             <img
               src={item.image_url}
               alt={item.name}
-              className="h-16 w-16 object-cover rounded-lg border border-border bg-muted"
-            />
-          ) : (
-            <div className="h-16 w-16 rounded-lg border border-dashed border-border bg-muted/40 flex items-center justify-center text-muted-foreground">
-              <ImageIcon className="h-5 w-5" />
-            </div>
+               className="h-20 w-20 object-cover rounded-xl border border-white/10 bg-white/5 group-hover:border-primary/50 transition-colors"
+             />
+           ) : (
+             <div className="h-20 w-20 rounded-xl border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground group-hover:border-primary/30 transition-colors">
+               <ImageIcon className="h-7 w-7" />
+             </div>
           )}
-          <label
-            title="Enviar foto do item"
-            className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow hover:opacity-90"
-          >
-            <Upload className="h-3 w-3" />
+           <label
+             title="Enviar foto do item"
+             className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-fire text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+           >
+             <Upload className="h-4 w-4" />
             <input
               type="file"
               accept="image/*"
@@ -347,35 +350,36 @@ function ItemRow({
           Adicione uma foto profissional do {hidePrice ? "sabor" : "item"} para destacá-lo no cardápio.
         </p>
       </div>
-      <div
-        className={`grid grid-cols-1 ${
-          hidePrice ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-[1fr_120px_auto]"
-        } gap-2`}
-      >
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onBlur={commit}
-          placeholder={hidePrice ? "Nome do sabor" : "Nome do item"}
-          className="input"
-        />
-        {!hidePrice && (
-          <input
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            onBlur={commit}
-            placeholder="0.00"
-            inputMode="decimal"
-            className="input"
-          />
-        )}
-        <button
-          onClick={onRemove}
-          className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+       <div className={`grid grid-cols-1 ${hidePrice ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-[1fr_120px_auto]"} gap-3`}>
+         <div className="relative">
+           <input
+             value={name}
+             onChange={(e) => setName(e.target.value)}
+             onBlur={commit}
+             placeholder={hidePrice ? "Nome do sabor" : "Nome do item"}
+             className="input bg-black/20 border-white/5 focus:border-primary/40 font-bold"
+           />
+         </div>
+         {!hidePrice && (
+           <div className="relative flex items-center">
+             <span className="absolute left-3 text-xs font-bold text-primary">R$</span>
+             <input
+               value={price}
+               onChange={(e) => setPrice(e.target.value)}
+               onBlur={commit}
+               placeholder="0.00"
+               inputMode="decimal"
+               className="input pl-9 bg-black/20 border-white/5 focus:border-primary/40 font-black text-emerald-400"
+             />
+           </div>
+         )}
+         <button
+           onClick={onRemove}
+           className="p-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+         >
+           <Trash2 className="h-5 w-5" />
+         </button>
+       </div>
       <textarea
         value={desc}
         onChange={(e) => setDesc(e.target.value)}

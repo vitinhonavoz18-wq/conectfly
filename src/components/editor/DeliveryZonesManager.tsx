@@ -99,109 +99,112 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-border bg-gradient-card p-5 shadow-card">
-        <div className="flex items-start gap-3 mb-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-            <MapPin className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h3 className="font-bold">Taxas de entrega por bairro</h3>
-            <p className="text-sm text-muted-foreground">
-              O cliente escolhe o bairro no checkout e a taxa é somada automaticamente
-              ao valor do pedido antes de ir para o WhatsApp.
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={handleSeedDefaults}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm font-semibold"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Carregar bairros padrão (Salvador)
-        </button>
-      </div>
+       <div className="card-premium p-6 border-primary/20 bg-primary/5">
+         <div className="flex items-start gap-4 mb-4">
+           <div className="h-12 w-12 rounded-xl bg-gradient-fire flex items-center justify-center shadow-glow flex-shrink-0">
+             <MapPin className="h-6 w-6 text-primary-foreground" />
+           </div>
+           <div>
+             <h3 className="text-xl font-black tracking-tight">Taxas de Entrega</h3>
+             <p className="text-sm text-muted-foreground">
+               Configure os bairros atendidos e suas respectivas taxas.
+             </p>
+           </div>
+         </div>
+         <button
+           onClick={handleSeedDefaults}
+           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold transition-all"
+         >
+           <RefreshCw className="h-4 w-4 text-primary" />
+           <span>Carregar Bairros Padrão (Salvador)</span>
+         </button>
+       </div>
+ 
+       <div className="card-premium p-6">
+         <h4 className="text-lg font-black mb-4 text-primary tracking-tight">Novo Bairro</h4>
+         <div className="grid grid-cols-1 sm:grid-cols-[2fr,1fr,auto] gap-3">
+           <input
+             value={newName}
+             onChange={(e) => setNewName(e.target.value)}
+             placeholder="Nome do bairro (ex: Vitória)"
+             className="input bg-black/20"
+           />
+           <div className="relative flex items-center">
+             <span className="absolute left-3 text-xs font-bold text-primary">R$</span>
+             <input
+               value={newFee}
+               onChange={(e) => setNewFee(e.target.value)}
+               placeholder="0.00"
+               inputMode="decimal"
+               className="input pl-9 bg-black/20"
+             />
+           </div>
+           <button
+             onClick={handleAdd}
+             className="btn-fire px-8 py-2.5 rounded-xl flex items-center gap-2"
+           >
+             <Plus className="h-5 w-5" /> 
+             <span>Adicionar</span>
+           </button>
+         </div>
+         {msg && <p className="text-sm font-bold text-primary mt-3 animate-pulse">{msg}</p>}
+       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-        <h4 className="font-bold mb-3">Adicionar novo bairro</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-[2fr,1fr,auto] gap-2">
-          <input
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            placeholder="Nome do bairro (ex: Vitória)"
-            className="input"
-          />
-          <input
-            value={newFee}
-            onChange={(e) => setNewFee(e.target.value)}
-            placeholder="Taxa (ex: 15)"
-            inputMode="decimal"
-            className="input"
-          />
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition shadow-glow"
-          >
-            <Plus className="h-4 w-4" /> Adicionar
-          </button>
-        </div>
-        {msg && <p className="text-sm text-muted-foreground mt-2">{msg}</p>}
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-        <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
-          <h4 className="font-bold">Bairros cadastrados ({zones.length})</h4>
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Filtrar..."
-            className="input max-w-xs"
-          />
-        </div>
+       <div className="card-premium p-6">
+         <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
+           <h4 className="text-lg font-black tracking-tight">Bairros Atendidos <span className="text-sm font-bold text-muted-foreground ml-2 bg-white/5 px-2 py-1 rounded-md">{zones.length}</span></h4>
+           <div className="relative flex-1 max-w-xs">
+             <input
+               value={filter}
+               onChange={(e) => setFilter(e.target.value)}
+               placeholder="Buscar bairro..."
+               className="input bg-black/20 pl-4 py-2"
+             />
+           </div>
+         </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : filtered.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhum bairro cadastrado.</p>
         ) : (
-          <div className="divide-y divide-border">
-            {filtered.map((z) => (
-              <div key={z.id} className="py-2 grid grid-cols-1 sm:grid-cols-[2fr,1fr,auto,auto] gap-2 items-center">
-                <input
-                  value={z.neighborhood}
-                  onChange={(e) => handleUpdate(z, { neighborhood: e.target.value })}
-                  className="input"
-                />
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">R$</span>
-                  <input
-                    value={String(z.fee)}
-                    onChange={(e) =>
-                      handleUpdate(z, {
-                        fee: Number(e.target.value.replace(",", ".")) || 0,
-                      })
-                    }
-                    inputMode="decimal"
-                    className="input flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground min-w-[80px]">
-                    {formatBRL(Number(z.fee) || 0)}
-                  </span>
-                </div>
-                <button
-                  onClick={() => handleSave(z)}
-                  className="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-secondary hover:bg-muted text-sm"
-                >
-                  <Save className="h-3.5 w-3.5" /> Salvar
-                </button>
-                <button
-                  onClick={() => handleDelete(z.id)}
-                  className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                  aria-label="Remover"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+           <div className="space-y-3">
+             {filtered.map((z) => (
+               <div key={z.id} className="p-3 rounded-xl bg-white/5 border border-white/5 grid grid-cols-1 sm:grid-cols-[2fr,1fr,auto,auto] gap-3 items-center hover:border-white/10 transition-colors group">
+                 <input
+                   value={z.neighborhood}
+                   onChange={(e) => handleUpdate(z, { neighborhood: e.target.value })}
+                   className="input bg-black/20 border-transparent focus:border-primary/40 font-bold uppercase"
+                 />
+                 <div className="flex items-center gap-2">
+                   <span className="text-xs font-bold text-primary">R$</span>
+                   <input
+                     value={String(z.fee)}
+                     onChange={(e) =>
+                       handleUpdate(z, {
+                         fee: Number(e.target.value.replace(",", ".")) || 0,
+                       })
+                     }
+                     inputMode="decimal"
+                     className="input flex-1 bg-black/20 border-transparent focus:border-primary/40 font-black text-emerald-400"
+                   />
+                 </div>
+                 <button
+                   onClick={() => handleSave(z)}
+                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all text-primary"
+                 >
+                   <Save className="h-4 w-4" /> 
+                   <span className="sm:hidden lg:inline">Salvar</span>
+                 </button>
+                 <button
+                   onClick={() => handleDelete(z.id)}
+                   className="p-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
+                   aria-label="Remover"
+                 >
+                   <Trash2 className="h-5 w-5" />
+                 </button>
+               </div>
+             ))}
+           </div>
         )}
       </div>
     </div>

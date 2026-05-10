@@ -313,10 +313,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
               onChange={(e) => set("primary_color", e.target.value)}
               className="input flex-1"
             />
-            <span
-              className="h-9 w-9 rounded-lg border border-border"
-              style={{ background: `hsl(${r.primary_color})` }}
-            />
+             <span
+               className="h-10 w-10 rounded-xl border border-white/20 shadow-lg"
+               style={{ background: `hsl(${r.primary_color})` }}
+             />
           </div>
         </Field>
         <Field label="Cor secundária (HSL)" hint='Ex: "45 93% 58%" (dourado)'>
@@ -326,10 +326,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
               onChange={(e) => set("secondary_color", e.target.value)}
               className="input flex-1"
             />
-            <span
-              className="h-9 w-9 rounded-lg border border-border"
-              style={{ background: `hsl(${r.secondary_color})` }}
-            />
+             <span
+               className="h-10 w-10 rounded-xl border border-white/20 shadow-lg"
+               style={{ background: `hsl(${r.secondary_color})` }}
+             />
           </div>
         </Field>
       </div>
@@ -440,22 +440,25 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </Field>
       </div>
 
-      <div className="flex items-center gap-3 pt-2">
-        <button
-          onClick={save}
-          disabled={saving}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-primary text-primary-foreground font-semibold hover:opacity-90 transition shadow-glow disabled:opacity-50"
-        >
-          <Save className="h-4 w-4" /> {saving ? "Salvando..." : "Salvar informações"}
-        </button>
-        {msg && <span className="text-sm text-muted-foreground">{msg}</span>}
-      </div>
-
-      <div className="rounded-2xl border border-border bg-card/40 p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary" />
-          <h3 className="font-bold">Integração FLYCONTROL</h3>
-        </div>
+           <div className="flex items-center gap-4 pt-4">
+             <button
+               onClick={save}
+               disabled={saving}
+               className="btn-fire px-8 py-3 rounded-xl flex items-center gap-2"
+             >
+               <Save className="h-5 w-5" />
+               <span>{saving ? "Salvando..." : "Salvar Configurações"}</span>
+             </button>
+             {msg && <span className="text-sm font-bold text-primary animate-pulse">{msg}</span>}
+           </div>
+ 
+           <div className="card-premium p-8 space-y-6 border-primary/20 bg-primary/5">
+             <div className="flex items-center gap-3">
+               <div className="h-10 w-10 rounded-lg bg-gradient-fire flex items-center justify-center shadow-glow">
+                 <Zap className="h-6 w-6 text-primary-foreground" />
+               </div>
+               <h3 className="text-2xl font-black tracking-tight">FLYCONTROL Integration</h3>
+             </div>
         <p className="text-sm text-muted-foreground">
           Envia cada pedido em tempo real para o painel FLYCONTROL desta pizzaria.
         </p>
