@@ -9,12 +9,13 @@ import {
   Eye,
   FileText,
   Link as LinkIcon,
-  MapPin,
-  Pencil,
-  Sparkles,
-  Tag,
-  Utensils,
-} from "lucide-react";
+   MapPin,
+   Pencil,
+   Rocket,
+   Sparkles,
+   Tag,
+   Utensils,
+ } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
 import { fetchSiteByRestaurant } from "@/lib/site/queries";
