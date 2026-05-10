@@ -98,7 +98,18 @@ export function SiteHero({
               Explorar Pizzas
             </a>
           </div>
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-1 text-[hsl(var(--site-muted-fg))] animate-bounce">
+        <div 
+          onClick={() => {
+            const element = document.getElementById("pizzas");
+            if (element) {
+              const offset = 80;
+              const elementPosition = element.getBoundingClientRect().top;
+              const offsetPosition = elementPosition + window.pageYOffset - offset;
+              window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+            }
+          }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-1 text-[hsl(var(--site-muted-fg))] animate-bounce cursor-pointer group z-20"
+        >
           <span className="text-[10px] uppercase tracking-[0.2em]">Role</span>
           <span className="block w-px h-6 bg-[hsl(var(--site-muted-fg))]" />
         </div>
