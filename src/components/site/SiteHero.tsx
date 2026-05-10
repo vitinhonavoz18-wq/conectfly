@@ -91,8 +91,8 @@ export function SiteHero({
               Cardápio de Combos
             </a>
             <a
-              href="#cardapio"
-              onClick={(e) => scrollTo(e, "cardapio")}
+              href="#pizzas"
+              onClick={(e) => scrollTo(e, "pizzas")}
               className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg transition-all transform hover:scale-110 hover:bg-white/10 active:scale-95 shadow-2xl backdrop-blur-md"
             >
               Explorar Pizzas
