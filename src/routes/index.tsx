@@ -247,22 +247,22 @@ function Dashboard() {
  function EmptyState({ onCreate }: { onCreate: () => void }) {
    return (
      <div className="rounded-[2.5rem] border-2 border-dashed border-white/10 bg-white/5 p-16 text-center shadow-2xl relative overflow-hidden group">
-       <div className="absolute inset-0 bg-gradient-fire opacity-0 group-hover:opacity-[0.03] transition-opacity" />
-       <div className="relative z-10">
-         <div className="mx-auto h-20 w-20 rounded-3xl bg-gradient-fire flex items-center justify-center mb-6 shadow-glow animate-bounce">
-           <Rocket className="h-10 w-10 text-primary-foreground glow-orange" />
-         </div>
+        <div className="absolute inset-0 bg-gradient-bronze opacity-0 group-hover:opacity-[0.03] transition-opacity" />
+        <div className="relative z-10">
+          <div className="mx-auto h-20 w-20 rounded-3xl bg-gradient-bronze flex items-center justify-center mb-6 shadow-glow animate-bounce">
+            <Rocket className="h-10 w-10 text-primary-foreground glow-bronze" />
+          </div>
          <h2 className="text-3xl font-black mb-3 tracking-tight">Comece sua Jornada</h2>
          <p className="text-muted-foreground mb-10 max-w-md mx-auto text-lg leading-relaxed">
            Crie sites de delivery poderosos com cardápio inteligente e checkout via WhatsApp em segundos.
          </p>
-         <button
-           onClick={onCreate}
-           className="btn-fire px-10 py-4 rounded-2xl text-lg flex items-center gap-3 mx-auto shadow-2xl"
-         >
-           <Plus className="h-6 w-6" />
-           <span>Criar Meu Primeiro Site</span>
-         </button>
+          <button
+            onClick={onCreate}
+            className="btn-premium px-10 py-4 rounded-2xl text-lg flex items-center gap-3 mx-auto shadow-2xl uppercase tracking-[0.1em]"
+          >
+            <Plus className="h-6 w-6 text-primary-foreground" />
+            <span>Criar Minha Vitrine Gourmet</span>
+          </button>
        </div>
      </div>
    );
