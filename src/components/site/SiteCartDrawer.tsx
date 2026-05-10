@@ -140,21 +140,24 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         }`}
         onClick={onClose}
       />
-      <aside
-        className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-[hsl(var(--site-bg))] border-l border-[hsl(var(--site-border))] shadow-2xl flex flex-col transition-transform ${
-          open ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--site-border))]">
-          <h2 className="font-bold text-lg">Seu pedido</h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-[hsl(var(--site-card))]"
-            aria-label="Fechar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+       <aside
+         className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-[hsl(var(--site-bg)/0.8)] backdrop-blur-2xl border-l border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col transition-transform duration-500 ${
+           open ? "translate-x-0" : "translate-x-full"
+         }`}
+       >
+         <div className="flex items-center justify-between p-6 border-b border-white/5">
+           <div className="flex flex-col">
+             <h2 className="font-black text-2xl tracking-tighter uppercase">Minha Seleção</h2>
+             <span className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">Cozinha Gourmet</span>
+           </div>
+           <button
+             onClick={onClose}
+             className="p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all active:scale-90"
+             aria-label="Fechar"
+           >
+             <X className="h-6 w-6" />
+           </button>
+         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {items.length === 0 ? (
@@ -163,16 +166,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </p>
           ) : (
             items.map((l) => (
-              <div
-                key={`${l.itemId}-${l.sizeLabel ?? ""}`}
-                className="rounded-lg border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-3"
-              >
+               <div
+                 key={`${l.itemId}-${l.sizeLabel ?? ""}`}
+                 className="rounded-2xl border border-white/5 bg-white/5 p-5 relative overflow-hidden group"
+               >
+                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="flex justify-between gap-2">
-                  <div className="flex-1">
-                    <p className="font-semibold">
-                      {l.name}
-                      {l.sizeLabel ? ` (${l.sizeLabel})` : ""}
-                    </p>
+                   <div className="flex-1 relative z-10">
+                     <p className="font-black text-lg tracking-tight uppercase group-hover:text-primary transition-colors">
+                       {l.name}
+                       {l.sizeLabel ? <span className="text-xs text-primary ml-2 font-bold bg-primary/10 px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
+                     </p>
                     {l.flavors && l.flavors.length > 0 ? (
                       <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
                         Sabores: {l.flavors.join(" + ")}
@@ -183,33 +187,33 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                       </p>
                     ) : null}
                   </div>
-                  <button
-                    onClick={() => removeLine(l.itemId, l.sizeLabel)}
-                    className="p-1 text-[hsl(var(--site-muted-fg))] hover:text-red-400"
-                    aria-label="Remover"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                   <button
+                     onClick={() => removeLine(l.itemId, l.sizeLabel)}
+                     className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all relative z-10"
+                     aria-label="Remover"
+                   >
+                     <Trash2 className="h-5 w-5" />
+                   </button>
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
-                      className="h-7 w-7 rounded-full border border-[hsl(var(--site-border))] inline-flex items-center justify-center hover:bg-[hsl(var(--site-muted))]"
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-6 text-center font-semibold">{l.quantity}</span>
-                    <button
-                      onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
-                      className="h-7 w-7 rounded-full border border-[hsl(var(--site-border))] inline-flex items-center justify-center hover:bg-[hsl(var(--site-muted))]"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
-                  <span className="font-bold text-[hsl(var(--site-secondary))]">
-                    {formatBRL(l.unitPrice * l.quantity)}
-                  </span>
+                     <button
+                       onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
+                       className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 inline-flex items-center justify-center hover:border-primary/50 transition-all active:scale-90"
+                     >
+                       <Minus className="h-4 w-4" />
+                     </button>
+                     <span className="w-10 text-center font-black text-lg">{l.quantity}</span>
+                     <button
+                       onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
+                       className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 inline-flex items-center justify-center hover:border-primary/50 transition-all active:scale-90"
+                     >
+                       <Plus className="h-4 w-4" />
+                     </button>
+                   </div>
+                   <span className="font-black text-xl text-primary tracking-tighter">
+                     {formatBRL(l.unitPrice * l.quantity)}
+                   </span>
                 </div>
               </div>
             ))
