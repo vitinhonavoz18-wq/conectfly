@@ -37,29 +37,33 @@ export function SiteHero({
           />
         ) : null}
       </div>
-      <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.7)] via-[hsl(var(--site-bg)/0.85)] to-[hsl(var(--site-bg))]" />
-      <div className="relative z-10 text-center px-4 py-20 site-hero-enter">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={name}
-            className="mx-auto mb-6 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-2xl"
-          />
-        ) : (
-          <h1 className="text-5xl sm:text-7xl font-black tracking-tight mb-6">
-            {name}
-          </h1>
-        )}
-        {tagline && (
-          <p className="text-xl sm:text-2xl font-semibold text-[hsl(var(--site-secondary))] mb-3">
-            {tagline}
-          </p>
-        )}
-        {description && (
-          <p className="max-w-xl mx-auto text-[hsl(var(--site-muted-fg))]">
-            {description}
-          </p>
-        )}
+       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.5)] via-[hsl(var(--site-bg)/0.8)] to-[hsl(var(--site-bg))]" />
+       <div className="absolute inset-0 bg-radial-at-c from-primary/10 to-transparent opacity-50" />
+       <div className="relative z-10 text-center px-4 py-20 site-hero-enter max-w-5xl mx-auto">
+         {logoUrl ? (
+           <div className="relative group inline-block">
+             <div className="absolute inset-0 bg-primary/20 blur-[100px] group-hover:bg-primary/40 transition-all rounded-full" />
+             <img
+               src={logoUrl}
+               alt={name}
+               className="relative mx-auto mb-8 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-[0_0_35px_rgba(255,122,0,0.3)] group-hover:scale-105 transition-transform duration-700"
+             />
+           </div>
+         ) : (
+           <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-primary via-orange-400 to-amber-300 bg-clip-text text-transparent drop-shadow-sm">
+             {name}
+           </h1>
+         )}
+         {tagline && (
+           <p className="text-2xl sm:text-3xl font-black text-primary mb-4 uppercase tracking-[0.15em] glow-orange">
+             {tagline}
+           </p>
+         )}
+         {description && (
+           <p className="max-w-2xl mx-auto text-lg sm:text-xl text-[hsl(var(--site-muted-fg))] leading-relaxed font-medium">
+             {description}
+           </p>
+         )}
         <div className="mt-8 flex gap-3 justify-center flex-wrap">
           <a
             href="#combos"
