@@ -50,7 +50,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     setSelectedFlavors((cur) => cur.slice(0, newMax));
   };
 
-  const handleAddToCart = (openCart = false) => {
+  const handleAddToCart = (shouldOpenCart = false) => {
     if (!size || selectedFlavors.length === 0) return;
     const flavorNames = selectedFlavors
       .map((id) => flavorMap.get(id)?.name)
@@ -75,7 +75,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     });
     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
     setSelectedFlavors([]);
-    if (openCart) setCartOpen(true);
+    if (shouldOpenCart) setCartOpen(true);
     setTimeout(() => setConfirm(null), 2200);
   };
 
@@ -283,16 +283,16 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
         }`}
       >
         <button
-          onClick={() => handleAddToCart(true)}
-          className="btn-premium w-full py-5 rounded-2xl flex items-center justify-between px-8 shadow-[0_20px_50px_rgba(255,90,0,0.4)] border border-primary/30 group active:scale-95 transition-transform"
+          onClick={() => handleAddToCart()}
+          className="btn-premium w-full py-5 rounded-2xl flex items-center justify-between px-8 shadow-[0_20px_50px_rgba(255,90,0,0.4)] border border-primary/30 group active:scale-95 transition-all"
         >
           <div className="flex flex-col items-start">
             <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Pizza {size?.label}</span>
-            <span className="text-xl font-black text-primary-foreground tracking-tighter">Adicionar • {formatBRL(finalPrice)}</span>
+            <span className="text-xl font-black text-primary-foreground tracking-tighter">Enviar p/ Sacola • {formatBRL(finalPrice)}</span>
           </div>
-          <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl group-hover:bg-white/30 transition-colors">
-            <span className="font-bold text-sm uppercase tracking-tight">Confirmar</span>
-            <Plus className="h-5 w-5" />
+          <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl group-hover:bg-white/40 transition-colors">
+            <ShoppingBag className="h-5 w-5" />
+            <Plus className="h-4 w-4" />
           </div>
         </button>
       </div>
