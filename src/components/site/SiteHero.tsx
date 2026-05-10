@@ -67,7 +67,7 @@ export function SiteHero({
          <div className="mt-12 flex gap-4 justify-center flex-wrap">
            <a
              href="#combos"
-             className="px-8 py-4 rounded-2xl bg-gradient-fire text-black font-black text-lg transition-all transform hover:scale-110 hover:shadow-[0_0_30px_rgba(255,90,0,0.4)] active:scale-95 shadow-2xl"
+             className="px-10 py-5 rounded-2xl bg-gradient-bronze text-primary-foreground font-black text-lg transition-all transform hover:scale-110 hover:shadow-[0_0_40px_rgba(205,127,50,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-primary/20"
            >
              Cardápio de Combos
            </a>

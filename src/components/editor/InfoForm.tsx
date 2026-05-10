@@ -344,9 +344,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                 className="h-16 w-16 object-contain bg-muted rounded-lg p-1"
               />
             )}
-            <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-              <Upload className="h-4 w-4" />
-              <span className="text-sm">Enviar logo</span>
+             <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
+               <Upload className="h-4 w-4 text-primary" />
+               <span>Enviar Emblema</span>
               <input
                 type="file"
                 accept="image/*"
@@ -398,9 +398,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                     className="h-16 w-24 object-cover rounded-lg bg-black"
                   />
                 )}
-                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm">Enviar vídeo (mp4/webm)</span>
+                 <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
+                   <Upload className="h-4 w-4 text-primary" />
+                   <span>Upload Vídeo Gourmet</span>
                   <input
                     type="file"
                     accept="video/mp4,video/webm,video/*"
@@ -421,9 +421,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                     className="h-16 w-24 object-cover rounded-lg"
                   />
                 )}
-                <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary hover:bg-muted transition">
-                  <Upload className="h-4 w-4" />
-                  <span className="text-sm">Enviar imagem</span>
+                 <label className="cursor-pointer inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-white/10 transition-all font-black text-xs uppercase tracking-widest shadow-xl">
+                   <Upload className="h-4 w-4 text-primary" />
+                   <span>Upload Cenário (Hero)</span>
                   <input
                     type="file"
                     accept="image/*"
@@ -440,24 +440,30 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </Field>
       </div>
 
-           <div className="flex items-center gap-4 pt-4">
+           <div className="flex items-center gap-5 pt-6">
              <button
                onClick={save}
                disabled={saving}
-               className="btn-fire px-8 py-3 rounded-xl flex items-center gap-2"
+               className="btn-premium px-12 py-4 rounded-2xl flex items-center gap-3 shadow-2xl uppercase text-xs tracking-[0.2em]"
              >
-               <Save className="h-5 w-5" />
-               <span>{saving ? "Salvando..." : "Salvar Configurações"}</span>
+               <Save className="h-6 w-6 text-primary-foreground" />
+               <span>{saving ? "Salvando..." : "Preservar Receita"}</span>
              </button>
-             {msg && <span className="text-sm font-bold text-primary animate-pulse">{msg}</span>}
+             {msg && <span className="text-sm font-black text-primary animate-pulse tracking-widest uppercase">{msg}</span>}
            </div>
  
-           <div className="card-premium p-8 space-y-6 border-primary/20 bg-primary/5">
-             <div className="flex items-center gap-3">
-               <div className="h-10 w-10 rounded-lg bg-gradient-fire flex items-center justify-center shadow-glow">
-                 <Zap className="h-6 w-6 text-primary-foreground" />
+           <div className="card-premium p-10 space-y-8 border-primary/20 bg-primary/5 relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-10 opacity-5">
+               <Zap className="h-32 w-32 text-primary" />
+             </div>
+             <div className="flex items-center gap-4 relative z-10">
+               <div className="h-14 w-14 rounded-xl bg-gradient-bronze flex items-center justify-center shadow-glow">
+                 <Zap className="h-8 w-8 text-primary-foreground" />
                </div>
-               <h3 className="text-2xl font-black tracking-tight">FLYCONTROL Integration</h3>
+               <div>
+                 <h3 className="text-3xl font-black tracking-tighter uppercase">Conexão FLYCONTROL</h3>
+                 <p className="text-muted-foreground italic">Engenharia gastronômica integrada em tempo real.</p>
+               </div>
              </div>
         <p className="text-sm text-muted-foreground">
           Envia cada pedido em tempo real para o painel FLYCONTROL desta pizzaria.

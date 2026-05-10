@@ -131,9 +131,9 @@ function EditPage() {
                <ArrowLeft className="h-5 w-5" />
              </Link>
              <div className="min-w-0 ml-1">
-               <h1 className="font-black text-xl truncate tracking-tight">{restaurant.name}</h1>
-               <p className="text-xs text-primary font-bold uppercase tracking-widest opacity-80">
-                 Editor FlyControl
+               <h1 className="font-black text-2xl truncate tracking-tight text-foreground uppercase">{restaurant.name}</h1>
+               <p className="text-xs text-primary font-black uppercase tracking-[0.3em] opacity-80">
+                 Estúdio Gastronômico
                </p>
              </div>
           </div>
@@ -159,8 +159,8 @@ function EditPage() {
               }}
                className={`inline-flex items-center gap-2 px-5 py-4 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
                  tab === t.id
-                   ? "border-primary text-primary glow-orange"
-                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-white/20"
+                   ? "border-primary text-primary glow-bronze"
+                   : "border-transparent text-muted-foreground hover:text-foreground hover:border-white/10"
                }`}
              >
               {t.icon}
@@ -204,23 +204,23 @@ function EditPage() {
              {!finalized && !restaurant.published ? (
                <div className="card-premium p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 justify-between border-primary/20 bg-primary/5">
                  <div className="flex items-start gap-4">
-                   <div className="h-14 w-14 rounded-2xl bg-gradient-fire flex items-center justify-center shadow-glow flex-shrink-0 animate-bounce">
-                     <Rocket className="h-7 w-7 text-primary-foreground glow-orange" />
+                   <div className="h-16 w-16 rounded-2xl bg-gradient-bronze flex items-center justify-center shadow-glow flex-shrink-0 animate-bounce">
+                     <Rocket className="h-8 w-8 text-primary-foreground glow-bronze" />
                    </div>
                    <div>
-                     <h3 className="text-2xl font-black tracking-tight">Pronto para o Sucesso?</h3>
-                     <p className="text-muted-foreground text-lg">
-                       Publique agora e comece a receber pedidos profissionais.
+                     <h3 className="text-3xl font-black tracking-tighter uppercase">Pronto para a Inauguração?</h3>
+                     <p className="text-muted-foreground text-lg italic">
+                       Sua cozinha digital está pronta para receber os primeiros clientes.
                      </p>
                    </div>
                  </div>
                  <button
                    onClick={handleFinalize}
                    disabled={finalizing}
-                   className="btn-fire px-10 py-4 rounded-2xl text-lg flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
+                   className="btn-premium px-12 py-4 rounded-2xl text-lg flex items-center gap-3 disabled:opacity-50 disabled:scale-100 uppercase tracking-widest shadow-2xl"
                  >
-                   <CheckCircle2 className="h-6 w-6" />
-                   {finalizing ? "Publicando..." : "Publicar Meu Site"}
+                   <CheckCircle2 className="h-6 w-6 text-primary-foreground" />
+                   {finalizing ? "Inaugurando..." : "Inaugurar Vitrine"}
                  </button>
                </div>
              ) : (
@@ -255,15 +255,15 @@ function EditPage() {
                        />
                        <button
                          onClick={handleCopyShare}
-                         className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-black hover:opacity-90 transition-all shadow-glow"
+                         className="btn-premium px-8 py-3 rounded-xl flex items-center gap-2 uppercase text-xs tracking-widest shadow-xl"
                        >
                          {copied ? (
                            <>
-                             <CheckCircle2 className="h-5 w-5" /> Copiado!
+                             <CheckCircle2 className="h-5 w-5 text-primary-foreground" /> Copiado
                            </>
                          ) : (
                            <>
-                             <Copy className="h-5 w-5" /> Copiar Link
+                             <Copy className="h-5 w-5 text-primary-foreground" /> Copiar Link
                            </>
                          )}
                        </button>

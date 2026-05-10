@@ -23,56 +23,61 @@ export function SiteMenuItemCard({ item }: { item: MenuItemRow }) {
   };
 
   return (
-    <div className="rounded-xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-3 hover:border-[hsl(var(--site-primary))] transition overflow-hidden shadow-lg group">
-      {item.image_url ? (
-        <div className="relative aspect-[4/3] overflow-hidden bg-black/30">
-          <img
-            src={item.image_url}
-            alt={item.name}
-            loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-        </div>
-      ) : (
-        <div className="relative aspect-[4/3] flex items-center justify-center bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))]">
-          <ImageIcon className="h-10 w-10 opacity-30" />
-        </div>
-      )}
-      <div className="p-5 pt-2 flex flex-col gap-3 flex-1">
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="font-bold text-lg leading-tight">{item.name}</h3>
-        <span className="text-[hsl(var(--site-secondary))] font-bold whitespace-nowrap">
-          {showConsult ? "Consultar" : formatBRL(price)}
-        </span>
-      </div>
-      {item.description && (
-        <p className="text-sm text-[hsl(var(--site-muted-fg))]">{item.description}</p>
-      )}
-      {sizes.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {sizes.map((s) => (
-            <button
-              key={s.label}
-              onClick={() => setSelected(s)}
-              className={`px-3 py-1 text-sm rounded-full border transition ${
-                selected?.label === s.label
-                  ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white"
-                  : "border-[hsl(var(--site-border))] hover:border-[hsl(var(--site-primary))]"
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-      )}
-      <button
-        onClick={handleAdd}
-        disabled={showConsult}
-        className="mt-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[hsl(var(--site-primary))] text-white font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Plus className="h-4 w-4" /> Adicionar
-      </button>
-      </div>
-    </div>
+     <div className="rounded-[2rem] border border-white/5 bg-white/5 flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
+       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+       {item.image_url ? (
+         <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+           <img
+             src={item.image_url}
+             alt={item.name}
+             loading="lazy"
+             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+         </div>
+       ) : (
+         <div className="relative aspect-[16/10] flex items-center justify-center bg-black/40 text-muted-foreground/30">
+           <ImageIcon className="h-12 w-12" />
+         </div>
+       )}
+       <div className="p-6 pt-2 flex flex-col gap-4 flex-1 relative z-10">
+         <div className="flex items-start justify-between gap-4">
+           <h3 className="font-black text-xl tracking-tighter uppercase group-hover:text-primary transition-colors leading-tight">{item.name}</h3>
+           <div className="flex flex-col items-end">
+             <span className="text-primary font-black text-lg tracking-tighter">
+               {showConsult ? "CONSULTAR" : formatBRL(price)}
+             </span>
+           </div>
+         </div>
+         {item.description && (
+           <p className="text-sm text-muted-foreground italic line-clamp-2">{item.description}</p>
+         )}
+         {sizes.length > 0 && (
+           <div className="flex flex-wrap gap-2">
+             {sizes.map((s) => (
+               <button
+                 key={s.label}
+                 onClick={() => setSelected(s)}
+                 className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
+                   selected?.label === s.label
+                     ? "bg-gradient-bronze border-primary/50 text-primary-foreground shadow-lg"
+                     : "border-white/10 bg-white/5 hover:border-primary/30 text-muted-foreground"
+                 }`}
+               >
+                 {s.label}
+               </button>
+             ))}
+           </div>
+         )}
+         <button
+           onClick={handleAdd}
+           disabled={showConsult}
+           className="mt-auto btn-premium py-3 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95"
+         >
+           <Plus className="h-4 w-4 text-primary-foreground" />
+           <span className="text-[10px] uppercase tracking-[0.2em]">Adicionar à Experiência</span>
+         </button>
+       </div>
+     </div>
   );
 }

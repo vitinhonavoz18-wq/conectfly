@@ -16,21 +16,26 @@ export function SiteMenuSection({ categories }: Props) {
   return (
     <section id="cardapio" className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight">Cardápio</h2>
-          <p className="text-[hsl(var(--site-muted-fg))] mt-2">
-            {current ? "Escolha seus pratos favoritos" : "Toque em uma categoria para ver os produtos"}
-          </p>
-        </div>
+         <div className="text-center mb-12">
+           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
+             Curadoria Gastronômica
+           </span>
+           <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4">
+             Nossa <span className="text-primary glow-bronze">Cozinha</span>
+           </h2>
+           <p className="text-muted-foreground mt-2 max-w-xl mx-auto italic">
+             {current ? `Explorando a seleção de ${current.name}` : "Selecione uma categoria para descobrir nossas especialidades artesanais."}
+           </p>
+         </div>
 
         {!current ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
             {categories.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActive(c.id)}
-                className="group relative aspect-square rounded-2xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition shadow-lg"
-              >
+               <button
+                 key={c.id}
+                 onClick={() => setActive(c.id)}
+                 className="group relative aspect-square rounded-3xl overflow-hidden border border-white/5 bg-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl"
+               >
                 {c.image_url ? (
                   <img
                     src={c.image_url}
@@ -61,23 +66,23 @@ export function SiteMenuSection({ categories }: Props) {
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-2 mb-6">
-              <button
-                onClick={() => setActive(null)}
-                className="px-4 py-2 rounded-full text-sm font-semibold bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] hover:border-[hsl(var(--site-primary))]"
-              >
-                ← Categorias
-              </button>
+               <button
+                 onClick={() => setActive(null)}
+                 className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white/5 border border-white/10 hover:border-primary/50 transition-all"
+               >
+                 ← Voltar
+               </button>
               <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
                 {categories.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setActive(c.id)}
-                    className={`px-5 py-2 rounded-full whitespace-nowrap font-semibold text-sm transition ${
-                      active === c.id
-                        ? "bg-[hsl(var(--site-primary))] text-white"
-                        : "bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] hover:border-[hsl(var(--site-primary))]"
-                    }`}
-                  >
+                   <button
+                     key={c.id}
+                     onClick={() => setActive(c.id)}
+                     className={`px-6 py-2.5 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+                       active === c.id
+                         ? "bg-gradient-bronze text-primary-foreground shadow-glow"
+                         : "bg-white/5 border border-white/10 hover:border-primary/30 text-muted-foreground"
+                     }`}
+                   >
                     {c.icon ? `${c.icon} ` : ""}
                     {c.name}
                   </button>

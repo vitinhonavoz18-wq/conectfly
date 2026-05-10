@@ -81,10 +81,10 @@ export function ComboManager({ restaurantId }: Props) {
         </p>
          <button
            onClick={addGroup}
-           className="btn-fire px-5 py-2.5 rounded-xl flex items-center gap-2"
+           className="btn-premium px-6 py-2.5 rounded-xl flex items-center gap-2 uppercase text-xs tracking-widest shadow-xl"
          >
-           <Plus className="h-4 w-4" />
-           <span>Novo Grupo</span>
+           <Plus className="h-4 w-4 text-primary-foreground" />
+           <span>Novo Grupo Gourmet</span>
          </button>
       </div>
 

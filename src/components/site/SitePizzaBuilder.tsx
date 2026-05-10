@@ -254,10 +254,10 @@ export function SitePizzaBuilder({ category }: Props) {
            <button
              onClick={handleAddToCart}
              disabled={!canAdd}
-             className="btn-fire px-8 py-4 rounded-2xl text-lg flex items-center gap-3 disabled:opacity-30 disabled:scale-100 disabled:shadow-none"
+             className="btn-premium px-10 py-5 rounded-2xl text-lg flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-2xl"
            >
-             <Plus className="h-6 w-6" /> 
-             <span>Adicionar ao Carrinho</span>
+             <Plus className="h-6 w-6 text-primary-foreground" /> 
+             <span>Adicionar ao Pedido</span>
            </button>
         </div>
         {confirm && (
