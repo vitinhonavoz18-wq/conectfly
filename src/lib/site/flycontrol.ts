@@ -32,8 +32,8 @@ export function buildOrderPayload(args: {
   items: CartLine[];
   subtotal: number;
   notes?: string;
-  paymentMethod?: string;
-  changeFor?: number;
+  paymentMethod?: string | null;
+  changeFor?: number | null;
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => ({
      name: `${l.name}${l.sizeLabel ? ` (${l.sizeLabel})` : ""}`,
