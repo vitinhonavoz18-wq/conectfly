@@ -36,7 +36,7 @@ export function DeliverySite({ data }: { data: SiteData }) {
           <SectionScroll>
             <Reveal variant="fade-up">
               <div className="site-scroll-rise">
-                <SitePizzaSection categories={data.categories} />
+                <SitePizzaSection categories={data.categories} restaurant={r} />
               </div>
             </Reveal>
           </SectionScroll>
@@ -50,7 +50,7 @@ export function DeliverySite({ data }: { data: SiteData }) {
           <SectionScroll>
             <Reveal variant="fade-up" delay={80}>
               <div className="site-scroll-rise">
-                <SiteMenuSection categories={nonPizzaCategories} />
+                <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
               </div>
             </Reveal>
           </SectionScroll>

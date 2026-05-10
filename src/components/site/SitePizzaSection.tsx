@@ -1,12 +1,13 @@
 import { useState } from "react";
-import type { MenuCategoryRow, MenuItemRow } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
 
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
+  restaurant: RestaurantRow;
 }
 
-export function SitePizzaSection({ categories }: Props) {
+export function SitePizzaSection({ categories, restaurant }: Props) {
   const pizzaCats = categories.filter(
     (c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0,
   );
@@ -57,7 +58,7 @@ export function SitePizzaSection({ categories }: Props) {
           </div>
         )}
 
-        <SitePizzaBuilder category={active} />
+        <SitePizzaBuilder category={active} restaurant={restaurant} />
       </div>
     </section>
   );

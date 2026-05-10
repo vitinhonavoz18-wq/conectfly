@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { ImageIcon } from "lucide-react";
-import type { MenuCategoryRow, MenuItemRow } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
-
+ 
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
+  restaurant: RestaurantRow;
 }
-
-export function SiteMenuSection({ categories }: Props) {
+ 
+export function SiteMenuSection({ categories, restaurant }: Props) {
   const [active, setActive] = useState<string | null>(null);
   if (categories.length === 0) return null;
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
@@ -106,11 +107,11 @@ export function SiteMenuSection({ categories }: Props) {
             )}
 
             {current.is_pizza ? (
-              <SitePizzaBuilder category={current} />
+              <SitePizzaBuilder category={current} restaurant={restaurant} />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
                 {current.items.map((it) => (
-                  <SiteMenuItemCard key={it.id} item={it} />
+                  <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
                 ))}
               </div>
             )}
