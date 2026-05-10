@@ -255,6 +255,7 @@ export function MenuManager({ restaurantId }: Props) {
                     key={it.id}
                     item={it}
                     hidePrice={c.is_pizza}
+                    showImage={restaurant?.show_item_images ?? true}
                     onUpdate={(p) => updateItem(it.id, p)}
                     onRemove={() => removeItem(it.id)}
                     onUploadImage={(f) => handleItemImageUpload(it.id, f)}
@@ -278,12 +279,14 @@ export function MenuManager({ restaurantId }: Props) {
 function ItemRow({
   item,
   hidePrice = false,
+  showImage = true,
   onUpdate,
   onRemove,
   onUploadImage,
 }: {
   item: MenuItemRow;
   hidePrice?: boolean;
+  showImage?: boolean;
   onUpdate: (p: Partial<MenuItemRow>) => void;
   onRemove: () => void;
   onUploadImage: (file: File) => void;
@@ -324,39 +327,41 @@ function ItemRow({
 
    return (
      <div className="rounded-xl border border-white/5 bg-white/5 p-4 grid gap-4 hover:border-white/10 transition-colors">
-       <div className="flex items-center gap-4">
-         <div className="relative shrink-0 group">
-          {item.image_url ? (
-            <img
-              src={item.image_url}
-              alt={item.name}
-               className="h-20 w-20 object-cover rounded-xl border border-white/10 bg-white/5 group-hover:border-primary/50 transition-colors"
-             />
-           ) : (
-             <div className="h-20 w-20 rounded-xl border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground group-hover:border-primary/30 transition-colors">
-               <ImageIcon className="h-7 w-7" />
-             </div>
-          )}
-           <label
-             title="Enviar foto do item"
-                   className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-bronze text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
-           >
-             <Upload className="h-4 w-4" />
-            <input
-              type="file"
-              accept="image/*"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) onUploadImage(f);
-              }}
-            />
-          </label>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Adicione uma foto profissional do {hidePrice ? "sabor" : "item"} para destacá-lo no cardápio.
-        </p>
-      </div>
+       {showImage && (
+         <div className="flex items-center gap-4">
+           <div className="relative shrink-0 group">
+             {item.image_url ? (
+               <img
+                 src={item.image_url}
+                 alt={item.name}
+                 className="h-20 w-20 object-cover rounded-xl border border-white/10 bg-white/5 group-hover:border-primary/50 transition-colors"
+               />
+             ) : (
+               <div className="h-20 w-20 rounded-xl border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center text-muted-foreground group-hover:border-primary/30 transition-colors">
+                 <ImageIcon className="h-7 w-7" />
+               </div>
+             )}
+             <label
+               title="Enviar foto do item"
+               className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-gradient-bronze text-primary-foreground inline-flex items-center justify-center cursor-pointer shadow-glow opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+             >
+               <Upload className="h-4 w-4" />
+               <input
+                 type="file"
+                 accept="image/*"
+                 hidden
+                 onChange={(e) => {
+                   const f = e.target.files?.[0];
+                   if (f) onUploadImage(f);
+                 }}
+               />
+             </label>
+           </div>
+           <p className="text-xs text-muted-foreground">
+             Adicione uma foto profissional do {hidePrice ? "sabor" : "item"} para destacá-lo no cardápio.
+           </p>
+         </div>
+       )}
        <div className={`grid grid-cols-1 ${hidePrice ? "sm:grid-cols-[1fr_auto]" : "sm:grid-cols-[1fr_120px_auto]"} gap-3`}>
          <div className="relative">
            <input
