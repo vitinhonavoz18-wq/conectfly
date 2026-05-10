@@ -99,15 +99,18 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
 
   return (
     <div className="space-y-5">
-       <div className="card-premium p-6 border-primary/20 bg-primary/5">
-         <div className="flex items-start gap-4 mb-4">
-           <div className="h-12 w-12 rounded-xl bg-gradient-fire flex items-center justify-center shadow-glow flex-shrink-0">
-             <MapPin className="h-6 w-6 text-primary-foreground" />
+       <div className="card-premium p-8 border-primary/20 bg-primary/5 relative overflow-hidden">
+         <div className="absolute top-0 right-0 p-8 opacity-5">
+           <MapPin className="h-24 w-24 text-primary" />
+         </div>
+         <div className="flex items-start gap-5 mb-6 relative z-10">
+           <div className="h-14 w-14 rounded-2xl bg-gradient-bronze flex items-center justify-center shadow-glow border border-primary/30">
+             <MapPin className="h-8 w-8 text-primary-foreground" />
            </div>
            <div>
-             <h3 className="text-xl font-black tracking-tight">Taxas de Entrega</h3>
-             <p className="text-sm text-muted-foreground">
-               Configure os bairros atendidos e suas respectivas taxas.
+             <h3 className="text-2xl font-black tracking-tighter uppercase">Roteamento Gourmet</h3>
+             <p className="text-muted-foreground italic">
+               Configure a logística de entrega das suas obras gastronômicas.
              </p>
            </div>
          </div>
@@ -141,10 +144,10 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
            </div>
            <button
              onClick={handleAdd}
-             className="btn-fire px-8 py-2.5 rounded-xl flex items-center gap-2"
+             className="btn-premium px-8 py-2.5 rounded-xl flex items-center gap-2 uppercase text-xs tracking-widest shadow-xl"
            >
-             <Plus className="h-5 w-5" /> 
-             <span>Adicionar</span>
+             <Plus className="h-5 w-5 text-primary-foreground" /> 
+             <span>Mapear Bairro</span>
            </button>
          </div>
          {msg && <p className="text-sm font-bold text-primary mt-3 animate-pulse">{msg}</p>}
