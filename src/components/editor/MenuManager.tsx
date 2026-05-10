@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 
 interface Props {
