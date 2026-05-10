@@ -87,19 +87,8 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     );
   }
 
-  // Monitor scroll to show floating button only when summary is not visible
-  const [summaryVisible, setSummaryVisible] = useState(true);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setSummaryVisible(entry.isIntersecting),
-      { threshold: 0.1 }
-    );
-    const summaryEl = document.getElementById(`summary-${category.id}`);
-    if (summaryEl) observer.observe(summaryEl);
-    return () => observer.disconnect();
-  }, [category.id]);
-
-  const showFloating = canAdd && !summaryVisible;
+  const isFullySelected = selectedFlavors.length === maxFlavors;
+  const showFloating = isFullySelected;
 
   return (
     <div className="space-y-6 relative" id={`pizza-builder-${category.id}`}>
@@ -299,11 +288,11 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
           className="btn-premium w-full py-5 rounded-2xl flex items-center justify-between px-8 shadow-[0_20px_50px_rgba(255,90,0,0.4)] border border-primary/30 group active:scale-95 transition-transform"
         >
           <div className="flex flex-col items-start">
-            <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Finalizar Pizza</span>
-            <span className="text-xl font-black text-primary-foreground tracking-tighter">{formatBRL(finalPrice)}</span>
+            <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Pizza {size?.label}</span>
+            <span className="text-xl font-black text-primary-foreground tracking-tighter">Adicionar • {formatBRL(finalPrice)}</span>
           </div>
           <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl group-hover:bg-white/30 transition-colors">
-            <span className="font-bold text-sm uppercase tracking-tight">Finalizar</span>
+            <span className="font-bold text-sm uppercase tracking-tight">Confirmar</span>
             <Plus className="h-5 w-5" />
           </div>
         </button>
