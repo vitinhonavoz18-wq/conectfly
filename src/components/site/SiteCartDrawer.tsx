@@ -1,9 +1,10 @@
  import { useState, useMemo } from "react";
-import { X, Minus, Plus, Trash2, MapPin } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { buildOrderPayload, sendOrderToFlycontrol } from "@/lib/site/flycontrol";
+import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
  import { toast } from "sonner";
 
 interface Props {
@@ -20,6 +21,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("PIX");
+  const [changeFor, setChangeFor] = useState("");
+  const [notes, setNotes] = useState("");
   const [zoneId, setZoneId] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
@@ -62,34 +66,25 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
-    const lines = items.map((l) => {
-      const sizeLabel = l.sizeLabel ? ` (${l.sizeLabel})` : "";
-      const flavorLine =
-        l.flavors && l.flavors.length > 0
-          ? `\n   Sabores: ${l.flavors.join(" + ")}`
-          : l.description
-            ? `\n_${l.description}_`
-            : "";
-      return `- ${l.quantity}x ${l.name}${sizeLabel} — ${formatBRL(
-        l.unitPrice * l.quantity,
-      )}${flavorLine}`;
-    });
+    const orderData = {
+      customer: {
+        name,
+        phone,
+        address,
+        neighborhood: selectedZone?.neighborhood || null,
+      },
+      items,
+      subtotal: totalPrice,
+      deliveryFee,
+      total: grandTotal,
+      paymentMethod,
+      changeFor: changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
+      notes,
+      createdAt: new Date().toISOString(),
+    };
 
-    const locationBlock = selectedZone
-      ? `*Bairro:* ${selectedZone.neighborhood}\n*Endereço:* ${address}\n`
-      : `*Localização:* ${address}\n`;
-    const feeLine = selectedZone
-      ? `*Subtotal:* ${formatBRL(totalPrice)}\n*Taxa de entrega (${selectedZone.neighborhood}):* ${formatBRL(deliveryFee)}\n`
-      : "";
-
-    const message =
-      `Olá, gostaria de fazer um pedido!\n\n` +
-      `*Nome:* ${name}\n` +
-      `*Telefone:* ${phone}\n` +
-      locationBlock +
-      `\n*Pedido:*\n${lines.join("\n")}\n\n` +
-      feeLine +
-      `*Total: ${formatBRL(grandTotal)}*`;
+    const messageWhatsApp = buildWhatsAppMessage(orderData);
+    const messageFull = buildOrderMessage(orderData, "complete");
 
      setSending(true);
      try {
@@ -100,8 +95,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
            address,
            neighborhood: selectedZone?.neighborhood ?? null,
            deliveryFee,
-           items,
-           subtotal: totalPrice,
+            items,
+            subtotal: totalPrice,
+            paymentMethod,
+            changeFor: orderData.changeFor,
+            notes: messageFull, // Envia a comanda completa no campo notes para o FlyControl
          });
  
          try {
@@ -114,13 +112,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
        }
  
        if (whatsappOn) {
-         openWhatsAppOrder(message);
+          openWhatsAppOrder(messageWhatsApp);
        }
  
        clear();
        setName("");
        setPhone("");
        setAddress("");
+        setPaymentMethod("PIX");
+        setChangeFor("");
+        setNotes("");
        setZoneId("");
        onClose();
      } catch (err) {
@@ -247,13 +248,56 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 </select>
               </div>
             )}
-            <textarea
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Rua, número, complemento..."
-              rows={2}
-              className="w-full px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] resize-none"
-            />
+            <div className="relative">
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+              <textarea
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Endereço completo (Rua, nº, complemento)"
+                rows={2}
+                className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] resize-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <div className="relative">
+                <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                <select
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] appearance-none"
+                >
+                  <option value="PIX">PIX</option>
+                  <option value="Cartão de Crédito">Cartão de Crédito</option>
+                  <option value="Cartão de Débito">Cartão de Débito</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                </select>
+              </div>
+
+              {paymentMethod === "Dinheiro" && (
+                <div className="relative">
+                  <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                  <input
+                    value={changeFor}
+                    onChange={(e) => setChangeFor(e.target.value)}
+                    placeholder="Troco para quanto?"
+                    inputMode="numeric"
+                    className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))]"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Observações do pedido..."
+                rows={2}
+                className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] resize-none"
+              />
+            </div>
           </div>
           {error && (
             <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-2">
