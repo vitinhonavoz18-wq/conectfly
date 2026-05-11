@@ -18,7 +18,11 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
     return line?.quantity ?? 0;
   };
 
-  const handleAdd = (bev: BeverageRow) => {
+   const handleAdd = (bev: BeverageRow, event?: React.MouseEvent) => {
+     if (event) {
+       event.preventDefault();
+       event.stopPropagation();
+     }
     const currentQty = getQty(bev.id);
     if (currentQty > 0) {
       updateQty(`bev-${bev.id}`, undefined, currentQty + 1);
@@ -32,7 +36,11 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
     }
   };
 
-  const handleRemove = (bev: BeverageRow) => {
+   const handleRemove = (bev: BeverageRow, event?: React.MouseEvent) => {
+     if (event) {
+       event.preventDefault();
+       event.stopPropagation();
+     }
     const currentQty = getQty(bev.id);
     if (currentQty > 0) {
       updateQty(`bev-${bev.id}`, undefined, currentQty - 1);
@@ -89,20 +97,20 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
 
               <div className="mt-auto flex items-center justify-between gap-4 pt-4 border-t border-white/5 relative z-10">
                 <div className="flex items-center gap-3 bg-black/40 p-1 rounded-2xl border border-white/10">
-                  <button 
-                    onClick={() => handleRemove(bev)}
-                    disabled={qty === 0}
-                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-white disabled:opacity-20 transition-all active:scale-90"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="w-8 text-center font-black text-lg">{qty}</span>
-                  <button 
-                    onClick={() => handleAdd(bev)}
-                    className="h-10 w-10 flex items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/80 transition-all active:scale-90 shadow-lg"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+                   <button 
+                     onClick={(e) => handleRemove(bev, e)}
+                     disabled={qty === 0}
+                     className="h-10 w-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-white disabled:opacity-20 transition-all active:scale-90"
+                   >
+                     <Minus className="h-4 w-4" />
+                   </button>
+                   <span className="w-8 text-center font-black text-lg">{qty}</span>
+                   <button 
+                     onClick={(e) => handleAdd(bev, e)}
+                     className="h-10 w-10 flex items-center justify-center rounded-xl bg-primary text-primary-foreground hover:bg-primary/80 transition-all active:scale-90 shadow-lg"
+                   >
+                     <Plus className="h-4 w-4" />
+                   </button>
                 </div>
                 
                 {qty > 0 && (
