@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
 
