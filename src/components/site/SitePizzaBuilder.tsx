@@ -152,7 +152,11 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     setSelectedFlavors((cur) => cur.slice(0, newMax));
   };
 
-  const handleAddToCart = (shouldOpenCart = false) => {
+   const handleAddToCart = (shouldOpenCart = false, event?: React.MouseEvent) => {
+     if (event) {
+       event.preventDefault();
+       event.stopPropagation();
+     }
     if (!size || selectedFlavors.length === 0) return;
     const flavorNames = selectedFlavors
       .map((id) => flavorMap.get(id)?.name)
@@ -369,14 +373,14 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
               {size ? formatBRL(finalPrice) : "—"}
             </span>
           </div>
-           <button
-             onClick={() => handleAddToCart()}
-             disabled={!canAdd}
-             className="btn-premium px-10 py-5 rounded-2xl text-lg flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-2xl"
-           >
-             <Plus className="h-6 w-6 text-primary-foreground" /> 
-             <span>Adicionar ao Pedido</span>
-           </button>
+            <button
+              onClick={(e) => handleAddToCart(false, e)}
+              disabled={!canAdd}
+              className="btn-premium px-10 py-5 rounded-2xl text-lg flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-2xl"
+            >
+              <Plus className="h-6 w-6 text-primary-foreground" /> 
+              <span>Adicionar ao Pedido</span>
+            </button>
         </div>
         {confirm && (
           <p className="mt-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center">
