@@ -9,6 +9,7 @@ import { SitePizzaSection } from "./SitePizzaSection";
 import { SiteCartDrawer } from "./SiteCartDrawer";
 import { SiteFooter } from "./SiteFooter";
 import { Reveal, ScrollProgress, SectionScroll } from "./Reveal";
+import { SiteBeverageSection } from "./SiteBeverageSection";
 import type { SiteData } from "@/lib/site/types";
 
 function DeliverySiteContent({ data }: { data: SiteData }) {
@@ -19,6 +20,7 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
     return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks";
   };
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c));
+  const hasBeverages = data.beverages && data.beverages.length > 0;
 
   // Monitor if header is visible to show/hide floating cart
   const [headerVisible, setHeaderVisible] = useState(true);
@@ -48,6 +50,13 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
           <Reveal variant="fade-up">
             <div className="site-scroll-rise">
               <SitePizzaSection categories={data.categories} restaurant={r} />
+              {hasBeverages && (
+                <div className="px-4 pb-14">
+                  <div className="max-w-6xl mx-auto">
+                    <SiteBeverageSection beverages={data.beverages!} restaurant={r} />
+                  </div>
+                </div>
+              )}
             </div>
           </Reveal>
         </SectionScroll>
