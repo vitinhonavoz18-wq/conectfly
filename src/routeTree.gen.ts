@@ -9,74 +9,109 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
-import { Route as ExportIdRouteImport } from './routes/export.$id'
-import { Route as EditIdRouteImport } from './routes/edit.$id'
+import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
+import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
 
-const IndexRoute = IndexRouteImport.update({
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const SSlugRoute = SSlugRouteImport.update({
   id: '/s/$slug',
   path: '/s/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ExportIdRoute = ExportIdRouteImport.update({
+const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
   id: '/export/$id',
   path: '/export/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
-const EditIdRoute = EditIdRouteImport.update({
+const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
   id: '/edit/$id',
   path: '/edit/$id',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/edit/$id': typeof EditIdRoute
-  '/export/$id': typeof ExportIdRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/login': typeof LoginRoute
   '/s/$slug': typeof SSlugRoute
+  '/edit/$id': typeof AuthenticatedEditIdRoute
+  '/export/$id': typeof AuthenticatedExportIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/edit/$id': typeof EditIdRoute
-  '/export/$id': typeof ExportIdRoute
+  '/login': typeof LoginRoute
   '/s/$slug': typeof SSlugRoute
+  '/': typeof AuthenticatedIndexRoute
+  '/edit/$id': typeof AuthenticatedEditIdRoute
+  '/export/$id': typeof AuthenticatedExportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/edit/$id': typeof EditIdRoute
-  '/export/$id': typeof ExportIdRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/login': typeof LoginRoute
   '/s/$slug': typeof SSlugRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
+  '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/edit/$id' | '/export/$id' | '/s/$slug'
+  fullPaths: '/' | '/login' | '/s/$slug' | '/edit/$id' | '/export/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/edit/$id' | '/export/$id' | '/s/$slug'
-  id: '__root__' | '/' | '/edit/$id' | '/export/$id' | '/s/$slug'
+  to: '/login' | '/s/$slug' | '/' | '/edit/$id' | '/export/$id'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/login'
+    | '/s/$slug'
+    | '/_authenticated/'
+    | '/_authenticated/edit/$id'
+    | '/_authenticated/export/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  EditIdRoute: typeof EditIdRoute
-  ExportIdRoute: typeof ExportIdRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  LoginRoute: typeof LoginRoute
   SSlugRoute: typeof SSlugRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/s/$slug': {
       id: '/s/$slug'
@@ -85,27 +120,42 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/export/$id': {
-      id: '/export/$id'
+    '/_authenticated/export/$id': {
+      id: '/_authenticated/export/$id'
       path: '/export/$id'
       fullPath: '/export/$id'
-      preLoaderRoute: typeof ExportIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedExportIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/edit/$id': {
-      id: '/edit/$id'
+    '/_authenticated/edit/$id': {
+      id: '/_authenticated/edit/$id'
       path: '/edit/$id'
       fullPath: '/edit/$id'
-      preLoaderRoute: typeof EditIdRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedEditIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedEditIdRoute: typeof AuthenticatedEditIdRoute
+  AuthenticatedExportIdRoute: typeof AuthenticatedExportIdRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedEditIdRoute: AuthenticatedEditIdRoute,
+  AuthenticatedExportIdRoute: AuthenticatedExportIdRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  EditIdRoute: EditIdRoute,
-  ExportIdRoute: ExportIdRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  LoginRoute: LoginRoute,
   SSlugRoute: SSlugRoute,
 }
 export const routeTree = rootRouteImport

@@ -19,7 +19,7 @@ import { slugify } from "@/lib/site/format";
 import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 import { generateApiKey } from "@/lib/site/flycontrol";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "SiteCreatorFly — Plataforma de sites de delivery" },
