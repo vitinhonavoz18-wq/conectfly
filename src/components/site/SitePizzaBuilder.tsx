@@ -97,6 +97,20 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
   const maxFlavors = size?.max_flavors ?? 0;
   const remaining = Math.max(0, maxFlavors - selectedFlavors.length);
   const canAdd = !!size && selectedFlavors.length > 0;
+  const isSelectionComplete = !!size && selectedFlavors.length === maxFlavors && maxFlavors > 0;
+
+  // Automatic scroll to beverages only when selection is truly complete
+  useEffect(() => {
+    if (isSelectionComplete) {
+      const timer = setTimeout(() => {
+        const beveragesSection = document.getElementById("bebidas");
+        if (beveragesSection) {
+          beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [isSelectionComplete]);
 
   const { flavorMap, classicFlavors, specialFlavors } = useMemo(() => {
     const m = new Map<string, MenuItemRow>();
@@ -151,20 +165,23 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     if (specialNames.length > 0) {
       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
     }
-    addLine(
-      {
-        itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
-        name: `Pizza ${size.label}`,
-        description: descParts.join(" • "),
-        unitPrice: finalPrice,
-        sizeLabel: size.label,
-        flavors: flavorNames,
-        specialFlavors: specialNames,
-        extras: specialExtras,
-      },
-      1,
-      true
-    );
+    addLine({
+      itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+      name: `Pizza ${size.label}`,
+      description: descParts.join(" • "),
+      unitPrice: finalPrice,
+      sizeLabel: size.label,
+      flavors: flavorNames,
+      specialFlavors: specialNames,
+      extras: specialExtras,
+    }, 1);
+
+    // Also scroll after adding, just in case they added a partially full selection
+    const beveragesSection = document.getElementById("bebidas");
+    if (beveragesSection) {
+      beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
     setSelectedFlavors([]);
     if (shouldOpenCart) setCartOpen(true);
