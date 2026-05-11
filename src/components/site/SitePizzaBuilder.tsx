@@ -162,16 +162,20 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     if (specialNames.length > 0) {
       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
     }
-    addLine({
-      itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
-      name: `Pizza ${size.label}`,
-      description: descParts.join(" • "),
-      unitPrice: finalPrice,
-      sizeLabel: size.label,
-      flavors: flavorNames,
-      specialFlavors: specialNames,
-      extras: specialExtras,
-    });
+    addLine(
+      {
+        itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+        name: `Pizza ${size.label}`,
+        description: descParts.join(" • "),
+        unitPrice: finalPrice,
+        sizeLabel: size.label,
+        flavors: flavorNames,
+        specialFlavors: specialNames,
+        extras: specialExtras,
+      },
+      1,
+      true
+    );
     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
     setSelectedFlavors([]);
     if (shouldOpenCart) setCartOpen(true);
