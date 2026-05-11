@@ -13,16 +13,20 @@ export function BeverageManager({ restaurantId }: Props) {
 
   const reload = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("pizzeria_beverages")
-      .select("*")
-      .eq("pizzeria_id", restaurantId)
-      .order("sort_order", { ascending: true });
-    
-    if (error) {
-      console.error("Error loading beverages:", error);
-    } else {
-      setBeverages((data ?? []) as unknown as BeverageRow[]);
+    try {
+      const { data, error } = await supabase
+        .from("pizzeria_beverages")
+        .select("*")
+        .eq("pizzeria_id", restaurantId)
+        .order("sort_order", { ascending: true });
+      
+      if (error) {
+        console.error("Error loading beverages:", error);
+      } else {
+        setBeverages((data ?? []) as unknown as BeverageRow[]);
+      }
+    } catch (err) {
+      console.error("Caught error loading beverages:", err);
     }
     setLoading(false);
   };
