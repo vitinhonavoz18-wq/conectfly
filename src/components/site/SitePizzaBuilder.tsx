@@ -128,18 +128,7 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     setSelectedFlavors((cur) => {
       if (cur.includes(id)) return cur.filter((x) => x !== id);
       if (cur.length >= maxFlavors) return cur;
-      const next = [...cur, id];
-      
-      if (next.length === maxFlavors) {
-        setTimeout(() => {
-          const beveragesSection = document.getElementById("bebidas");
-          if (beveragesSection) {
-            beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-        }, 600);
-      }
-      
-      return next;
+      return [...cur, id];
     });
   };
 
