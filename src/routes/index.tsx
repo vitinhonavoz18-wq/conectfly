@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -14,6 +14,7 @@ import {
 import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
+import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { slugify } from "@/lib/site/format";
 import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 import { generateApiKey } from "@/lib/site/flycontrol";
@@ -214,13 +215,14 @@ function Dashboard() {
                    >
                      <Pencil className="h-4 w-4 text-primary" /> Painel
                    </Link>
-                   <Link
-                     to="/s/$slug"
-                     params={{ slug: r.slug }}
-                     className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all"
-                   >
-                     <Eye className="h-4 w-4 text-secondary" /> Ver
-                   </Link>
+                    <a
+                      href={getPizzeriaPublicUrl(r.slug)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all"
+                    >
+                      <Eye className="h-4 w-4 text-secondary" /> Ver
+                    </a>
                  </div>
                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
                    <Link
