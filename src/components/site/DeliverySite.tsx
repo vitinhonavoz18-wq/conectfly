@@ -14,7 +14,11 @@ import type { SiteData } from "@/lib/site/types";
 function DeliverySiteContent({ data }: { data: SiteData }) {
   const { totalItems, totalPrice, isCartOpen, setCartOpen } = useCart();
   const r = data.restaurant;
-  const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza);
+  const isBeverage = (c: any) => {
+    const name = c.name.toLowerCase();
+    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks";
+  };
+  const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c));
 
   // Monitor if header is visible to show/hide floating cart
   const [headerVisible, setHeaderVisible] = useState(true);
