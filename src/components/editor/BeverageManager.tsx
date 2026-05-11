@@ -36,6 +36,11 @@ export function BeverageManager({ restaurantId }: Props) {
   }, [restaurantId]);
 
   const addBeverage = async () => {
+    if (!restaurantId) {
+      alert("Erro: ID da pizzaria não encontrado.");
+      return;
+    }
+
     const { error } = await supabase.from("pizzeria_beverages").insert({
       pizzeria_id: restaurantId,
       name: "Nova Bebida",
