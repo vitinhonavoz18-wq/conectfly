@@ -236,11 +236,22 @@ export function InfoForm({ restaurant, onChange }: Props) {
           />
         </Field>
         <Field label="URL (slug)">
-          <input
-            value={r.slug}
-            onChange={(e) => set("slug", slugify(e.target.value))}
-            className="input"
-          />
+          <div className="flex gap-2 items-center">
+            <input
+              value={r.slug}
+              onChange={(e) => set("slug", slugify(e.target.value))}
+              className="input flex-1"
+            />
+            <a
+              href={getPizzeriaPublicUrl(r.slug)}
+              target="_blank"
+              rel="noreferrer"
+              className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary transition-all shadow-xl"
+              title="Ver site público"
+            >
+              <Eye className="h-5 w-5" />
+            </a>
+          </div>
         </Field>
         <Field label="Slogan curto" hint="Ex: O melhor yakisoba de Salvador">
           <input
