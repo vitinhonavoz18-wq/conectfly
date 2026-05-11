@@ -14,6 +14,51 @@ export function SiteMenuSection({ categories, restaurant }: Props) {
   if (categories.length === 0) return null;
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
 
+  const isBeverageCategory = (c: MenuCategoryRow) => {
+    const name = c.name.toLowerCase();
+    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks";
+  };
+
+  const beverageCategory = categories.find(isBeverageCategory);
+  const otherCategories = categories.filter(c => !isBeverageCategory(c));
+
+  const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
+      {cats.map((c) => (
+         <button
+           key={c.id}
+           onClick={() => setActive(c.id)}
+           className="group relative aspect-square rounded-3xl overflow-hidden border border-white/5 bg-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl"
+         >
+          {c.image_url ? (
+            <img
+              src={c.image_url}
+              alt={c.name}
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))]">
+              <ImageIcon className="h-10 w-10 opacity-40" />
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-left">
+            <h3 className="text-white font-black text-base sm:text-lg leading-tight drop-shadow">
+              {c.icon ? `${c.icon} ` : ""}
+              {c.name}
+            </h3>
+            <p className="text-white/80 text-xs mt-0.5">
+              {c.is_pizza
+                ? `${c.items.length} ${c.items.length === 1 ? "sabor" : "sabores"}`
+                : `${c.items.length} ${c.items.length === 1 ? "item" : "itens"}`}
+            </p>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <section id="cardapio" className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -30,39 +75,24 @@ export function SiteMenuSection({ categories, restaurant }: Props) {
          </div>
 
         {!current ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
-            {categories.map((c) => (
-               <button
-                 key={c.id}
-                 onClick={() => setActive(c.id)}
-                 className="group relative aspect-square rounded-3xl overflow-hidden border border-white/5 bg-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl"
-               >
-                {c.image_url ? (
-                  <img
-                    src={c.image_url}
-                    alt={c.name}
-                    loading="lazy"
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))]">
-                    <ImageIcon className="h-10 w-10 opacity-40" />
+          <div className="space-y-12">
+            {otherCategories.length > 0 && renderCategoryList(otherCategories)}
+            
+            {beverageCategory && (
+              <div id="bebidas" className="pt-8 border-t border-white/5">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
+                    <span className="text-xl">🥤</span>
                   </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-left">
-                  <h3 className="text-white font-black text-base sm:text-lg leading-tight drop-shadow">
-                    {c.icon ? `${c.icon} ` : ""}
-                    {c.name}
-                  </h3>
-                  <p className="text-white/80 text-xs mt-0.5">
-                    {c.is_pizza
-                      ? `${c.items.length} ${c.items.length === 1 ? "sabor" : "sabores"}`
-                      : `${c.items.length} ${c.items.length === 1 ? "item" : "itens"}`}
-                  </p>
+                  <h3 className="text-2xl font-black tracking-tight uppercase">Bebidas</h3>
                 </div>
-              </button>
-            ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {beverageCategory.items.map((it) => (
+                    <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
