@@ -151,16 +151,20 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
     if (specialNames.length > 0) {
       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
     }
-    addLine({
-      itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
-      name: `Pizza ${size.label}`,
-      description: descParts.join(" • "),
-      unitPrice: finalPrice,
-      sizeLabel: size.label,
-      flavors: flavorNames,
-      specialFlavors: specialNames,
-      extras: specialExtras,
-    });
+    addLine(
+      {
+        itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+        name: `Pizza ${size.label}`,
+        description: descParts.join(" • "),
+        unitPrice: finalPrice,
+        sizeLabel: size.label,
+        flavors: flavorNames,
+        specialFlavors: specialNames,
+        extras: specialExtras,
+      },
+      1,
+      true
+    );
     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
     setSelectedFlavors([]);
     if (shouldOpenCart) setCartOpen(true);
@@ -174,8 +178,6 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
       </div>
     );
   }
-
-  const showFloating = canAdd;
 
   return (
     <div className="space-y-6 relative" id={`pizza-builder-${category.id}`}>
@@ -366,26 +368,6 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
         )}
       </div>
 
-      {/* Floating Checkout Button */}
-      <div 
-        className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[90%] max-w-md transition-all duration-500 transform ${
-          showFloating ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-90 pointer-events-none"
-        }`}
-      >
-        <button
-          onClick={() => handleAddToCart()}
-          className="btn-premium w-full py-5 rounded-2xl flex items-center justify-between px-8 shadow-[0_20px_50px_rgba(255,90,0,0.4)] border border-primary/30 group active:scale-95 transition-all"
-        >
-          <div className="flex flex-col items-start">
-            <span className="text-[10px] uppercase tracking-widest text-primary-foreground/70 font-black">Pizza {size?.label}</span>
-            <span className="text-xl font-black text-primary-foreground tracking-tighter">Enviar p/ Sacola • {formatBRL(finalPrice)}</span>
-          </div>
-          <div className="flex items-center gap-3 bg-white/20 px-4 py-2 rounded-xl group-hover:bg-white/40 transition-colors">
-            <ShoppingBag className="h-5 w-5" />
-            <Plus className="h-4 w-4" />
-          </div>
-        </button>
-      </div>
     </div>
   );
 }
