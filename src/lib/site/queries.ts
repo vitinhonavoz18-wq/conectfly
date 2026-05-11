@@ -7,6 +7,7 @@ import type {
   MenuItemRow,
   RestaurantRow,
   SiteData,
+  BeverageRow,
 } from "./types";
 
 export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
@@ -23,7 +24,7 @@ export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
 export async function fetchSiteByRestaurant(
   restaurant: RestaurantRow,
 ): Promise<SiteData> {
-  const [catsRes, itemsRes, groupsRes, combosRes, zonesRes] = await Promise.all([
+  const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("*")
@@ -49,6 +50,12 @@ export async function fetchSiteByRestaurant(
       .select("*")
       .eq("restaurant_id", restaurant.id)
       .order("sort_order"),
+    supabase
+      .from("pizzeria_beverages")
+      .select("*")
+      .eq("pizzeria_id", restaurant.id)
+      .eq("is_active", true)
+      .order("sort_order"),
   ]);
   if (catsRes.error) throw catsRes.error;
   if (itemsRes.error) throw itemsRes.error;
@@ -60,6 +67,7 @@ export async function fetchSiteByRestaurant(
   const groups = (groupsRes.data ?? []) as unknown as ComboGroupRow[];
   const combos = (combosRes.data ?? []) as unknown as ComboRow[];
   const zones = (zonesRes.data ?? []) as unknown as DeliveryZoneRow[];
+  const beverages = (beveragesRes.data ?? []) as unknown as BeverageRow[];
 
   return {
     restaurant,
@@ -72,6 +80,7 @@ export async function fetchSiteByRestaurant(
       combos: combos.filter((cb) => cb.group_id === g.id),
     })),
     deliveryZones: zones,
+    beverages,
   };
 }
 

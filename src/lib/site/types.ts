@@ -75,11 +75,25 @@ export interface RestaurantRow {
   show_item_images?: boolean;
 }
 
+export interface BeverageRow {
+  id: string;
+  pizzeria_id: string;
+  name: string;
+  brand: string | null;
+  size: string | null;
+  price: number;
+  is_active: boolean;
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface SiteData {
   restaurant: RestaurantRow;
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   comboGroups: (ComboGroupRow & { combos: ComboRow[] })[];
   deliveryZones?: DeliveryZoneRow[];
+  beverages?: BeverageRow[];
 }
 
 export interface CartLine {
