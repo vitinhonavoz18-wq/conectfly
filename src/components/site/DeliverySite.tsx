@@ -17,7 +17,7 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
   const r = data.restaurant;
   const isBeverage = (c: any) => {
     const name = c.name.toLowerCase();
-    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks";
+    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
   };
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c));
   const hasBeverages = data.beverages && data.beverages.length > 0;
