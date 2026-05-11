@@ -46,20 +46,25 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
             heroVideoUrl={r.hero_video_url}
           />
         </SectionScroll>
-        <SectionScroll>
+        <SectionScroll id="pizzas-container">
           <Reveal variant="fade-up">
             <div className="site-scroll-rise">
               <SitePizzaSection categories={data.categories} restaurant={r} />
-              {hasBeverages && (
-                <div className="px-4 pb-14">
-                  <div className="max-w-6xl mx-auto">
-                    <SiteBeverageSection beverages={data.beverages!} restaurant={r} />
-                  </div>
-                </div>
-              )}
             </div>
           </Reveal>
         </SectionScroll>
+
+        {hasBeverages && (
+          <SectionScroll id="beverages-container">
+            <Reveal variant="fade-up" delay={50}>
+              <div className="site-scroll-rise px-4 pb-14">
+                <div className="max-w-6xl mx-auto">
+                  <SiteBeverageSection beverages={data.beverages!} restaurant={r} />
+                </div>
+              </div>
+            </Reveal>
+          </SectionScroll>
+        )}
         <SectionScroll>
           <Reveal variant="fade-up" delay={80}>
             <div className="site-scroll-rise">
