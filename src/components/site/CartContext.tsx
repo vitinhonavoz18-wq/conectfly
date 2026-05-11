@@ -3,7 +3,7 @@ import type { CartLine } from "@/lib/site/types";
 
 interface CartCtx {
   items: CartLine[];
-  addLine: (line: Omit<CartLine, "quantity">, qty?: number) => void;
+  addLine: (line: Omit<CartLine, "quantity">, qty?: number, scrollAfterPizza?: boolean) => void;
   updateQty: (itemId: string, sizeLabel: string | undefined, qty: number) => void;
   removeLine: (itemId: string, sizeLabel?: string) => void;
   clear: () => void;
@@ -23,7 +23,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
   const [isCartOpen, setCartOpen] = useState(false);
 
-  const addLine: CartCtx["addLine"] = (line, qty = 1) => {
+  const addLine: CartCtx["addLine"] = (line, qty = 1, scrollAfterPizza = false) => {
     setItems((cur) => {
       const idx = cur.findIndex(
         (l) => keyOf(l.itemId, l.sizeLabel) === keyOf(line.itemId, line.sizeLabel),
@@ -33,7 +33,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
         copy[idx] = { ...copy[idx], quantity: copy[idx].quantity + qty };
         return copy;
       }
-      return [...cur, { ...line, quantity: qty }];
+      const next = [...cur, { ...line, quantity: qty }];
+      if (scrollAfterPizza) {
+        setTimeout(() => {
+          const beveragesSection = document.getElementById("bebidas");
+          if (beveragesSection) {
+            beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 600);
+      }
+      return next;
     });
   };
 
