@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
+import { BeverageManager } from "./BeverageManager";
 
 interface Props {
   restaurantId: string;
@@ -139,6 +140,13 @@ export function MenuManager({ restaurantId }: Props) {
 
   return (
     <div className="space-y-4">
+      {/* Beverages Section */}
+      <div className="mb-12">
+        <BeverageManager restaurantId={restaurantId} />
+      </div>
+
+      <div className="h-px w-full bg-white/5 my-8" />
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Organize seu cardápio em categorias. Use tamanhos para itens com preço variável (ex: 500g / 1kg).
