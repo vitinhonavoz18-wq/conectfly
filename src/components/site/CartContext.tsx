@@ -33,16 +33,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         copy[idx] = { ...copy[idx], quantity: copy[idx].quantity + qty };
         return copy;
       }
-      const next = [...cur, { ...line, quantity: qty }];
-      if (scrollAfterPizza) {
-        setTimeout(() => {
-          const beveragesSection = document.getElementById("bebidas");
-          if (beveragesSection) {
-            beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
-          }
-        }, 600);
-      }
-      return next;
+      return [...cur, { ...line, quantity: qty }];
     });
   };
 
