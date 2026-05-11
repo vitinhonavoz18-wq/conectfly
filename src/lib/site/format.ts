@@ -1,3 +1,11 @@
+const PUBLIC_SITE_URL = import.meta.env.VITE_PUBLIC_SITE_URL || (typeof window !== "undefined" ? window.location.origin : "");
+
+export function getPizzeriaPublicUrl(slug: string): string {
+  if (!slug) return PUBLIC_SITE_URL;
+  // Remove trailing slash from base if present, then add /s/slug
+  const base = PUBLIC_SITE_URL.replace(/\/$/, "");
+  return `${base}/s/${slug}`;
+}
 
 export function formatDateTime(date?: string | Date): string {
   const d = date ? new Date(date) : new Date();

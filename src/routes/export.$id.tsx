@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -20,6 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import type { RestaurantRow } from "@/lib/site/types";
 import {
   FLYCONTROL_EDGE_FUNCTION_TS,
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/export/$id")({
 
 function ExportPage() {
   const { id } = Route.useParams();
+  const router = useRouter();
   const [r, setR] = useState<RestaurantRow | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -87,10 +89,7 @@ function ExportPage() {
     }
   };
 
-  const shareUrl =
-    r && typeof window !== "undefined"
-      ? `${window.location.origin}/s/${r.slug}`
-      : "";
+  const shareUrl = r ? getPizzeriaPublicUrl(r.slug) : "";
 
   const handleCopyShare = async () => {
     if (!shareUrl) return;

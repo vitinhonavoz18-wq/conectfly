@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy, Wand2 } from "lucide-react";
+import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy, Wand2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
-import { formatPhoneMask, slugify } from "@/lib/site/format";
+import { formatPhoneMask, slugify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
 
 interface Props {
@@ -236,11 +236,22 @@ export function InfoForm({ restaurant, onChange }: Props) {
           />
         </Field>
         <Field label="URL (slug)">
-          <input
-            value={r.slug}
-            onChange={(e) => set("slug", slugify(e.target.value))}
-            className="input"
-          />
+          <div className="flex gap-2 items-center">
+            <input
+              value={r.slug}
+              onChange={(e) => set("slug", slugify(e.target.value))}
+              className="input flex-1"
+            />
+            <a
+              href={getPizzeriaPublicUrl(r.slug)}
+              target="_blank"
+              rel="noreferrer"
+              className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary transition-all shadow-xl"
+              title="Ver site público"
+            >
+              <Eye className="h-5 w-5" />
+            </a>
+          </div>
         </Field>
         <Field label="Slogan curto" hint="Ex: O melhor yakisoba de Salvador">
           <input
