@@ -26,7 +26,7 @@ import { ComboManager } from "@/components/editor/ComboManager";
 import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
 
-export const Route = createFileRoute("/edit/$id")({
+export const Route = createFileRoute("/_authenticated/edit/$id")({
   component: EditPage,
 });
 

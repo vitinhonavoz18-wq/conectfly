@@ -28,7 +28,7 @@ import {
   FLYCONTROL_SCHEMA_SQL,
 } from "@/lib/site/flycontrolEdgeFunction";
 
-export const Route = createFileRoute("/export/$id")({
+export const Route = createFileRoute("/_authenticated/export/$id")({
   component: ExportPage,
 });
 

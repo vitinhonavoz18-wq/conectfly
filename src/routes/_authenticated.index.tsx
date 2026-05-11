@@ -18,8 +18,11 @@ import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { slugify } from "@/lib/site/format";
 import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 import { generateApiKey } from "@/lib/site/flycontrol";
+import { useAuth } from "@/hooks/useAuth";
+import { LogOut } from "lucide-react";
+import { toast } from "sonner";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "SiteCreatorFly — Plataforma de sites de delivery" },
@@ -35,6 +38,7 @@ export const Route = createFileRoute("/")({
 
 function Dashboard() {
   const router = useRouter();
+  const { user, signOut } = useAuth();
   const [list, setList] = useState<RestaurantRow[] | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
@@ -67,7 +71,7 @@ function Dashboard() {
 
     const { data, error: insErr } = await supabase
       .from("restaurants")
-      .insert({ name: trimmed, slug, flycontrol_api_key: generateApiKey() })
+      .insert({ name: trimmed, slug, flycontrol_api_key: generateApiKey(), owner_id: user?.id })
       .select()
       .single();
     if (insErr || !data) {
@@ -90,6 +94,13 @@ function Dashboard() {
     if (!confirm("Excluir este site definitivamente?")) return;
     await supabase.from("restaurants").delete().eq("id", id);
     reload();
+  };
+
+  const handleClaim = async (id: string) => {
+    if (!user) return;
+    const { error } = await supabase.from("restaurants").update({ owner_id: user.id }).eq("id", id);
+    if (error) toast.error("Falha ao reivindicar: " + error.message);
+    else { toast.success("Pizzaria reivindicada!"); reload(); }
   };
 
   const togglePublished = async (r: RestaurantRow) => {
@@ -124,6 +135,14 @@ function Dashboard() {
              >
                <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform text-primary-foreground" />
                <span className="uppercase text-xs tracking-[0.2em]">Novo Site Gourmet</span>
+             </button>
+             <button
+               onClick={() => signOut()}
+               className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
+               title={user?.email ?? ""}
+             >
+               <LogOut className="h-4 w-4" />
+               <span className="hidden sm:inline text-xs uppercase tracking-widest">Sair</span>
              </button>
            </div>
         </div>
