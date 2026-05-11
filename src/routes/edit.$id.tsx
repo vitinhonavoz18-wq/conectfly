@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
 import { fetchSiteByRestaurant } from "@/lib/site/queries";
+import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { InfoForm } from "@/components/editor/InfoForm";
 import { MenuManager } from "@/components/editor/MenuManager";
 import { ComboManager } from "@/components/editor/ComboManager";
@@ -33,6 +34,7 @@ type Tab = "info" | "menu" | "combo" | "delivery" | "preview";
 
 function EditPage() {
   const { id } = Route.useParams();
+  const router = useRouter();
   const [restaurant, setRestaurant] = useState<RestaurantRow | null>(null);
   const [tab, setTab] = useState<Tab>("info");
   const [preview, setPreview] = useState<SiteData | null>(null);
@@ -75,10 +77,7 @@ function EditPage() {
     setFinalized(true);
   };
 
-  const shareUrl =
-    restaurant && typeof window !== "undefined"
-      ? `${window.location.origin}/s/${restaurant.slug}`
-      : "";
+  const shareUrl = restaurant ? getPizzeriaPublicUrl(restaurant.slug) : "";
 
   const handleCopyShare = async () => {
     if (!shareUrl) return;
