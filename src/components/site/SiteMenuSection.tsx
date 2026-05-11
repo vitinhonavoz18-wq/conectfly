@@ -19,7 +19,6 @@ export function SiteMenuSection({ categories, restaurant }: Props) {
     return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks";
   };
 
-  const beverageCategory = categories.find(isBeverageCategory);
   const otherCategories = categories.filter(c => !isBeverageCategory(c));
 
   const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
@@ -77,22 +76,6 @@ export function SiteMenuSection({ categories, restaurant }: Props) {
         {!current ? (
           <div className="space-y-12">
             {otherCategories.length > 0 && renderCategoryList(otherCategories)}
-            
-            {beverageCategory && (
-              <div id="bebidas" className="pt-8 border-t border-white/5">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-2xl bg-primary/20 flex items-center justify-center text-primary">
-                    <span className="text-xl">🥤</span>
-                  </div>
-                  <h3 className="text-2xl font-black tracking-tight uppercase">Bebidas</h3>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {beverageCategory.items.map((it) => (
-                    <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         ) : (
           <>
