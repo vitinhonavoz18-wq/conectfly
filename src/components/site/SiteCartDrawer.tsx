@@ -118,7 +118,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
        }
  
         if (whatsappOn) {
-          console.log("[FLYCONTROL] Abrindo WhatsApp");
+          console.log("Abrindo WhatsApp");
           openWhatsAppOrder(messageWhatsApp);
         }
  
