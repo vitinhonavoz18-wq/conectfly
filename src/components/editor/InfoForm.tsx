@@ -529,19 +529,24 @@ export function InfoForm({ restaurant, onChange }: Props) {
                   const val = e.target.value;
                   set("flycontrol_base_url", val);
                   
-                  // Requirement 3: Auto-generate endpoint if base URL is pasted
-                  if (val && !r.flycontrol_api_url) {
-                    let base = val.trim();
-                    if (!base.startsWith("http")) base = "https://" + base;
-                    base = base.replace(/\/+$/, "");
+                  // Auto-generate endpoint if base URL is pasted or if current is a test endpoint
+                  if (val) {
+                    const currentApiUrl = (r.flycontrol_api_url ?? "").toLowerCase();
+                    const isTest = currentApiUrl.includes("test") || currentApiUrl.includes("connection");
                     
-                    let autoEndpoint = "";
-                    if (base.includes(".supabase.co")) {
-                      autoEndpoint = base + "/functions/v1/create-order";
-                    } else {
-                      autoEndpoint = base + "/api/orders";
+                    if (!r.flycontrol_api_url || isTest) {
+                      let base = val.trim();
+                      if (!base.startsWith("http")) base = "https://" + base;
+                      base = base.replace(/\/+$/, "");
+                      
+                      let autoEndpoint = "";
+                      if (base.includes(".supabase.co")) {
+                        autoEndpoint = base + "/functions/v1/create-order";
+                      } else {
+                        autoEndpoint = base + "/api/orders";
+                      }
+                      set("flycontrol_api_url", autoEndpoint);
                     }
-                    set("flycontrol_api_url", autoEndpoint);
                   }
                 }}
                 placeholder="https://sua-url-do-flycontrol.lovable.app"
