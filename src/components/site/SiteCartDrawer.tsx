@@ -153,20 +153,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
          console.log("ℹ️ Endpoint ou API Key ausente (ou desabilitado). Pulando registro no painel e seguindo para WhatsApp.");
        }
 
-      if (whatsappOn) {
-        console.log("📲 Redirecionando para WhatsApp");
-        openWhatsAppOrder(messageWhatsApp);
-      }
-
-      clear();
-      setName("");
-      setPhone("");
-      setAddress("");
-      setPaymentMethod("PIX");
-      setChangeFor("");
-      setNotes("");
-      setZoneId("");
-      onClose();
     } catch (err) {
       console.error("❌ Erro geral ao finalizar pedido:", err);
       setError("Ocorreu um erro ao processar seu pedido.");
@@ -175,9 +161,26 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       console.log("🏁 Fluxo de finalização encerrado");
     }
 
+    // Redirecionar para WhatsApp SEMPRE, mesmo se o FlyControl falhar
+    if (whatsappOn) {
+      console.log("📲 Redirecionando para WhatsApp");
+      openWhatsAppOrder(messageWhatsApp);
+    }
+
     if (flycontrolOn && !painelRegistrado) {
       console.warn("⚠️ Pedido não foi registrado no painel, mas o fluxo continuou.");
     }
+
+    // Limpar carrinho e fechar após iniciar o redirecionamento
+    clear();
+    setName("");
+    setPhone("");
+    setAddress("");
+    setPaymentMethod("PIX");
+    setChangeFor("");
+    setNotes("");
+    setZoneId("");
+    onClose();
    };
 
   return (
