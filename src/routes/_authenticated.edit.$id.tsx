@@ -140,12 +140,12 @@ function EditPage() {
              </div>
           </div>
             <div className="flex items-center gap-3">
-              <Link
-                to="/s/$slug"
-                params={{ slug: restaurant.slug }}
-                target="_blank"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
-              >
+               <Link
+                 to="/$slug"
+                 params={{ slug: restaurant.slug }}
+                 target="_blank"
+                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
+               >
                 <Eye className="h-4 w-4 text-secondary" /> 
                 <span className="hidden sm:inline">Visualizar Site</span>
               </Link>
@@ -281,7 +281,7 @@ function EditPage() {
  
                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                      <Link
-                       to="/s/$slug"
+                       to="/$slug"
                        params={{ slug: restaurant.slug }}
                        target="_blank"
                        className="flex flex-col items-start gap-3 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all group/item"
