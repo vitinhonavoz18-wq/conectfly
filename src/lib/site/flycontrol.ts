@@ -152,6 +152,7 @@ function joinUrl(base: string, path: string): string {
 export async function sendOrderToFlycontrol(
   restaurant: Pick<
     RestaurantRow,
+    | "id"
     | "flycontrol_enabled"
     | "flycontrol_api_url"
     | "flycontrol_api_key"
@@ -182,70 +183,32 @@ if (payload.order.total <= 0) {
 }
 
    if (!restaurant.flycontrol_enabled) return;
-   const url = resolveOrdersUrl(restaurant);
-   const key = (restaurant.flycontrol_api_key ?? "").trim();
-  if (!url || !key) {
-    console.error("Integração incompleta:", { url, key });
-    throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
+
+  if (!restaurant.id) {
+    throw new Error("restaurant.id ausente para envio do pedido.");
   }
- 
-  console.log("Iniciando finalização do pedido");
+
+  console.log("Iniciando finalização do pedido (via server route)");
   console.log("Payload montado para FlyControl:", payload);
-  console.log("Enviando para endpoint:", url);
 
-  const finalPayload = { ...payload, api_key: key };
-  const maxRetries = opts.retries ?? 3;
-  let lastErr: unknown;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      console.log(`Tentativa ${attempt + 1}/${maxRetries + 1}`);
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": key,
-          "x-idempotency-key": payload.order.id,
-          Authorization: `Bearer ${key}`,
-        },
-        body: JSON.stringify(finalPayload),
-      });
-
-      const txt = await res.text().catch(() => "");
-      let data: any = {};
-      try {
-        data = JSON.parse(txt);
-      } catch (e) {
-        data = { text: txt };
-      }
-
-      console.log("Resposta do FlyControl", {
-        status: res.status,
-        data,
-      });
-
-      if (!res.ok) {
-        throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
-      }
-
-      if (data.status === "error" || data.success === false) {
-        throw new Error(data.message || "Pedido rejeitado pelo FlyControl");
-      }
-
-      console.log("Pedido confirmado com sucesso!");
-      return;
-    } catch (err) {
-      lastErr = err;
-      console.error("Erro ao enviar pedido para FlyControl", err);
-
-      if (attempt < maxRetries) {
-        const delay = (opts.initialDelay || 1000) * Math.pow(2, attempt);
-        console.log(`Aguardando ${delay}ms para próxima tentativa...`);
-        await new Promise((r) => setTimeout(r, delay));
-      }
-    }
+  const res = await fetch("/api/public/submit-order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-idempotency-key": payload.order.id,
+    },
+    body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
+  });
+  const txt = await res.text().catch(() => "");
+  let data: any = {};
+  try { data = JSON.parse(txt); } catch { data = { text: txt }; }
+  console.log("Resposta do server route /api/public/submit-order:", { status: res.status, data });
+  if (!res.ok || data?.success === false) {
+    throw new Error(data?.error || `Falha ao enviar pedido (HTTP ${res.status})`);
   }
-  throw lastErr instanceof Error ? lastErr : new Error("Falha definitiva ao enviar pedido para o FlyControl");
+  console.log("Pedido confirmado com sucesso!");
+  // opts kept for backwards compat; retry handled server-side
+  void opts;
 }
 
 export function generateApiKey(): string {
