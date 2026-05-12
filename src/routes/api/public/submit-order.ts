@@ -100,7 +100,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
                    "x-api-key": key,
                    "x-idempotency-key": idempotencyKey,
                   },
-                  body: JSON.stringify({ ...body.payload, api_key: key }),
+                   body: JSON.stringify(body.payload),
                });
                const txt = await res.text().catch(() => "");
                try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
