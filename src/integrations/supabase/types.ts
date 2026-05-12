@@ -124,6 +124,50 @@ export type Database = {
         }
         Relationships: []
       }
+      flycontrol_order_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          idempotency_key: string | null
+          payload: Json
+          response_body: string | null
+          restaurant_id: string
+          status_code: number | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string | null
+          payload: Json
+          response_body?: string | null
+          restaurant_id: string
+          status_code?: number | null
+          success?: boolean
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          idempotency_key?: string | null
+          payload?: Json
+          response_body?: string | null
+          restaurant_id?: string
+          status_code?: number | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flycontrol_order_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           created_at: string

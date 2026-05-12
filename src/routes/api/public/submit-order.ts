@@ -84,53 +84,56 @@ export const Route = createFileRoute("/api/public/submit-order")({
             );
           }
 
-          const idempotencyKey =
-            request.headers.get("x-idempotency-key") || body.payload?.order?.id || "";
-
-          // Forward com retry/backoff
-          const maxRetries = 3;
-          let lastErr = "";
-          let lastStatus = 0;
-          for (let attempt = 0; attempt <= maxRetries; attempt++) {
-            try {
-              const res = await fetch(url, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-api-key": key,
-                  "x-idempotency-key": idempotencyKey,
-                  Authorization: `Bearer ${key}`,
-                },
-                body: JSON.stringify({ ...body.payload, api_key: key }),
-              });
-              const txt = await res.text().catch(() => "");
-              let data: any = {};
-              try { data = JSON.parse(txt); } catch { data = { text: txt }; }
-              if (!res.ok) {
-                lastErr = `FLYCONTROL ${res.status}: ${txt || res.statusText}`;
-                lastStatus = res.status;
-                if (res.status >= 400 && res.status < 500) break; // não retry em 4xx
-              } else if (data.status === "error" || data.success === false) {
-                lastErr = data.message || "Pedido rejeitado pelo FlyControl";
-                break;
-              } else {
-                return new Response(
-                  JSON.stringify({ success: true, data }),
-                  { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-                );
-              }
-            } catch (e: any) {
-              lastErr = e?.message || String(e);
-            }
-            if (attempt < maxRetries) {
-              await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
-            }
-          }
-
-          return new Response(
-            JSON.stringify({ success: false, error: lastErr, status: lastStatus }),
-            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-          );
+           const idempotencyKey = request.headers.get("x-idempotency-key") || body.payload?.order?.id || "";
+           const maxRetries = 3;
+           let lastErr = "";
+           let lastStatus = 0;
+           let finalData: any = null;
+           let isSuccess = false;
+ 
+           for (let attempt = 0; attempt <= maxRetries; attempt++) {
+             try {
+               const res = await fetch(url, {
+                 method: "POST",
+                 headers: {
+                   "Content-Type": "application/json",
+                   "x-api-key": key,
+                   "x-idempotency-key": idempotencyKey,
+                   Authorization: `Bearer ${key}`,
+                 },
+                 body: JSON.stringify({ ...body.payload, api_key: key }),
+               });
+               const txt = await res.text().catch(() => "");
+               try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
+               lastStatus = res.status;
+ 
+               if (res.ok && finalData.status !== "error" && finalData.success !== false) {
+                 isSuccess = true;
+                 break;
+               }
+ 
+               lastErr = !res.ok ? `FLYCONTROL ${res.status}: ${txt || res.statusText}` : (finalData.message || "Pedido rejeitado");
+               if (res.status >= 400 && res.status < 500) break;
+             } catch (e: any) {
+               lastErr = e?.message || String(e);
+             }
+             if (attempt < maxRetries) await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+           }
+ 
+           await supabaseAdmin.from("flycontrol_order_logs").insert({
+             restaurant_id: body.restaurant_id,
+             idempotency_key: idempotencyKey,
+             payload: body.payload,
+             status_code: lastStatus,
+             success: isSuccess,
+             error_message: isSuccess ? null : lastErr,
+             response_body: finalData ? JSON.stringify(finalData) : null,
+           });
+ 
+           return new Response(JSON.stringify({ success: isSuccess, data: finalData, error: isSuccess ? null : lastErr }), {
+             status: isSuccess ? 200 : 502,
+             headers: { ...corsHeaders, "Content-Type": "application/json" },
+           });
         } catch (e: any) {
           return new Response(
             JSON.stringify({ success: false, error: e?.message || "internal error" }),
