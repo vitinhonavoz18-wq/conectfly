@@ -89,26 +89,27 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
      setSending(true);
      try {
        if (flycontrolOn && restaurant) {
-         const payload = buildOrderPayload({
-           name,
-           phone,
-           address,
-           neighborhood: selectedZone?.neighborhood ?? null,
-           deliveryFee,
+          const payload = buildOrderPayload({
+            name,
+            phone,
+            address,
+            neighborhood: selectedZone?.neighborhood ?? null,
+            reference: null, // Pode ser adicionado um campo no futuro se necessário
+            deliveryFee,
             items,
             subtotal: totalPrice,
+            total: grandTotal,
             paymentMethod,
             changeFor: orderData.changeFor,
-            notes: notes.trim(), // Envia apenas a observação digitada para o campo notes
-         });
- 
-          // Implementação conforme solicitado: Envia primeiro, abre WhatsApp depois.
-          // Já possui retry interno no sendOrderToFlycontrol.
+            notes: notes.trim(),
+            pizzeria_slug: restaurant.slug,
+            pizzeria_name: restaurant.name,
+            whatsapp_message: messageWhatsApp,
+            delivery_type: hasZones ? "delivery" : "retirada"
+          });
+
           try {
-            await sendOrderToFlycontrol(restaurant, {
-              ...payload,
-              pizzeria_slug: restaurant.slug
-            });
+            await sendOrderToFlycontrol(restaurant, payload);
             toast.success("Pedido enviado para o painel!");
           } catch (err) {
             console.error("[FLYCONTROL] Falha definitiva no fluxo de finalização:", err);
