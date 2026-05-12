@@ -27,6 +27,7 @@ import { MenuManager } from "@/components/editor/MenuManager";
 import { ComboManager } from "@/components/editor/ComboManager";
 import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/edit/$id")({
   component: EditPage,
@@ -154,9 +155,19 @@ function EditPage() {
                 className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline text-xs uppercase tracking-widest">Sair</span>
-              </button>
-            </div>
+                 <span className="hidden sm:inline text-xs uppercase tracking-widest">Sair</span>
+               </button>
+               <button
+                 onClick={() => {
+                   navigator.clipboard.writeText(getPizzeriaPublicUrl(restaurant.slug));
+                   toast.success("Link copiado!");
+                 }}
+                 className="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-primary transition-all"
+                 title="Copiar link público"
+               >
+                 <Copy className="h-4 w-4" />
+               </button>
+             </div>
         </div>
          <div className="max-w-7xl mx-auto px-6 flex gap-2 overflow-x-auto scrollbar-hide">
           {tabs.map((t) => (
