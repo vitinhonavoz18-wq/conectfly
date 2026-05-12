@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
 
@@ -35,6 +36,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicSubmitOrderRoute = ApiPublicSubmitOrderRouteImport.update({
+  id: '/api/public/submit-order',
+  path: '/api/public/submit-order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
   id: '/export/$id',
   path: '/export/$id',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
 }
 export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +76,25 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/$slug' | '/' | '/login' | '/edit/$id' | '/export/$id'
+  fullPaths:
+    | '/$slug'
+    | '/'
+    | '/login'
+    | '/edit/$id'
+    | '/export/$id'
+    | '/api/public/submit-order'
   fileRoutesByTo: FileRoutesByTo
-  to: '/$slug' | '/login' | '/' | '/edit/$id' | '/export/$id'
+  to:
+    | '/$slug'
+    | '/login'
+    | '/'
+    | '/edit/$id'
+    | '/export/$id'
+    | '/api/public/submit-order'
   id:
     | '__root__'
     | '/$slug'
@@ -82,12 +103,14 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
+    | '/api/public/submit-order'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -119,6 +142,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/public/submit-order': {
+      id: '/api/public/submit-order'
+      path: '/api/public/submit-order'
+      fullPath: '/api/public/submit-order'
+      preLoaderRoute: typeof ApiPublicSubmitOrderRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/export/$id': {
       id: '/_authenticated/export/$id'
@@ -157,6 +187,7 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
