@@ -83,6 +83,7 @@ function joinUrl(base: string, path: string): string {
  function resolveOrdersUrl(
    restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
  ): string {
+   console.log("[FLYCONTROL] Resolvendo endpoint de pedidos...");
    let specific = (restaurant.flycontrol_api_url ?? "").trim();
    let base = (restaurant.flycontrol_base_url ?? "").trim();
  
