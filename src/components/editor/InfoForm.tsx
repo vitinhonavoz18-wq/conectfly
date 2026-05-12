@@ -169,6 +169,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
           subtotal: testOrderData.subtotal,
           paymentMethod: testOrderData.paymentMethod,
           notes: messageFull,
+          pizzeria_slug: r.slug,
         });
 
        console.log("[FLYCONTROL] Testando conexão com payload fake...");

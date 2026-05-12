@@ -102,18 +102,24 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             notes: notes.trim(), // Envia apenas a observação digitada para o campo notes
          });
  
-         try {
-           await sendOrderToFlycontrol(restaurant, payload);
-           toast.success("Pedido enviado para o painel!");
-         } catch (err) {
-           console.error("[FLYCONTROL] erro:", err);
-           toast.error("Erro ao enviar para o painel, mas continuaremos via WhatsApp.");
-         }
+          // Implementação conforme solicitado: Envia primeiro, abre WhatsApp depois.
+          // Já possui retry interno no sendOrderToFlycontrol.
+          try {
+            await sendOrderToFlycontrol(restaurant, {
+              ...payload,
+              pizzeria_slug: restaurant.slug
+            });
+            toast.success("Pedido enviado para o painel!");
+          } catch (err) {
+            console.error("[FLYCONTROL] Falha definitiva no fluxo de finalização:", err);
+            toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
+          }
        }
  
-       if (whatsappOn) {
+        if (whatsappOn) {
+          console.log("[FLYCONTROL] Abrindo WhatsApp");
           openWhatsAppOrder(messageWhatsApp);
-       }
+        }
  
        clear();
        setName("");
