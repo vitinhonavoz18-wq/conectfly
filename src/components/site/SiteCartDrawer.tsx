@@ -92,11 +92,20 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     try {
       console.log("🚀 Iniciando finalização do pedido");
 
-      if (flycontrolOn && restaurant) {
-        console.log("🔐 FlyControl está habilitado");
-        console.log("🍕 Slug:", restaurant.slug);
+       const apiKey = restaurant?.flycontrol_api_key;
+       const endpoint = restaurant?.flycontrol_api_url || restaurant?.flycontrol_base_url;
+       const pizzeriaSlug = restaurant?.slug;
 
-        const payload = buildOrderPayload({
+       if (flycontrolOn && restaurant) {
+         console.log("🔐 FlyControl está habilitado");
+         console.log("🍕 Slug:", pizzeriaSlug);
+         console.log("🔐 API Key existe?", Boolean(apiKey));
+         console.log("🔗 Endpoint usado (base):", endpoint);
+
+         // Nota: Devido a atualizações de segurança, o envio real usa a rota /api/public/submit-order
+         // que gerencia as chaves de forma protegida no servidor.
+
+         const payload = buildOrderPayload({
           name,
           phone,
           address,
@@ -111,37 +120,38 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           notes: notes.trim(),
           pizzeria_slug: restaurant.slug,
           pizzeria_name: restaurant.name,
-          whatsapp_message: messageWhatsApp,
-          delivery_type: hasZones ? "delivery" : "retirada",
-        });
+           whatsapp_message: messageWhatsApp,
+           delivery_type: hasZones ? "delivery" : "retirada",
+         });
 
-        console.log("📦 Payload montado:", payload);
+         console.log("📦 Payload:", payload);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-          console.warn("⏱️ Timeout de 5s atingido no envio para o FlyControl. Abortando...");
-          controller.abort();
-        }, 5000);
+         const controller = new AbortController();
+         const timeoutId = setTimeout(() => {
+           console.warn("⏱️ Timeout de 5s atingido no envio para o FlyControl. Abortando...");
+           controller.abort();
+         }, 5000);
 
-        try {
-          console.log("📡 Enviando para FlyControl via server route...");
-          await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          painelRegistrado = true;
-          console.log("✅ Registro concluído no painel");
-          toast.success("Pedido enviado para o painel!");
-        } catch (err: any) {
-          clearTimeout(timeoutId);
-          if (err.name === "AbortError") {
-            console.error("❌ Falha ao registrar no painel: Timeout");
-          } else {
-            console.error("❌ Falha ao registrar no painel:", err);
-          }
-          toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
-        }
-      } else {
-        console.log("ℹ️ FlyControl desabilitado ou restaurante ausente. Pulando registro.");
-      }
+         try {
+           console.log("📡 Enviando para FlyControl...");
+           await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
+           clearTimeout(timeoutId);
+           painelRegistrado = true;
+           console.log("✅ Registro concluído no painel");
+           toast.success("Pedido enviado para o painel!");
+         } catch (err: any) {
+           clearTimeout(timeoutId);
+           if (err.name === "AbortError") {
+             console.error("❌ Falha ao registrar no painel: Timeout (5s)");
+           } else {
+             console.error("❌ Falha ao registrar no painel:", err);
+           }
+           // Mostramos o aviso discreto mas continuamos
+           toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
+         }
+       } else {
+         console.log("ℹ️ Endpoint ou API Key ausente (ou desabilitado). Pulando registro no painel e seguindo para WhatsApp.");
+       }
 
       if (whatsappOn) {
         console.log("📲 Redirecionando para WhatsApp");
