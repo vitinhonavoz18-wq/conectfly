@@ -99,7 +99,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             subtotal: totalPrice,
             paymentMethod,
             changeFor: orderData.changeFor,
-            notes: messageFull, // Envia a comanda completa no campo notes para o FlyControl
+            notes: notes.trim(), // Envia apenas a observação digitada para o campo notes
          });
  
          try {
