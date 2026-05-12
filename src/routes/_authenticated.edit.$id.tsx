@@ -15,10 +15,12 @@ import {
    Sparkles,
    Tag,
    Utensils,
+   LogOut,
  } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
-import { fetchSiteByRestaurant } from "@/lib/site/queries";
+ import { fetchSiteByRestaurant } from "@/lib/site/queries";
+ import { useAuth } from "@/hooks/useAuth";
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { InfoForm } from "@/components/editor/InfoForm";
 import { MenuManager } from "@/components/editor/MenuManager";
@@ -33,8 +35,9 @@ export const Route = createFileRoute("/_authenticated/edit/$id")({
 type Tab = "info" | "menu" | "combo" | "delivery" | "preview";
 
 function EditPage() {
-  const { id } = Route.useParams();
-  const router = useRouter();
+   const { id } = Route.useParams();
+   const router = useRouter();
+   const { signOut } = useAuth();
   const [restaurant, setRestaurant] = useState<RestaurantRow | null>(null);
   const [tab, setTab] = useState<Tab>("info");
   const [preview, setPreview] = useState<SiteData | null>(null);
@@ -136,17 +139,24 @@ function EditPage() {
                </p>
              </div>
           </div>
-           <div className="flex items-center gap-3">
-             <Link
-               to="/s/$slug"
-               params={{ slug: restaurant.slug }}
-               target="_blank"
-               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
-             >
-               <Eye className="h-4 w-4 text-secondary" /> 
-               <span className="hidden sm:inline">Visualizar Site</span>
-             </Link>
-           </div>
+            <div className="flex items-center gap-3">
+              <Link
+                to="/s/$slug"
+                params={{ slug: restaurant.slug }}
+                target="_blank"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
+              >
+                <Eye className="h-4 w-4 text-secondary" /> 
+                <span className="hidden sm:inline">Visualizar Site</span>
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs uppercase tracking-widest">Sair</span>
+              </button>
+            </div>
         </div>
          <div className="max-w-7xl mx-auto px-6 flex gap-2 overflow-x-auto scrollbar-hide">
           {tabs.map((t) => (
