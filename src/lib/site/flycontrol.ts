@@ -1,79 +1,106 @@
 import type { CartLine, RestaurantRow } from "./types";
 
- export interface FlycontrolOrderPayload {
-   api_key?: string;
-   order_id: string;
-    customer: {
-      name: string;
-      phone: string;
-      address: string;
-      neighborhood?: string;
-    };
-    items: {
-      name: string;
-      quantity: number;
-      price: number;
-      type?: string;
-      notes?: string;
-    }[];
-    pizzeria_slug?: string;
-    source?: string;
-   total: number;
-   delivery_fee?: number;
-   payment_method?: string | null;
-   change_for?: number | null;
-   notes?: string;
-   created_at: string;
- }
-
-  export function buildOrderPayload(args: {
+export interface FlycontrolOrderPayload {
+  event: "order.created";
+  source: "sitecreatorfly";
+  pizzeria: {
+    slug: string;
+    name: string;
+  };
+  customer: {
     name: string;
     phone: string;
     address: string;
-    neighborhood?: string | null;
-    deliveryFee?: number;
-    items: CartLine[];
+    neighborhood: string | null;
+    reference: string | null;
+  };
+  order: {
+    id: string;
+    created_at: string;
+    items: any[];
     subtotal: number;
-    notes?: string;
-    paymentMethod?: string | null;
-    changeFor?: number | null;
-    pizzeria_slug?: string;
-  }): FlycontrolOrderPayload {
-    const items = args.items.map((l) => {
-      const isPizza = !!(l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza");
+    delivery_fee: number;
+    total: number;
+    payment_method: string;
+    change_for: number | null;
+    delivery_type: "delivery" | "retirada";
+    notes: string;
+    whatsapp_message: string;
+  };
+  api_key?: string; // Mantido para envio interno se necessário
+}
+
+export function buildOrderPayload(args: {
+  name: string;
+  phone: string;
+  address: string;
+  neighborhood?: string | null;
+  reference?: string | null;
+  deliveryFee?: number;
+  items: CartLine[];
+  subtotal: number;
+  total: number;
+  notes?: string;
+  paymentMethod?: string | null;
+  changeFor?: number | null;
+  pizzeria_slug: string;
+  pizzeria_name: string;
+  whatsapp_message: string;
+  delivery_type?: "delivery" | "retirada";
+}): FlycontrolOrderPayload {
+  const items = args.items.map((l) => {
+    const isPizza = !!(l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza");
+    if (isPizza) {
       return {
-        name: `${l.name}${l.sizeLabel ? ` (${l.sizeLabel})` : ""}`,
+        type: "pizza",
+        size: l.sizeLabel || "Padrão",
+        flavors: l.flavors && l.flavors.length > 0 ? l.flavors : [l.name],
         quantity: l.quantity,
-        price: l.unitPrice,
-        type: isPizza ? "pizza" : "beverage",
-        notes:
-          l.flavors && l.flavors.length > 0
-            ? `Sabores: ${l.flavors.join(" + ")}`
-            : l.description || undefined,
+        unit_price: l.unitPrice,
+        total_price: l.unitPrice * l.quantity,
+        notes: l.description || ""
       };
-    });
-   const fee = args.deliveryFee ?? 0;
-   return {
-     order_id:
-       typeof crypto !== "undefined" && "randomUUID" in crypto
-         ? crypto.randomUUID()
-         : `ord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-     customer: { 
-       name: args.name, 
-       phone: args.phone,
-       address: args.address,
-       neighborhood: args.neighborhood ?? undefined
-     },
-     items,
-     total: args.subtotal + fee,
-     delivery_fee: fee,
-     payment_method: args.paymentMethod ?? null,
-     change_for: args.changeFor ?? null,
+    } else {
+      return {
+        type: "beverage",
+        name: l.name,
+        quantity: l.quantity,
+        unit_price: l.unitPrice,
+        total_price: l.unitPrice * l.quantity
+      };
+    }
+  });
+
+  return {
+    event: "order.created",
+    source: "sitecreatorfly",
+    pizzeria: {
+      slug: args.pizzeria_slug,
+      name: args.pizzeria_name
+    },
+    customer: {
+      name: args.name,
+      phone: args.phone,
+      address: args.address,
+      neighborhood: args.neighborhood || null,
+      reference: args.reference || null
+    },
+    order: {
+      id: typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `ord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      created_at: new Date().toISOString(),
+      items,
+      subtotal: args.subtotal,
+      delivery_fee: args.deliveryFee ?? 0,
+      total: args.total,
+      payment_method: args.paymentMethod || "PIX",
+      change_for: args.changeFor || null,
+      delivery_type: args.delivery_type || "delivery",
       notes: (args.notes ?? "").trim(),
-      pizzeria_slug: args.pizzeria_slug,
-      source: "sitecreatorfly",
-     created_at: new Date().toISOString(),
-   };
+      whatsapp_message: args.whatsapp_message
+    }
+  };
 }
 
 function joinUrl(base: string, path: string): string {
@@ -121,105 +148,105 @@ function joinUrl(base: string, path: string): string {
    return joinUrl(base, "api/orders");
  }
 
- /** Sends an order to FLYCONTROL with exponential backoff retry. Throws on final failure. */
- export async function sendOrderToFlycontrol(
-   restaurant: Pick<
-     RestaurantRow,
-     | "flycontrol_enabled"
-     | "flycontrol_api_url"
-     | "flycontrol_api_key"
-     | "flycontrol_base_url"
-   >,
-   payload: FlycontrolOrderPayload,
-   opts: { retries?: number; initialDelay?: number } = {},
- ): Promise<void> {
-  // 1. Validações pré-envio
+/** Sends an order to FLYCONTROL with exponential backoff retry. Throws on final failure. */
+export async function sendOrderToFlycontrol(
+  restaurant: Pick<
+    RestaurantRow,
+    | "flycontrol_enabled"
+    | "flycontrol_api_url"
+    | "flycontrol_api_key"
+    | "flycontrol_base_url"
+  >,
+  payload: FlycontrolOrderPayload,
+  opts: { retries?: number; initialDelay?: number } = {},
+): Promise<void> {
+  // 1. Validações pré-envio conforme solicitado
   const missingFields: string[] = [];
-  if (!payload.pizzeria_slug) missingFields.push("pizzeria_slug");
+  if (!payload.pizzeria?.slug) missingFields.push("pizzeria.slug");
   if (!payload.customer?.name) missingFields.push("customer.name");
   if (!payload.customer?.phone) missingFields.push("customer.phone");
   if (!payload.customer?.address) missingFields.push("customer.address");
-  if (!payload.items || payload.items.length === 0) missingFields.push("items");
-  if (payload.total === undefined || payload.total === null) missingFields.push("total");
+  if (!payload.order?.items || payload.order.items.length === 0) missingFields.push("order.items");
+  if (payload.order?.total === undefined || payload.order?.total === null) missingFields.push("order.total");
 
   if (missingFields.length > 0) {
-    const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
-    console.error("[FLYCONTROL] Erro de validação antes do POST:", errorMsg);
-    console.log("[FLYCONTROL] Payload incompleto:", payload);
-    throw new Error(errorMsg);
+  const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
+  console.error("Erro de validação antes do POST:", errorMsg);
+  console.log("Payload incompleto:", payload);
+  throw new Error(errorMsg);
   }
 
   // 2. Consistência de dados
-  if (payload.total <= 0) {
-    console.warn("[FLYCONTROL] Aviso: Total do pedido é zero ou negativo:", payload.total);
-  }
+if (payload.order.total <= 0) {
+  console.warn("Aviso: Total do pedido é zero ou negativo:", payload.order.total);
+}
 
    if (!restaurant.flycontrol_enabled) return;
    const url = resolveOrdersUrl(restaurant);
    const key = (restaurant.flycontrol_api_key ?? "").trim();
-   if (!url || !key) {
-     console.error("[FLYCONTROL] Integração incompleta:", { url, key });
-     throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
-   }
+  if (!url || !key) {
+    console.error("Integração incompleta:", { url, key });
+    throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
+  }
  
-    console.log("[FLYCONTROL] Iniciando finalização do pedido");
-    console.log("[FLYCONTROL] Payload montado para FlyControl:", payload);
-    console.log("[FLYCONTROL] Enviando para endpoint:", url);
+  console.log("Iniciando finalização do pedido");
+  console.log("Payload montado para FlyControl:", payload);
+  console.log("Enviando para endpoint:", url);
 
-    const finalPayload = { ...payload, api_key: key };
-    const maxRetries = opts.retries ?? 3;
-    let lastErr: unknown;
+  const finalPayload = { ...payload, api_key: key };
+  const maxRetries = opts.retries ?? 3;
+  let lastErr: unknown;
 
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Tentativa ${attempt + 1}/${maxRetries + 1}`);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": key,
+          "x-idempotency-key": payload.order.id,
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify(finalPayload),
+      });
+
+      const txt = await res.text().catch(() => "");
+      let data: any = {};
       try {
-        console.log(`[FLYCONTROL] Enviando tentativa ${attempt + 1}/${maxRetries + 1}`);
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": key,
-            "x-idempotency-key": payload.order_id,
-            Authorization: `Bearer ${key}`,
-          },
-          body: JSON.stringify(finalPayload),
-        });
+        data = JSON.parse(txt);
+      } catch (e) {
+        data = { text: txt };
+      }
 
-        const txt = await res.text().catch(() => "");
-        let data: any = {};
-        try {
-          data = JSON.parse(txt);
-        } catch (e) {
-          data = { text: txt };
-        }
+      console.log("Resposta do FlyControl", {
+        status: res.status,
+        data,
+      });
 
-        console.log("[FLYCONTROL] Resposta do FlyControl:", {
-          status: res.status,
-          data,
-        });
+      if (!res.ok) {
+        throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
+      }
 
-        if (!res.ok) {
-          throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
-        }
+      if (data.status === "error" || data.success === false) {
+        throw new Error(data.message || "Pedido rejeitado pelo FlyControl");
+      }
 
-        if (data.status === "error" || data.success === false) {
-          throw new Error(data.message || "Pedido rejeitado pelo FlyControl");
-        }
+      console.log("Pedido confirmado com sucesso!");
+      return;
+    } catch (err) {
+      lastErr = err;
+      console.error("Erro ao enviar pedido para FlyControl", err);
 
-        console.log("[FLYCONTROL] Pedido confirmado com sucesso!");
-        return;
-      } catch (err) {
-        lastErr = err;
-        console.error("[FLYCONTROL] Erro ao enviar pedido para FlyControl:", err);
-
-        if (attempt < maxRetries) {
-          const delay = (opts.initialDelay || 1000) * Math.pow(2, attempt);
-          console.log(`[FLYCONTROL] Aguardando ${delay}ms para próxima tentativa...`);
-          await new Promise((r) => setTimeout(r, delay));
-        }
+      if (attempt < maxRetries) {
+        const delay = (opts.initialDelay || 1000) * Math.pow(2, attempt);
+        console.log(`Aguardando ${delay}ms para próxima tentativa...`);
+        await new Promise((r) => setTimeout(r, delay));
       }
     }
-   throw lastErr instanceof Error ? lastErr : new Error("Falha definitiva ao enviar pedido para o FlyControl");
- }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error("Falha definitiva ao enviar pedido para o FlyControl");
+}
 
 export function generateApiKey(): string {
   const bytes = new Uint8Array(32);
