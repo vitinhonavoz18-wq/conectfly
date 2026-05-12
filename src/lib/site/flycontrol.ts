@@ -159,7 +159,7 @@ export async function sendOrderToFlycontrol(
     | "flycontrol_base_url"
   >,
   payload: FlycontrolOrderPayload,
-  opts: { retries?: number; initialDelay?: number } = {},
+  opts: { retries?: number; initialDelay?: number; signal?: AbortSignal } = {},
 ): Promise<void> {
   // 1. Validações pré-envio conforme solicitado
   const missingFields: string[] = [];
@@ -191,14 +191,20 @@ if (payload.order.total <= 0) {
   console.log("Iniciando finalização do pedido (via server route)");
   console.log("Payload montado para FlyControl:", payload);
 
-  const res = await fetch("/api/public/submit-order", {
+  const fetchOptions: RequestInit = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-idempotency-key": payload.order.id,
     },
     body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
-  });
+  };
+
+  if (opts.signal) {
+    fetchOptions.signal = opts.signal;
+  }
+
+  const res = await fetch("/api/public/submit-order", fetchOptions);
   const txt = await res.text().catch(() => "");
   let data: any = {};
   try { data = JSON.parse(txt); } catch { data = { text: txt }; }
