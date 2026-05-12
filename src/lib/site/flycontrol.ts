@@ -3,18 +3,21 @@ import type { CartLine, RestaurantRow } from "./types";
  export interface FlycontrolOrderPayload {
    api_key?: string;
    order_id: string;
-   customer: { 
-     name: string; 
-     phone: string; 
-     address: string;
-     neighborhood?: string;
-   };
-   items: { 
-     name: string; 
-     qty: number; 
-     price: number; 
-     notes?: string 
-   }[];
+    customer: {
+      name: string;
+      phone: string;
+      address: string;
+      neighborhood?: string;
+    };
+    items: {
+      name: string;
+      quantity: number;
+      price: number;
+      type?: string;
+      notes?: string;
+    }[];
+    pizzeria_slug?: string;
+    source?: string;
    total: number;
    delivery_fee?: number;
    payment_method?: string | null;
@@ -23,27 +26,32 @@ import type { CartLine, RestaurantRow } from "./types";
    created_at: string;
  }
 
-export function buildOrderPayload(args: {
-  name: string;
-  phone: string;
-  address: string;
-  neighborhood?: string | null;
-  deliveryFee?: number;
-  items: CartLine[];
-  subtotal: number;
-  notes?: string;
-  paymentMethod?: string | null;
-  changeFor?: number | null;
-}): FlycontrolOrderPayload {
-   const items = args.items.map((l) => ({
-     name: `${l.name}${l.sizeLabel ? ` (${l.sizeLabel})` : ""}`,
-     qty: l.quantity,
-     price: l.unitPrice,
-     notes:
-       l.flavors && l.flavors.length > 0
-         ? `Sabores: ${l.flavors.join(" + ")}`
-         : l.description || undefined,
-   }));
+  export function buildOrderPayload(args: {
+    name: string;
+    phone: string;
+    address: string;
+    neighborhood?: string | null;
+    deliveryFee?: number;
+    items: CartLine[];
+    subtotal: number;
+    notes?: string;
+    paymentMethod?: string | null;
+    changeFor?: number | null;
+    pizzeria_slug?: string;
+  }): FlycontrolOrderPayload {
+    const items = args.items.map((l) => {
+      const isPizza = !!(l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza");
+      return {
+        name: `${l.name}${l.sizeLabel ? ` (${l.sizeLabel})` : ""}`,
+        quantity: l.quantity,
+        price: l.unitPrice,
+        type: isPizza ? "pizza" : "beverage",
+        notes:
+          l.flavors && l.flavors.length > 0
+            ? `Sabores: ${l.flavors.join(" + ")}`
+            : l.description || undefined,
+      };
+    });
    const fee = args.deliveryFee ?? 0;
    return {
      order_id:
@@ -62,6 +70,8 @@ export function buildOrderPayload(args: {
      payment_method: args.paymentMethod ?? null,
      change_for: args.changeFor ?? null,
       notes: (args.notes ?? "").trim(),
+      pizzeria_slug: args.pizzeria_slug,
+      source: "sitecreatorfly",
      created_at: new Date().toISOString(),
    };
 }
@@ -122,49 +132,61 @@ function joinUrl(base: string, path: string): string {
      throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
    }
  
-   const finalPayload = { ...payload, api_key: key };
-   const maxRetries = opts.retries ?? 3;
-   let lastErr: unknown;
- 
-   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-     try {
-       console.log(`[FLYCONTROL] Enviando pedido para ${url} (tentativa ${attempt + 1}/${maxRetries + 1})`);
-       const res = await fetch(url, {
-         method: "POST",
-         headers: {
-           "Content-Type": "application/json",
-           "x-api-key": key,
-           Authorization: `Bearer ${key}`,
-         },
-         body: JSON.stringify(finalPayload),
-       });
- 
-       if (!res.ok) {
-         const txt = await res.text().catch(() => "");
-         throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
-       }
- 
-       const data = await res.json().catch(() => ({}));
-       // Verifica se a resposta contém algum indicativo de sucesso (confirmado)
-       // Aceitamos sucesso HTTP 200/201, mas se o corpo tiver status explicitamente negativo, tratamos como erro
-       if (data.status === "error" || data.success === false) {
-         throw new Error(data.message || "Pedido rejeitado pelo FlyControl");
-       }
- 
-       console.log("[FLYCONTROL] Pedido confirmado com sucesso:", data);
-       return;
-     } catch (err) {
-       lastErr = err;
-       console.warn(`[FLYCONTROL] Falha na tentativa ${attempt + 1}:`, err);
-       
-       if (attempt < maxRetries) {
-         // Backoff exponencial: 1s, 2s, 4s...
-         const delay = (opts.initialDelay || 1000) * Math.pow(2, attempt);
-         console.log(`[FLYCONTROL] Aguardando ${delay}ms para próxima tentativa...`);
-         await new Promise((r) => setTimeout(r, delay));
-       }
-     }
-   }
+    console.log("[FLYCONTROL] Iniciando finalização do pedido");
+    console.log("[FLYCONTROL] Payload montado para FlyControl:", payload);
+    console.log("[FLYCONTROL] Enviando para endpoint:", url);
+
+    const finalPayload = { ...payload, api_key: key };
+    const maxRetries = opts.retries ?? 3;
+    let lastErr: unknown;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[FLYCONTROL] Enviando tentativa ${attempt + 1}/${maxRetries + 1}`);
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": key,
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify(finalPayload),
+        });
+
+        const txt = await res.text().catch(() => "");
+        let data: any = {};
+        try {
+          data = JSON.parse(txt);
+        } catch (e) {
+          data = { text: txt };
+        }
+
+        console.log("[FLYCONTROL] Resposta do FlyControl:", {
+          status: res.status,
+          data,
+        });
+
+        if (!res.ok) {
+          throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
+        }
+
+        if (data.status === "error" || data.success === false) {
+          throw new Error(data.message || "Pedido rejeitado pelo FlyControl");
+        }
+
+        console.log("[FLYCONTROL] Pedido confirmado com sucesso!");
+        return;
+      } catch (err) {
+        lastErr = err;
+        console.error("[FLYCONTROL] Erro ao enviar pedido para FlyControl:", err);
+
+        if (attempt < maxRetries) {
+          const delay = (opts.initialDelay || 1000) * Math.pow(2, attempt);
+          console.log(`[FLYCONTROL] Aguardando ${delay}ms para próxima tentativa...`);
+          await new Promise((r) => setTimeout(r, delay));
+        }
+      }
+    }
    throw lastErr instanceof Error ? lastErr : new Error("Falha definitiva ao enviar pedido para o FlyControl");
  }
 
