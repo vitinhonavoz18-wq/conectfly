@@ -17,19 +17,10 @@ function resolveOrdersUrl(restaurant: {
 }): string {
   let specific = (restaurant.flycontrol_api_url ?? "").trim();
   let base = (restaurant.flycontrol_base_url ?? "").trim();
-  const isTest = /test|connection|check|ping/i.test(specific);
-  if (base && isTest) specific = "";
+
   if (specific) {
-    if (
-      !specific.includes("/orders") &&
-      !specific.includes("/create-order") &&
-      !specific.includes("/functions/v1/")
-    ) {
-      base = specific;
-      specific = "";
-    } else {
-      return specific;
-    }
+    if (!specific.startsWith("http")) specific = "https://" + specific;
+    return specific;
   }
   if (!base) return "";
   if (!base.startsWith("http")) base = "https://" + base;
