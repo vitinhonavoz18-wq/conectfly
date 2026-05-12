@@ -51,9 +51,9 @@ function PublicSite() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-4 text-center">
         <h1 className="text-3xl font-black">Site não encontrado</h1>
-        <p className="text-muted-foreground">
-          O endereço /s/{slug} não corresponde a nenhum restaurante.
-        </p>
+         <p className="text-muted-foreground">
+           O endereço /{slug} não corresponde a nenhum restaurante.
+         </p>
         <Link
           to="/"
           className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold"
