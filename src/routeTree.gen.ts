@@ -11,8 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
-import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
 
@@ -25,15 +25,15 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
-} as any)
-const SSlugRoute = SSlugRouteImport.update({
-  id: '/s/$slug',
-  path: '/s/$slug',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
   id: '/export/$id',
@@ -47,47 +47,47 @@ const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/$slug': typeof SlugRoute
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
-  '/s/$slug': typeof SSlugRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
 }
 export interface FileRoutesByTo {
+  '/$slug': typeof SlugRoute
   '/login': typeof LoginRoute
-  '/s/$slug': typeof SSlugRoute
   '/': typeof AuthenticatedIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/$slug': typeof SlugRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
-  '/s/$slug': typeof SSlugRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/s/$slug' | '/edit/$id' | '/export/$id'
+  fullPaths: '/$slug' | '/' | '/login' | '/edit/$id' | '/export/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/s/$slug' | '/' | '/edit/$id' | '/export/$id'
+  to: '/$slug' | '/login' | '/' | '/edit/$id' | '/export/$id'
   id:
     | '__root__'
+    | '/$slug'
     | '/_authenticated'
     | '/login'
-    | '/s/$slug'
     | '/_authenticated/'
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  SlugRoute: typeof SlugRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  SSlugRoute: typeof SSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -106,19 +106,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
-    }
-    '/s/$slug': {
-      id: '/s/$slug'
-      path: '/s/$slug'
-      fullPath: '/s/$slug'
-      preLoaderRoute: typeof SSlugRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/export/$id': {
       id: '/_authenticated/export/$id'
@@ -154,10 +154,19 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 )
 
 const rootRouteChildren: RootRouteChildren = {
+  SlugRoute: SlugRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
-  SSlugRoute: SSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

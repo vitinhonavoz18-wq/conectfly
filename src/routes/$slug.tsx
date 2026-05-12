@@ -4,7 +4,7 @@ import { fetchSiteBySlug } from "@/lib/site/queries";
 import type { SiteData } from "@/lib/site/types";
 import { DeliverySite } from "@/components/site/DeliverySite";
 
-export const Route = createFileRoute("/s/$slug")({
+export const Route = createFileRoute("/$slug")({
   component: PublicSite,
 });
 
