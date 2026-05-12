@@ -114,26 +114,12 @@ function joinUrl(base: string, path: string): string {
    let specific = (restaurant.flycontrol_api_url ?? "").trim();
    let base = (restaurant.flycontrol_base_url ?? "").trim();
  
-   // Forçar endpoint de pedidos: se o endpoint atual contiver "test", "connection" ou "check"
-   // e tivermos uma base_url, ignoramos o específico e recalculamos.
-   const isLikelyTestEndpoint = /test|connection|check|ping/i.test(specific);
-   
-   if (base && isLikelyTestEndpoint) {
-     console.warn("[FLYCONTROL] Endpoint específico ignorado por parecer um teste:", specific);
-     specific = "";
-   }
- 
-   if (specific) {
-     // Se o específico for apenas um domínio sem path de orders, tentamos completar
-     if (!specific.includes("/orders") && !specific.includes("/create-order") && !specific.includes("/functions/v1/")) {
-        base = specific;
-        specific = "";
-     } else {
-        return specific;
-     }
-   }
- 
-   if (!base) return "";
+  if (specific) {
+    if (!specific.startsWith("http")) specific = "https://" + specific;
+    return specific.trim();
+  }
+
+  if (!base) return "";
  
    // Normalizar URL base
    if (!base.startsWith("http")) base = "https://" + base;
@@ -144,8 +130,99 @@ function joinUrl(base: string, path: string): string {
      return joinUrl(base, "functions/v1/create-order");
    }
  
-   // Padrão Lovable Cloud Server Function ou API Express/Next
-   return joinUrl(base, "api/orders");
+  return joinUrl(base, "api/orders");
+}
+
+/** 
+ * Test connection directly to the orders endpoint without proxy
+ * This is used for debugging and direct verification.
+ */
+export async function testFlycontrolConnection(
+  endpoint: string,
+  apiKey: string,
+  slug: string
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  const payload = {
+    event: "order.created",
+    source: "sitecreatorfly-test",
+    pizzeria: {
+      slug: slug || "cheirosa-pizzaria",
+      name: "CHEIROSA PIZZARIA (TESTE)"
+    },
+    customer: {
+      name: "Cliente Teste",
+      phone: "71999999999",
+      address: "Rua Teste",
+      neighborhood: "Bairro Teste",
+      reference: "Teste"
+    },
+    order: {
+      id: "teste-" + Date.now(),
+      created_at: new Date().toISOString(),
+      items: [
+        {
+          type: "pizza",
+          size: "Grande",
+          flavors: ["Calabresa"],
+          quantity: 1,
+          unit_price: 55,
+          total_price: 55,
+          notes: ""
+        }
+      ],
+      subtotal: 55,
+      delivery_fee: 15,
+      total: 70,
+      payment_method: "PIX",
+      change_for: null,
+      delivery_type: "delivery",
+      notes: "Pedido de teste",
+      whatsapp_message: "Pedido teste"
+    }
+  };
+
+  try {
+    console.log("🧪 Testando conexão direta com FlyControl");
+    console.log("URL:", endpoint);
+    console.log("API Key (trimmed):", apiKey.trim().slice(0, 8) + "...");
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey.trim()
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+    const responseText = await response.text();
+    
+    let data = null;
+    try { data = JSON.parse(responseText); } catch { data = { text: responseText }; }
+
+    return {
+      success: response.ok,
+      status: response.status,
+      data,
+      url: endpoint,
+      apiKeyExists: !!apiKey,
+      slugUsed: slug
+    };
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    return {
+      success: false,
+      error: error.message,
+      url: endpoint,
+      apiKeyExists: !!apiKey,
+      slugUsed: slug
+    };
+  }
  }
 
 /** Sends an order to FLYCONTROL with exponential backoff retry. Throws on final failure. */
