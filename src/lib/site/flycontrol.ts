@@ -170,24 +170,24 @@ export async function sendOrderToFlycontrol(
   if (payload.order?.total === undefined || payload.order?.total === null) missingFields.push("order.total");
 
   if (missingFields.length > 0) {
-    const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
-    console.error("[FLYCONTROL] Erro de validação antes do POST:", errorMsg);
-    console.log("[FLYCONTROL] Payload incompleto:", payload);
-    throw new Error(errorMsg);
+  const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
+  console.error("Erro de validação antes do POST:", errorMsg);
+  console.log("Payload incompleto:", payload);
+  throw new Error(errorMsg);
   }
 
   // 2. Consistência de dados
-  if (payload.order.total <= 0) {
-    console.warn("[FLYCONTROL] Aviso: Total do pedido é zero ou negativo:", payload.order.total);
-  }
+if (payload.order.total <= 0) {
+  console.warn("Aviso: Total do pedido é zero ou negativo:", payload.order.total);
+}
 
    if (!restaurant.flycontrol_enabled) return;
    const url = resolveOrdersUrl(restaurant);
    const key = (restaurant.flycontrol_api_key ?? "").trim();
-   if (!url || !key) {
-     console.error("[FLYCONTROL] Integração incompleta:", { url, key });
-     throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
-   }
+  if (!url || !key) {
+    console.error("Integração incompleta:", { url, key });
+    throw new Error("Integração FLYCONTROL incompleta (URL/API Key).");
+  }
  
   console.log("Iniciando finalização do pedido");
   console.log("Payload montado para FlyControl:", payload);
