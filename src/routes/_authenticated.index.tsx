@@ -4,8 +4,9 @@ import {
   Plus,
   ExternalLink,
   Pencil,
+  Copy,
   Trash2,
-   Download,
+  Download,
    Eye,
    Globe,
    Rocket,
@@ -200,7 +201,16 @@ function Dashboard() {
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 site-stagger">
             {list.map((r) => (
                <article key={r.id} className="card-premium p-6 flex flex-col gap-4 group">
-                 <div className="flex items-start justify-between gap-4">
+                 <div className="flex items-start justify-between gap-4 relative">
+                   <div className="absolute -top-2 -right-2 flex gap-2">
+                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm border ${
+                       r.published 
+                         ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                         : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                     }`}>
+                       {r.published ? "Publicado" : "Aguardando"}
+                     </span>
+                   </div>
                   <div className="flex items-center gap-3 min-w-0">
                      <div className="relative">
                        {r.logo_url ? (
@@ -244,6 +254,17 @@ function Dashboard() {
                     </a>
                  </div>
                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                   <button
+                     onClick={() => {
+                       navigator.clipboard.writeText(getPizzeriaPublicUrl(r.slug));
+                       toast.success("Link copiado!");
+                     }}
+                     className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+                     title="Copiar link público"
+                   >
+                     <Copy className="h-3 w-3" />
+                     Copiar Link
+                   </button>
                    <Link
                      to="/export/$id"
                      params={{ id: r.id }}
