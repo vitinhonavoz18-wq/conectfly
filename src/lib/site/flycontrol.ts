@@ -83,32 +83,40 @@ function joinUrl(base: string, path: string): string {
  function resolveOrdersUrl(
    restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
  ): string {
-   const specific = (restaurant.flycontrol_api_url ?? "").trim();
-   if (specific) return specific;
- 
+   let specific = (restaurant.flycontrol_api_url ?? "").trim();
    let base = (restaurant.flycontrol_base_url ?? "").trim();
+ 
+   // Forçar endpoint de pedidos: se o endpoint atual contiver "test", "connection" ou "check"
+   // e tivermos uma base_url, ignoramos o específico e recalculamos.
+   const isLikelyTestEndpoint = /test|connection|check|ping/i.test(specific);
+   
+   if (base && isLikelyTestEndpoint) {
+     console.warn("[FLYCONTROL] Endpoint específico ignorado por parecer um teste:", specific);
+     specific = "";
+   }
+ 
+   if (specific) {
+     // Se o específico for apenas um domínio sem path de orders, tentamos completar
+     if (!specific.includes("/orders") && !specific.includes("/create-order") && !specific.includes("/functions/v1/")) {
+        base = specific;
+        specific = "";
+     } else {
+        return specific;
+     }
+   }
+ 
    if (!base) return "";
  
-   // Normalizar URL (remover barras extras e garantir protocolo)
+   // Normalizar URL base
    if (!base.startsWith("http")) base = "https://" + base;
    base = base.replace(/\/+$/, "");
  
-   // Se já for um endpoint completo
-   if (
-     base.includes("/functions/v1/") ||
-     base.endsWith("/api/orders") ||
-     base.endsWith("/create-order") ||
-     base.endsWith("/orders")
-   ) {
-     return base;
-   }
- 
-   // Se for uma URL da Supabase (Edge Function)
+   // Heurística de endpoints de pedidos reais do FlyControl
    if (base.includes(".supabase.co")) {
      return joinUrl(base, "functions/v1/create-order");
    }
  
-   // Padrão Lovable Cloud Server Function
+   // Padrão Lovable Cloud Server Function ou API Express/Next
    return joinUrl(base, "api/orders");
  }
 
