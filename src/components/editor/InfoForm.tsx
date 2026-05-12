@@ -16,7 +16,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [msg, setMsg] = useState("");
   const [registering, setRegistering] = useState(false);
    const [regMsg, setRegMsg] = useState("");
-   const [testing, setTesting] = useState(false);
+    const [testing, setTesting] = useState(false);
+    const [testDebug, setTestDebug] = useState<any>(null);
 
   const set = <K extends keyof RestaurantRow>(k: K, v: RestaurantRow[K]) =>
     setR((p) => ({ ...p, [k]: v }));
@@ -130,64 +131,31 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
     const handleTestConnection = async () => {
       setRegMsg("");
-      const baseUrl = (r.flycontrol_base_url ?? "").trim();
-      if (!baseUrl) {
-        setRegMsg("Informe a URL base do FLYCONTROL primeiro.");
+      setTestDebug(null);
+      const endpoint = (r.flycontrol_api_url ?? "").trim();
+      const apiKey = (r.flycontrol_api_key ?? "").trim();
+      const slug = (r.slug ?? "").trim();
+
+      if (!endpoint || !apiKey) {
+        setRegMsg("Informe o Endpoint de Pedidos e a API Key primeiro.");
         return;
       }
+
       setTesting(true);
       try {
-        // Tenta buscar o endpoint de pedidos resolvido
-        const { sendOrderToFlycontrol, buildOrderPayload } = await import("@/lib/site/flycontrol");
+        const { testFlycontrolConnection } = await import("@/lib/site/flycontrol");
+        console.log("[FLYCONTROL] Iniciando teste de conexão real...");
         
-        // Payload de teste fake
-        const { buildOrderMessage } = await import("@/lib/site/orderFormatter");
-        
-        const testOrderData = {
-          customer: {
-            name: "João Silva (TESTE)",
-            phone: "71999999999",
-            address: "Rua das Flores, 123",
-          },
-          items: [
-            { itemId: "t1", name: "Pizza Calabresa", quantity: 1, unitPrice: 49.9, description: "" },
-            { itemId: "t2", name: "Coca-Cola 2L", quantity: 2, unitPrice: 12.0, description: "" }
-          ],
-          subtotal: 73.9,
-          deliveryFee: 0,
-          total: 73.9,
-          paymentMethod: "PIX",
-          notes: "Sem cebola\nBorda recheada",
-          createdAt: new Date().toISOString(),
-        };
+        const result = await testFlycontrolConnection(endpoint, apiKey, slug);
+        setTestDebug(result);
 
-        const messageFull = buildOrderMessage(testOrderData, "complete");
-
-        const testPayload = buildOrderPayload({
-          ...testOrderData.customer,
-          items: testOrderData.items.map(item => ({
-            ...item,
-            unitPrice: item.unitPrice,
-            sizeLabel: "Média",
-            flavors: [item.name],
-            description: item.description
-          })),
-          subtotal: testOrderData.subtotal,
-          total: testOrderData.total,
-          paymentMethod: testOrderData.paymentMethod,
-          notes: "Pedido de Teste",
-          pizzeria_slug: r.slug || "test-pizzeria",
-          pizzeria_name: r.name || "Test Pizzeria",
-          whatsapp_message: messageFull,
-          delivery_type: "delivery"
-        });
-
-       console.log("[FLYCONTROL] Testando conexão com payload fake...");
-       await sendOrderToFlycontrol(r, testPayload, { retries: 0 });
-       setRegMsg("STATUS: ONLINE - O painel FLYCONTROL respondeu corretamente!");
-       console.log("[FLYCONTROL] Teste concluído com sucesso.");
+        if (result.success) {
+          setRegMsg("STATUS: CONECTADO - O FlyControl aceitou o pedido de teste!");
+        } else {
+          setRegMsg("FALHA: O FlyControl recusou a conexão ou retornou erro.");
+        }
       } catch (err) {
-        setRegMsg("Falha no teste: " + (err instanceof Error ? err.message : String(err)));
+        setRegMsg("Erro inesperado: " + (err instanceof Error ? err.message : String(err)));
       } finally {
         setTesting(false);
       }
@@ -645,10 +613,34 @@ export function InfoForm({ restaurant, onChange }: Props) {
                       </button>
                     )}
                   </div>
-                  {regMsg && (
-                    <span className={`text-xs font-medium p-2 rounded bg-primary/10 border border-primary/20 ${regMsg.includes("Falha") || regMsg.includes("Erro") ? "text-destructive" : "text-primary"}`}>
-                      {regMsg}
-                    </span>
+                  {(regMsg || testDebug) && (
+                    <div className="space-y-2 mt-2">
+                      {regMsg && (
+                        <div className={`text-xs font-black p-3 rounded-xl border ${regMsg.includes("FALHA") || regMsg.includes("Erro") ? "bg-red-500/10 border-red-500/30 text-red-500" : "bg-primary/10 border-primary/20 text-primary"} uppercase tracking-wider`}>
+                          {regMsg}
+                        </div>
+                      )}
+                      {testDebug && (
+                        <div className="p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-[10px] space-y-2 overflow-auto max-h-60">
+                          <div className="flex justify-between border-b border-white/5 pb-1 mb-1">
+                            <span className="text-muted-foreground">DEBUG INFO</span>
+                            <span className={testDebug.success ? "text-green-500" : "text-red-500"}>
+                              {testDebug.status || "ERROR"}
+                            </span>
+                          </div>
+                          <p><span className="text-muted-foreground">ENDPOINT:</span> {testDebug.url}</p>
+                          <p><span className="text-muted-foreground">SLUG:</span> {testDebug.slugUsed}</p>
+                          <p><span className="text-muted-foreground">API KEY:</span> {testDebug.apiKeyExists ? "Presente (OK)" : "Ausente"}</p>
+                          {testDebug.error && <p className="text-red-400"><span className="text-muted-foreground">ERROR:</span> {testDebug.error}</p>}
+                          {testDebug.data && (
+                            <div className="mt-2">
+                              <span className="text-muted-foreground">RESPONSE:</span>
+                              <pre className="mt-1 opacity-80 whitespace-pre-wrap">{JSON.stringify(testDebug.data, null, 2)}</pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
              </div>
