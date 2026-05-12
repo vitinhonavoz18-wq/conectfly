@@ -86,57 +86,88 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
     const messageFull = buildOrderMessage(orderData, "complete");
 
-     setSending(true);
-     try {
-       if (flycontrolOn && restaurant) {
-          const payload = buildOrderPayload({
-            name,
-            phone,
-            address,
-            neighborhood: selectedZone?.neighborhood ?? null,
-            reference: null, // Pode ser adicionado um campo no futuro se necessário
-            deliveryFee,
-            items,
-            subtotal: totalPrice,
-            total: grandTotal,
-            paymentMethod,
-            changeFor: orderData.changeFor,
-            notes: notes.trim(),
-            pizzeria_slug: restaurant.slug,
-            pizzeria_name: restaurant.name,
-            whatsapp_message: messageWhatsApp,
-            delivery_type: hasZones ? "delivery" : "retirada"
-          });
+    setSending(true);
+    let painelRegistrado = false;
 
-          try {
-            await sendOrderToFlycontrol(restaurant, payload);
-            toast.success("Pedido enviado para o painel!");
-          } catch (err) {
-            console.error("[FLYCONTROL] Falha definitiva no fluxo de finalização:", err);
-            toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
+    try {
+      console.log("🚀 Iniciando finalização do pedido");
+
+      if (flycontrolOn && restaurant) {
+        console.log("🔐 FlyControl está habilitado");
+        console.log("🍕 Slug:", restaurant.slug);
+
+        const payload = buildOrderPayload({
+          name,
+          phone,
+          address,
+          neighborhood: selectedZone?.neighborhood ?? null,
+          reference: null,
+          deliveryFee,
+          items,
+          subtotal: totalPrice,
+          total: grandTotal,
+          paymentMethod,
+          changeFor: orderData.changeFor,
+          notes: notes.trim(),
+          pizzeria_slug: restaurant.slug,
+          pizzeria_name: restaurant.name,
+          whatsapp_message: messageWhatsApp,
+          delivery_type: hasZones ? "delivery" : "retirada",
+        });
+
+        console.log("📦 Payload montado:", payload);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.warn("⏱️ Timeout de 5s atingido no envio para o FlyControl. Abortando...");
+          controller.abort();
+        }, 5000);
+
+        try {
+          console.log("📡 Enviando para FlyControl via server route...");
+          await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          painelRegistrado = true;
+          console.log("✅ Registro concluído no painel");
+          toast.success("Pedido enviado para o painel!");
+        } catch (err: any) {
+          clearTimeout(timeoutId);
+          if (err.name === "AbortError") {
+            console.error("❌ Falha ao registrar no painel: Timeout");
+          } else {
+            console.error("❌ Falha ao registrar no painel:", err);
           }
-       }
- 
-        if (whatsappOn) {
-          console.log("Abrindo WhatsApp");
-          openWhatsAppOrder(messageWhatsApp);
+          toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
         }
- 
-       clear();
-       setName("");
-       setPhone("");
-       setAddress("");
-        setPaymentMethod("PIX");
-        setChangeFor("");
-        setNotes("");
-       setZoneId("");
-       onClose();
-     } catch (err) {
-       console.error("Erro ao finalizar pedido:", err);
-       setError("Ocorreu um erro ao processar seu pedido.");
-     } finally {
-       setSending(false);
-     }
+      } else {
+        console.log("ℹ️ FlyControl desabilitado ou restaurante ausente. Pulando registro.");
+      }
+
+      if (whatsappOn) {
+        console.log("📲 Redirecionando para WhatsApp");
+        openWhatsAppOrder(messageWhatsApp);
+      }
+
+      clear();
+      setName("");
+      setPhone("");
+      setAddress("");
+      setPaymentMethod("PIX");
+      setChangeFor("");
+      setNotes("");
+      setZoneId("");
+      onClose();
+    } catch (err) {
+      console.error("❌ Erro geral ao finalizar pedido:", err);
+      setError("Ocorreu um erro ao processar seu pedido.");
+    } finally {
+      setSending(false);
+      console.log("🏁 Fluxo de finalização encerrado");
+    }
+
+    if (flycontrolOn && !painelRegistrado) {
+      console.warn("⚠️ Pedido não foi registrado no painel, mas o fluxo continuou.");
+    }
    };
 
   return (
