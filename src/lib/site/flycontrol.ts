@@ -61,7 +61,7 @@ export function buildOrderPayload(args: {
      delivery_fee: fee,
      payment_method: args.paymentMethod ?? null,
      change_for: args.changeFor ?? null,
-     notes: args.notes ?? "",
+      notes: (args.notes ?? "").trim(),
      created_at: new Date().toISOString(),
    };
 }
