@@ -42,9 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     loading,
    signOut: async () => {
-     toast.info("Saindo...");
-     await supabase.auth.signOut();
-     window.location.href = "/login";
+     try {
+       toast.info("Saindo...");
+       await supabase.auth.signOut();
+     } catch (e) {
+       console.error("SignOut error", e);
+     } finally {
+       window.location.href = "/login";
+     }
    },
   };
 
