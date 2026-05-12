@@ -38,13 +38,19 @@ function LoginPage() {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast.success("Conta criada! Verifique seu email para confirmar.");
+        
+        if (data.session) {
+          toast.success("Conta criada com sucesso! Bem-vindo.");
+          navigate({ to: search.redirect || "/" });
+        } else {
+          toast.success("Conta criada! Verifique seu email para confirmar.");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
