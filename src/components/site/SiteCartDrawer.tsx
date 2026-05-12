@@ -86,57 +86,101 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
     const messageFull = buildOrderMessage(orderData, "complete");
 
-     setSending(true);
-     try {
-       if (flycontrolOn && restaurant) {
-          const payload = buildOrderPayload({
-            name,
-            phone,
-            address,
-            neighborhood: selectedZone?.neighborhood ?? null,
-            reference: null, // Pode ser adicionado um campo no futuro se necessário
-            deliveryFee,
-            items,
-            subtotal: totalPrice,
-            total: grandTotal,
-            paymentMethod,
-            changeFor: orderData.changeFor,
-            notes: notes.trim(),
-            pizzeria_slug: restaurant.slug,
-            pizzeria_name: restaurant.name,
-            whatsapp_message: messageWhatsApp,
-            delivery_type: hasZones ? "delivery" : "retirada"
-          });
+    setSending(true);
+    let painelRegistrado = false;
 
-          try {
-            await sendOrderToFlycontrol(restaurant, payload);
-            toast.success("Pedido enviado para o painel!");
-          } catch (err) {
-            console.error("[FLYCONTROL] Falha definitiva no fluxo de finalização:", err);
-            toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
-          }
+    try {
+      console.log("🚀 Iniciando finalização do pedido");
+
+       const apiKey = restaurant?.flycontrol_api_key;
+       const endpoint = restaurant?.flycontrol_api_url || restaurant?.flycontrol_base_url;
+       const pizzeriaSlug = restaurant?.slug;
+
+       if (flycontrolOn && restaurant) {
+         console.log("🔐 FlyControl está habilitado");
+         console.log("🍕 Slug:", pizzeriaSlug);
+         console.log("🔐 API Key existe?", Boolean(apiKey));
+         console.log("🔗 Endpoint usado (base):", endpoint);
+
+         // Nota: Devido a atualizações de segurança, o envio real usa a rota /api/public/submit-order
+         // que gerencia as chaves de forma protegida no servidor.
+
+         const payload = buildOrderPayload({
+          name,
+          phone,
+          address,
+          neighborhood: selectedZone?.neighborhood ?? null,
+          reference: null,
+          deliveryFee,
+          items,
+          subtotal: totalPrice,
+          total: grandTotal,
+          paymentMethod,
+          changeFor: orderData.changeFor,
+          notes: notes.trim(),
+          pizzeria_slug: restaurant.slug,
+          pizzeria_name: restaurant.name,
+           whatsapp_message: messageWhatsApp,
+           delivery_type: hasZones ? "delivery" : "retirada",
+         });
+
+         console.log("📦 Payload:", payload);
+
+         const controller = new AbortController();
+         const timeoutId = setTimeout(() => {
+           console.warn("⏱️ Timeout de 5s atingido no envio para o FlyControl. Abortando...");
+           controller.abort();
+         }, 5000);
+
+         try {
+           console.log("📡 Enviando para FlyControl...");
+           await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
+           clearTimeout(timeoutId);
+           painelRegistrado = true;
+           console.log("✅ Registro concluído no painel");
+           toast.success("Pedido enviado para o painel!");
+         } catch (err: any) {
+           clearTimeout(timeoutId);
+           if (err.name === "AbortError") {
+             console.error("❌ Falha ao registrar no painel: Timeout (5s)");
+           } else {
+             console.error("❌ Falha ao registrar no painel:", err);
+           }
+           // Mostramos o aviso discreto mas continuamos
+           toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
+         }
+       } else {
+         console.log("ℹ️ Endpoint ou API Key ausente (ou desabilitado). Pulando registro no painel e seguindo para WhatsApp.");
        }
- 
-        if (whatsappOn) {
-          console.log("Abrindo WhatsApp");
-          openWhatsAppOrder(messageWhatsApp);
-        }
- 
-       clear();
-       setName("");
-       setPhone("");
-       setAddress("");
-        setPaymentMethod("PIX");
-        setChangeFor("");
-        setNotes("");
-       setZoneId("");
-       onClose();
-     } catch (err) {
-       console.error("Erro ao finalizar pedido:", err);
-       setError("Ocorreu um erro ao processar seu pedido.");
-     } finally {
-       setSending(false);
-     }
+
+    } catch (err) {
+      console.error("❌ Erro geral ao finalizar pedido:", err);
+      setError("Ocorreu um erro ao processar seu pedido.");
+    } finally {
+      setSending(false);
+      console.log("🏁 Fluxo de finalização encerrado");
+    }
+
+    // Redirecionar para WhatsApp SEMPRE, mesmo se o FlyControl falhar
+    if (whatsappOn) {
+      console.log("📲 Redirecionando para WhatsApp");
+      openWhatsAppOrder(messageWhatsApp);
+    }
+
+    if (flycontrolOn && !painelRegistrado) {
+      console.warn("⚠️ Pedido não foi registrado no painel, mas o fluxo continuou.");
+    }
+
+    // Limpar carrinho e fechar após iniciar o redirecionamento
+    clear();
+    setName("");
+    setPhone("");
+    setAddress("");
+    setPaymentMethod("PIX");
+    setChangeFor("");
+    setNotes("");
+    setZoneId("");
+    onClose();
    };
 
   return (
