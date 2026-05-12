@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+ import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+ import { toast } from "sonner";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user: session?.user ?? null,
     loading,
    signOut: async () => {
+     toast.info("Saindo...");
      await supabase.auth.signOut();
      window.location.href = "/login";
    },
