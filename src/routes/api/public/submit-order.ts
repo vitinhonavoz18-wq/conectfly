@@ -99,9 +99,8 @@ export const Route = createFileRoute("/api/public/submit-order")({
                    "Content-Type": "application/json",
                    "x-api-key": key,
                    "x-idempotency-key": idempotencyKey,
-                   Authorization: `Bearer ${key}`,
-                 },
-                 body: JSON.stringify({ ...body.payload, api_key: key }),
+                  },
+                  body: JSON.stringify({ ...body.payload, api_key: key }),
                });
                const txt = await res.text().catch(() => "");
                try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }

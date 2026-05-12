@@ -96,16 +96,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
        const endpoint = restaurant?.flycontrol_api_url || restaurant?.flycontrol_base_url;
        const pizzeriaSlug = restaurant?.slug;
 
-       if (flycontrolOn && restaurant) {
-         console.log("🔐 FlyControl está habilitado");
-         console.log("🍕 Slug:", pizzeriaSlug);
-         console.log("🔐 API Key existe?", Boolean(apiKey));
-         console.log("🔗 Endpoint usado (base):", endpoint);
-
-         // Nota: Devido a atualizações de segurança, o envio real usa a rota /api/public/submit-order
-         // que gerencia as chaves de forma protegida no servidor.
-
-         const payload = buildOrderPayload({
+        if (flycontrolOn && restaurant) {
+          const payload = buildOrderPayload({
           name,
           phone,
           address,
@@ -124,31 +116,23 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
            delivery_type: hasZones ? "delivery" : "retirada",
          });
 
-         console.log("📦 Payload:", payload);
-
-         const controller = new AbortController();
+          const controller = new AbortController();
          const timeoutId = setTimeout(() => {
            console.warn("⏱️ Timeout de 5s atingido no envio para o FlyControl. Abortando...");
            controller.abort();
          }, 5000);
 
-         try {
-           console.log("📡 Enviando para FlyControl...");
-           await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
-           clearTimeout(timeoutId);
-           painelRegistrado = true;
-           console.log("✅ Registro concluído no painel");
-           toast.success("Pedido enviado para o painel!");
-         } catch (err: any) {
-           clearTimeout(timeoutId);
-           if (err.name === "AbortError") {
-             console.error("❌ Falha ao registrar no painel: Timeout (5s)");
-           } else {
-             console.error("❌ Falha ao registrar no painel:", err);
-           }
-           // Mostramos o aviso discreto mas continuamos
-           toast.error("Erro ao registrar no painel, mas continuaremos via WhatsApp.");
-         }
+          try {
+            await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            painelRegistrado = true;
+            toast.success("Pedido registrado no FlyControl!");
+          } catch (err: any) {
+            clearTimeout(timeoutId);
+            // O log de erro detalhado já é feito dentro de sendOrderToFlycontrol
+            console.warn("⚠️ Continuando para WhatsApp mesmo com erro no registro do painel");
+            toast.error("Erro no painel, mas o pedido seguirá via WhatsApp.");
+          }
        } else {
          console.log("ℹ️ Endpoint ou API Key ausente (ou desabilitado). Pulando registro no painel e seguindo para WhatsApp.");
        }

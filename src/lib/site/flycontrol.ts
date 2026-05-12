@@ -188,31 +188,39 @@ if (payload.order.total <= 0) {
     throw new Error("restaurant.id ausente para envio do pedido.");
   }
 
-  console.log("Iniciando finalização do pedido (via server route)");
-  console.log("Payload montado para FlyControl:", payload);
+  console.log("🚀 Enviando pedido para FlyControl (via Proxy Seguro)");
+  console.log("🔗 Proxy:", "/api/public/submit-order");
+  console.log("🔐 ID da Pizzaria:", restaurant.id);
+  console.log("📦 Payload:", payload);
 
-  const fetchOptions: RequestInit = {
+  const response = await fetch("/api/public/submit-order", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-idempotency-key": payload.order.id,
     },
     body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
-  };
+    signal: opts.signal,
+  });
 
-  if (opts.signal) {
-    fetchOptions.signal = opts.signal;
-  }
-
-  const res = await fetch("/api/public/submit-order", fetchOptions);
-  const txt = await res.text().catch(() => "");
+  const responseText = await response.text();
   let data: any = {};
-  try { data = JSON.parse(txt); } catch { data = { text: txt }; }
-  console.log("Resposta do server route /api/public/submit-order:", { status: res.status, data });
-  if (!res.ok || data?.success === false) {
-    throw new Error(data?.error || `Falha ao enviar pedido (HTTP ${res.status})`);
+  try {
+    data = JSON.parse(responseText);
+  } catch {
+    data = { text: responseText };
   }
-  console.log("Pedido confirmado com sucesso!");
+
+  console.log("📡 Status Proxy:", response.status);
+  console.log("📡 Resposta Proxy:", responseText);
+
+  if (!response.ok || data?.success === false) {
+    const errorMsg = data?.error || `Falha no envio: ${response.status}`;
+    console.error("❌ Erro ao registrar no FlyControl:", errorMsg);
+    throw new Error(errorMsg);
+  }
+
+  console.log("✅ Pedido registrado no FlyControl com sucesso");
   // opts kept for backwards compat; retry handled server-side
   void opts;
 }
