@@ -165,11 +165,21 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
         const testPayload = buildOrderPayload({
           ...testOrderData.customer,
-          items: testOrderData.items,
+          items: testOrderData.items.map(item => ({
+            ...item,
+            unitPrice: item.unitPrice,
+            sizeLabel: "Média",
+            flavors: [item.name],
+            description: item.description
+          })),
           subtotal: testOrderData.subtotal,
+          total: testOrderData.total,
           paymentMethod: testOrderData.paymentMethod,
-          notes: messageFull,
-          pizzeria_slug: r.slug,
+          notes: "Pedido de Teste",
+          pizzeria_slug: r.slug || "test-pizzeria",
+          pizzeria_name: r.name || "Test Pizzeria",
+          whatsapp_message: messageFull,
+          delivery_type: "delivery"
         });
 
        console.log("[FLYCONTROL] Testando conexão com payload fake...");
