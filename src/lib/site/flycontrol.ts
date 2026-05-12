@@ -102,19 +102,19 @@ function joinUrl(base: string, path: string): string {
    return joinUrl(base, "api/orders");
  }
 
-/** Sends an order to FLYCONTROL with simple retry. Throws on final failure. */
-export async function sendOrderToFlycontrol(
-  restaurant: Pick<
-    RestaurantRow,
-    | "flycontrol_enabled"
-    | "flycontrol_api_url"
-    | "flycontrol_api_key"
-    | "flycontrol_base_url"
-  >,
-  payload: FlycontrolOrderPayload,
-  opts: { retries?: number } = {},
-): Promise<void> {
-  if (!restaurant.flycontrol_enabled) return;
+ /** Sends an order to FLYCONTROL with exponential backoff retry. Throws on final failure. */
+ export async function sendOrderToFlycontrol(
+   restaurant: Pick<
+     RestaurantRow,
+     | "flycontrol_enabled"
+     | "flycontrol_api_url"
+     | "flycontrol_api_key"
+     | "flycontrol_base_url"
+   >,
+   payload: FlycontrolOrderPayload,
+   opts: { retries?: number; initialDelay?: number } = {},
+ ): Promise<void> {
+   if (!restaurant.flycontrol_enabled) return;
    const url = resolveOrdersUrl(restaurant);
    const key = (restaurant.flycontrol_api_key ?? "").trim();
    if (!url || !key) {
@@ -123,12 +123,12 @@ export async function sendOrderToFlycontrol(
    }
  
    const finalPayload = { ...payload, api_key: key };
-
-  const retries = Math.max(0, opts.retries ?? 2);
-  let lastErr: unknown;
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-       console.log(`[FLYCONTROL] Enviando pedido para ${url} (tentativa ${attempt + 1})`);
+   const maxRetries = opts.retries ?? 3;
+   let lastErr: unknown;
+ 
+   for (let attempt = 0; attempt <= maxRetries; attempt++) {
+     try {
+       console.log(`[FLYCONTROL] Enviando pedido para ${url} (tentativa ${attempt + 1}/${maxRetries + 1})`);
        const res = await fetch(url, {
          method: "POST",
          headers: {
@@ -138,20 +138,35 @@ export async function sendOrderToFlycontrol(
          },
          body: JSON.stringify(finalPayload),
        });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
-      }
-      return;
-    } catch (err) {
-      lastErr = err;
-      if (attempt < retries) {
-        await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
-      }
-    }
-  }
-  throw lastErr instanceof Error ? lastErr : new Error("Falha ao enviar pedido");
-}
+ 
+       if (!res.ok) {
+         const txt = await res.text().catch(() => "");
+         throw new Error(`FLYCONTROL ${res.status}: ${txt || res.statusText}`);
+       }
+ 
+       const data = await res.json().catch(() => ({}));
+       // Verifica se a resposta contém algum indicativo de sucesso (confirmado)
+       // Aceitamos sucesso HTTP 200/201, mas se o corpo tiver status explicitamente negativo, tratamos como erro
+       if (data.status === "error" || data.success === false) {
+         throw new Error(data.message || "Pedido rejeitado pelo FlyControl");
+       }
+ 
+       console.log("[FLYCONTROL] Pedido confirmado com sucesso:", data);
+       return;
+     } catch (err) {
+       lastErr = err;
+       console.warn(`[FLYCONTROL] Falha na tentativa ${attempt + 1}:`, err);
+       
+       if (attempt < maxRetries) {
+         // Backoff exponencial: 1s, 2s, 4s...
+         const delay = (opts.initialDelay || 1000) * Math.pow(2, attempt);
+         console.log(`[FLYCONTROL] Aguardando ${delay}ms para próxima tentativa...`);
+         await new Promise((r) => setTimeout(r, delay));
+       }
+     }
+   }
+   throw lastErr instanceof Error ? lastErr : new Error("Falha definitiva ao enviar pedido para o FlyControl");
+ }
 
 export function generateApiKey(): string {
   const bytes = new Uint8Array(32);
