@@ -133,6 +133,27 @@ function joinUrl(base: string, path: string): string {
    payload: FlycontrolOrderPayload,
    opts: { retries?: number; initialDelay?: number } = {},
  ): Promise<void> {
+  // 1. Validações pré-envio
+  const missingFields: string[] = [];
+  if (!payload.pizzeria_slug) missingFields.push("pizzeria_slug");
+  if (!payload.customer?.name) missingFields.push("customer.name");
+  if (!payload.customer?.phone) missingFields.push("customer.phone");
+  if (!payload.customer?.address) missingFields.push("customer.address");
+  if (!payload.items || payload.items.length === 0) missingFields.push("items");
+  if (payload.total === undefined || payload.total === null) missingFields.push("total");
+
+  if (missingFields.length > 0) {
+    const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
+    console.error("[FLYCONTROL] Erro de validação antes do POST:", errorMsg);
+    console.log("[FLYCONTROL] Payload incompleto:", payload);
+    throw new Error(errorMsg);
+  }
+
+  // 2. Consistência de dados
+  if (payload.total <= 0) {
+    console.warn("[FLYCONTROL] Aviso: Total do pedido é zero ou negativo:", payload.total);
+  }
+
    if (!restaurant.flycontrol_enabled) return;
    const url = resolveOrdersUrl(restaurant);
    const key = (restaurant.flycontrol_api_key ?? "").trim();
@@ -157,6 +178,7 @@ function joinUrl(base: string, path: string): string {
           headers: {
             "Content-Type": "application/json",
             "x-api-key": key,
+            "x-idempotency-key": payload.order_id,
             Authorization: `Bearer ${key}`,
           },
           body: JSON.stringify(finalPayload),
