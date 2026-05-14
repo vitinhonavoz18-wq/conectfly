@@ -25,22 +25,21 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
   return (
      <div className="rounded-[2rem] border border-white/5 bg-white/5 flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-       {(restaurant?.show_item_images ?? true) && (
-         item.image_url ? (
-           <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
-             <img
-               src={item.image_url}
-               alt={item.name}
-               loading="lazy"
-               className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-             />
-             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-           </div>
-         ) : (
-           <div className="relative aspect-[16/10] flex items-center justify-center bg-black/40 text-muted-foreground/30">
-             <ImageIcon className="h-12 w-12" />
-           </div>
-         )
+       {(restaurant?.show_item_images ?? true) && item.image_url && (
+         <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+           <img
+             src={item.image_url}
+             alt={item.name}
+             loading="lazy"
+             decoding="async"
+             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+             onError={(e) => {
+               const container = (e.target as HTMLImageElement).closest('.aspect-\\[16\\/10\\]');
+               if (container) (container as HTMLElement).style.display = 'none';
+             }}
+           />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+         </div>
        )}
        <div className="p-6 pt-2 flex flex-col gap-4 flex-1 relative z-10">
          <div className="flex items-start justify-between gap-4">
