@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag } from "lucide-react";
+ import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 import { BeverageManager } from "./BeverageManager";
+ import { MenuImport } from "./MenuImport";
 
 interface Props {
   restaurantId: string;
@@ -151,24 +152,25 @@ export function MenuManager({ restaurantId }: Props) {
         <p className="text-sm text-muted-foreground">
           Organize seu cardápio em categorias. Use tamanhos para itens com preço variável (ex: 500g / 1kg).
         </p>
-         <div className="flex items-center gap-3">
-           <button
-             onClick={applyDefaultMenu}
-             disabled={loadingTemplate}
-             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all disabled:opacity-50"
-             title="Carregar cardápio padrão (Pizzaria — 4 tamanhos e 32 sabores)"
-           >
-             <Sparkles className="h-4 w-4 text-primary" />
-             <span>{loadingTemplate ? "Carregando..." : "Cardápio Padrão"}</span>
-           </button>
-           <button
-             onClick={addCategory}
-             className="btn-premium px-6 py-2.5 rounded-xl flex items-center gap-2 uppercase text-xs tracking-widest shadow-xl"
-           >
-             <Plus className="h-4 w-4 text-primary-foreground" /> 
-             <span>Nova Categoria</span>
-           </button>
-         </div>
+           <div className="flex items-center gap-3">
+             <MenuImport restaurantId={restaurantId} onSuccess={reload} />
+             <button
+               onClick={applyDefaultMenu}
+               disabled={loadingTemplate}
+               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all disabled:opacity-50"
+               title="Carregar cardápio padrão (Pizzaria — 4 tamanhos e 32 sabores)"
+             >
+               <Sparkles className="h-4 w-4 text-primary" />
+               <span>{loadingTemplate ? "Carregando..." : "Cardápio Padrão"}</span>
+             </button>
+             <button
+               onClick={addCategory}
+               className="btn-premium px-6 py-2.5 rounded-xl flex items-center gap-2 uppercase text-xs tracking-widest shadow-xl"
+             >
+               <Plus className="h-4 w-4 text-primary-foreground" /> 
+               <span>Nova Categoria</span>
+             </button>
+           </div>
       </div>
 
       {cats.length === 0 && (
