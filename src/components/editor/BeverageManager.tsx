@@ -122,25 +122,64 @@ export function BeverageManager({ restaurantId }: Props) {
      }
    };
 
-  const updateBeverage = async (id: string, patch: Partial<BeverageRow>) => {
-    const { error } = await supabase
-      .from("pizzeria_beverages")
-      .update(patch as any)
-      .eq("id", id);
-    
-    if (error) {
-      alert("Erro ao salvar: " + error.message);
-    } else {
-      setBeverages((cur) => cur.map((b) => (b.id === id ? { ...b, ...patch } : b)));
-    }
-  };
+   const updateBeverage = async (id: string, patch: Partial<BeverageRow>) => {
+     const session = await ensureAuthenticatedSession();
+     if (!session) {
+       toast.error("Sua sessão expirou. Faça login novamente para continuar.");
+       return;
+     }
+ 
+     const { error } = await supabase
+       .from("pizzeria_beverages")
+       .update(patch as any)
+       .eq("id", id);
+     
+     if (error) {
+       if (error.message.includes("JWT expired")) {
+         const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+         if (refreshedSession) {
+           const { error: retryError } = await supabase
+             .from("pizzeria_beverages")
+             .update(patch as any)
+             .eq("id", id);
+           if (!retryError) {
+             setBeverages((cur) => cur.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+             return;
+           }
+         }
+       }
+       toast.error("Erro ao salvar: " + error.message);
+     } else {
+       setBeverages((cur) => cur.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+     }
+   };
 
-  const removeBeverage = async (id: string) => {
-    if (!confirm("Excluir esta bebida?")) return;
-    const { error } = await supabase.from("pizzeria_beverages").delete().eq("id", id);
-    if (error) alert("Erro ao excluir: " + error.message);
-    else reload();
-  };
+   const removeBeverage = async (id: string) => {
+     if (!confirm("Excluir esta bebida?")) return;
+     
+     const session = await ensureAuthenticatedSession();
+     if (!session) {
+       toast.error("Sua sessão expirou. Faça login novamente para continuar.");
+       return;
+     }
+ 
+     const { error } = await supabase.from("pizzeria_beverages").delete().eq("id", id);
+     if (error) {
+       if (error.message.includes("JWT expired")) {
+         const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+         if (refreshedSession) {
+           const { error: retryError } = await supabase.from("pizzeria_beverages").delete().eq("id", id);
+           if (!retryError) {
+             reload();
+             return;
+           }
+         }
+       }
+       toast.error("Erro ao excluir: " + error.message);
+     } else {
+       reload();
+     }
+   };
 
   if (loading) return <div className="p-4 text-center">Carregando bebidas...</div>;
 
