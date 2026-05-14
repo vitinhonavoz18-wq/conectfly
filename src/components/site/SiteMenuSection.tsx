@@ -29,14 +29,19 @@ export function SiteMenuSection({ categories, restaurant }: Props) {
            onClick={() => setActive(c.id)}
            className="group relative aspect-square rounded-3xl overflow-hidden border border-white/5 bg-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl"
          >
-          {c.image_url ? (
+          {c.image_url && (
             <img
               src={c.image_url}
               alt={c.name}
               loading="lazy"
+              decoding="async"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
-          ) : (
+          )}
+          {!c.image_url && (
             <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))]">
               <ImageIcon className="h-10 w-10 opacity-40" />
             </div>
