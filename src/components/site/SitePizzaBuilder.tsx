@@ -4,10 +4,11 @@ import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/l
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
-interface Props {
-  category: MenuCategoryRow & { items: MenuItemRow[] };
-  restaurant?: RestaurantRow;
-}
+ interface Props {
+   category: MenuCategoryRow & { items: MenuItemRow[] };
+   restaurant?: RestaurantRow;
+   bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+ }
 
 interface FlavorCardProps {
   it: MenuItemRow;
