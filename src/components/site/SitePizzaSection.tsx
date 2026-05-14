@@ -71,7 +71,11 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
           </button>
         </div>
 
-        <SitePizzaBuilder category={active} restaurant={restaurant} />
+         <SitePizzaBuilder 
+           category={active} 
+           restaurant={restaurant} 
+           bordasCategory={bordasCategory} 
+         />
       </div>
     </section>
   );
