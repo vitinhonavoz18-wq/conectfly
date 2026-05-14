@@ -135,26 +135,32 @@
          .select("*")
          .eq("category_id", mainCat.id);
  
-       for (const sabor of data.sabores || []) {
-         const existing = existingItems?.find(i => 
-           (sabor.codigo && i.name.includes(`[${sabor.codigo}]`)) || 
-           i.name.toUpperCase() === sabor.nome.toUpperCase()
+       const sortedSabores = [...(data.sabores || [])].sort((a, b) => {
+         const codeA = parseInt(a.codigo || "0");
+         const codeB = parseInt(b.codigo || "0");
+         return codeA - codeB;
+       });
+ 
+       for (let i = 0; i < sortedSabores.length; i++) {
+         const sabor = sortedSabores[i];
+         const existing = existingItems?.find(item => 
+           (sabor.codigo && item.name.includes(`[${sabor.codigo}]`)) || 
+           item.name.toUpperCase() === sabor.nome.toUpperCase()
          );
  
          const displayName = sabor.codigo ? `[${sabor.codigo}] ${sabor.nome}` : sabor.nome;
          const description = sabor.ingredientes_ordem_preparo?.join(", ") || "";
  
          if (existing) {
-           // Atualizar
            await supabase
              .from("menu_items")
              .update({
                name: displayName,
                description: description,
+               sort_order: i,
              })
              .eq("id", existing.id);
          } else {
-           // Inserir
            await supabase
              .from("menu_items")
              .insert({
@@ -163,7 +169,7 @@
                name: displayName,
                description: description,
                price: 0,
-               sort_order: existingItems?.length || 0,
+               sort_order: i,
                is_special: false,
                special_extra: 0
              });
