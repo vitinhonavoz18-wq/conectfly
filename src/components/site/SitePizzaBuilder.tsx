@@ -4,10 +4,11 @@ import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/l
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
-interface Props {
-  category: MenuCategoryRow & { items: MenuItemRow[] };
-  restaurant?: RestaurantRow;
-}
+ interface Props {
+   category: MenuCategoryRow & { items: MenuItemRow[] };
+   restaurant?: RestaurantRow;
+   bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+ }
 
 interface FlavorCardProps {
   it: MenuItemRow;
@@ -87,11 +88,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-export function SitePizzaBuilder({ category, restaurant }: Props) {
+ export function SitePizzaBuilder({ category, restaurant, bordasCategory }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
-  const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+   const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
 
   const size = sizeIdx !== null ? sizes[sizeIdx] : null;
@@ -133,10 +135,16 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
   const selectedItems = selectedFlavors
     .map((id) => flavorMap.get(id))
     .filter(Boolean) as MenuItemRow[];
-  const specialExtras = selectedItems
-    .filter((it) => it.is_special)
-    .reduce((sum, it) => sum + (Number(it.special_extra) || 0), 0);
-  const finalPrice = (size?.price ?? 0) + specialExtras;
+   const specialExtras = selectedItems
+     .filter((it) => it.is_special)
+     .reduce((sum, it) => sum + (Number(it.special_extra) || 0), 0);
+ 
+   const selectedBorder = selectedBorderId 
+     ? bordasCategory?.items.find(b => b.id === selectedBorderId) 
+     : null;
+   const borderPrice = selectedBorder?.price ?? 0;
+ 
+   const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice;
   const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
 
   const toggleFlavor = (id: string) => {
@@ -167,9 +175,12 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
         ? `Sabor: ${flavorNames[0]}`
         : `Sabores: ${flavorNames.join(" + ")}`,
     ];
-    if (specialNames.length > 0) {
-      descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
-    }
+     if (specialNames.length > 0) {
+       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
+     }
+     if (selectedBorder) {
+       descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
+     }
     addLine({
       itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
       name: `Pizza ${size.label}`,
@@ -187,9 +198,10 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
       beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
-    setSelectedFlavors([]);
-    if (shouldOpenCart) setCartOpen(true);
+     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
+     setSelectedFlavors([]);
+     setSelectedBorderId(null);
+     if (shouldOpenCart) setCartOpen(true);
     setTimeout(() => setConfirm(null), 2200);
   };
 
@@ -328,9 +340,62 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
         )}
       </div>
 
-      {/* Step 3 — Summary + add */}
-       <div 
-         id={`summary-${category.id}`}
+       {/* Step 3 — Bordas Recheadas */}
+       {bordasCategory && bordasCategory.items.length > 0 && (
+         <div className="space-y-4">
+           <div className="flex items-baseline justify-between mb-3">
+             <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
+           </div>
+           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+             <button
+               onClick={() => setSelectedBorderId(null)}
+               className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
+                 selectedBorderId === null
+                   ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent"
+                   : "border-white/5 bg-white/5 hover:border-white/20"
+               }`}
+             >
+               {selectedBorderId === null && (
+                 <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                   <Check className="h-3 w-3" />
+                 </span>
+               )}
+               <p className="font-bold leading-tight">Sem Borda</p>
+               <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
+                 Grátis
+               </p>
+             </button>
+             {bordasCategory.items.map((b) => {
+               const active = selectedBorderId === b.id;
+               return (
+                 <button
+                   key={b.id}
+                   onClick={() => setSelectedBorderId(b.id)}
+                   className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
+                     active
+                       ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent shadow-[0_0_20px_rgba(255,90,0,0.15)]"
+                       : "border-white/5 bg-white/5 hover:border-white/20"
+                   }`}
+                 >
+                   {active && (
+                     <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                       <Check className="h-3 w-3" />
+                     </span>
+                   )}
+                   <p className="font-bold leading-tight">{b.name}</p>
+                   <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
+                     +{formatBRL(b.price)}
+                   </p>
+                 </button>
+               );
+             })}
+           </div>
+         </div>
+       )}
+ 
+       {/* Step 4 — Summary + add */}
+        <div 
+          id={`summary-${category.id}`}
          className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden"
        >
          <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -352,15 +417,21 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
                     .filter(Boolean)
                     .join(" + ")}
             </li>
-            {specialExtras > 0 && (
-              <li>
-                <strong className="text-amber-300">Adicional especial:</strong>{" "}
-                +{formatBRL(specialExtras)}
-                {specialNames.length > 0 && (
-                  <span className="text-xs"> ({specialNames.join(", ")})</span>
-                )}
-              </li>
-            )}
+             {specialExtras > 0 && (
+               <li>
+                 <strong className="text-amber-300">Adicional especial:</strong>{" "}
+                 +{formatBRL(specialExtras)}
+                 {specialNames.length > 0 && (
+                   <span className="text-xs"> ({specialNames.join(", ")})</span>
+                 )}
+               </li>
+             )}
+             {selectedBorder && (
+               <li>
+                 <strong className="text-amber-300">Borda recheada:</strong>{" "}
+                 {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
+               </li>
+             )}
           </ul>
         ) : (
           <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
