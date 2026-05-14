@@ -34,19 +34,20 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             : "border-white/5 bg-white/5 hover:border-white/20"
       } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01] hover:shadow-xl"}`}
     >
-      {(restaurant?.show_item_images ?? true) && (
-        it.image_url ? (
+      {(restaurant?.show_item_images ?? true) && it.image_url && (
+        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg border border-[hsl(var(--site-border))] bg-black/20">
           <img
             src={it.image_url}
             alt={it.name}
             loading="lazy"
-            className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[hsl(var(--site-border))]"
+            decoding="async"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+            }}
           />
-        ) : (
-          <div className="h-20 w-20 rounded-lg shrink-0 border border-dashed border-[hsl(var(--site-border))] bg-black/20 flex items-center justify-center text-[hsl(var(--site-muted-fg))]">
-            <ImageIcon className="h-6 w-6 opacity-40" />
-          </div>
-        )
+        </div>
       )}
       <div
         className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center transition-colors duration-300 ${
