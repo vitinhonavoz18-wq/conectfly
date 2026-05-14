@@ -175,9 +175,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         ? `Sabor: ${flavorNames[0]}`
         : `Sabores: ${flavorNames.join(" + ")}`,
     ];
-    if (specialNames.length > 0) {
-      descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
-    }
+     if (specialNames.length > 0) {
+       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
+     }
+     if (selectedBorder) {
+       descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
+     }
     addLine({
       itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
       name: `Pizza ${size.label}`,
@@ -195,9 +198,10 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
-    setSelectedFlavors([]);
-    if (shouldOpenCart) setCartOpen(true);
+     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
+     setSelectedFlavors([]);
+     setSelectedBorderId(null);
+     if (shouldOpenCart) setCartOpen(true);
     setTimeout(() => setConfirm(null), 2200);
   };
 
@@ -413,15 +417,21 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                     .filter(Boolean)
                     .join(" + ")}
             </li>
-            {specialExtras > 0 && (
-              <li>
-                <strong className="text-amber-300">Adicional especial:</strong>{" "}
-                +{formatBRL(specialExtras)}
-                {specialNames.length > 0 && (
-                  <span className="text-xs"> ({specialNames.join(", ")})</span>
-                )}
-              </li>
-            )}
+             {specialExtras > 0 && (
+               <li>
+                 <strong className="text-amber-300">Adicional especial:</strong>{" "}
+                 +{formatBRL(specialExtras)}
+                 {specialNames.length > 0 && (
+                   <span className="text-xs"> ({specialNames.join(", ")})</span>
+                 )}
+               </li>
+             )}
+             {selectedBorder && (
+               <li>
+                 <strong className="text-amber-300">Borda recheada:</strong>{" "}
+                 {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
+               </li>
+             )}
           </ul>
         ) : (
           <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
