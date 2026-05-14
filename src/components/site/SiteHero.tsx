@@ -61,11 +61,15 @@ export function SiteHero({
          {logoUrl ? (
            <div className="relative group inline-block">
              <div className="absolute inset-0 bg-primary/20 blur-[100px] group-hover:bg-primary/40 transition-all rounded-full" />
-             <img
-               src={logoUrl}
-               alt={name}
-               className="relative mx-auto mb-8 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-[0_0_35px_rgba(255,122,0,0.3)] group-hover:scale-105 transition-transform duration-700"
-             />
+              <img
+                src={logoUrl}
+                alt={name}
+                loading="eager"
+                className="relative mx-auto mb-8 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-[0_0_35px_rgba(255,122,0,0.3)] group-hover:scale-105 transition-transform duration-700"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
            </div>
          ) : (
            <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-primary via-orange-400 to-amber-300 bg-clip-text text-transparent drop-shadow-sm">
