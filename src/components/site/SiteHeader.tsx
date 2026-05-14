@@ -47,11 +47,9 @@ export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
                }}
              />
            ) : null}
-           {(!logoUrl || logoUrl) && (
-             <div className={`fallback-header-logo h-11 w-11 rounded-xl bg-gradient-bronze shadow-glow border border-primary/20 ${logoUrl ? 'hidden' : ''}`} />
-           )}
-             <div className="h-11 w-11 rounded-xl bg-gradient-bronze shadow-glow border border-primary/20" />
-           )}
+            {(!logoUrl || logoUrl) && (
+              <div className={`fallback-header-logo h-11 w-11 rounded-xl bg-gradient-bronze shadow-glow border border-primary/20 ${logoUrl ? 'hidden' : ''}`} />
+            )}
            <span className="font-black tracking-tighter text-xl sm:text-2xl group-hover:text-primary transition-colors">{name}</span>
          </div>
          <button
