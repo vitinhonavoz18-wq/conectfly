@@ -88,11 +88,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-export function SitePizzaBuilder({ category, restaurant }: Props) {
+ export function SitePizzaBuilder({ category, restaurant, bordasCategory }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
-  const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+   const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
+   const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
 
   const size = sizeIdx !== null ? sizes[sizeIdx] : null;
@@ -134,10 +135,16 @@ export function SitePizzaBuilder({ category, restaurant }: Props) {
   const selectedItems = selectedFlavors
     .map((id) => flavorMap.get(id))
     .filter(Boolean) as MenuItemRow[];
-  const specialExtras = selectedItems
-    .filter((it) => it.is_special)
-    .reduce((sum, it) => sum + (Number(it.special_extra) || 0), 0);
-  const finalPrice = (size?.price ?? 0) + specialExtras;
+   const specialExtras = selectedItems
+     .filter((it) => it.is_special)
+     .reduce((sum, it) => sum + (Number(it.special_extra) || 0), 0);
+ 
+   const selectedBorder = selectedBorderId 
+     ? bordasCategory?.items.find(b => b.id === selectedBorderId) 
+     : null;
+   const borderPrice = selectedBorder?.price ?? 0;
+ 
+   const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice;
   const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
 
   const toggleFlavor = (id: string) => {
