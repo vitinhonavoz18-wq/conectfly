@@ -19,7 +19,12 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
     const name = c.name.toLowerCase();
     return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
   };
-  const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c));
+   const isBordas = (c: any) => {
+     const name = c.name.toLowerCase();
+     return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
+   };
+   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
+   const bordasCategory = data.categories.find(isBordas);
   const hasBeverages = data.beverages && data.beverages.length > 0;
 
   // Monitor if header is visible to show/hide floating cart
