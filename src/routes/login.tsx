@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate, useSearch, redirect } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Loader2, Rocket, LogIn, UserPlus } from "lucide-react";
+import { Loader2, LogIn, UserPlus, ChefHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/admin/BrandLogo";
 
 type Search = { redirect?: string };
 
@@ -65,19 +66,29 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
+      {/* Ambient gold/wood glow */}
+      <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-accent/15 blur-[120px]" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:repeating-linear-gradient(115deg,#DAA520_0,#DAA520_1px,transparent_1px,transparent_8px)]" />
+
+      <div className="w-full max-w-md relative">
         <div className="text-center mb-8">
-          <div className="inline-flex h-16 w-16 rounded-2xl bg-gradient-bronze items-center justify-center shadow-glow mb-4">
-            <Rocket className="h-8 w-8 text-primary-foreground" />
+          <div className="relative inline-flex flex-col items-center justify-center px-10 py-6 rounded-3xl bg-gradient-to-b from-white/[0.04] to-transparent border border-primary/20 shadow-[0_30px_80px_-30px_oklch(0.62_0.16_48_/_0.45)]">
+            <BrandLogo size="xl" />
+            <div className="mt-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] text-primary/80 font-bold">
+              <span className="h-px w-8 bg-gradient-to-r from-transparent to-primary/60" />
+              <ChefHat className="h-3 w-3" />
+              <span>Plataforma Premium</span>
+              <span className="h-px w-8 bg-gradient-to-l from-transparent to-primary/60" />
+            </div>
           </div>
-          <h1 className="text-3xl font-black tracking-tight">SiteCreatorFly</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {mode === "login" ? "Acesse sua conta" : "Crie sua conta"}
+          <p className="text-sm text-muted-foreground mt-5 italic">
+            {mode === "login" ? "Bem-vindo de volta ao seu estúdio gastronômico" : "Crie sua conta e comece a servir"}
           </p>
         </div>
 
-        <div className="card-premium p-8 space-y-5">
+        <div className="card-premium p-8 space-y-5 border-primary/10">
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>

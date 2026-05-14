@@ -28,6 +28,7 @@ import { ComboManager } from "@/components/editor/ComboManager";
 import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/admin/BrandLogo";
 
 export const Route = createFileRoute("/_authenticated/edit/$id")({
   component: EditPage,
@@ -132,6 +133,9 @@ function EditPage() {
                aria-label="Voltar"
              >
                <ArrowLeft className="h-5 w-5" />
+             </Link>
+             <Link to="/" className="hidden md:flex items-center pr-3 border-r border-white/10 mr-1" aria-label="SiteCreatorFly">
+               <BrandLogo size="sm" glow={false} />
              </Link>
              <div className="min-w-0 ml-1">
                <h1 className="font-black text-2xl truncate tracking-tight text-foreground uppercase">{restaurant.name}</h1>
