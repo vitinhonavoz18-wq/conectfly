@@ -37,8 +37,19 @@ export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
             onClick={scrollToTop}
           >
            {logoUrl ? (
-             <img src={logoUrl} alt={name} className="h-11 w-11 object-contain group-hover:scale-110 transition-transform drop-shadow-lg" />
-           ) : (
+             <img 
+               src={logoUrl} 
+               alt={name} 
+               className="h-11 w-11 object-contain group-hover:scale-110 transition-transform drop-shadow-lg"
+               onError={(e) => {
+                 (e.target as HTMLImageElement).style.display = 'none';
+                 (e.target as HTMLImageElement).parentElement?.querySelector('.fallback-header-logo')?.classList.remove('hidden');
+               }}
+             />
+           ) : null}
+           {(!logoUrl || logoUrl) && (
+             <div className={`fallback-header-logo h-11 w-11 rounded-xl bg-gradient-bronze shadow-glow border border-primary/20 ${logoUrl ? 'hidden' : ''}`} />
+           )}
              <div className="h-11 w-11 rounded-xl bg-gradient-bronze shadow-glow border border-primary/20" />
            )}
            <span className="font-black tracking-tighter text-xl sm:text-2xl group-hover:text-primary transition-colors">{name}</span>
