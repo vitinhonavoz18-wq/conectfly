@@ -54,7 +54,11 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
         <SectionScroll id="pizzas-container">
           <Reveal variant="fade-up">
             <div className="site-scroll-rise">
-              <SitePizzaSection categories={data.categories} restaurant={r} />
+               <SitePizzaSection 
+                 categories={data.categories} 
+                 restaurant={r} 
+                 bordasCategory={bordasCategory}
+               />
             </div>
           </Reveal>
         </SectionScroll>
