@@ -22,6 +22,7 @@ import { generateApiKey } from "@/lib/site/flycontrol";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/admin/BrandLogo";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -116,16 +117,16 @@ function Dashboard() {
      <div className="min-h-screen bg-background">
        <header className="border-b border-white/5 bg-background/80 backdrop-blur-xl sticky top-0 z-40">
          <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <div className="h-11 w-11 rounded-xl bg-gradient-bronze flex items-center justify-center shadow-glow animate-pulse">
-               <Rocket className="h-6 w-6 text-primary-foreground glow-bronze" />
+          <div className="flex items-center gap-4">
+            <div className="relative flex items-center justify-center px-3 py-1.5 rounded-xl bg-gradient-to-b from-white/[0.05] to-transparent border border-primary/15">
+              <BrandLogo size="md" />
             </div>
-            <div>
-               <h1 className="font-black tracking-tight text-xl leading-none bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                 SuperCreatorFly
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Sites de delivery prontos para decolar
+            <div className="hidden sm:block border-l border-white/10 pl-4">
+              <p className="text-[10px] uppercase tracking-[0.35em] text-primary/80 font-black">
+                Painel Administrativo
+              </p>
+              <p className="text-xs text-muted-foreground italic mt-0.5">
+                Sites de delivery premium para chefs visionários
               </p>
             </div>
           </div>
