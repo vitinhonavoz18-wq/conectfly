@@ -26,10 +26,7 @@
      fatias: number;
      max_sabores: number;
    }>;
-   bordas_recheadas?: Array<{
-     nome: string;
-     acrescimo: number;
-   }>;
+   bordas_recheadas?: Array<{ nome: string; acrescimo: number }>;
    sabores?: Array<{
      codigo?: string;
      nome: string;
@@ -84,48 +81,43 @@
      setLoading(true);
  
      try {
-       // 1. Processar Categoria (Pizzas por padrão)
        const categoryName = data.tipo_cardapio?.toUpperCase() || "PIZZA";
-       
-       // Buscar categorias existentes
-       const { data: existingCats } = await supabase
-         .from("menu_categories")
-         .select("*")
-         .eq("restaurant_id", restaurantId);
- 
+       const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
        let mainCat = existingCats?.find(c => c.name.toUpperCase() === categoryName);
- 
-       // Formatar tamanhos
-       const pizzaSizes: PizzaSize[] = data.tamanhos?.map(t => ({
-         label: t.nome,
-         price: t.preco,
-         max_flavors: t.max_sabores
-       })) || [];
+       const pizzaSizes: PizzaSize[] = data.tamanhos?.map(t => ({ label: t.nome, price: t.preco, max_flavors: t.max_sabores })) || [];
  
        if (!mainCat) {
-         // Criar categoria
-         const { data: newCat, error: catErr } = await supabase
-           .from("menu_categories")
-           .insert({
-             restaurant_id: restaurantId,
-             name: categoryName,
-             icon: "🍕",
-             is_pizza: true,
-             pizza_sizes: pizzaSizes as any,
-             sort_order: existingCats?.length || 0
-           })
-           .select()
-           .single();
-         
+         const { data: newCat, error: catErr } = await supabase.from("menu_categories").insert({
+           restaurant_id: restaurantId, name: categoryName, icon: "🍕", is_pizza: true,
+           pizza_sizes: pizzaSizes as any, sort_order: existingCats?.length || 0
+         }).select().single();
          if (catErr) throw catErr;
          mainCat = newCat;
-       } else {
-         // Atualizar tamanhos se vierem no JSON
-         if (pizzaSizes.length > 0) {
-           await supabase
-             .from("menu_categories")
-             .update({ pizza_sizes: pizzaSizes as any })
-             .eq("id", mainCat.id);
+       } else if (pizzaSizes.length > 0) {
+         await supabase.from("menu_categories").update({ pizza_sizes: pizzaSizes as any }).eq("id", mainCat.id);
+       }
+ 
+       // 1.5 Processar Bordas (Como Sabores Especiais na categoria BORDAS ou similar)
+       if (data.bordas_recheadas && data.bordas_recheadas.length > 0) {
+         let bordasCat = existingCats?.find(c => c.name.toUpperCase() === "BORDAS RECHEADAS");
+         if (!bordasCat) {
+           const { data: newBCat, error: bCatErr } = await supabase.from("menu_categories").insert({
+             restaurant_id: restaurantId, name: "BORDAS RECHEADAS", icon: "🥖", is_pizza: false, sort_order: (existingCats?.length || 0) + 1
+           }).select().single();
+           if (!bCatErr) bordasCat = newBCat;
+         }
+         if (bordasCat) {
+           const { data: exBordas } = await supabase.from("menu_items").select("*").eq("category_id", bordasCat.id);
+           for (const borda of data.bordas_recheadas) {
+             const exB = exBordas?.find(i => i.name.toUpperCase() === borda.nome.toUpperCase());
+             if (exB) {
+               await supabase.from("menu_items").update({ price: borda.acrescimo }).eq("id", exB.id);
+             } else {
+               await supabase.from("menu_items").insert({
+                 restaurant_id: restaurantId, category_id: bordasCat.id, name: borda.nome, price: borda.acrescimo, sort_order: exBordas?.length || 0
+               });
+             }
+           }
          }
        }
  
