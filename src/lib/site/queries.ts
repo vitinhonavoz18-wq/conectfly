@@ -12,9 +12,8 @@ import type {
 
 export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
   const { data: restaurant, error } = await supabase
-    .from("restaurants")
-     .from("pizzerias_public")
-     .select("id, name, slug, tagline, description, whatsapp_number, whatsapp_display, whatsapp_enabled, address, hours, city, logo_url, hero_image_url, hero_media_type, hero_video_url, primary_color, secondary_color, published, show_item_images, flycontrol_enabled, flycontrol_api_key_masked, flycontrol_base_url, flycontrol_api_url")
+    .from("pizzerias_public")
+    .select("id, name, slug, tagline, description, whatsapp_number, whatsapp_display, whatsapp_enabled, address, hours, city, logo_url, hero_image_url, hero_media_type, hero_video_url, primary_color, secondary_color, published, show_item_images, flycontrol_enabled, flycontrol_api_key_masked, flycontrol_base_url, flycontrol_api_url")
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
