@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, Save, Trash2, MapPin, RefreshCw } from "lucide-react";
+ import { Plus, Save, Trash2, MapPin, RefreshCw, FileJson } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DeliveryZoneRow } from "@/lib/site/types";
 import { DEFAULT_DELIVERY_ZONES } from "@/lib/site/defaultMenu";
 import { formatBRL } from "@/lib/site/format";
+ import { DeliveryImport } from "./DeliveryImport";
 
 interface Props {
   restaurantId: string;
@@ -114,13 +115,21 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
              </p>
            </div>
          </div>
-         <button
-           onClick={handleSeedDefaults}
-           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold transition-all"
-         >
-           <RefreshCw className="h-4 w-4 text-primary" />
-           <span>Carregar Bairros Padrão (Salvador)</span>
-         </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={handleSeedDefaults}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-sm font-bold transition-all"
+            >
+              <RefreshCw className="h-4 w-4 text-primary" />
+              <span>Carregar Bairros Padrão (Salvador)</span>
+            </button>
+            
+            <DeliveryImport 
+              restaurantId={restaurantId} 
+              onSuccess={load} 
+              existingZones={zones}
+            />
+          </div>
        </div>
  
        <div className="card-premium p-6">
