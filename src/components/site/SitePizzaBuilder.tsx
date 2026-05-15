@@ -505,12 +505,29 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                  )}
                </li>
              )}
-             {selectedBorder && (
-               <li>
-                 <strong className="text-amber-300">Borda recheada:</strong>{" "}
-                 {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
-               </li>
-             )}
+              {selectedBorder && (
+                <li>
+                  <strong className="text-amber-300">Borda recheada:</strong>{" "}
+                  {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
+                </li>
+              )}
+              {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
+                <li className="pt-2 mt-2 border-t border-white/5">
+                  <strong className="text-emerald-400">Bebidas:</strong>
+                  <ul className="pl-4 space-y-0.5 mt-1">
+                    {Object.entries(selectedBeverages).map(([id, qty]) => {
+                      if (qty === 0) return null;
+                      const bev = beverages?.find(b => b.id === id);
+                      if (!bev) return null;
+                      return (
+                        <li key={id} className="text-xs">
+                          {qty}x {bev.name} — {formatBRL(Number(bev.price) * qty)}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              )}
           </ul>
         ) : (
           <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
