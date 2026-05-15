@@ -41,6 +41,13 @@ export type Database = {
             foreignKeyName: "combo_groups_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combo_groups_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -86,6 +93,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "combo_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "combos_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
             referencedColumns: ["id"]
           },
           {
@@ -163,6 +177,13 @@ export type Database = {
             foreignKeyName: "flycontrol_order_logs_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flycontrol_order_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -203,6 +224,13 @@ export type Database = {
           sort_order?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "menu_categories_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "menu_categories_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -267,6 +295,49 @@ export type Database = {
             foreignKeyName: "menu_items_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          restaurant_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          restaurant_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          restaurant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -310,6 +381,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pizzeria_beverages_pizzeria_id_fkey"
+            columns: ["pizzeria_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pizzeria_beverages_pizzeria_id_fkey"
             columns: ["pizzeria_id"]
@@ -435,9 +513,90 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pizzerias_public: {
+        Row: {
+          address: string | null
+          city: string | null
+          description: string | null
+          flycontrol_api_key_masked: string | null
+          flycontrol_api_url: string | null
+          flycontrol_base_url: string | null
+          flycontrol_enabled: boolean | null
+          hero_image_url: string | null
+          hero_media_type: string | null
+          hero_video_url: string | null
+          hours: string | null
+          id: string | null
+          logo_url: string | null
+          name: string | null
+          primary_color: string | null
+          published: boolean | null
+          secondary_color: string | null
+          show_item_images: boolean | null
+          slug: string | null
+          tagline: string | null
+          whatsapp_display: string | null
+          whatsapp_enabled: boolean | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          description?: string | null
+          flycontrol_api_key_masked?: never
+          flycontrol_api_url?: string | null
+          flycontrol_base_url?: string | null
+          flycontrol_enabled?: boolean | null
+          hero_image_url?: string | null
+          hero_media_type?: string | null
+          hero_video_url?: string | null
+          hours?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          primary_color?: string | null
+          published?: boolean | null
+          secondary_color?: string | null
+          show_item_images?: boolean | null
+          slug?: string | null
+          tagline?: string | null
+          whatsapp_display?: string | null
+          whatsapp_enabled?: boolean | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          description?: string | null
+          flycontrol_api_key_masked?: never
+          flycontrol_api_url?: string | null
+          flycontrol_base_url?: string | null
+          flycontrol_enabled?: boolean | null
+          hero_image_url?: string | null
+          hero_media_type?: string | null
+          hero_video_url?: string | null
+          hours?: string | null
+          id?: string | null
+          logo_url?: string | null
+          name?: string | null
+          primary_color?: string | null
+          published?: boolean | null
+          secondary_color?: string | null
+          show_item_images?: boolean | null
+          slug?: string | null
+          tagline?: string | null
+          whatsapp_display?: string | null
+          whatsapp_enabled?: boolean | null
+          whatsapp_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_order_rate_limit: {
+        Args: { p_ip: string; p_restaurant_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
