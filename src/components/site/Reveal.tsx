@@ -28,46 +28,25 @@ export function Reveal({
   threshold = 0.15,
 }: RevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  const [visible, setVisible] = useState(false);
+   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) {
-      setVisible(true);
-      return;
-    }
-    const node = ref.current;
-    if (!node) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setVisible(true);
-            if (once) obs.unobserve(e.target);
-          } else if (!once) {
-            setVisible(false);
-          }
-        });
-      },
-      { threshold, rootMargin: "0px 0px -10% 0px" },
-    );
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, [once, threshold]);
+     // Animation disabled for stability on mobile devices
+     setVisible(true);
+   }, []);
 
   const initial: Record<Variant, string> = {
-    "fade-up": "translate3d(0, 32px, 0)",
-    fade: "none",
-    zoom: "scale(0.94)",
-    "slide-left": "translate3d(-40px, 0, 0)",
-    "slide-right": "translate3d(40px, 0, 0)",
+     "fade-up": "none",
+     fade: "none",
+     zoom: "none",
+     "slide-left": "none",
+     "slide-right": "none",
   };
 
   const style: CSSProperties = {
-    opacity: visible ? 1 : 0,
-    transform: visible ? "none" : initial[variant],
-    transition: `opacity ${duration}ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms, transform ${duration}ms cubic-bezier(0.22, 1, 0.36, 1) ${delay}ms`,
+     opacity: 1,
+     transform: "none",
+     transition: "none",
     willChange: "opacity, transform",
   };
 

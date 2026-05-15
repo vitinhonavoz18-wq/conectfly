@@ -10,26 +10,13 @@ interface Props {
 
 export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
   const { totalItems } = useCart();
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-        scrolled
-           ? "bg-[hsl(var(--site-bg)/0.7)] backdrop-blur-2xl border-b border-white/5 shadow-2xl"
-           : "bg-transparent"
-      }`}
+       className="fixed top-0 left-0 right-0 z-40 bg-[hsl(var(--site-bg)/0.8)] backdrop-blur-2xl border-b border-white/5 shadow-2xl"
     >
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div 

@@ -104,18 +104,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   const canAdd = !!size && selectedFlavors.length > 0;
   const isSelectionComplete = !!size && selectedFlavors.length === maxFlavors && maxFlavors > 0;
 
-  // Automatic scroll to beverages only when selection is truly complete
-  useEffect(() => {
-    if (isSelectionComplete) {
-      const timer = setTimeout(() => {
-        const beveragesSection = document.getElementById("bebidas-step");
-        if (beveragesSection) {
-          beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isSelectionComplete]);
 
   const { flavorMap, classicFlavors, specialFlavors } = useMemo(() => {
     const m = new Map<string, MenuItemRow>();
@@ -222,10 +210,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       setSelectedBeverages({});
       if (shouldOpenCart) setCartOpen(true);
 
-      const beveragesSection = document.getElementById("bebidas-step");
-      if (beveragesSection) {
-        beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
 
      setTimeout(() => setConfirm(null), 2200);
    };

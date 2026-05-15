@@ -27,67 +27,44 @@ function DeliverySiteContent({ data }: { data: SiteData }) {
    const bordasCategory = data.categories.find(isBordas);
   const hasBeverages = data.beverages && data.beverages.length > 0;
 
-  // Monitor if header is visible to show/hide floating cart
-  const [headerVisible, setHeaderVisible] = useState(true);
-  useEffect(() => {
-    const handleScroll = () => setHeaderVisible(window.scrollY < 200);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <>
-      <ScrollProgress />
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
       <main>
-        <SectionScroll className="site-hero-section">
-          <SiteHero
-            name={r.name}
-            tagline={r.tagline}
-            description={r.description}
-            logoUrl={r.logo_url}
-            heroImageUrl={r.hero_image_url}
-            heroMediaType={r.hero_media_type}
-            heroVideoUrl={r.hero_video_url}
-          />
-        </SectionScroll>
-        <SectionScroll id="pizzas-container">
-          <Reveal variant="fade-up">
-            <div className="site-scroll-rise">
-                <SitePizzaSection 
-                  categories={data.categories} 
-                  restaurant={r} 
-                  bordasCategory={bordasCategory}
-                  beverages={data.beverages ?? []}
-                />
-            </div>
-          </Reveal>
-        </SectionScroll>
-
-        <SectionScroll>
-          <Reveal variant="fade-up" delay={80}>
-            <div className="site-scroll-rise">
-              <SiteComboSection groups={data.comboGroups} />
-            </div>
-          </Reveal>
-        </SectionScroll>
-        <SectionScroll>
-          <Reveal variant="fade-up" delay={80}>
-            <div className="site-scroll-rise">
-              <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
-            </div>
-          </Reveal>
-        </SectionScroll>
+         <div className="site-hero-section">
+           <SiteHero
+             name={r.name}
+             tagline={r.tagline}
+             description={r.description}
+             logoUrl={r.logo_url}
+             heroImageUrl={r.hero_image_url}
+             heroMediaType={r.hero_media_type}
+             heroVideoUrl={r.hero_video_url}
+           />
+         </div>
+         <div id="pizzas-container">
+           <SitePizzaSection 
+             categories={data.categories} 
+             restaurant={r} 
+             bordasCategory={bordasCategory}
+             beverages={data.beverages ?? []}
+           />
+         </div>
+ 
+         <div>
+           <SiteComboSection groups={data.comboGroups} />
+         </div>
+         <div>
+           <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
+         </div>
       </main>
-      <Reveal variant="fade">
-        <SiteFooter
-          name={r.name}
-          phoneDisplay={r.whatsapp_display}
-          hours={r.hours}
-          address={r.address}
-          city={r.city}
-        />
-      </Reveal>
+       <SiteFooter
+         name={r.name}
+         phoneDisplay={r.whatsapp_display}
+         hours={r.hours}
+         address={r.address}
+         city={r.city}
+       />
 
 
       <SiteCartDrawer

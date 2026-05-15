@@ -213,32 +213,13 @@
   0% { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(6px); }
   100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
-.site-hero-enter > * {
-  animation: site-hero-enter 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-.site-hero-enter > *:nth-child(1) { animation-delay: 80ms; }
-.site-hero-enter > *:nth-child(2) { animation-delay: 220ms; }
-.site-hero-enter > *:nth-child(3) { animation-delay: 340ms; }
-.site-hero-enter > *:nth-child(4) { animation-delay: 460ms; }
-.site-hero-enter > *:nth-child(5) { animation-delay: 580ms; }
-
-@keyframes site-stagger-in {
-  0% { opacity: 0; transform: translateY(24px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-.site-stagger > * {
-  opacity: 0;
-  animation: site-stagger-in 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-.site-stagger > *:nth-child(1) { animation-delay: 60ms; }
-.site-stagger > *:nth-child(2) { animation-delay: 140ms; }
-.site-stagger > *:nth-child(3) { animation-delay: 220ms; }
-.site-stagger > *:nth-child(4) { animation-delay: 300ms; }
-.site-stagger > *:nth-child(5) { animation-delay: 380ms; }
-.site-stagger > *:nth-child(6) { animation-delay: 460ms; }
-.site-stagger > *:nth-child(7) { animation-delay: 540ms; }
-.site-stagger > *:nth-child(8) { animation-delay: 620ms; }
-.site-stagger > *:nth-child(n+9) { animation-delay: 700ms; }
+ .site-hero-enter > *,
+ .site-stagger > * {
+   animation: none !important;
+   opacity: 1 !important;
+   transform: none !important;
+   filter: none !important;
+ }
 
 @media (prefers-reduced-motion: reduce) {
   .site-hero-enter > *,
@@ -268,55 +249,20 @@
   --section-progress-center: 0;
 }
 
-.site-scroll-fade {
-  opacity: calc(var(--section-progress-in) * 1);
-  will-change: opacity;
-}
-
-.site-scroll-rise {
-  transform: translate3d(0, calc((1 - var(--section-progress-in)) * 60px), 0);
-  opacity: var(--section-progress-in);
-  will-change: transform, opacity;
-}
-
-.site-scroll-zoom {
-  transform: scale(calc(0.92 + var(--section-progress-in) * 0.08));
-  opacity: var(--section-progress-in);
-  transform-origin: center;
-  will-change: transform, opacity;
-}
-
-.site-scroll-blur {
-  filter: blur(calc((1 - var(--section-progress-in)) * 8px));
-  opacity: calc(0.4 + var(--section-progress-in) * 0.6);
-  will-change: filter, opacity;
-}
-
-/* Background parallax tied to section progress (slow downward drift) */
-.site-scroll-parallax-bg {
-  transform: translate3d(0, calc((var(--section-progress) - 0.5) * -80px), 0) scale(1.08);
-  will-change: transform;
-}
-
-/* Subtle horizontal slide that anchors to center as section reaches viewport center */
-.site-scroll-slide-left {
-  transform: translate3d(calc((1 - var(--section-progress-in)) * -48px), 0, 0);
-  opacity: var(--section-progress-in);
-  will-change: transform, opacity;
-}
-.site-scroll-slide-right {
-  transform: translate3d(calc((1 - var(--section-progress-in)) * 48px), 0, 0);
-  opacity: var(--section-progress-in);
-  will-change: transform, opacity;
-}
-
-/* Headline emphasis — brightens & lifts at center, fades on exit */
-.site-scroll-headline {
-  transform: translate3d(0, calc((1 - var(--section-progress-center)) * 16px), 0);
-  opacity: calc(0.55 + var(--section-progress-center) * 0.45);
-  letter-spacing: calc((var(--section-progress-center) * 0.01em) - 0.005em);
-  will-change: transform, opacity;
-}
+ .site-scroll-fade,
+ .site-scroll-rise,
+ .site-scroll-zoom,
+ .site-scroll-blur,
+ .site-scroll-parallax-bg,
+ .site-scroll-slide-left,
+ .site-scroll-slide-right,
+ .site-scroll-headline {
+   opacity: 1 !important;
+   transform: none !important;
+   filter: none !important;
+   letter-spacing: normal !important;
+   visibility: visible !important;
+ }
 
 @media (prefers-reduced-motion: reduce) {
   .site-scroll-fade,
