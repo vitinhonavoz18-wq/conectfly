@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
- import { Plus, Save, Trash2, MapPin, RefreshCw, FileJson } from "lucide-react";
+  import { Plus, Save, Trash2, MapPin, RefreshCw, FileJson, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { DeliveryZoneRow } from "@/lib/site/types";
 import { DEFAULT_DELIVERY_ZONES } from "@/lib/site/defaultMenu";
@@ -70,11 +70,28 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
     flash("Salvo");
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Remover este bairro?")) return;
-    await supabase.from("delivery_zones").delete().eq("id", id);
-    load();
-  };
+   const handleDelete = async (id: string) => {
+     if (!confirm("Remover este bairro?")) return;
+     await supabase.from("delivery_zones").delete().eq("id", id);
+     load();
+   };
+ 
+   const handleDeleteAll = async () => {
+     if (!confirm("Tem certeza que deseja apagar TODOS os bairros e taxas de entrega cadastrados? Esta ação não pode ser desfeita.")) return;
+     
+     setLoading(true);
+     const { error } = await supabase
+       .from("delivery_zones")
+       .delete()
+       .eq("restaurant_id", restaurantId);
+     
+     if (error) {
+       flash("Erro ao apagar: " + error.message);
+     } else {
+       flash("Todos os bairros foram removidos");
+       load();
+     }
+   };
 
   const handleSeedDefaults = async () => {
     if (!confirm("Adicionar bairros padrão de Salvador que ainda não existem?")) return;
@@ -124,11 +141,21 @@ export function DeliveryZonesManager({ restaurantId }: Props) {
               <span>Carregar Bairros Padrão (Salvador)</span>
             </button>
             
-            <DeliveryImport 
-              restaurantId={restaurantId} 
-              onSuccess={load} 
-              existingZones={zones}
-            />
+             <DeliveryImport 
+               restaurantId={restaurantId} 
+               onSuccess={load} 
+               existingZones={zones}
+             />
+ 
+             {zones.length > 0 && (
+               <button
+                 onClick={handleDeleteAll}
+                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive/5 border border-destructive/10 hover:bg-destructive/10 text-sm font-bold transition-all text-destructive"
+               >
+                 <Trash className="h-4 w-4" />
+                 <span>Limpar Todos os Bairros</span>
+               </button>
+             )}
           </div>
        </div>
  
