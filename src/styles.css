@@ -268,55 +268,20 @@
   --section-progress-center: 0;
 }
 
-.site-scroll-fade {
-  opacity: calc(var(--section-progress-in) * 1);
-  will-change: opacity;
-}
-
-.site-scroll-rise {
-  transform: translate3d(0, calc((1 - var(--section-progress-in)) * 60px), 0);
-  opacity: var(--section-progress-in);
-  will-change: transform, opacity;
-}
-
-.site-scroll-zoom {
-  transform: scale(calc(0.92 + var(--section-progress-in) * 0.08));
-  opacity: var(--section-progress-in);
-  transform-origin: center;
-  will-change: transform, opacity;
-}
-
-.site-scroll-blur {
-  filter: blur(calc((1 - var(--section-progress-in)) * 8px));
-  opacity: calc(0.4 + var(--section-progress-in) * 0.6);
-  will-change: filter, opacity;
-}
-
-/* Background parallax tied to section progress (slow downward drift) */
-.site-scroll-parallax-bg {
-  transform: translate3d(0, calc((var(--section-progress) - 0.5) * -80px), 0) scale(1.08);
-  will-change: transform;
-}
-
-/* Subtle horizontal slide that anchors to center as section reaches viewport center */
-.site-scroll-slide-left {
-  transform: translate3d(calc((1 - var(--section-progress-in)) * -48px), 0, 0);
-  opacity: var(--section-progress-in);
-  will-change: transform, opacity;
-}
-.site-scroll-slide-right {
-  transform: translate3d(calc((1 - var(--section-progress-in)) * 48px), 0, 0);
-  opacity: var(--section-progress-in);
-  will-change: transform, opacity;
-}
-
-/* Headline emphasis — brightens & lifts at center, fades on exit */
-.site-scroll-headline {
-  transform: translate3d(0, calc((1 - var(--section-progress-center)) * 16px), 0);
-  opacity: calc(0.55 + var(--section-progress-center) * 0.45);
-  letter-spacing: calc((var(--section-progress-center) * 0.01em) - 0.005em);
-  will-change: transform, opacity;
-}
+ .site-scroll-fade,
+ .site-scroll-rise,
+ .site-scroll-zoom,
+ .site-scroll-blur,
+ .site-scroll-parallax-bg,
+ .site-scroll-slide-left,
+ .site-scroll-slide-right,
+ .site-scroll-headline {
+   opacity: 1 !important;
+   transform: none !important;
+   filter: none !important;
+   letter-spacing: normal !important;
+   visibility: visible !important;
+ }
 
 @media (prefers-reduced-motion: reduce) {
   .site-scroll-fade,
