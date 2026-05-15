@@ -108,7 +108,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   useEffect(() => {
     if (isSelectionComplete) {
       const timer = setTimeout(() => {
-        const beveragesSection = document.getElementById("bebidas");
+        const beveragesSection = document.getElementById("bebidas-step");
         if (beveragesSection) {
           beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -221,6 +221,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       setSelectedBorderId(null);
       setSelectedBeverages({});
       if (shouldOpenCart) setCartOpen(true);
+
+      const beveragesSection = document.getElementById("bebidas-step");
+      if (beveragesSection) {
+        beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
      setTimeout(() => setConfirm(null), 2200);
    };
 
