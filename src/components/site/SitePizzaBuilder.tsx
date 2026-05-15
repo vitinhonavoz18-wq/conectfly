@@ -89,7 +89,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
- export function SitePizzaBuilder({ category, restaurant, bordasCategory }: Props) {
+  export function SitePizzaBuilder({ category, restaurant, bordasCategory, beverages }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
