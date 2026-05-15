@@ -360,7 +360,67 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       </div>
 
        {/* Step 3 — Bordas Recheadas */}
-       {bordasCategory && bordasCategory.items.length > 0 && (
+        {bordasCategory && bordasCategory.items.length > 0 && (
+  
+        {/* Step 4 — Bebidas */}
+        {beverages && beverages.length > 0 && (
+          <div className="space-y-4" id="bebidas-step">
+            <div className="flex items-baseline justify-between mb-3">
+              <h4 className="text-lg font-bold">4. Escolha as bebidas (opcional)</h4>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {beverages.map((bev) => {
+                const qty = selectedBeverages[bev.id] || 0;
+                return (
+                  <div
+                    key={bev.id}
+                    className={`relative rounded-2xl border p-4 flex items-center justify-between transition-all duration-300 ${
+                      qty > 0
+                        ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.1)] to-transparent"
+                        : "border-white/5 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold leading-tight truncate">{bev.name}</p>
+                      <p className="text-[11px] text-[hsl(var(--site-muted-fg))]">
+                        {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
+                      </p>
+                      <p className="text-[hsl(var(--site-secondary))] font-bold mt-0.5">
+                        {formatBRL(bev.price)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-black/40 p-1 rounded-xl border border-white/10">
+                      <button
+                        onClick={() => {
+                          setSelectedBeverages((cur) => ({
+                            ...cur,
+                            [bev.id]: Math.max(0, (cur[bev.id] || 0) - 1),
+                          }));
+                        }}
+                        disabled={qty === 0}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-20 transition-all active:scale-90"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-6 text-center font-bold text-sm">{qty}</span>
+                      <button
+                        onClick={() => {
+                          setSelectedBeverages((cur) => ({
+                            ...cur,
+                            [bev.id]: (cur[bev.id] || 0) + 1,
+                          }));
+                        }}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-[hsl(var(--site-primary))] text-white hover:opacity-80 transition-all active:scale-90"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
          <div className="space-y-4">
            <div className="flex items-baseline justify-between mb-3">
              <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
