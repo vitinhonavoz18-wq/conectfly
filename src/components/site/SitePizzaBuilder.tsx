@@ -1,14 +1,15 @@
 import { useMemo, useState, useEffect } from "react";
-import { Check, Plus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
-import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/lib/site/types";
+ import { Check, Plus, Minus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
+ import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
- interface Props {
-   category: MenuCategoryRow & { items: MenuItemRow[] };
-   restaurant?: RestaurantRow;
-   bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
- }
+  interface Props {
+    category: MenuCategoryRow & { items: MenuItemRow[] };
+    restaurant?: RestaurantRow;
+    bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    beverages?: BeverageRow[];
+  }
 
 interface FlavorCardProps {
   it: MenuItemRow;
@@ -88,12 +89,13 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
- export function SitePizzaBuilder({ category, restaurant, bordasCategory }: Props) {
+  export function SitePizzaBuilder({ category, restaurant, bordasCategory, beverages }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
    const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
-   const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
+    const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
+    const [selectedBeverages, setSelectedBeverages] = useState<Record<string, number>>({});
   const [confirm, setConfirm] = useState<string | null>(null);
 
   const size = sizeIdx !== null ? sizes[sizeIdx] : null;
@@ -106,7 +108,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   useEffect(() => {
     if (isSelectionComplete) {
       const timer = setTimeout(() => {
-        const beveragesSection = document.getElementById("bebidas");
+        const beveragesSection = document.getElementById("bebidas-step");
         if (beveragesSection) {
           beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -142,9 +144,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
    const selectedBorder = selectedBorderId 
      ? bordasCategory?.items.find(b => b.id === selectedBorderId) 
      : null;
-   const borderPrice = selectedBorder?.price ?? 0;
- 
-   const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice;
+    const borderPrice = selectedBorder?.price ?? 0;
+
+    const beveragesPrice = Object.entries(selectedBeverages).reduce((sum, [id, qty]) => {
+      const bev = beverages?.find(b => b.id === id);
+      return sum + (Number(bev?.price ?? 0) * qty);
+    }, 0);
+  
+    const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice + beveragesPrice;
   const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
 
   const toggleFlavor = (id: string) => {
@@ -161,49 +168,67 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     setSelectedFlavors((cur) => cur.slice(0, newMax));
   };
 
-   const handleAddToCart = (shouldOpenCart = false, event?: React.MouseEvent) => {
-     if (event) {
-       event.preventDefault();
-       event.stopPropagation();
-     }
-    if (!size || selectedFlavors.length === 0) return;
-    const flavorNames = selectedFlavors
-      .map((id) => flavorMap.get(id)?.name)
-      .filter(Boolean) as string[];
-    const descParts = [
-      flavorNames.length === 1
-        ? `Sabor: ${flavorNames[0]}`
-        : `Sabores: ${flavorNames.join(" + ")}`,
-    ];
-     if (specialNames.length > 0) {
-       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
-     }
-     if (selectedBorder) {
-       descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
-     }
-    addLine({
-      itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
-      name: `Pizza ${size.label}`,
-      description: descParts.join(" • "),
-      unitPrice: finalPrice,
-      sizeLabel: size.label,
-      flavors: flavorNames,
-      specialFlavors: specialNames,
-      extras: specialExtras,
-    }, 1);
+    const handleAddToCart = (shouldOpenCart = false, event?: React.MouseEvent) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+     if (!size || selectedFlavors.length === 0) return;
+     const flavorNames = selectedFlavors
+       .map((id) => flavorMap.get(id)?.name)
+       .filter(Boolean) as string[];
+     const descParts = [
+       flavorNames.length === 1
+         ? `Sabor: ${flavorNames[0]}`
+         : `Sabores: ${flavorNames.join(" + ")}`,
+     ];
+      if (specialNames.length > 0) {
+        descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
+      }
+      if (selectedBorder) {
+        descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
+      }
 
-    // Also scroll after adding, just in case they added a partially full selection
-    const beveragesSection = document.getElementById("bebidas");
-    if (beveragesSection) {
-      beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+     // 1. Add Pizza
+     addLine({
+       itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+       name: `Pizza ${size.label}`,
+       description: descParts.join(" • "),
+       unitPrice: (size?.price ?? 0) + specialExtras + borderPrice,
+       sizeLabel: size.label,
+       flavors: flavorNames,
+       specialFlavors: specialNames,
+       extras: specialExtras,
+     }, 1);
 
-     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
-     setSelectedFlavors([]);
-     setSelectedBorderId(null);
-     if (shouldOpenCart) setCartOpen(true);
-    setTimeout(() => setConfirm(null), 2200);
-  };
+     // 2. Add Beverages
+     Object.entries(selectedBeverages).forEach(([id, qty]) => {
+       if (qty > 0) {
+         const bev = beverages?.find(b => b.id === id);
+         if (bev) {
+           addLine({
+             itemId: `bev-${bev.id}`,
+             name: bev.name,
+             description: bev.brand && bev.size ? `${bev.brand} - ${bev.size}` : bev.brand || bev.size || "",
+             unitPrice: Number(bev.price),
+           }, qty);
+         }
+       }
+     });
+ 
+      setConfirm(`Adicionado ao carrinho!`);
+      setSelectedFlavors([]);
+      setSelectedBorderId(null);
+      setSelectedBeverages({});
+      if (shouldOpenCart) setCartOpen(true);
+
+      const beveragesSection = document.getElementById("bebidas-step");
+      if (beveragesSection) {
+        beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+     setTimeout(() => setConfirm(null), 2200);
+   };
 
   if (sizes.length === 0) {
     return (
@@ -340,9 +365,9 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         )}
       </div>
 
-       {/* Step 3 — Bordas Recheadas */}
-       {bordasCategory && bordasCategory.items.length > 0 && (
-         <div className="space-y-4">
+        {/* Step 3 — Bordas Recheadas */}
+        {bordasCategory && bordasCategory.items.length > 0 && (
+          <div className="space-y-4">
            <div className="flex items-baseline justify-between mb-3">
              <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
            </div>
@@ -389,11 +414,71 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                  </button>
                );
              })}
-           </div>
-         </div>
-       )}
- 
-       {/* Step 4 — Summary + add */}
+            </div>
+          </div>
+        )}
+
+        {/* Step 4 — Bebidas */}
+        {beverages && beverages.length > 0 && (
+          <div className="space-y-4" id="bebidas-step">
+            <div className="flex items-baseline justify-between mb-3">
+              <h4 className="text-lg font-bold">4. Escolha as bebidas (opcional)</h4>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {beverages.map((bev) => {
+                const qty = selectedBeverages[bev.id] || 0;
+                return (
+                  <div
+                    key={bev.id}
+                    className={`relative rounded-2xl border p-4 flex items-center justify-between transition-all duration-300 ${
+                      qty > 0
+                        ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.1)] to-transparent"
+                        : "border-white/5 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold leading-tight truncate">{bev.name}</p>
+                      <p className="text-[11px] text-[hsl(var(--site-muted-fg))]">
+                        {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
+                      </p>
+                      <p className="text-[hsl(var(--site-secondary))] font-bold mt-0.5">
+                        {formatBRL(bev.price)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 bg-black/40 p-1 rounded-xl border border-white/10">
+                      <button
+                        onClick={() => {
+                          setSelectedBeverages((cur) => ({
+                            ...cur,
+                            [bev.id]: Math.max(0, (cur[bev.id] || 0) - 1),
+                          }));
+                        }}
+                        disabled={qty === 0}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-20 transition-all active:scale-90"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-6 text-center font-bold text-sm">{qty}</span>
+                      <button
+                        onClick={() => {
+                          setSelectedBeverages((cur) => ({
+                            ...cur,
+                            [bev.id]: (cur[bev.id] || 0) + 1,
+                          }));
+                        }}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-[hsl(var(--site-primary))] text-white hover:opacity-80 transition-all active:scale-90"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Step 5 — Summary + add */}
         <div 
           id={`summary-${category.id}`}
          className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden"
@@ -426,12 +511,29 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                  )}
                </li>
              )}
-             {selectedBorder && (
-               <li>
-                 <strong className="text-amber-300">Borda recheada:</strong>{" "}
-                 {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
-               </li>
-             )}
+              {selectedBorder && (
+                <li>
+                  <strong className="text-amber-300">Borda recheada:</strong>{" "}
+                  {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
+                </li>
+              )}
+              {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
+                <li className="pt-2 mt-2 border-t border-white/5">
+                  <strong className="text-emerald-400">Bebidas:</strong>
+                  <ul className="pl-4 space-y-0.5 mt-1">
+                    {Object.entries(selectedBeverages).map(([id, qty]) => {
+                      if (qty === 0) return null;
+                      const bev = beverages?.find(b => b.id === id);
+                      if (!bev) return null;
+                      return (
+                        <li key={id} className="text-xs">
+                          {qty}x {bev.name} — {formatBRL(Number(bev.price) * qty)}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </li>
+              )}
           </ul>
         ) : (
           <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>

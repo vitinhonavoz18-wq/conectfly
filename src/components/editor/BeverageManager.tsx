@@ -90,6 +90,7 @@ export function BeverageManager({ restaurantId }: Props) {
        size: "",
        price: 0,
        sort_order: beverages.length,
+       is_active: true
      });
  
      if (error) {
