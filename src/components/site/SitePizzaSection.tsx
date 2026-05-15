@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
-import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
+ import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow } from "@/lib/site/types";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
 
- interface Props {
-   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
-   restaurant: RestaurantRow;
-   bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
- }
- 
- export function SitePizzaSection({ categories, restaurant, bordasCategory }: Props) {
+  interface Props {
+    categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
+    restaurant: RestaurantRow;
+    bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    beverages: BeverageRow[];
+  }
+  
+  export function SitePizzaSection({ categories, restaurant, bordasCategory, beverages }: Props) {
   const pizzaCats = categories.filter(
     (c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0,
   );
@@ -71,11 +72,12 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
           </button>
         </div>
 
-         <SitePizzaBuilder 
-           category={active} 
-           restaurant={restaurant} 
-           bordasCategory={bordasCategory} 
-         />
+          <SitePizzaBuilder 
+            category={active} 
+            restaurant={restaurant} 
+            bordasCategory={bordasCategory} 
+            beverages={beverages}
+          />
       </div>
     </section>
   );
