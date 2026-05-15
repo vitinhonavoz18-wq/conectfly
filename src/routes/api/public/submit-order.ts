@@ -11,6 +11,20 @@ function joinUrl(base: string, path: string) {
   return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
 }
 
+function isInvalidUrl(url: string): boolean {
+  const lower = url.toLowerCase().trim();
+  return (
+    lower.includes("localhost") ||
+    lower.includes("127.0.0.1") ||
+    lower.includes("0.0.0.0") ||
+    lower.includes("169.254.169.254") ||
+    lower.startsWith("file://") ||
+    lower.startsWith("ftp://") ||
+    (lower.startsWith("http://") && !lower.includes("localhost")) ||
+    /^https?:\/\/(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(lower)
+  );
+}
+
 function resolveOrdersUrl(restaurant: {
   flycontrol_api_url: string | null;
   flycontrol_base_url: string | null;
@@ -20,10 +34,13 @@ function resolveOrdersUrl(restaurant: {
 
   if (specific) {
     if (!specific.startsWith("http")) specific = "https://" + specific;
+    if (isInvalidUrl(specific)) return "";
     return specific;
   }
   if (!base) return "";
   if (!base.startsWith("http")) base = "https://" + base;
+  if (isInvalidUrl(base)) return "";
+  
   base = base.replace(/\/+$/, "");
   if (base.includes(".supabase.co")) return joinUrl(base, "functions/v1/create-order");
   return joinUrl(base, "api/orders");
@@ -35,6 +52,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
       OPTIONS: async () => new Response(null, { headers: corsHeaders }),
       POST: async ({ request }) => {
         try {
+          const ip = request.headers.get("x-forwarded-for") || "unknown";
           const body = (await request.json()) as {
             restaurant_id?: string;
             payload?: any;
@@ -43,6 +61,22 @@ export const Route = createFileRoute("/api/public/submit-order")({
             return new Response(
               JSON.stringify({ success: false, error: "restaurant_id e payload obrigatórios" }),
               { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+
+          // Rate limiting
+          const { data: allowed, error: limitErr } = await supabaseAdmin.rpc("check_order_rate_limit", {
+            p_restaurant_id: body.restaurant_id,
+            p_ip: ip
+          });
+
+          if (limitErr || allowed === false) {
+            return new Response(
+              JSON.stringify({ 
+                success: false, 
+                error: "Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente." 
+              }),
+              { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
             );
           }
 
