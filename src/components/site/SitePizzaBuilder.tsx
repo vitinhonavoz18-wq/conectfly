@@ -1,14 +1,15 @@
 import { useMemo, useState, useEffect } from "react";
-import { Check, Plus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
-import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow } from "@/lib/site/types";
+ import { Check, Plus, Minus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
+ import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
- interface Props {
-   category: MenuCategoryRow & { items: MenuItemRow[] };
-   restaurant?: RestaurantRow;
-   bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
- }
+  interface Props {
+    category: MenuCategoryRow & { items: MenuItemRow[] };
+    restaurant?: RestaurantRow;
+    bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    beverages?: BeverageRow[];
+  }
 
 interface FlavorCardProps {
   it: MenuItemRow;
@@ -93,7 +94,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
    const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
-   const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
+    const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
+    const [selectedBeverages, setSelectedBeverages] = useState<Record<string, number>>({});
   const [confirm, setConfirm] = useState<string | null>(null);
 
   const size = sizeIdx !== null ? sizes[sizeIdx] : null;
@@ -142,9 +144,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
    const selectedBorder = selectedBorderId 
      ? bordasCategory?.items.find(b => b.id === selectedBorderId) 
      : null;
-   const borderPrice = selectedBorder?.price ?? 0;
- 
-   const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice;
+    const borderPrice = selectedBorder?.price ?? 0;
+
+    const beveragesPrice = Object.entries(selectedBeverages).reduce((sum, [id, qty]) => {
+      const bev = beverages?.find(b => b.id === id);
+      return sum + (Number(bev?.price ?? 0) * qty);
+    }, 0);
+  
+    const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice + beveragesPrice;
   const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
 
   const toggleFlavor = (id: string) => {
@@ -161,49 +168,61 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     setSelectedFlavors((cur) => cur.slice(0, newMax));
   };
 
-   const handleAddToCart = (shouldOpenCart = false, event?: React.MouseEvent) => {
-     if (event) {
-       event.preventDefault();
-       event.stopPropagation();
-     }
-    if (!size || selectedFlavors.length === 0) return;
-    const flavorNames = selectedFlavors
-      .map((id) => flavorMap.get(id)?.name)
-      .filter(Boolean) as string[];
-    const descParts = [
-      flavorNames.length === 1
-        ? `Sabor: ${flavorNames[0]}`
-        : `Sabores: ${flavorNames.join(" + ")}`,
-    ];
-     if (specialNames.length > 0) {
-       descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
-     }
-     if (selectedBorder) {
-       descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
-     }
-    addLine({
-      itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
-      name: `Pizza ${size.label}`,
-      description: descParts.join(" • "),
-      unitPrice: finalPrice,
-      sizeLabel: size.label,
-      flavors: flavorNames,
-      specialFlavors: specialNames,
-      extras: specialExtras,
-    }, 1);
+    const handleAddToCart = (shouldOpenCart = false, event?: React.MouseEvent) => {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+     if (!size || selectedFlavors.length === 0) return;
+     const flavorNames = selectedFlavors
+       .map((id) => flavorMap.get(id)?.name)
+       .filter(Boolean) as string[];
+     const descParts = [
+       flavorNames.length === 1
+         ? `Sabor: ${flavorNames[0]}`
+         : `Sabores: ${flavorNames.join(" + ")}`,
+     ];
+      if (specialNames.length > 0) {
+        descParts.push(`Especiais (+${formatBRL(specialExtras)}): ${specialNames.join(", ")}`);
+      }
+      if (selectedBorder) {
+        descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
+      }
 
-    // Also scroll after adding, just in case they added a partially full selection
-    const beveragesSection = document.getElementById("bebidas");
-    if (beveragesSection) {
-      beveragesSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+     // 1. Add Pizza
+     addLine({
+       itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+       name: `Pizza ${size.label}`,
+       description: descParts.join(" • "),
+       unitPrice: (size?.price ?? 0) + specialExtras + borderPrice,
+       sizeLabel: size.label,
+       flavors: flavorNames,
+       specialFlavors: specialNames,
+       extras: specialExtras,
+     }, 1);
 
-     setConfirm(`Pizza ${size.label} adicionada ao carrinho!`);
-     setSelectedFlavors([]);
-     setSelectedBorderId(null);
-     if (shouldOpenCart) setCartOpen(true);
-    setTimeout(() => setConfirm(null), 2200);
-  };
+     // 2. Add Beverages
+     Object.entries(selectedBeverages).forEach(([id, qty]) => {
+       if (qty > 0) {
+         const bev = beverages?.find(b => b.id === id);
+         if (bev) {
+           addLine({
+             itemId: `bev-${bev.id}`,
+             name: bev.name,
+             description: bev.brand && bev.size ? `${bev.brand} - ${bev.size}` : bev.brand || bev.size || "",
+             unitPrice: Number(bev.price),
+           }, qty);
+         }
+       }
+     });
+ 
+      setConfirm(`Adicionado ao carrinho!`);
+      setSelectedFlavors([]);
+      setSelectedBorderId(null);
+      setSelectedBeverages({});
+      if (shouldOpenCart) setCartOpen(true);
+     setTimeout(() => setConfirm(null), 2200);
+   };
 
   if (sizes.length === 0) {
     return (
