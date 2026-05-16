@@ -92,6 +92,15 @@ export const Route = createFileRoute("/api/public/submit-order")({
             );
           }
 
+          // Validate restaurant_id is a UUID before any DB call
+          const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidRe.test(body.restaurant_id)) {
+            return new Response(
+              JSON.stringify({ success: false, error: "restaurant_id inválido" }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+
           // Rate limiting
           const { data: allowed, error: limitErr } = await supabaseAdmin.rpc("check_order_rate_limit", {
             p_restaurant_id: body.restaurant_id,
