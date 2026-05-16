@@ -194,7 +194,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
            </button>
          </div>
 
-         <div className="flex-1 overflow-y-auto p-4 space-y-3 overscroll-contain">
+         <div className="flex-1 overflow-y-auto overscroll-contain">
+           <div className="p-4 space-y-3">
           {items.length === 0 ? (
             <p className="text-center text-[hsl(var(--site-muted-fg))] py-12">
               Carrinho vazio. Adicione itens do cardápio.
@@ -253,7 +254,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               </div>
             ))
           )}
-        </div>
+          </div>
 
           <div className="p-4 space-y-6">
             <div className="space-y-4">
