@@ -85,10 +85,29 @@ export async function fetchSiteByRestaurant(
 }
 
 export async function listRestaurants(): Promise<RestaurantRow[]> {
-  const { data, error } = await supabase
+  const { data: userData } = await supabase.auth.getUser();
+  const uid = userData?.user?.id;
+  if (!uid) return [];
+
+  // Check admin role (best-effort); admins see all, owners see only their own.
+  let isAdmin = false;
+  try {
+    const { data: adminCheck } = await supabase.rpc("has_role", {
+      _user_id: uid,
+      _role: "admin",
+    });
+    isAdmin = adminCheck === true;
+  } catch {
+    isAdmin = false;
+  }
+
+  let query = supabase
     .from("restaurants")
     .select("*")
     .order("created_at", { ascending: false });
+  if (!isAdmin) query = query.eq("owner_id", uid);
+
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as unknown as RestaurantRow[];
 }
