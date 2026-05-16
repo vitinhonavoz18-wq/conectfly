@@ -12,17 +12,45 @@ function joinUrl(base: string, path: string) {
 }
 
 function isInvalidUrl(url: string): boolean {
-  const lower = url.toLowerCase().trim();
-  return (
-    lower.includes("localhost") ||
-    lower.includes("127.0.0.1") ||
-    lower.includes("0.0.0.0") ||
-    lower.includes("169.254.169.254") ||
-    lower.startsWith("file://") ||
-    lower.startsWith("ftp://") ||
-    (lower.startsWith("http://") && !lower.includes("localhost")) ||
-    /^https?:\/\/(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(lower)
-  );
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return true;
+  }
+  // Only HTTPS to public hosts is allowed.
+  if (parsed.protocol !== "https:") return true;
+  const host = parsed.hostname.toLowerCase();
+  if (!host) return true;
+
+  // Block localhost / loopback / internal hostnames
+  if (
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal") ||
+    host === "metadata.google.internal"
+  ) return true;
+
+  // Block raw IPv6 literals (covers ::1 and ULA fc00::/7, link-local fe80::/10)
+  if (host.startsWith("[")) return true;
+
+  // If hostname is an IPv4 literal, block private / loopback / link-local ranges
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = [parseInt(ipv4[1], 10), parseInt(ipv4[2], 10)];
+    if (
+      a === 10 ||
+      a === 127 ||
+      a === 0 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a >= 224 // multicast / reserved
+    ) return true;
+  }
+
+  return false;
 }
 
 function resolveOrdersUrl(restaurant: {
@@ -60,6 +88,15 @@ export const Route = createFileRoute("/api/public/submit-order")({
           if (!body?.restaurant_id || !body?.payload) {
             return new Response(
               JSON.stringify({ success: false, error: "restaurant_id e payload obrigatórios" }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+
+          // Validate restaurant_id is a UUID before any DB call
+          const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (!uuidRe.test(body.restaurant_id)) {
+            return new Response(
+              JSON.stringify({ success: false, error: "restaurant_id inválido" }),
               { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
             );
           }
