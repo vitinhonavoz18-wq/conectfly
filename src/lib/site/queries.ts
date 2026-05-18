@@ -13,11 +13,13 @@ import type {
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
    console.log(`[fetchSiteBySlug] Buscando restaurante pelo slug: "${slug}"`);
    
-   const { data: restaurant, error } = await supabase
-     .from("pizzerias_public")
-     .select("id, name, slug, tagline, description, whatsapp_number, whatsapp_display, whatsapp_enabled, address, hours, city, logo_url, hero_image_url, hero_media_type, hero_video_url, primary_color, secondary_color, published, show_item_images, flycontrol_enabled, flycontrol_api_key_masked, flycontrol_base_url, flycontrol_api_url")
-     .eq("slug", slug)
-     .maybeSingle();
+    const { data, error } = await supabase
+      .from("pizzerias_public")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+    const restaurant = data as any;
  
    if (error) {
      console.error(`[fetchSiteBySlug] Erro ao buscar restaurante "${slug}":`, error);
@@ -39,8 +41,10 @@ import type {
      return null;
    }
  
-   console.log(`[fetchSiteBySlug] Restaurante encontrado: ID=${restaurant.id}, Nome=${restaurant.name}`);
-   return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
+    if (restaurant) {
+      console.log(`[fetchSiteBySlug] Restaurante encontrado: ID=${restaurant.id}, Nome=${restaurant.name}`);
+    }
+    return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
  }
 
  export async function fetchSiteByRestaurant(
