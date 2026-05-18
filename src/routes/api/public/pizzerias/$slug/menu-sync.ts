@@ -23,7 +23,6 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
           });
         }
 
-        // Valida pizzaria e API Key
         const { data: restaurant, error: rErr } = await supabaseAdmin
           .from("restaurants")
           .select("id, name, slug, flycontrol_api_key")
@@ -44,7 +43,6 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
           });
         }
 
-        // Busca dados do cardápio em paralelo
         const [cats, items, bevs, combos] = await Promise.all([
           supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("menu_items").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
@@ -99,4 +97,3 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
     },
   },
 });
-*** End Patch
