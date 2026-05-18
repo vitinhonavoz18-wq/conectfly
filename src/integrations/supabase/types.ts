@@ -530,13 +530,7 @@ export type Database = {
           address: string | null
           city: string | null
           description: string | null
-          flycontrol_api_key_masked: string | null
-          flycontrol_api_url: string | null
-          flycontrol_base_url: string | null
-          flycontrol_enabled: boolean | null
           hero_image_url: string | null
-          hero_media_type: string | null
-          hero_video_url: string | null
           hours: string | null
           id: string | null
           logo_url: string | null
@@ -544,24 +538,16 @@ export type Database = {
           primary_color: string | null
           published: boolean | null
           secondary_color: string | null
-          show_item_images: boolean | null
           slug: string | null
           tagline: string | null
           whatsapp_display: string | null
-          whatsapp_enabled: boolean | null
           whatsapp_number: string | null
         }
         Insert: {
           address?: string | null
           city?: string | null
           description?: string | null
-          flycontrol_api_key_masked?: never
-          flycontrol_api_url?: string | null
-          flycontrol_base_url?: string | null
-          flycontrol_enabled?: boolean | null
           hero_image_url?: string | null
-          hero_media_type?: string | null
-          hero_video_url?: string | null
           hours?: string | null
           id?: string | null
           logo_url?: string | null
@@ -569,24 +555,16 @@ export type Database = {
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
-          show_item_images?: boolean | null
           slug?: string | null
           tagline?: string | null
           whatsapp_display?: string | null
-          whatsapp_enabled?: boolean | null
           whatsapp_number?: string | null
         }
         Update: {
           address?: string | null
           city?: string | null
           description?: string | null
-          flycontrol_api_key_masked?: never
-          flycontrol_api_url?: string | null
-          flycontrol_base_url?: string | null
-          flycontrol_enabled?: boolean | null
           hero_image_url?: string | null
-          hero_media_type?: string | null
-          hero_video_url?: string | null
           hours?: string | null
           id?: string | null
           logo_url?: string | null
@@ -594,11 +572,9 @@ export type Database = {
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
-          show_item_images?: boolean | null
           slug?: string | null
           tagline?: string | null
           whatsapp_display?: string | null
-          whatsapp_enabled?: boolean | null
           whatsapp_number?: string | null
         }
         Relationships: []
