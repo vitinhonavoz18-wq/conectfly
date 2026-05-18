@@ -36,21 +36,27 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
           });
         }
 
-        if (restaurant.flycontrol_api_key !== apiKey) {
+         if (restaurant.flycontrol_api_key !== apiKey) {
+           console.error(`[menu-sync] API Key inválida para ${slug}`);
           return new Response(JSON.stringify({ error: "API Key inválida" }), {
             status: 403,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
 
-        const [cats, items, bevs, combos] = await Promise.all([
+         console.log(`[menu-sync] Buscando cardápio para: ${restaurant.name} (${restaurant.id})`);
+
+         const [cats, items, bevs, combos, zones] = await Promise.all([
           supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("menu_items").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
-          supabaseAdmin.from("combos").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
+           supabaseAdmin.from("combos").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
+           supabaseAdmin.from("delivery_zones").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         ]);
 
-        return new Response(
+         console.log(`[menu-sync] Encontrados: ${cats.data?.length || 0} categorias, ${items.data?.length || 0} produtos, ${bevs.data?.length || 0} bebidas, ${zones.data?.length || 0} taxas.`);
+
+         return new Response(
           JSON.stringify({
             pizzeria: { id: restaurant.id, name: restaurant.name, slug: restaurant.slug },
             categories: (cats.data || []).map(c => ({
@@ -82,14 +88,20 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
               price: b.price,
               active: b.is_active
             })),
-            combos: (combos.data || []).map(c => ({
-              id: c.id,
-              name: c.name,
-              description: c.badge,
-              price: c.price,
-              active: true,
-              items: c.items
-            }))
+             combos: (combos.data || []).map(c => ({
+               id: c.id,
+               name: c.name,
+               description: c.badge,
+               price: c.price,
+               active: c.is_active ?? true,
+               items: c.items
+             })),
+             delivery_zones: (zones.data || []).map(z => ({
+               id: z.id,
+               neighborhood: z.neighborhood,
+               fee: z.fee,
+               sort_order: z.sort_order
+             }))
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );

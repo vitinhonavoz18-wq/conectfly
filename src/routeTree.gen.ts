@@ -16,7 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
-import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api/public/pizzerias.$slug.menu-sync'
+import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api.public.pizzerias.$slug.menu-sync'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -214,12 +214,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
