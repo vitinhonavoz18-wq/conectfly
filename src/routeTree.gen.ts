@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
@@ -36,6 +37,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiMenuSyncRoute = ApiMenuSyncRouteImport.update({
+  id: '/api/menu-sync',
+  path: '/api/menu-sync',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicSubmitOrderRoute = ApiPublicSubmitOrderRouteImport.update({
   id: '/api/public/submit-order',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/$slug': typeof SlugRoute
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/api/menu-sync': typeof ApiMenuSyncRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/login': typeof LoginRoute
+  '/api/menu-sync': typeof ApiMenuSyncRoute
   '/': typeof AuthenticatedIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   '/$slug': typeof SlugRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/api/menu-sync': typeof ApiMenuSyncRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/'
     | '/login'
+    | '/api/menu-sync'
     | '/edit/$id'
     | '/export/$id'
     | '/api/public/submit-order'
@@ -102,6 +112,7 @@ export interface FileRouteTypes {
   to:
     | '/$slug'
     | '/login'
+    | '/api/menu-sync'
     | '/'
     | '/edit/$id'
     | '/export/$id'
@@ -112,6 +123,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/_authenticated'
     | '/login'
+    | '/api/menu-sync'
     | '/_authenticated/'
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
@@ -123,6 +135,7 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiMenuSyncRoute: typeof ApiMenuSyncRoute
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
   ApiPublicPizzeriasSlugMenuSyncRoute: typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -156,6 +169,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/menu-sync': {
+      id: '/api/menu-sync'
+      path: '/api/menu-sync'
+      fullPath: '/api/menu-sync'
+      preLoaderRoute: typeof ApiMenuSyncRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/submit-order': {
       id: '/api/public/submit-order'
@@ -208,9 +228,19 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiMenuSyncRoute: ApiMenuSyncRoute,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
   ApiPublicPizzeriasSlugMenuSyncRoute: ApiPublicPizzeriasSlugMenuSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
