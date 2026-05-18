@@ -43,11 +43,12 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
           });
         }
 
-        const [cats, items, bevs, combos] = await Promise.all([
+         const [cats, items, bevs, combos, zones] = await Promise.all([
           supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("menu_items").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
-          supabaseAdmin.from("combos").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
+           supabaseAdmin.from("combos").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
+           supabaseAdmin.from("delivery_zones").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         ]);
 
         return new Response(
@@ -82,14 +83,20 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
               price: b.price,
               active: b.is_active
             })),
-            combos: (combos.data || []).map(c => ({
-              id: c.id,
-              name: c.name,
-              description: c.badge,
-              price: c.price,
-              active: true,
-              items: c.items
-            }))
+             combos: (combos.data || []).map(c => ({
+               id: c.id,
+               name: c.name,
+               description: c.badge,
+               price: c.price,
+               active: c.is_active ?? true,
+               items: c.items
+             })),
+             delivery_zones: (zones.data || []).map(z => ({
+               id: z.id,
+               neighborhood: z.neighborhood,
+               fee: z.fee,
+               sort_order: z.sort_order
+             }))
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
