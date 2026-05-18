@@ -1,4 +1,5 @@
 import type { CartLine, RestaurantRow } from "./types";
+import { formatBRL } from "./format";
 
 export interface FlycontrolOrderPayload {
   event: "order.created";
@@ -51,35 +52,46 @@ export function buildOrderPayload(args: {
    const items = args.items.map((l) => {
      const isBeverage = l.itemId.startsWith('bev-');
      const isCombo = l.itemId.startsWith('combo-');
-     const isPizza = !isBeverage && !isCombo && (!!(l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza"));
+     const isPizza = !isBeverage && !isCombo && ((l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza"));
      
      if (isPizza) {
        return {
          type: "pizza",
+         name: l.name,
          size: l.sizeLabel || "Padrão",
          flavors: l.flavors && l.flavors.length > 0 ? l.flavors : [l.name],
-         quantity: l.quantity,
-         unit_price: l.unitPrice,
-         total_price: l.unitPrice * l.quantity,
-         notes: l.description || ""
+         quantity: Number(l.quantity) || 0,
+         unit_price: Number(l.unitPrice) || 0,
+         total_price: (Number(l.unitPrice) || 0) * (Number(l.quantity) || 0),
+         notes: (l.description || "").trim()
        };
      } else if (isCombo) {
        return {
          type: "combo",
          name: l.name,
-         items: l.description.split(" • ").flatMap(d => d.split(" + ")).map(i => i.trim()),
-         quantity: l.quantity,
-         unit_price: l.unitPrice,
-         total_price: l.unitPrice * l.quantity,
+         items: (l.description || "").split(/[•\+\n]/).map(i => i.trim()).filter(Boolean),
+         quantity: Number(l.quantity) || 0,
+         unit_price: Number(l.unitPrice) || 0,
+         total_price: (Number(l.unitPrice) || 0) * (Number(l.quantity) || 0),
          notes: ""
        };
-     } else {
+     } else if (isBeverage) {
        return {
          type: "beverage",
          name: l.name,
-         quantity: l.quantity,
-         unit_price: l.unitPrice,
-         total_price: l.unitPrice * l.quantity
+         quantity: Number(l.quantity) || 0,
+         unit_price: Number(l.unitPrice) || 0,
+         total_price: (Number(l.unitPrice) || 0) * (Number(l.quantity) || 0),
+         notes: (l.description || "").trim()
+       };
+     } else {
+       return {
+         type: "other",
+         name: l.name,
+         quantity: Number(l.quantity) || 0,
+         unit_price: Number(l.unitPrice) || 0,
+         total_price: (Number(l.unitPrice) || 0) * (Number(l.quantity) || 0),
+         notes: (l.description || "").trim()
        };
      }
    });
@@ -104,11 +116,11 @@ export function buildOrderPayload(args: {
         : `ord_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       created_at: new Date().toISOString(),
       items,
-      subtotal: args.subtotal,
-      delivery_fee: args.deliveryFee ?? 0,
-      total: args.total,
+       subtotal: Number(args.subtotal) || 0,
+       delivery_fee: Number(args.deliveryFee) || 0,
+       total: Number(args.total) || 0,
       payment_method: args.paymentMethod || "PIX",
-      change_for: args.changeFor || null,
+       change_for: args.changeFor ? Number(args.changeFor) : null,
       delivery_type: args.delivery_type || "delivery",
       notes: (args.notes ?? "").trim(),
       whatsapp_message: args.whatsapp_message
@@ -278,22 +290,30 @@ if (payload.order.total <= 0) {
     throw new Error("restaurant.id ausente para envio do pedido.");
   }
 
-  console.log("🚀 Enviando pedido para FlyControl (via Proxy Seguro)");
-  console.log("🔗 Proxy:", "/api/public/submit-order");
-  console.log("🔐 ID da Pizzaria:", restaurant.id);
-  console.log("📦 Payload:", payload);
+  console.log("[FLYCONTROL] 🚀 Iniciando envio via Proxy Seguro");
+  console.log("[FLYCONTROL] 🔗 Proxy:", "/api/public/submit-order");
+  console.log("[FLYCONTROL] 🔐 ID Pizzaria:", restaurant.id);
+  console.log("[FLYCONTROL] 🍕 Slug:", payload.pizzeria.slug);
+  console.log("[FLYCONTROL] 👤 Cliente:", payload.customer.name);
+  console.log("[FLYCONTROL] 💰 Total:", formatBRL(payload.order.total));
+  console.log("[FLYCONTROL] 📦 Itens:", payload.order.items.length);
+
+  const idempotencyKey = payload.order.id;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-idempotency-key": idempotencyKey,
+  };
 
   const response = await fetch("/api/public/submit-order", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-idempotency-key": payload.order.id,
-    },
+    headers,
     body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
     signal: opts.signal,
   });
 
   const responseText = await response.text();
+  const status = response.status;
+  
   let data: any = {};
   try {
     data = JSON.parse(responseText);
@@ -301,17 +321,15 @@ if (payload.order.total <= 0) {
     data = { text: responseText };
   }
 
-  console.log("📡 Status Proxy:", response.status);
-  console.log("📡 Resposta Proxy:", responseText);
+  console.log(`[FLYCONTROL] 📡 Resposta Proxy [${status}]:`, data);
 
   if (!response.ok || data?.success === false) {
-    const errorMsg = data?.error || `Falha no envio: ${response.status}`;
-    console.error("❌ Erro ao registrar no FlyControl:", errorMsg);
+    const errorMsg = data?.error || `Falha no envio: ${status}`;
+    console.error("[FLYCONTROL] ❌ Erro ao registrar:", errorMsg, data);
     throw new Error(errorMsg);
   }
 
-  console.log("✅ Pedido registrado no FlyControl com sucesso");
-  // opts kept for backwards compat; retry handled server-side
+  console.log("[FLYCONTROL] ✅ Pedido registrado com sucesso");
   void opts;
 }
 
