@@ -51,36 +51,12 @@ export const Route = createFileRoute("/api/menu-sync")({
 
           // Buscar todos os dados do cardápio usando a mesma lógica que o site público
           const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
-            supabaseAdmin
-              .from("menu_categories")
-              .select("*")
-              .eq("restaurant_id", restaurant.id)
-              .order("sort_order"),
-            supabaseAdmin
-              .from("menu_items")
-              .select("*")
-              .eq("restaurant_id", restaurant.id)
-              .order("sort_order"),
-            supabaseAdmin
-              .from("combo_groups")
-              .select("*")
-              .eq("restaurant_id", restaurant.id)
-              .order("sort_order"),
-            supabaseAdmin
-              .from("combos")
-              .select("*")
-              .eq("restaurant_id", restaurant.id)
-              .order("sort_order"),
-            supabaseAdmin
-              .from("delivery_zones")
-              .select("*")
-              .eq("restaurant_id", restaurant.id)
-              .order("sort_order"),
-            supabaseAdmin
-              .from("pizzeria_beverages")
-              .select("*")
-              .eq("pizzeria_id", restaurant.id)
-              .order("sort_order"),
+            supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
+            supabaseAdmin.from("menu_items").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
+            supabaseAdmin.from("combo_groups").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
+            supabaseAdmin.from("combos").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
+            supabaseAdmin.from("delivery_zones").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
+            supabaseAdmin.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurant.id!).order("sort_order"),
           ]);
 
           const categories = catsRes.data || [];
