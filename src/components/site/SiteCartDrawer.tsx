@@ -64,7 +64,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
     setValidationAttempted(true);
 
-    let firstEmptyField: React.RefObject<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | null = null;
+    let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
 
     if (!name.trim()) {
@@ -87,7 +87,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       errorMessage = "Informe se precisa de troco";
     }
 
-    if (firstEmptyField) {
+    if (firstEmptyField && firstEmptyField.current) {
       setError(errorMessage);
       firstEmptyField.current?.focus();
       firstEmptyField.current?.scrollIntoView({ behavior: "smooth", block: "center" });
