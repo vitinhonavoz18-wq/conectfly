@@ -25,26 +25,30 @@ export async function fetchSiteByRestaurant(
   restaurant: RestaurantRow,
 ): Promise<SiteData> {
   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
-    supabase
-      .from("menu_categories")
-      .select("*")
-      .eq("restaurant_id", restaurant.id)
-      .order("sort_order"),
-    supabase
-      .from("menu_items")
-      .select("*")
-      .eq("restaurant_id", restaurant.id)
-      .order("sort_order"),
+     supabase
+       .from("menu_categories")
+       .select("*")
+       .eq("restaurant_id", restaurant.id)
+       .eq("is_active", true)
+       .order("sort_order"),
+     supabase
+       .from("menu_items")
+       .select("*")
+       .eq("restaurant_id", restaurant.id)
+       .eq("is_active", true)
+       .order("sort_order"),
     supabase
       .from("combo_groups")
       .select("*")
       .eq("restaurant_id", restaurant.id)
       .order("sort_order"),
-    supabase
-      .from("combos")
-      .select("*")
-      .eq("restaurant_id", restaurant.id)
-      .order("sort_order"),
+     supabase
+       .from("combos")
+       .select("*")
+       .eq("restaurant_id", restaurant.id)
+       .eq("is_active", true)
+       .order("is_highlighted", { ascending: false })
+       .order("sort_order"),
     supabase
       .from("delivery_zones")
       .select("*")
