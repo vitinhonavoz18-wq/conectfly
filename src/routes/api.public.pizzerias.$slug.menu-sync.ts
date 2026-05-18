@@ -36,12 +36,15 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
           });
         }
 
-        if (restaurant.flycontrol_api_key !== apiKey) {
+         if (restaurant.flycontrol_api_key !== apiKey) {
+           console.error(`[menu-sync] API Key inválida para ${slug}`);
           return new Response(JSON.stringify({ error: "API Key inválida" }), {
             status: 403,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+
+         console.log(`[menu-sync] Buscando cardápio para: ${restaurant.name} (${restaurant.id})`);
 
          const [cats, items, bevs, combos, zones] = await Promise.all([
           supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
@@ -51,7 +54,9 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
            supabaseAdmin.from("delivery_zones").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         ]);
 
-        return new Response(
+         console.log(`[menu-sync] Encontrados: ${cats.data?.length || 0} categorias, ${items.data?.length || 0} produtos, ${bevs.data?.length || 0} bebidas, ${zones.data?.length || 0} taxas.`);
+
+         return new Response(
           JSON.stringify({
             pizzeria: { id: restaurant.id, name: restaurant.name, slug: restaurant.slug },
             categories: (cats.data || []).map(c => ({
