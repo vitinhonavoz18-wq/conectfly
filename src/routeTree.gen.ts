@@ -16,7 +16,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
-import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api/public/pizzerias.$slug.menu-sync'
+import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api.public.pizzerias.$slug.menu-sync'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
