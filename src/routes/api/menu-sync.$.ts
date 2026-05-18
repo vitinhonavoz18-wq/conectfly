@@ -42,11 +42,11 @@
              delete data.restaurant_id;
            } else if (path === "combo") {
              table = "combos";
-           } else if (path === "border" || path === "additional") {
-             // In this system, borders and additionals are items in specific categories
-             // We need to ensure they are created in the right category
-             table = "menu_items";
-           } else {
+            } else if (path === "border" || path === "additional") {
+              table = "menu_items";
+            } else if (path === "delivery-zone") {
+              table = "delivery_zones";
+            } else {
              return new Response(JSON.stringify({ success: false, error: "Invalid path" }), {
                status: 400,
                headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -109,8 +109,9 @@
              restaurantField = "pizzeria_id";
            }
            else if (type === "combo") table = "combos";
-           else if (type === "border" || type === "additional") table = "menu_items";
-           else {
+            else if (type === "border" || type === "additional") table = "menu_items";
+            else if (type === "delivery-zone") table = "delivery_zones";
+            else {
              return new Response(JSON.stringify({ success: false, error: "Invalid type" }), {
                status: 400,
                headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -182,8 +183,9 @@
              restaurantField = "pizzeria_id";
            }
            else if (type === "combo") table = "combos";
-           else if (type === "border" || type === "additional") table = "menu_items";
-           else {
+            else if (type === "border" || type === "additional") table = "menu_items";
+            else if (type === "delivery-zone") table = "delivery_zones";
+            else {
              return new Response(JSON.stringify({ success: false, error: "Invalid type" }), {
                status: 400,
                headers: { ...corsHeaders, "Content-Type": "application/json" },
