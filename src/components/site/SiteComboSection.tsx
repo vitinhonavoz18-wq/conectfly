@@ -25,9 +25,9 @@ export function SiteComboSection({ groups }: Props) {
            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
              Seleções do Chef
            </span>
-           <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4">
-             Combos <span className="text-primary glow-bronze">Exclusivos</span>
-           </h2>
+            <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4">
+              Combos <span className="text-primary glow-bronze">Especiais</span>
+            </h2>
            <div className="h-1.5 w-24 bg-gradient-bronze mx-auto rounded-full" />
          </div>
 

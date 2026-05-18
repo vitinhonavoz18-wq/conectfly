@@ -39,30 +39,31 @@ export function buildOrderMessage(order: OrderData, version: "compact" | "comple
   const beverageItems = items.filter(i => i.itemId.startsWith('bev-'));
   const mainItems = items.filter(i => !i.itemId.startsWith('bev-'));
 
-  // Main Items
-  if (mainItems.length > 0) {
-    sections.push(`${SEPARATOR}\n🛒 ITENS DO PEDIDO\n${SEPARATOR}`);
-    const itemsText = mainItems.map(item => {
-      const sizeLabel = item.sizeLabel ? ` (${item.sizeLabel})` : "";
-      let line = `${item.quantity}x ${item.name}${sizeLabel}\n💰 ${formatBRL(item.unitPrice * item.quantity)}`;
-      
-      if (item.flavors && item.flavors.length > 0) {
-        const flavorTitle = item.flavors.length > 1 ? "🍕 Meio a Meio:" : "🍕 Sabor:";
-        line += `\n${flavorTitle}\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
-      }
-      
-      if (item.description) {
-        if (item.description.includes(",") || item.description.includes("\n")) {
-          const extras = item.description.split(/[,\n]/).map(e => e.trim()).filter(Boolean);
-          line += `\n✨ Opções:\n${extras.map(e => `* ${e}`).join("\n")}`;
-        } else {
-          line += `\n📝 Obs: ${item.description}`;
-        }
-      }
-      return line;
-    }).join("\n\n");
-    sections.push(itemsText);
-  }
+   // Main Items (Pizzas, Combos, etc)
+   if (mainItems.length > 0) {
+     sections.push(`${SEPARATOR}\n🛒 ITENS DO PEDIDO\n${SEPARATOR}`);
+     const itemsText = mainItems.map(item => {
+       const isCombo = item.itemId.startsWith('combo-') || !item.flavors;
+       const sizeLabel = item.sizeLabel ? ` (${item.sizeLabel})` : "";
+       let line = `${item.quantity}x ${item.name}${sizeLabel}\n💰 ${formatBRL(item.unitPrice * item.quantity)}`;
+       
+       if (item.flavors && item.flavors.length > 0) {
+         const flavorTitle = item.flavors.length > 1 ? "🍕 Meio a Meio:" : "🍕 Sabor:";
+         line += `\n${flavorTitle}\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
+       }
+       
+       if (item.description) {
+         if (isCombo || item.description.includes(",") || item.description.includes("\n")) {
+           const extras = item.description.split(/[•,\n\+]/).map(e => e.trim()).filter(Boolean);
+           line += `\n${isCombo ? "📦 Composição:" : "✨ Opções:"}\n${extras.map(e => `* ${e}`).join("\n")}`;
+         } else {
+           line += `\n📝 Obs: ${item.description}`;
+         }
+       }
+       return line;
+     }).join("\n\n");
+     sections.push(itemsText);
+   }
 
   // Beverages
   if (beverageItems.length > 0) {

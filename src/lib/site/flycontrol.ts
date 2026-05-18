@@ -48,28 +48,41 @@ export function buildOrderPayload(args: {
   whatsapp_message: string;
   delivery_type?: "delivery" | "retirada";
 }): FlycontrolOrderPayload {
-  const items = args.items.map((l) => {
-    const isPizza = !!(l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza");
-    if (isPizza) {
-      return {
-        type: "pizza",
-        size: l.sizeLabel || "Padrão",
-        flavors: l.flavors && l.flavors.length > 0 ? l.flavors : [l.name],
-        quantity: l.quantity,
-        unit_price: l.unitPrice,
-        total_price: l.unitPrice * l.quantity,
-        notes: l.description || ""
-      };
-    } else {
-      return {
-        type: "beverage",
-        name: l.name,
-        quantity: l.quantity,
-        unit_price: l.unitPrice,
-        total_price: l.unitPrice * l.quantity
-      };
-    }
-  });
+   const items = args.items.map((l) => {
+     const isBeverage = l.itemId.startsWith('bev-');
+     const isCombo = l.itemId.startsWith('combo-');
+     const isPizza = !isBeverage && !isCombo && (!!(l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza"));
+     
+     if (isPizza) {
+       return {
+         type: "pizza",
+         size: l.sizeLabel || "Padrão",
+         flavors: l.flavors && l.flavors.length > 0 ? l.flavors : [l.name],
+         quantity: l.quantity,
+         unit_price: l.unitPrice,
+         total_price: l.unitPrice * l.quantity,
+         notes: l.description || ""
+       };
+     } else if (isCombo) {
+       return {
+         type: "combo",
+         name: l.name,
+         items: l.description.split(" • ").flatMap(d => d.split(" + ")).map(i => i.trim()),
+         quantity: l.quantity,
+         unit_price: l.unitPrice,
+         total_price: l.unitPrice * l.quantity,
+         notes: ""
+       };
+     } else {
+       return {
+         type: "beverage",
+         name: l.name,
+         quantity: l.quantity,
+         unit_price: l.unitPrice,
+         total_price: l.unitPrice * l.quantity
+       };
+     }
+   });
 
   return {
     event: "order.created",

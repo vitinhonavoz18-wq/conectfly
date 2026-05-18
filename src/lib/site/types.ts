@@ -8,12 +8,13 @@ export interface MenuItemRow {
   restaurant_id: string;
   name: string;
   description: string | null;
-  price: number;
-  sizes: Size[] | null;
-  sort_order: number;
-  is_special: boolean;
-  special_extra: number;
-  image_url?: string | null;
+   price: number;
+   sizes: Size[] | null;
+   sort_order: number;
+   is_special: boolean;
+   special_extra: number;
+   image_url?: string | null;
+   is_active?: boolean;
 }
 
 export interface MenuCategoryRow {
@@ -22,9 +23,10 @@ export interface MenuCategoryRow {
   name: string;
   icon: string | null;
   image_url: string | null;
-  sort_order: number;
-  is_pizza: boolean;
-  pizza_sizes: PizzaSize[] | null;
+   sort_order: number;
+   is_pizza: boolean;
+   pizza_sizes: PizzaSize[] | null;
+   is_active?: boolean;
 }
 
 export interface ComboRow {
@@ -33,9 +35,11 @@ export interface ComboRow {
   restaurant_id: string;
   name: string;
   items: string[];
-  price: number;
-  badge: string | null;
-  sort_order: number;
+   price: number;
+   badge: string | null;
+   sort_order: number;
+   is_active?: boolean;
+   is_highlighted?: boolean;
 }
 
 export interface ComboGroupRow {
