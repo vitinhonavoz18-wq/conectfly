@@ -59,6 +59,8 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
+          is_active: boolean | null
+          is_highlighted: boolean | null
           items: string[]
           name: string
           price: number
@@ -70,6 +72,8 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
+          is_active?: boolean | null
+          is_highlighted?: boolean | null
           items?: string[]
           name: string
           price?: number
@@ -81,6 +85,8 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
+          is_active?: boolean | null
+          is_highlighted?: boolean | null
           items?: string[]
           name?: string
           price?: number
@@ -195,6 +201,7 @@ export type Database = {
           icon: string | null
           id: string
           image_url: string | null
+          is_active: boolean | null
           is_pizza: boolean
           name: string
           pizza_sizes: Json | null
@@ -206,6 +213,7 @@ export type Database = {
           icon?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           is_pizza?: boolean
           name: string
           pizza_sizes?: Json | null
@@ -217,6 +225,7 @@ export type Database = {
           icon?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           is_pizza?: boolean
           name?: string
           pizza_sizes?: Json | null
@@ -247,6 +256,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          is_active: boolean | null
           is_special: boolean
           name: string
           price: number
@@ -261,6 +271,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           is_special?: boolean
           name: string
           price?: number
@@ -275,6 +286,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          is_active?: boolean | null
           is_special?: boolean
           name?: string
           price?: number
