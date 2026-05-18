@@ -10,20 +10,48 @@ import type {
   BeverageRow,
 } from "./types";
 
-export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
-  const { data: restaurant, error } = await supabase
-    .from("pizzerias_public")
-    .select("id, name, slug, tagline, description, whatsapp_number, whatsapp_display, whatsapp_enabled, address, hours, city, logo_url, hero_image_url, hero_media_type, hero_video_url, primary_color, secondary_color, published, show_item_images, flycontrol_enabled, flycontrol_api_key_masked, flycontrol_base_url, flycontrol_api_url")
-    .eq("slug", slug)
-    .maybeSingle();
-  if (error) throw error;
-  if (!restaurant) return null;
-  return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
-}
+ export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
+   console.log(`[fetchSiteBySlug] Buscando restaurante pelo slug: "${slug}"`);
+   
+    const { data, error } = await supabase
+      .from("pizzerias_public")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
 
-export async function fetchSiteByRestaurant(
-  restaurant: RestaurantRow,
-): Promise<SiteData> {
+    const restaurant = data as any;
+ 
+   if (error) {
+     console.error(`[fetchSiteBySlug] Erro ao buscar restaurante "${slug}":`, error);
+     throw error;
+   }
+ 
+   if (!restaurant) {
+     console.warn(`[fetchSiteBySlug] Restaurante não encontrado no banco para o slug: "${slug}"`);
+     // Verificar se o restaurante existe na tabela principal mas não está publicado
+     const { count } = await supabase
+       .from("restaurants")
+       .select("*", { count: 'exact', head: true })
+       .eq("slug", slug);
+     
+     if (count && count > 0) {
+       console.warn(`[fetchSiteBySlug] O restaurante "${slug}" existe mas possivelmente não está publicado ou há restrição de RLS.`);
+     }
+     
+     return null;
+   }
+ 
+    if (restaurant) {
+      console.log(`[fetchSiteBySlug] Restaurante encontrado: ID=${restaurant.id}, Nome=${restaurant.name}`);
+    }
+    return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
+ }
+
+ export async function fetchSiteByRestaurant(
+   restaurant: RestaurantRow,
+ ): Promise<SiteData> {
+   console.log(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
+   
   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
      supabase
        .from("menu_categories")
@@ -61,10 +89,24 @@ export async function fetchSiteByRestaurant(
       .eq("is_active", true)
       .order("sort_order"),
   ]);
-  if (catsRes.error) throw catsRes.error;
-  if (itemsRes.error) throw itemsRes.error;
-  if (groupsRes.error) throw groupsRes.error;
-  if (combosRes.error) throw combosRes.error;
+   if (catsRes.error) {
+     console.error("[fetchSiteByRestaurant] Erro ao carregar categorias:", catsRes.error);
+     throw catsRes.error;
+   }
+   if (itemsRes.error) {
+     console.error("[fetchSiteByRestaurant] Erro ao carregar itens:", itemsRes.error);
+     throw itemsRes.error;
+   }
+   if (groupsRes.error) {
+     console.error("[fetchSiteByRestaurant] Erro ao carregar grupos de combo:", groupsRes.error);
+     throw groupsRes.error;
+   }
+   if (combosRes.error) {
+     console.error("[fetchSiteByRestaurant] Erro ao carregar combos:", combosRes.error);
+     throw combosRes.error;
+   }
+ 
+   console.log(`[fetchSiteByRestaurant] Sucesso ao carregar dados: ${catsRes.data?.length || 0} categorias, ${itemsRes.data?.length || 0} itens.`);
 
   const cats = (catsRes.data ?? []) as unknown as MenuCategoryRow[];
   const items = (itemsRes.data ?? []) as unknown as MenuItemRow[];
