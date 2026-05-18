@@ -289,23 +289,41 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           )}
           </div>
 
-          <div className="p-4 space-y-6">
+          <div className="p-4 space-y-6" ref={fieldsContainerRef}>
+            {validationAttempted && error && (
+              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-sm font-black text-primary text-center">
+                  Quase lá! Preencha seus dados para finalizar o pedido. 🍕
+                </p>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b border-white/5 pb-2">Seus Dados</h3>
                 <div className="space-y-3">
                   <input
+                    ref={nameRef}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo"
-                    className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 transition-all font-bold"
+                    className={`w-full px-4 py-3 rounded-2xl bg-white/5 border transition-all font-bold focus:outline-none ${
+                      validationAttempted && !name.trim() 
+                        ? "border-red-500/50 ring-1 ring-red-500/20" 
+                        : "border-white/10 focus:border-primary/50"
+                    }`}
                   />
                   <input
+                    ref={phoneRef}
                     value={phone}
                     onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
                     placeholder="(00) 00000-0000"
                     inputMode="numeric"
-                    className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 transition-all font-bold"
+                    className={`w-full px-4 py-3 rounded-2xl bg-white/5 border transition-all font-bold focus:outline-none ${
+                      validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10)
+                        ? "border-red-500/50 ring-1 ring-red-500/20" 
+                        : "border-white/10 focus:border-primary/50"
+                    }`}
                   />
                 </div>
               </div>
@@ -317,9 +335,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     <div className="relative group">
                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
                       <select
+                        ref={zoneRef}
                         value={zoneId}
                         onChange={(e) => setZoneId(e.target.value)}
-                        className="w-full pl-12 pr-4 py-3 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 transition-all font-black text-xs uppercase tracking-widest appearance-none"
+                        className={`w-full pl-12 pr-4 py-3 rounded-2xl bg-white/5 border transition-all font-black text-xs uppercase tracking-widest appearance-none focus:outline-none ${
+                          validationAttempted && !selectedZone
+                            ? "border-red-500/50 ring-1 ring-red-500/20" 
+                            : "border-white/10 focus:border-primary/50"
+                        }`}
                       >
                         <option value="" className="bg-[hsl(var(--site-bg))] text-white">Local de Entrega *</option>
                         {deliveryZones.map((z) => (
@@ -333,11 +356,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
                     <textarea
+                      ref={addressRef}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Endereço completo (Rua, nº, complemento)"
                       rows={2}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] resize-none"
+                      className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border transition-all resize-none focus:outline-none ${
+                        validationAttempted && !address.trim()
+                          ? "border-red-500/50 ring-1 ring-red-500/20" 
+                          : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))]"
+                      }`}
                     />
                   </div>
                 </div>
@@ -350,9 +378,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     <div className="relative">
                       <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
                       <select
+                        ref={paymentRef}
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] appearance-none"
+                        className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border transition-all appearance-none focus:outline-none ${
+                          validationAttempted && !paymentMethod
+                            ? "border-red-500/50 ring-1 ring-red-500/20" 
+                            : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))]"
+                        }`}
                       >
                         <option value="PIX">PIX</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -365,11 +398,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                       <div className="relative">
                         <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
                         <input
+                          ref={changeRef}
                           value={changeFor}
                           onChange={(e) => setChangeFor(e.target.value)}
                           placeholder="Troco para quanto?"
                           inputMode="numeric"
-                          className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))]"
+                          className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border transition-all focus:outline-none ${
+                            validationAttempted && !changeFor.trim()
+                              ? "border-red-500/50 ring-1 ring-red-500/20" 
+                              : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))]"
+                          }`}
                         />
                       </div>
                     )}
