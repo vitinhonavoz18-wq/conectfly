@@ -15,6 +15,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
+import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
 import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api.public.pizzerias.$slug.menu-sync'
@@ -48,6 +49,11 @@ const ApiPublicSubmitOrderRoute = ApiPublicSubmitOrderRouteImport.update({
   path: '/api/public/submit-order',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMenuSyncSplatRoute = ApiMenuSyncSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => ApiMenuSyncRoute,
+} as any)
 const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
   id: '/export/$id',
   path: '/export/$id',
@@ -69,19 +75,21 @@ export interface FileRoutesByFullPath {
   '/$slug': typeof SlugRoute
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
-  '/api/menu-sync': typeof ApiMenuSyncRoute
+  '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/pizzerias/$slug/menu-sync': typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
 export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/login': typeof LoginRoute
-  '/api/menu-sync': typeof ApiMenuSyncRoute
+  '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/pizzerias/$slug/menu-sync': typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -90,10 +98,11 @@ export interface FileRoutesById {
   '/$slug': typeof SlugRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
-  '/api/menu-sync': typeof ApiMenuSyncRoute
+  '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/pizzerias/$slug/menu-sync': typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/api/menu-sync'
     | '/edit/$id'
     | '/export/$id'
+    | '/api/menu-sync/$'
     | '/api/public/submit-order'
     | '/api/public/pizzerias/$slug/menu-sync'
   fileRoutesByTo: FileRoutesByTo
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/'
     | '/edit/$id'
     | '/export/$id'
+    | '/api/menu-sync/$'
     | '/api/public/submit-order'
     | '/api/public/pizzerias/$slug/menu-sync'
   id:
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
+    | '/api/menu-sync/$'
     | '/api/public/submit-order'
     | '/api/public/pizzerias/$slug/menu-sync'
   fileRoutesById: FileRoutesById
@@ -135,7 +147,7 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
-  ApiMenuSyncRoute: typeof ApiMenuSyncRoute
+  ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
   ApiPublicPizzeriasSlugMenuSyncRoute: typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -184,6 +196,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSubmitOrderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/menu-sync/$': {
+      id: '/api/menu-sync/$'
+      path: '/$'
+      fullPath: '/api/menu-sync/$'
+      preLoaderRoute: typeof ApiMenuSyncSplatRouteImport
+      parentRoute: typeof ApiMenuSyncRoute
+    }
     '/_authenticated/export/$id': {
       id: '/_authenticated/export/$id'
       path: '/export/$id'
@@ -224,23 +243,26 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface ApiMenuSyncRouteChildren {
+  ApiMenuSyncSplatRoute: typeof ApiMenuSyncSplatRoute
+}
+
+const ApiMenuSyncRouteChildren: ApiMenuSyncRouteChildren = {
+  ApiMenuSyncSplatRoute: ApiMenuSyncSplatRoute,
+}
+
+const ApiMenuSyncRouteWithChildren = ApiMenuSyncRoute._addFileChildren(
+  ApiMenuSyncRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
-  ApiMenuSyncRoute: ApiMenuSyncRoute,
+  ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
   ApiPublicPizzeriasSlugMenuSyncRoute: ApiPublicPizzeriasSlugMenuSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
