@@ -124,6 +124,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
             .maybeSingle();
 
           if (error || !r) {
+            console.error(`[API/SUBMIT-ORDER] Erro: Pizzaria ${body.restaurant_id} não encontrada no banco.`);
             return new Response(
               JSON.stringify({ success: false, error: "Pizzaria não encontrada" }),
               { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -140,13 +141,24 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const url = resolveOrdersUrl(r);
           const key = (r.flycontrol_api_key ?? "").trim();
           if (!url || !key) {
+            console.error(`[API/SUBMIT-ORDER] Erro: Integração incompleta para ${body.restaurant_id}. URL: ${!!url}, Key: ${!!key}`);
             return new Response(
               JSON.stringify({ success: false, error: "Integração FlyControl incompleta" }),
               { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
             );
           }
 
+          // Fallback: Add API Key to payload body as well
+          if (body.payload) {
+            body.payload.api_key = key;
+          }
+
            const idempotencyKey = request.headers.get("x-idempotency-key") || body.payload?.order?.id || "";
+
+          console.log(`[API/SUBMIT-ORDER] 📤 Encaminhando para FlyControl: ${url}`);
+          console.log(`[API/SUBMIT-ORDER] 🍕 Slug: ${body.payload?.pizzeria?.slug}`);
+          console.log(`[API/SUBMIT-ORDER] 🆔 Idempotency: ${idempotencyKey}`);
+
            const maxRetries = 3;
            let lastErr = "";
            let lastStatus = 0;
@@ -160,11 +172,14 @@ export const Route = createFileRoute("/api/public/submit-order")({
                  headers: {
                    "Content-Type": "application/json",
                    "x-api-key": key,
+                    "Authorization": `Bearer ${key}`,
                    "x-idempotency-key": idempotencyKey,
                   },
                    body: JSON.stringify(body.payload),
                });
                const txt = await res.text().catch(() => "");
+                console.log(`[API/SUBMIT-ORDER] 📥 Resposta de ${url} [Tentativa ${attempt+1}/${maxRetries+1}]: Status ${res.status}`);
+
                try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
                lastStatus = res.status;
  
