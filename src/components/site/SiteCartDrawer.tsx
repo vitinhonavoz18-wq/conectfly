@@ -1,4 +1,4 @@
- import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
@@ -27,6 +27,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [zoneId, setZoneId] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [validationAttempted, setValidationAttempted] = useState(false);
+
+  const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const addressRef = useRef<HTMLTextAreaElement>(null);
+  const zoneRef = useRef<HTMLSelectElement>(null);
+  const paymentRef = useRef<HTMLSelectElement>(null);
+  const changeRef = useRef<HTMLInputElement>(null);
+  const fieldsContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
   const deliveryFee = Number(selectedZone?.fee ?? 0);
@@ -53,14 +62,38 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setError("Seu carrinho está vazio");
       return;
     }
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      setError("Preencha nome, telefone e endereço");
+    setValidationAttempted(true);
+
+    let firstEmptyField: React.RefObject<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement> | null = null;
+    let errorMessage = "";
+
+    if (!name.trim()) {
+      firstEmptyField = nameRef;
+      errorMessage = "Por favor, preencha seu nome";
+    } else if (!phone.trim() || phone.replace(/\D/g, "").length < 10) {
+      firstEmptyField = phoneRef;
+      errorMessage = "Por favor, preencha um telefone válido";
+    } else if (hasZones && !selectedZone) {
+      firstEmptyField = zoneRef;
+      errorMessage = "Selecione o bairro para entrega";
+    } else if (!address.trim()) {
+      firstEmptyField = addressRef;
+      errorMessage = "Informe o seu endereço completo";
+    } else if (!paymentMethod) {
+      firstEmptyField = paymentRef;
+      errorMessage = "Selecione uma forma de pagamento";
+    } else if (paymentMethod === "Dinheiro" && !changeFor.trim()) {
+      firstEmptyField = changeRef;
+      errorMessage = "Informe se precisa de troco";
+    }
+
+    if (firstEmptyField) {
+      setError(errorMessage);
+      firstEmptyField.current?.focus();
+      firstEmptyField.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    if (hasZones && !selectedZone) {
-      setError("Selecione o bairro para calcular a taxa de entrega");
-      return;
-    }
+
     if (whatsappOn && !whatsappNumber && !flycontrolOn) {
       setError("Loja sem WhatsApp configurado");
       return;
