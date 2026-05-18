@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
  import { Check, Plus, Minus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
  import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
@@ -97,12 +97,59 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
     const [selectedBeverages, setSelectedBeverages] = useState<Record<string, number>>({});
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [scrollMessage, setScrollMessage] = useState<string | null>(null);
+  const [lastCompletedCount, setLastCompletedCount] = useState<number>(0);
+
+  const bordasRef = useRef<HTMLDivElement>(null);
+  const beveragesRef = useRef<HTMLDivElement>(null);
+  const summaryRef = useRef<HTMLDivElement>(null);
 
   const size = sizeIdx !== null ? sizes[sizeIdx] : null;
   const maxFlavors = size?.max_flavors ?? 0;
   const remaining = Math.max(0, maxFlavors - selectedFlavors.length);
   const canAdd = !!size && selectedFlavors.length > 0;
   const isSelectionComplete = !!size && selectedFlavors.length === maxFlavors && maxFlavors > 0;
+
+  useEffect(() => {
+    if (isSelectionComplete && selectedFlavors.length !== lastCompletedCount) {
+      setLastCompletedCount(selectedFlavors.length);
+      
+      // Determine which section to scroll to
+      let targetRef = null;
+      let message = "";
+
+      if (bordasCategory && bordasCategory.items.length > 0) {
+        targetRef = bordasRef;
+        message = "Agora escolha sua borda recheada 🍕";
+      } else if (beverages && beverages.length > 0) {
+        targetRef = beveragesRef;
+        message = "Que tal uma bebida para acompanhar? 🥤";
+      } else {
+        targetRef = summaryRef;
+        message = "Tudo pronto! Revise seu pedido abaixo. ✨";
+      }
+
+      if (targetRef?.current) {
+        setScrollMessage(message);
+        const offset = 100; // Safe offset for fixed headers
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = targetRef.current.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth"
+        });
+
+        // Clear message after some time
+        setTimeout(() => setScrollMessage(null), 4000);
+      }
+    } else if (selectedFlavors.length < maxFlavors) {
+      // Reset lastCompletedCount if flavors are removed
+      setLastCompletedCount(0);
+    }
+  }, [isSelectionComplete, selectedFlavors.length, maxFlavors, bordasCategory, beverages, lastCompletedCount]);
 
 
   const { flavorMap, classicFlavors, specialFlavors } = useMemo(() => {
@@ -351,10 +398,15 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
         {/* Step 3 — Bordas Recheadas */}
         {bordasCategory && bordasCategory.items.length > 0 && (
-          <div className="space-y-4">
-           <div className="flex items-baseline justify-between mb-3">
-             <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
-           </div>
+          <div className="space-y-4" ref={bordasRef}>
+            <div className="flex items-baseline justify-between mb-3">
+              <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
+              {scrollMessage && scrollMessage.includes("borda") && (
+                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                  {scrollMessage}
+                </span>
+              )}
+            </div>
            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
              <button
                onClick={() => setSelectedBorderId(null)}
@@ -404,9 +456,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
         {/* Step 4 — Bebidas */}
         {beverages && beverages.length > 0 && (
-          <div className="space-y-4" id="bebidas-step">
+          <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
             <div className="flex items-baseline justify-between mb-3">
               <h4 className="text-lg font-bold">4. Escolha as bebidas (opcional)</h4>
+              {scrollMessage && scrollMessage.includes("bebida") && (
+                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                  {scrollMessage}
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {beverages.map((bev) => {
@@ -465,8 +522,16 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         {/* Step 5 — Summary + add */}
         <div 
           id={`summary-${category.id}`}
+          ref={summaryRef}
          className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden"
        >
+         {scrollMessage && scrollMessage.includes("pronto") && (
+           <div className="absolute top-4 right-8 z-10">
+             <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-pulse">
+               {scrollMessage}
+             </span>
+           </div>
+         )}
          <div className="absolute top-0 right-0 p-8 opacity-5">
            <Sparkles className="h-24 w-24 text-primary" />
          </div>
