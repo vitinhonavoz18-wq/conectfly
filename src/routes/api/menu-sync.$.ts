@@ -13,20 +13,20 @@
      handlers: {
        OPTIONS: async () => new Response(null, { headers: corsHeaders }),
        
-       POST: async ({ request, params }) => {
-         const auth = await validateApiKey(request);
-         if (auth.error) {
-           return new Response(JSON.stringify({ success: false, error: auth.error }), {
-             status: auth.status,
-             headers: { ...corsHeaders, "Content-Type": "application/json" },
-           });
-         }
- 
-         const { restaurant } = auth;
-         const path = params._splat; // e.g. "product" or "beverage"
-         const body = await request.json();
- 
-         console.log(`[menu-sync] 🆕 POST request for ${path} (restaurant: ${restaurant.slug})`);
+        POST: async ({ request, params }: { request: Request; params: any }) => {
+          const auth = await validateApiKey(request);
+          if (auth.error || !auth.restaurant) {
+            return new Response(JSON.stringify({ success: false, error: auth.error || "Unauthorized" }), {
+              status: auth.status || 401,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          const restaurant = auth.restaurant;
+          const path = params._splat || ""; // e.g. "product" or "beverage"
+          const body = await request.json();
+
+          console.log(`[menu-sync] 🆕 POST request for ${path} (restaurant: ${restaurant.slug})`);
  
          try {
            let table = "";
@@ -53,8 +53,8 @@
              });
            }
  
-           const { data: result, error } = await supabaseAdmin
-             .from(table)
+          const { data: result, error } = await (supabaseAdmin
+            .from(table as any) as any)
              .insert(data)
              .select()
              .single();
@@ -73,29 +73,29 @@
          }
        },
  
-       PUT: async ({ request, params }) => {
-         const auth = await validateApiKey(request);
-         if (auth.error) {
-           return new Response(JSON.stringify({ success: false, error: auth.error }), {
-             status: auth.status,
-             headers: { ...corsHeaders, "Content-Type": "application/json" },
-           });
-         }
- 
-         const { restaurant } = auth;
-         const splat = params._splat.split("/"); // e.g. ["product", "uuid"]
-         const type = splat[0];
-         const id = splat[1];
-         const body = await request.json();
- 
-         if (!id) {
-           return new Response(JSON.stringify({ success: false, error: "ID is required" }), {
-             status: 400,
-             headers: { ...corsHeaders, "Content-Type": "application/json" },
-           });
-         }
- 
-         console.log(`[menu-sync] 📝 PUT request for ${type}/${id} (restaurant: ${restaurant.slug})`);
+        PUT: async ({ request, params }: { request: Request; params: any }) => {
+          const auth = await validateApiKey(request);
+          if (auth.error || !auth.restaurant) {
+            return new Response(JSON.stringify({ success: false, error: auth.error || "Unauthorized" }), {
+              status: auth.status || 401,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          const restaurant = auth.restaurant;
+          const splat = (params._splat || "").split("/"); // e.g. ["product", "uuid"]
+          const type = splat[0];
+          const id = splat[1];
+          const body = await request.json();
+
+          if (!id) {
+            return new Response(JSON.stringify({ success: false, error: "ID is required" }), {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          console.log(`[menu-sync] 📝 PUT request for ${type}/${id} (restaurant: ${restaurant.slug})`);
  
          try {
            let table = "";
@@ -117,8 +117,8 @@
              });
            }
  
-           const { data: result, error } = await supabaseAdmin
-             .from(table)
+          const { data: result, error } = await (supabaseAdmin
+            .from(table as any) as any)
              .update(body)
              .eq(idField, id)
              .eq(restaurantField, restaurant.id)
@@ -145,30 +145,30 @@
          }
        },
  
-       PATCH: async ({ request, params }) => {
-         const auth = await validateApiKey(request);
-         if (auth.error) {
-           return new Response(JSON.stringify({ success: false, error: auth.error }), {
-             status: auth.status,
-             headers: { ...corsHeaders, "Content-Type": "application/json" },
-           });
-         }
- 
-         const { restaurant } = auth;
-         const splat = params._splat.split("/"); // e.g. ["product", "uuid", "status"]
-         const type = splat[0];
-         const id = splat[1];
-         const action = splat[2];
-         const body = await request.json();
- 
-         if (!id) {
-           return new Response(JSON.stringify({ success: false, error: "ID is required" }), {
-             status: 400,
-             headers: { ...corsHeaders, "Content-Type": "application/json" },
-           });
-         }
- 
-         console.log(`[menu-sync] ⚡ PATCH request for ${type}/${id}/${action || ""} (restaurant: ${restaurant.slug})`);
+        PATCH: async ({ request, params }: { request: Request; params: any }) => {
+          const auth = await validateApiKey(request);
+          if (auth.error || !auth.restaurant) {
+            return new Response(JSON.stringify({ success: false, error: auth.error || "Unauthorized" }), {
+              status: auth.status || 401,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          const restaurant = auth.restaurant;
+          const splat = (params._splat || "").split("/"); // e.g. ["product", "uuid", "status"]
+          const type = splat[0];
+          const id = splat[1];
+          const action = splat[2];
+          const body = await request.json();
+
+          if (!id) {
+            return new Response(JSON.stringify({ success: false, error: "ID is required" }), {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+
+          console.log(`[menu-sync] ⚡ PATCH request for ${type}/${id}/${action || ""} (restaurant: ${restaurant.slug})`);
  
          try {
            let table = "";
@@ -196,8 +196,8 @@
              updateData = { is_active: body.active ?? body.is_active };
            }
  
-           const { data: result, error } = await supabaseAdmin
-             .from(table)
+          const { data: result, error } = await (supabaseAdmin
+            .from(table as any) as any)
              .update(updateData)
              .eq("id", id)
              .eq(restaurantField, restaurant.id)
