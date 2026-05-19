@@ -6,8 +6,9 @@ import type {
   MenuCategoryRow,
   MenuItemRow,
   RestaurantRow,
-  SiteData,
-  BeverageRow,
+   SiteData,
+   BeverageRow,
+   PizzaSize,
 } from "./types";
 
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
@@ -52,7 +53,7 @@ import type {
  ): Promise<SiteData> {
    console.log(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
    
-  const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
+   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, sizesRes] = await Promise.all([
      supabase
        .from("menu_categories")
        .select("*")
@@ -87,8 +88,14 @@ import type {
       .select("*")
       .eq("pizzeria_id", restaurant.id)
       .eq("is_active", true)
-      .order("sort_order"),
-  ]);
+       .order("sort_order"),
+     supabase
+       .from("pizzeria_pizza_sizes")
+       .select("*")
+       .eq("pizzeria_id", restaurant.id)
+       .eq("is_active", true)
+       .order("sort_order"),
+   ]);
    if (catsRes.error) {
      console.error("[fetchSiteByRestaurant] Erro ao carregar categorias:", catsRes.error);
      throw catsRes.error;
@@ -113,20 +120,31 @@ import type {
   const groups = (groupsRes.data ?? []) as unknown as ComboGroupRow[];
   const combos = (combosRes.data ?? []) as unknown as ComboRow[];
   const zones = (zonesRes.data ?? []) as unknown as DeliveryZoneRow[];
-  const beverages = (beveragesRes.data ?? []) as unknown as BeverageRow[];
+   const beverages = (beveragesRes.data ?? []) as unknown as BeverageRow[];
+   const pizzaSizes = (sizesRes?.data ?? []).map(s => ({
+     id: s.id,
+     label: s.name,
+     price: Number(s.price),
+     max_flavors: s.max_flavors,
+     slices: s.slices,
+     active: s.is_active,
+     sort_order: s.sort_order
+   })) as PizzaSize[];
 
   return {
     restaurant,
-    categories: cats.map((c) => ({
-      ...c,
-      items: items.filter((i) => i.category_id === c.id),
-    })),
+     categories: cats.map((c) => ({
+       ...c,
+       items: items.filter((i) => i.category_id === c.id),
+       pizza_sizes: c.is_pizza ? pizzaSizes : c.pizza_sizes
+     })),
     comboGroups: groups.map((g) => ({
       ...g,
       combos: combos.filter((cb) => cb.group_id === g.id),
     })),
-    deliveryZones: zones,
-    beverages,
+     deliveryZones: zones,
+     beverages,
+     pizzaSizes,
   };
 }
 

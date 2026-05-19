@@ -421,6 +421,60 @@ export type Database = {
           },
         ]
       }
+      pizzeria_pizza_sizes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          max_flavors: number
+          name: string
+          pizzeria_id: string
+          price: number
+          slices: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_flavors?: number
+          name: string
+          pizzeria_id: string
+          price?: number
+          slices?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_flavors?: number
+          name?: string
+          pizzeria_id?: string
+          price?: number
+          slices?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pizzeria_pizza_sizes_pizzeria_id_fkey"
+            columns: ["pizzeria_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pizzeria_pizza_sizes_pizzeria_id_fkey"
+            columns: ["pizzeria_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurants: {
         Row: {
           address: string | null

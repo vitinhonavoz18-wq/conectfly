@@ -302,6 +302,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                   {formatBRL(s.price)}
                 </p>
                 <p className="text-[11px] text-[hsl(var(--site-muted-fg))] mt-0.5">
+                  {s.slices ? `${s.slices} fatias · ` : ""}
                   até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}
                 </p>
               </button>

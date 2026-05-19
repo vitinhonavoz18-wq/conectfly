@@ -1,6 +1,14 @@
 export type Size = { label: string; price: number };
 
-export type PizzaSize = { label: string; price: number; max_flavors: number };
+ export type PizzaSize = { 
+   id?: string;
+   label: string; 
+   price: number; 
+   max_flavors: number;
+   slices?: number;
+   active?: boolean;
+   sort_order?: number;
+ };
 
 export interface MenuItemRow {
   id: string;
@@ -97,7 +105,8 @@ export interface SiteData {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   comboGroups: (ComboGroupRow & { combos: ComboRow[] })[];
   deliveryZones?: DeliveryZoneRow[];
-  beverages?: BeverageRow[];
+   beverages?: BeverageRow[];
+   pizzaSizes?: PizzaSize[];
 }
 
 export interface CartLine {
