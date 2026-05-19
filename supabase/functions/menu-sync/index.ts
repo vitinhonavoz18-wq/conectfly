@@ -4,7 +4,7 @@
  const CORS_HEADERS = {
    "Access-Control-Allow-Origin": "*",
    "Access-Control-Allow-Headers": "content-type, x-api-key, apikey, authorization",
-   "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
    "Access-Control-Allow-Credentials": "true",
  };
  
@@ -64,7 +64,7 @@
  
      const url = new URL(req.url);
      const slug = url.searchParams.get("slug");
-     const apiKey = req.headers.get("x-api-key") || req.headers.get("apikey");
+      const apiKey = req.headers.get("x-api-key") || req.headers.get("apikey") || req.headers.get("Authorization")?.replace("Bearer ", "");
      
      // Identify pizzeria
      let pizzeria;
@@ -168,12 +168,25 @@
        });
      }
  
-     const body = await req.json();
-     // The path after /menu-sync/ determines the type/id
-     const pathParts = url.pathname.split("/").filter(p => p && p !== "menu-sync");
-     const type = pathParts[0]; // category, product, etc.
-     const id = pathParts[1];
-     const action = pathParts[2]; // status
+      let body: any = {};
+      try {
+        if (method !== "GET" && method !== "OPTIONS") {
+          body = await req.json();
+        }
+      } catch (e) {
+        console.log("No body found or invalid JSON");
+      }
+
+      const pathParts = url.pathname.split("/").filter(p => p && p !== "menu-sync" && p !== "functions" && p !== "v1");
+      
+      let action = body.action;
+      let type = body.type || pathParts[0];
+      let id = body.id || pathParts[1];
+
+      if (method === "PATCH" && !action) action = "status";
+      if (method === "DELETE" && !action) action = "delete";
+      if (method === "PUT" && !action) action = "update";
+      if (method === "POST" && !action) action = "create";
  
      if (!type) {
        return new Response(JSON.stringify({ success: false, error: "Tipo de item não especificado" }), {
@@ -191,26 +204,53 @@
      else if (type === "delivery-zone") table = "delivery_zones";
      else return new Response(JSON.stringify({ success: false, error: "Tipo inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
  
-     if (method === "POST") {
-       const data = { ...mapFields(body, type), [resField]: restaurantId };
+      if (method === "POST" || action === "create") {
+        const insertData = body.data || body;
+        const data = { ...mapFields(insertData, type), [resField]: restaurantId };
        const { data: res, error } = await supabase.from(table).insert(data).select().single();
-       if (error) throw error;
-       return new Response(JSON.stringify({ success: true, data: res }), { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (error) {
+          console.error(`[menu-sync] Create Error:`, error);
+          throw error;
+        }
+        return new Response(JSON.stringify({ success: true, message: "Item criado com sucesso", item: res }), { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } });
      }
  
      if (!id) return new Response(JSON.stringify({ success: false, error: "ID obrigatório para edição" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
  
-     if (method === "PUT" || method === "PATCH") {
-       let updateData = mapFields(body, type);
-       if (method === "PATCH" && action === "status") {
-         updateData = { is_active: body.active ?? body.is_active };
+      if (method === "PUT" || method === "PATCH" || action === "update" || action === "status") {
+        let updateData;
+        if (action === "status") {
+          updateData = { is_active: body.active !== undefined ? body.active : body.is_active };
+        } else {
+          const fields = body.data || body;
+          updateData = mapFields(fields, type);
        }
-       const { data: res, error } = await supabase.from(table).update(updateData).eq("id", id).eq(resField, restaurantId).select().maybeSingle();
+        
+        const { data: res, error } = await supabase.from(table)
+          .update({ ...updateData, updated_at: new Date().toISOString() })
+          .eq("id", id)
+          .eq(resField, restaurantId)
+          .select()
+          .maybeSingle();
+          
        if (error) throw error;
        if (!res) return new Response(JSON.stringify({ success: false, error: "Item não encontrado ou sem permissão" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-       return new Response(JSON.stringify({ success: true, data: res }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ success: true, message: "Item atualizado com sucesso", item: res }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
      }
  
+      if (method === "DELETE" || action === "delete") {
+        // Soft delete
+        const { data: res, error } = await supabase.from(table)
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq("id", id)
+          .eq(resField, restaurantId)
+          .select()
+          .maybeSingle();
+          
+        if (error) throw error;
+        return new Response(JSON.stringify({ success: true, message: "Item removido (desativado) com sucesso", item: res }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
      return new Response(JSON.stringify({ success: false, error: "Método não suportado" }), { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } });
  
    } catch (error) {
