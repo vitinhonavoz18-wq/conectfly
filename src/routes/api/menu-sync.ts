@@ -1,17 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-api-key, authorization",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
+const allowedOrigins = [
+  "https://flycontrol-dash.lovable.app",
+  "https://preview--flycontrol-dash.lovable.app"
+];
+
+const getCorsHeaders = (request: Request) => {
+  const origin = request.headers.get("Origin");
+  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  return {
+    "Access-Control-Allow-Origin": isAllowed ? origin : "*",
+    "Access-Control-Allow-Headers": "content-type, x-api-key, authorization",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+  };
 };
 
 export const Route = createFileRoute("/api/menu-sync")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { headers: corsHeaders }),
+      OPTIONS: async ({ request }) => new Response(null, { headers: getCorsHeaders(request) }),
       GET: async ({ request }) => {
+        const corsHeaders = getCorsHeaders(request);
         try {
           const url = new URL(request.url);
           const slug = url.searchParams.get("slug");
@@ -28,7 +40,6 @@ export const Route = createFileRoute("/api/menu-sync")({
             });
           }
 
-          // Usar pizzerias_public para garantir que estamos pegando o que aparece no site
           const { data: restaurant, error: rErr } = await supabaseAdmin
             .from("pizzerias_public")
             .select("*")
@@ -49,7 +60,6 @@ export const Route = createFileRoute("/api/menu-sync")({
 
           console.log(`[menu-sync] ✅ Pizzaria encontrada: ${restaurant.name} (${restaurant.id})`);
 
-          // Buscar todos os dados do cardápio usando a mesma lógica que o site público
           const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
             supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
             supabaseAdmin.from("menu_items").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
@@ -65,15 +75,6 @@ export const Route = createFileRoute("/api/menu-sync")({
           const beverages = beveragesRes.data || [];
           const deliveryZones = zonesRes.data || [];
 
-          console.log(`[menu-sync] 📊 Dados encontrados: 
-            - Categorias: ${categories.length}
-            - Produtos: ${products.length}
-            - Bebidas: ${beverages.length}
-            - Combos: ${combos.length}
-            - Taxas de entrega: ${deliveryZones.length}`);
-
-          // Separar bordas e adicionais das categorias se existirem
-          // No SiteCreatorFly, as bordas são tratadas como categorias normais com flag ou nome específico
           const isBorda = (c: any) => {
             const name = c.name.toLowerCase();
             return name.includes("borda");
@@ -107,7 +108,8 @@ export const Route = createFileRoute("/api/menu-sync")({
               active: c.is_active ?? true,
               sort_order: c.sort_order,
               is_pizza: c.is_pizza,
-              pizza_sizes: c.pizza_sizes
+              pizza_sizes: c.pizza_sizes,
+              updated_at: (c as any).updated_at
             })),
             products: products.map(i => ({
               id: i.id,
@@ -120,7 +122,8 @@ export const Route = createFileRoute("/api/menu-sync")({
               sort_order: i.sort_order,
               is_special: i.is_special,
               special_extra: i.special_extra,
-              sizes: i.sizes
+              sizes: i.sizes,
+              updated_at: (i as any).updated_at
             })),
             beverages: beverages.map(b => ({
               id: b.id,
@@ -128,21 +131,24 @@ export const Route = createFileRoute("/api/menu-sync")({
               brand: b.brand,
               size: b.size,
               price: b.price,
-              active: b.is_active ?? true
+              active: b.is_active ?? true,
+              updated_at: b.updated_at
             })),
             borders: borders.map(b => ({
               id: b.id,
               pizzeria_id: restaurant.id,
               name: b.name,
               price: b.price,
-              active: b.is_active ?? true
+              active: b.is_active ?? true,
+              updated_at: (b as any).updated_at
             })),
             additionals: additionals.map(a => ({
               id: a.id,
               pizzeria_id: restaurant.id,
               name: a.name,
               price: a.price,
-              active: a.is_active ?? true
+              active: a.is_active ?? true,
+              updated_at: (a as any).updated_at
             })),
             combos: combos.map(c => ({
               id: c.id,
@@ -150,19 +156,17 @@ export const Route = createFileRoute("/api/menu-sync")({
               description: c.badge,
               price: c.price,
               active: c.is_active ?? true,
-              items: c.items
+              items: c.items,
+              updated_at: (c as any).updated_at
             })),
             delivery_zones: deliveryZones.map(z => ({
               id: z.id,
               neighborhood: z.neighborhood,
               fee: z.fee,
-              sort_order: z.sort_order
+              sort_order: z.sort_order,
+              updated_at: (z as any).updated_at
             }))
           };
-
-          if (categories.length === 0 && products.length === 0) {
-            (response as any).message = "Cardápio encontrado, mas sem itens cadastrados.";
-          }
 
           return new Response(JSON.stringify(response), {
             status: 200,
