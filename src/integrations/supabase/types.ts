@@ -66,6 +66,7 @@ export type Database = {
           price: number
           restaurant_id: string
           sort_order: number
+          updated_at: string | null
         }
         Insert: {
           badge?: string | null
@@ -79,6 +80,7 @@ export type Database = {
           price?: number
           restaurant_id: string
           sort_order?: number
+          updated_at?: string | null
         }
         Update: {
           badge?: string | null
@@ -92,6 +94,7 @@ export type Database = {
           price?: number
           restaurant_id?: string
           sort_order?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -125,6 +128,7 @@ export type Database = {
           neighborhood: string
           restaurant_id: string
           sort_order: number
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
@@ -133,6 +137,7 @@ export type Database = {
           neighborhood: string
           restaurant_id: string
           sort_order?: number
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
@@ -141,6 +146,7 @@ export type Database = {
           neighborhood?: string
           restaurant_id?: string
           sort_order?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -207,6 +213,7 @@ export type Database = {
           pizza_sizes: Json | null
           restaurant_id: string
           sort_order: number
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
@@ -219,6 +226,7 @@ export type Database = {
           pizza_sizes?: Json | null
           restaurant_id: string
           sort_order?: number
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
@@ -231,6 +239,7 @@ export type Database = {
           pizza_sizes?: Json | null
           restaurant_id?: string
           sort_order?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -264,6 +273,7 @@ export type Database = {
           sizes: Json | null
           sort_order: number
           special_extra: number
+          updated_at: string | null
         }
         Insert: {
           category_id: string
@@ -279,6 +289,7 @@ export type Database = {
           sizes?: Json | null
           sort_order?: number
           special_extra?: number
+          updated_at?: string | null
         }
         Update: {
           category_id?: string
@@ -294,6 +305,7 @@ export type Database = {
           sizes?: Json | null
           sort_order?: number
           special_extra?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
