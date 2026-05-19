@@ -129,6 +129,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
      }
    };
 
+    const copySyncUrl = () => {
+      const url = `https://watjejwgtieqfkpebkfz.supabase.co/functions/v1/menu-sync?slug=${r.slug}`;
+      navigator.clipboard.writeText(url);
+      setMsg("URL de Sincronização copiada!");
+      setTimeout(() => setMsg(""), 2000);
+    };
+
     const handleTestConnection = async () => {
       setRegMsg("");
       setTestDebug(null);
@@ -649,17 +656,39 @@ export function InfoForm({ restaurant, onChange }: Props) {
              </div>
            </div>
 
-            <Field
-              label="Endpoint de Pedidos"
-              hint="Preenchido automaticamente ao colar a URL do Painel."
-            >
-              <input
-                value={r.flycontrol_api_url ?? ""}
-                onChange={(e) => set("flycontrol_api_url", e.target.value)}
-                placeholder="https://.../api/orders"
-                className="input text-xs"
-              />
-            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Field
+                label="Endpoint de Pedidos"
+                hint="Preenchido automaticamente ao colar a URL do Painel."
+              >
+                <input
+                  value={r.flycontrol_api_url ?? ""}
+                  onChange={(e) => set("flycontrol_api_url", e.target.value)}
+                  placeholder="https://.../api/orders"
+                  className="input text-xs"
+                />
+              </Field>
+              <Field
+                label="Endpoint de Sincronização do Cardápio"
+                hint="Use esta URL no FlyControl para importar seu cardápio."
+              >
+                <div className="flex gap-2">
+                  <input
+                    readOnly
+                    value={`https://watjejwgtieqfkpebkfz.supabase.co/functions/v1/menu-sync?slug=${r.slug}`}
+                    className="input text-xs flex-1 bg-white/5"
+                  />
+                  <button
+                    type="button"
+                    onClick={copySyncUrl}
+                    className="p-2 rounded-lg bg-secondary hover:bg-muted transition"
+                    title="Copiar URL de Sincronização"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                </div>
+              </Field>
+            </div>
          </div>
         <p className="text-xs text-muted-foreground">
           ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
