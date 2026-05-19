@@ -29,25 +29,36 @@
    };
  }
  
- const mapFields = (body: any, type: string) => {
-   const data = { ...body };
-   if ('active' in data) {
-     data.is_active = data.active;
-     delete data.active;
-   }
-   if ('highlight' in data) {
-     data.is_highlighted = data.highlight;
-     delete data.highlight;
-   }
-   if (type === 'combo' && 'description' in data) {
-     data.badge = data.description;
-     delete data.description;
-   }
-   delete data.id;
-   delete data.restaurant_id;
-   delete data.pizzeria_id;
-   return data;
- };
+  const mapFields = (body: any, type: string) => {
+    const data = { ...body };
+    
+    // Normalize availability field
+    // FlyControl may send 'active' or 'available', but our DB uses 'is_active'
+    if ('active' in data || 'available' in data) {
+      data.is_active = data.active !== undefined ? data.active : data.available;
+      delete data.active;
+      delete data.available;
+    }
+    
+    if ('highlight' in data) {
+      data.is_highlighted = data.highlight;
+      delete data.highlight;
+    }
+    
+    if (type === 'combo' && 'description' in data) {
+      data.badge = data.description;
+      delete data.description;
+    }
+
+    // Clean up fields that should not be in the update/insert payload
+    delete data.id;
+    delete data.restaurant_id;
+    delete data.pizzeria_id;
+    delete data.updated_at;
+    delete data.created_at;
+    
+    return data;
+  };
  
  serve(async (req) => {
    const corsHeaders = getCorsHeaders(req);
@@ -224,11 +235,16 @@
       if (action === "update" || action === "status") {
         let updateData;
         if (action === "status") {
-          updateData = { is_active: body.active !== undefined ? body.active : body.is_active };
+          // Normalize status update
+          const activeVal = body.active !== undefined ? body.active : 
+                           (body.available !== undefined ? body.available : body.is_active);
+          updateData = { is_active: activeVal };
         } else {
           const fields = body.data || body;
           updateData = mapFields(fields, type);
         }
+        
+        console.log(`[menu-sync] Updating ${table} id=${id}. Normalized payload:`, JSON.stringify(updateData));
         
         const { data: res, error } = await supabase.from(table)
           .update({ ...updateData, updated_at: new Date().toISOString() })
