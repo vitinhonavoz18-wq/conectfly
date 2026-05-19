@@ -30,34 +30,54 @@
  }
  
   const mapFields = (body: any, type: string) => {
-    const data = { ...body };
+    const originalData = { ...body };
+    const data: any = { ...body };
     
-    // Normalize availability field
-    // FlyControl may send 'active' or 'available', but our DB uses 'is_active'
+    console.log(`[menu-sync] Normalizing payload for type=${type}. Original:`, JSON.stringify(originalData));
+
+    // 1. Basic normalization of common fields
     if ('active' in data || 'available' in data) {
       data.is_active = data.active !== undefined ? data.active : data.available;
-      delete data.active;
-      delete data.available;
     }
     
     if ('highlight' in data) {
       data.is_highlighted = data.highlight;
-      delete data.highlight;
     }
     
     if (type === 'combo' && 'description' in data) {
       data.badge = data.description;
-      delete data.description;
     }
 
-    // Clean up fields that should not be in the update/insert payload
-    delete data.id;
-    delete data.restaurant_id;
-    delete data.pizzeria_id;
-    delete data.updated_at;
-    delete data.created_at;
+    // 2. Define Whitelists (strictly based on DB schema)
+    const whitelists: Record<string, string[]> = {
+      'product': ['name', 'description', 'price', 'image_url', 'category_id', 'is_active', 'sort_order', 'is_special', 'special_extra', 'sizes'],
+      'beverage': ['name', 'brand', 'size', 'price', 'is_active', 'sort_order'],
+      'border': ['name', 'price', 'is_active', 'sort_order', 'category_id'],
+      'additional': ['name', 'price', 'is_active', 'sort_order', 'category_id'],
+      'category': ['name', 'icon', 'image_url', 'sort_order', 'is_pizza', 'pizza_sizes', 'is_active'],
+      'combo': ['name', 'items', 'price', 'badge', 'sort_order', 'is_active', 'is_highlighted'],
+      'delivery-zone': ['neighborhood', 'fee', 'sort_order']
+    };
+
+    const whitelist = whitelists[type] || [];
+    const normalizedData: any = {};
+    const removedFields: string[] = [];
+
+    // 3. Apply whitelist
+    Object.keys(data).forEach(key => {
+      if (whitelist.includes(key)) {
+        normalizedData[key] = data[key];
+      } else {
+        removedFields.push(key);
+      }
+    });
+
+    console.log(`[menu-sync] Normalized payload for ${type}:`, JSON.stringify(normalizedData));
+    if (removedFields.length > 0) {
+      console.log(`[menu-sync] Fields removed for ${type}:`, removedFields.join(', '));
+    }
     
-    return data;
+    return normalizedData;
   };
  
  serve(async (req) => {
@@ -160,18 +180,18 @@
            sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra,
            sizes: i.sizes, updated_at: i.updated_at
          })),
-         beverages: beverages.map(b => ({
-           id: b.id, name: b.name, brand: b.brand, size: b.size, price: b.price,
-           active: b.is_active ?? true, updated_at: b.updated_at
-         })),
-         borders: borders.map(b => ({
-           id: b.id, pizzeria_id: restaurantId, name: b.name, price: b.price,
-           active: b.is_active ?? true, updated_at: b.updated_at
-         })),
-         additionals: additionals.map(a => ({
-           id: a.id, pizzeria_id: restaurantId, name: a.name, price: a.price,
-           active: a.is_active ?? true, updated_at: a.updated_at
-         })),
+          beverages: beverages.map(b => ({
+            id: b.id, name: b.name, description: "", brand: b.brand, size: b.size, price: b.price,
+            active: b.is_active ?? true, updated_at: b.updated_at, type: "beverage"
+          })),
+          borders: borders.map(b => ({
+            id: b.id, pizzeria_id: restaurantId, name: b.name, description: "", price: b.price,
+            active: b.is_active ?? true, updated_at: b.updated_at, type: "border"
+          })),
+          additionals: additionals.map(a => ({
+            id: a.id, pizzeria_id: restaurantId, name: a.name, description: "", price: a.price,
+            active: a.is_active ?? true, updated_at: a.updated_at, type: "additional"
+          })),
          combos: combos.map(c => ({
            id: c.id, name: c.name, description: c.badge, price: c.price,
            active: c.is_active ?? true, items: c.items, updated_at: c.updated_at
