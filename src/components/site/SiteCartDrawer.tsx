@@ -149,21 +149,34 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
            delivery_type: hasZones ? "delivery" : "retirada",
          });
 
+          // Timeout amplo (25s) para cobrir os retries (1s+2s+4s) do proxy
           const controller = new AbortController();
-         const timeoutId = setTimeout(() => {
-           console.warn("⏱️ Timeout de 5s atingido no envio para o FlyControl. Abortando...");
-           controller.abort();
-         }, 5000);
+          const timeoutId = setTimeout(() => {
+            console.warn("⏱️ Timeout de 25s atingido no envio para o FlyControl. Abortando...");
+            controller.abort();
+          }, 25000);
+
+          console.log("📤 [CHECKOUT] INICIANDO ENVIO REAL para FlyControl", {
+            slug: restaurant.slug,
+            restaurant_id: restaurant.id,
+            items: payload.order.items.length,
+            total: payload.order.total,
+            order_id: payload.order.id,
+          });
 
           try {
             await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
             clearTimeout(timeoutId);
             painelRegistrado = true;
+            console.log("✅ [CHECKOUT] RESPOSTA FLYCONTROL: sucesso", { order_id: payload.order.id });
             toast.success("Pedido registrado no FlyControl!");
           } catch (err: any) {
             clearTimeout(timeoutId);
-            // O log de erro detalhado já é feito dentro de sendOrderToFlycontrol
-            console.warn("⚠️ Continuando para WhatsApp mesmo com erro no registro do painel");
+            console.error("❌ [CHECKOUT] ERRO ENVIO PEDIDO:", {
+              message: err?.message,
+              name: err?.name,
+              stack: err?.stack,
+            });
             toast.error("Erro no painel, mas o pedido seguirá via WhatsApp.");
           }
        } else {
