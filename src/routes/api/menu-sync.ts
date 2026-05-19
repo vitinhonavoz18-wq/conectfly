@@ -1,19 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-
-const allowedOrigins = [
-  "https://flycontrol-dash.lovable.app",
-  "https://preview--flycontrol-dash.lovable.app"
-];
+import { validateApiKey } from "@/lib/api-auth";
 
 const getCorsHeaders = (request: Request) => {
   const origin = request.headers.get("Origin");
-  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  // Allow all lovable.app subdomains and standard FlyControl domains
+  const isAllowed = origin && (
+    origin.includes("flycontrol") || 
+    origin.endsWith(".lovable.app") ||
+    origin.includes("localhost")
+  );
   
   return {
     "Access-Control-Allow-Origin": isAllowed ? origin : "*",
-    "Access-Control-Allow-Headers": "content-type, x-api-key, authorization",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type, x-api-key, apikey, authorization",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
   };
 };
@@ -24,41 +26,44 @@ export const Route = createFileRoute("/api/menu-sync")({
       OPTIONS: async ({ request }) => new Response(null, { headers: getCorsHeaders(request) }),
       GET: async ({ request }) => {
         const corsHeaders = getCorsHeaders(request);
+        const origin = request.headers.get("Origin");
+        
+        const auth = await validateApiKey(request);
+        if (auth.error || !auth.restaurant) {
+          console.warn(\`[menu-sync] 🚫 GET Unauthorized. Origin: \${origin}, Error: \${auth.error}\`);
+          return new Response(JSON.stringify({ 
+            success: false, 
+            error: auth.error || "Unauthorized",
+            details: "API Key válida é necessária para sincronização"
+          }), {
+            status: auth.status || 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
         try {
           const url = new URL(request.url);
           const slug = url.searchParams.get("slug");
 
-          console.log(`[menu-sync] 🔍 Requisição recebida para slug: "${slug}"`);
+          console.log(\`[menu-sync] 🔍 Requisição recebida. Origin: \${origin}, Slug: "\${slug}"\`);
+          
+          const restaurant = auth.restaurant;
 
-          if (!slug) {
+          // Verify slug matching if provided
+          if (slug && restaurant.slug !== slug) {
+            console.warn(\`[menu-sync] ⚠️ Slug mismatch. URL: \${slug}, Key: \${restaurant.slug}\`);
             return new Response(JSON.stringify({ 
               success: false, 
-              error: "Parâmetro 'slug' é obrigatório" 
-            }), {
-              status: 400,
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          }
-
-          const { data: restaurant, error: rErr } = await supabaseAdmin
-            .from("pizzerias_public")
-            .select("*")
-            .eq("slug", slug)
-            .maybeSingle();
-
-          if (rErr || !restaurant) {
-            console.warn(`[menu-sync] ❌ Pizzaria não encontrada para o slug: "${slug}"`);
-            return new Response(JSON.stringify({ 
-              success: false, 
-              error: "Pizzaria não encontrada",
+              error: "API Key não pertence a esta pizzaria",
               slug 
             }), {
-              status: 404,
+              status: 403,
               headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
           }
 
-          console.log(`[menu-sync] ✅ Pizzaria encontrada: ${restaurant.name} (${restaurant.id})`);
+          const currentSlug = slug || restaurant.slug;
+          console.log(\`[menu-sync] ✅ Pizzaria encontrada: \${restaurant.name} (\${restaurant.id})\`);
 
           const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
             supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id!).order("sort_order"),
@@ -74,6 +79,8 @@ export const Route = createFileRoute("/api/menu-sync")({
           const combos = combosRes.data || [];
           const beverages = beveragesRes.data || [];
           const deliveryZones = zonesRes.data || [];
+
+          console.log(\`[menu-sync] 📦 Dados carregados: \${categories.length} cat, \${products.length} prod, \${beverages.length} bev, \${combos.length} comb, \${deliveryZones.length} zones\`);
 
           const isBorda = (c: any) => {
             const name = c.name.toLowerCase();
@@ -173,7 +180,7 @@ export const Route = createFileRoute("/api/menu-sync")({
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } catch (error: any) {
-          console.error(`[menu-sync] 💥 Erro crítico no endpoint:`, error);
+          console.error(\`[menu-sync] 💥 Erro crítico no endpoint:\`, error);
           return new Response(JSON.stringify({ 
             success: false, 
             error: "Erro interno no servidor",

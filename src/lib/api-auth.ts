@@ -1,10 +1,10 @@
  import { supabaseAdmin } from "@/integrations/supabase/client.server";
  
  export async function validateApiKey(request: Request) {
-   const apiKey = request.headers.get("x-api-key");
+  const apiKey = request.headers.get("x-api-key") || request.headers.get("apikey");
    
    if (!apiKey) {
-     return { error: "x-api-key header is required", status: 401 };
+    return { error: "x-api-key or apikey header is required", status: 401 };
    }
  
    const { data: restaurant, error } = await supabaseAdmin
