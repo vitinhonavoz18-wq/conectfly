@@ -56,7 +56,8 @@
       'additional': ['name', 'price', 'is_active', 'sort_order', 'category_id'],
       'category': ['name', 'icon', 'image_url', 'sort_order', 'is_pizza', 'pizza_sizes', 'is_active'],
       'combo': ['name', 'items', 'price', 'badge', 'sort_order', 'is_active', 'is_highlighted'],
-      'delivery-zone': ['neighborhood', 'fee', 'sort_order']
+       'delivery-zone': ['neighborhood', 'fee', 'sort_order'],
+       'pizza_size': ['name', 'price', 'max_flavors', 'slices', 'is_active', 'sort_order']
     };
 
     const whitelist = whitelists[type] || [];
@@ -139,20 +140,22 @@
      if (method === "GET") {
        console.log(`[menu-sync] GET Sync for \${pizzeria.slug}`);
        
-       const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes] = await Promise.all([
+       const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, sizesRes] = await Promise.all([
          supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId).order("sort_order"),
          supabase.from("menu_items").select("*").eq("restaurant_id", restaurantId).order("sort_order"),
          supabase.from("combo_groups").select("*").eq("restaurant_id", restaurantId).order("sort_order"),
          supabase.from("combos").select("*").eq("restaurant_id", restaurantId).order("sort_order"),
          supabase.from("delivery_zones").select("*").eq("restaurant_id", restaurantId).order("sort_order"),
          supabase.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurantId).order("sort_order"),
+          supabase.from("pizzeria_pizza_sizes").select("*").eq("pizzeria_id", restaurantId).order("sort_order"),
        ]);
  
        const categories = catsRes.data || [];
        const productsRaw = itemsRes.data || [];
        const combos = combosRes.data || [];
        const beverages = beveragesRes.data || [];
-       const deliveryZones = zonesRes.data || [];
+        const deliveryZones = zonesRes.data || [];
+        const pizzaSizes = sizesRes.data || [];
  
        const isBorda = (c: any) => c.name.toLowerCase().includes("borda");
        const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra");
@@ -196,9 +199,13 @@
            id: c.id, name: c.name, description: c.badge, price: c.price,
            active: c.is_active ?? true, items: c.items, updated_at: c.updated_at
          })),
-         delivery_zones: deliveryZones.map(z => ({
-           id: z.id, neighborhood: z.neighborhood, fee: z.fee, sort_order: z.sort_order, updated_at: z.updated_at
-         }))
+          delivery_zones: deliveryZones.map(z => ({
+            id: z.id, neighborhood: z.neighborhood, fee: z.fee, sort_order: z.sort_order, updated_at: z.updated_at
+          })),
+          pizza_sizes: pizzaSizes.map(s => ({
+            id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, 
+            slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order, updated_at: s.updated_at
+          }))
        };
  
        return new Response(JSON.stringify(response), {
@@ -234,7 +241,8 @@
       else if (type === "category") table = "menu_categories";
       else if (type === "beverage") { table = "pizzeria_beverages"; resField = "pizzeria_id"; }
       else if (type === "combo") table = "combos";
-      else if (type === "delivery-zone") table = "delivery_zones";
+       else if (type === "delivery-zone") table = "delivery_zones";
+       else if (type === "pizza_size") { table = "pizzeria_pizza_sizes"; resField = "pizzeria_id"; }
       else return new Response(JSON.stringify({ success: false, error: "Tipo inválido" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
       console.log(`[menu-sync] Target table: ${table}`);
