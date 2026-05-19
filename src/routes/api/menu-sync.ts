@@ -1,19 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const allowedOrigins = [
-  "https://flycontrol-dash.lovable.app",
-  "https://preview--flycontrol-dash.lovable.app"
-];
-
 const getCorsHeaders = (request: Request) => {
   const origin = request.headers.get("Origin");
-  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  // Allow all lovable.app subdomains and standard FlyControl domains
+  const isAllowed = origin && (
+    origin.includes("flycontrol") || 
+    origin.endsWith(".lovable.app") ||
+    origin.includes("localhost")
+  );
   
   return {
     "Access-Control-Allow-Origin": isAllowed ? origin : "*",
-    "Access-Control-Allow-Headers": "content-type, x-api-key, authorization",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type, x-api-key, apikey, authorization",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
   };
 };
@@ -24,11 +25,14 @@ export const Route = createFileRoute("/api/menu-sync")({
       OPTIONS: async ({ request }) => new Response(null, { headers: getCorsHeaders(request) }),
       GET: async ({ request }) => {
         const corsHeaders = getCorsHeaders(request);
+        const origin = request.headers.get("Origin");
+        
         try {
           const url = new URL(request.url);
           const slug = url.searchParams.get("slug");
 
-          console.log(`[menu-sync] 🔍 Requisição recebida para slug: "${slug}"`);
+          console.log(`[menu-sync] 🔍 Requisição recebida. Origin: ${origin}, Slug: "${slug}"`);
+          console.log(`[menu-sync] 🛡️ CORS permitido: ${corsHeaders["Access-Control-Allow-Origin"] !== "*" || origin?.includes("lovable.app")}`);
 
           if (!slug) {
             return new Response(JSON.stringify({ 
@@ -74,6 +78,8 @@ export const Route = createFileRoute("/api/menu-sync")({
           const combos = combosRes.data || [];
           const beverages = beveragesRes.data || [];
           const deliveryZones = zonesRes.data || [];
+
+          console.log(`[menu-sync] 📦 Dados carregados: ${categories.length} cat, ${products.length} prod, ${beverages.length} bev, ${combos.length} comb, ${deliveryZones.length} zones`);
 
           const isBorda = (c: any) => {
             const name = c.name.toLowerCase();
