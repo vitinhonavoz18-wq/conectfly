@@ -2,18 +2,19 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { validateApiKey } from "@/lib/api-auth";
 
-const allowedOrigins = [
-  "https://flycontrol-dash.lovable.app",
-  "https://preview--flycontrol-dash.lovable.app"
-];
-
 const getCorsHeaders = (request: Request) => {
   const origin = request.headers.get("Origin");
-  const isAllowed = origin && allowedOrigins.includes(origin);
+  
+  // Allow all lovable.app subdomains and standard FlyControl domains
+  const isAllowed = origin && (
+    origin.includes("flycontrol") || 
+    origin.endsWith(".lovable.app") ||
+    origin.includes("localhost")
+  );
   
   return {
     "Access-Control-Allow-Origin": isAllowed ? origin : "*",
-    "Access-Control-Allow-Headers": "content-type, x-api-key, authorization",
+    "Access-Control-Allow-Headers": "content-type, x-api-key, apikey, authorization",
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
   };
@@ -56,7 +57,10 @@ export const Route = createFileRoute("/api/menu-sync/$")({
       POST: async ({ request, params }: { request: Request; params: any }) => {
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
+        const origin = request.headers.get("Origin");
+
         if (auth.error || !auth.restaurant) {
+          console.warn(`[menu-sync] 🚫 POST Unauthorized. Origin: ${origin}, Error: ${auth.error}`);
           return new Response(JSON.stringify({ success: false, error: auth.error || "Unauthorized" }), {
             status: auth.status || 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -67,7 +71,7 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         const type = params._splat || "";
         const body = await request.json();
 
-        console.log(`[menu-sync] 🆕 POST request for ${type} (restaurant: ${restaurant.slug})`);
+        console.log(`[menu-sync] 🆕 POST ${type} for ${restaurant.slug}. Origin: ${origin}`);
 
         try {
           let table = "";
@@ -120,7 +124,10 @@ export const Route = createFileRoute("/api/menu-sync/$")({
       PUT: async ({ request, params }: { request: Request; params: any }) => {
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
+        const origin = request.headers.get("Origin");
+
         if (auth.error || !auth.restaurant) {
+          console.warn(`[menu-sync] 🚫 PUT Unauthorized. Origin: ${origin}, Error: ${auth.error}`);
           return new Response(JSON.stringify({ success: false, error: auth.error || "Unauthorized" }), {
             status: auth.status || 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -140,7 +147,7 @@ export const Route = createFileRoute("/api/menu-sync/$")({
           });
         }
 
-        console.log(`[menu-sync] 📝 PUT request for ${type}/${id} (restaurant: ${restaurant.slug})`);
+        console.log(`[menu-sync] 📝 PUT ${type}/${id} for ${restaurant.slug}. Origin: ${origin}`);
 
         try {
           let table = "";
@@ -193,7 +200,10 @@ export const Route = createFileRoute("/api/menu-sync/$")({
       PATCH: async ({ request, params }: { request: Request; params: any }) => {
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
+        const origin = request.headers.get("Origin");
+
         if (auth.error || !auth.restaurant) {
+          console.warn(`[menu-sync] 🚫 PATCH Unauthorized. Origin: ${origin}, Error: ${auth.error}`);
           return new Response(JSON.stringify({ success: false, error: auth.error || "Unauthorized" }), {
             status: auth.status || 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -214,7 +224,7 @@ export const Route = createFileRoute("/api/menu-sync/$")({
           });
         }
 
-        console.log(`[menu-sync] ⚡ PATCH request for ${type}/${id}/${action || ""} (restaurant: ${restaurant.slug})`);
+        console.log(`[menu-sync] ⚡ PATCH ${type}/${id}/${action || ""} for ${restaurant.slug}. Origin: ${origin}`);
 
         try {
           let table = "";
