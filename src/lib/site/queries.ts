@@ -6,8 +6,9 @@ import type {
   MenuCategoryRow,
   MenuItemRow,
   RestaurantRow,
-  SiteData,
-  BeverageRow,
+   SiteData,
+   BeverageRow,
+   PizzaSize,
 } from "./types";
 
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
