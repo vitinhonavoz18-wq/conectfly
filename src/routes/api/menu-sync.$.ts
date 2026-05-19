@@ -19,17 +19,32 @@ const getCorsHeaders = (request: Request) => {
   };
 };
 
-const mapFields = (body: any) => {
+const mapFields = (body: any, type: string) => {
   const data = { ...body };
-  // Map 'active' to 'is_active' if present
+  
+  // Map 'active' to 'is_active'
   if ('active' in data) {
     data.is_active = data.active;
     delete data.active;
   }
-  // Remove ID and restaurant/pizzeria IDs to prevent changing ownership or primary keys
+  
+  // Map 'highlight' to 'is_highlighted'
+  if ('highlight' in data) {
+    data.is_highlighted = data.highlight;
+    delete data.highlight;
+  }
+  
+  // For combos, map 'description' back to 'badge'
+  if (type === 'combo' && 'description' in data) {
+    data.badge = data.description;
+    delete data.description;
+  }
+  
+  // Remove restricted fields
   delete data.id;
   delete data.restaurant_id;
   delete data.pizzeria_id;
+  
   return data;
 };
 
@@ -49,29 +64,29 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         }
 
         const restaurant = auth.restaurant;
-        const path = params._splat || "";
+        const type = params._splat || "";
         const body = await request.json();
 
-        console.log(`[menu-sync] 🆕 POST request for ${path} (restaurant: ${restaurant.slug})`);
+        console.log(`[menu-sync] 🆕 POST request for ${type} (restaurant: ${restaurant.slug})`);
 
         try {
           let table = "";
-          let mappedData = mapFields(body);
+          let mappedData = mapFields(body, type);
           let dataWithOwnership: any;
 
-          if (path === "product" || path === "border" || path === "additional") {
+          if (type === "product" || type === "border" || type === "additional") {
             table = "menu_items";
             dataWithOwnership = { ...mappedData, restaurant_id: restaurant.id };
-          } else if (path === "category") {
+          } else if (type === "category") {
             table = "menu_categories";
             dataWithOwnership = { ...mappedData, restaurant_id: restaurant.id };
-          } else if (path === "beverage") {
+          } else if (type === "beverage") {
             table = "pizzeria_beverages";
             dataWithOwnership = { ...mappedData, pizzeria_id: restaurant.id };
-          } else if (path === "combo") {
+          } else if (type === "combo") {
             table = "combos";
             dataWithOwnership = { ...mappedData, restaurant_id: restaurant.id };
-          } else if (path === "delivery-zone") {
+          } else if (type === "delivery-zone") {
             table = "delivery_zones";
             dataWithOwnership = { ...mappedData, restaurant_id: restaurant.id };
           } else {
@@ -94,7 +109,7 @@ export const Route = createFileRoute("/api/menu-sync/$")({
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } catch (err: any) {
-          console.error(`[menu-sync] 💥 Error in POST ${path}:`, err);
+          console.error(`[menu-sync] 💥 Error in POST ${type}:`, err);
           return new Response(JSON.stringify({ success: false, error: err.message }), {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -130,7 +145,7 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         try {
           let table = "";
           let restaurantField = "restaurant_id";
-          let mappedData = mapFields(body);
+          let mappedData = mapFields(body, type);
 
           if (type === "product" || type === "border" || type === "additional") table = "menu_items";
           else if (type === "category") table = "menu_categories";
@@ -204,7 +219,7 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         try {
           let table = "";
           let restaurantField = "restaurant_id";
-          let updateData = mapFields(body);
+          let updateData = mapFields(body, type);
 
           if (type === "product" || type === "border" || type === "additional") table = "menu_items";
           else if (type === "category") table = "menu_categories";
