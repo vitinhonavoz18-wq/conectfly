@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ALLOWED_ORIGINS = [
-  "https://conectfly.lovable.app",
   "https://conectfly.com.br",
   "https://www.conectfly.com.br",
+  "https://conectfly.lovable.app",
   "https://teste.conectfly.com.br",
   "http://localhost:5173", // For development
 ];

@@ -506,7 +506,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
          <div className="space-y-4 pt-2">
             <Field
               label="URL do Painel FLYCONTROL"
-              hint="Copie a URL do seu painel aberto (ex: https://flycontrol-xxxx.lovable.app)"
+              hint="Copie a URL do seu painel aberto (ex: https://flycontrol.conectfly.com.br)"
             >
               <input
                 value={r.flycontrol_base_url ?? ""}
@@ -534,7 +534,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                     }
                   }
                 }}
-                placeholder="https://sua-url-do-flycontrol.lovable.app"
+                placeholder="https://flycontrol.conectfly.com.br"
                 className="input"
               />
             </Field>
@@ -546,7 +546,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
              <input
                value={r.flycontrol_register_url ?? ""}
                onChange={(e) => set("flycontrol_register_url", e.target.value)}
-               placeholder="https://sua-url.lovable.app/api/pizzerias/create"
+               placeholder="https://conectfly.com.br/api/pizzerias/create"
                className="input"
              />
            </Field>
