@@ -12,54 +12,32 @@ import type {
 } from "./types";
 
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    console.log("--- PUBLIC PAGE ACCESS ---");
-    console.log("IS AUTH REQUIRED?", false);
-    console.log("SLUG:", slug);
-    console.log("SUPABASE USER:", user?.id || "None (Anonymous)");
-    
     // Normalização extra do slug antes da query
     const normalizedSlug = slug.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
     
+    console.log("--- PUBLIC PAGE ACCESS ---");
+    console.log("SLUG DETECTED:", normalizedSlug);
+
+    // Buscamos apenas os dados públicos da view segura.
+    // Isso garante que segredos nunca cheguem ao frontend.
     const { data, error } = await supabase
       .from("pizzerias_public")
       .select("*")
       .eq("slug", normalizedSlug)
       .maybeSingle();
 
-    console.log("RESTAURANT QUERY RESULT:", data ? `Encontrado: ${data.name}` : "Não encontrado");
-    console.log("RESTAURANT QUERY ERROR:", error);
-
     if (error) {
-      console.error(`[fetchSiteBySlug] ERRO REAL NA QUERY:`, error);
+      console.error(`[fetchSiteBySlug] Erro ao buscar restaurante:`, error);
       throw error;
     }
 
-    const restaurant = data as any;
- 
-    if (!restaurant) {
-      console.warn(`[fetchSiteBySlug] NENHUM RESTAURANTE ENCONTRADO para o slug: "${normalizedSlug}"`);
-      
-      // Log extra para depuração de RLS (head query para verificar se existe)
-      const { count, error: countErr } = await supabase
-        .from("restaurants")
-        .select("*", { count: 'exact', head: true })
-        .eq("slug", normalizedSlug);
-      
-      if (countErr) console.error(`[fetchSiteBySlug] Erro ao verificar existência na tabela principal:`, countErr);
-      
-      if (count && count > 0) {
-        console.warn(`[fetchSiteBySlug] O restaurante "${normalizedSlug}" EXISTE no banco, mas a view pizzerias_public não retornou. Verifique se published=true.`);
-      } else {
-        console.warn(`[fetchSiteBySlug] O restaurante "${normalizedSlug}" REALMENTE NÃO EXISTE na tabela principal.`);
-      }
-      
+    if (!data) {
+      console.warn(`[fetchSiteBySlug] Restaurante não encontrado para o slug: "${normalizedSlug}"`);
       return null;
     }
  
-    console.log(`[fetchSiteBySlug] SUCESSO: Restaurante "${restaurant.name}" encontrado (ID: ${restaurant.id})`);
-    return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
+    console.log(`[fetchSiteBySlug] Sucesso: Restaurante "${data.name}" encontrado.`);
+    return fetchSiteByRestaurant(data as unknown as RestaurantRow);
  }
 
  export async function fetchSiteByRestaurant(
