@@ -236,10 +236,10 @@ function Dashboard() {
                      </div>
                      <div className="min-w-0 ml-4">
                        <h3 className="font-black text-lg truncate group-hover:text-primary transition-colors">{r.name}</h3>
-                       <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
-                         <Globe className="h-3 w-3" />
-                         {r.slug}
-                       </p>
+                        <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
+                          <Globe className="h-3 w-3" />
+                          conectfly.com.br/{r.slug}
+                        </p>
                      </div>
                   </div>
                  </div>
