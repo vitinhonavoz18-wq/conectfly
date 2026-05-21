@@ -39,7 +39,7 @@ const debugLog = (...args: any[]) => {
     }
 
     if (!data) {
-      console.warn(`[fetchSiteBySlug] Restaurante não encontrado para o slug: "${normalizedSlug}"`);
+      console.warn(`[fetchSiteBySlug] Restaurante não encontrado para o identificador: "${normalizedIdentifier}"`);
       return null;
     }
  
