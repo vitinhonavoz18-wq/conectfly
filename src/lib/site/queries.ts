@@ -6,10 +6,17 @@ import type {
   MenuCategoryRow,
   MenuItemRow,
   RestaurantRow,
-   SiteData,
-   BeverageRow,
-   PizzaSize,
+  SiteData,
+  BeverageRow,
+  PizzaSize,
 } from "./types";
+
+// Função para gerar logs apenas em desenvolvimento
+const debugLog = (...args: any[]) => {
+  if (import.meta.env.DEV) {
+    console.log("[DEBUG]", ...args);
+  }
+};
 
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
     // Normalização extra do slug antes da query
@@ -36,14 +43,14 @@ import type {
       return null;
     }
  
-    console.log(`[fetchSiteBySlug] Sucesso: Restaurante "${data.name}" encontrado.`);
+    debugLog(`[fetchSiteBySlug] Sucesso: Restaurante "${data.name}" encontrado.`);
     return fetchSiteByRestaurant(data as unknown as RestaurantRow);
  }
 
  export async function fetchSiteByRestaurant(
    restaurant: RestaurantRow,
  ): Promise<SiteData> {
-   console.log(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
+  debugLog(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
    
    const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, sizesRes] = await Promise.all([
      supabase
@@ -109,13 +116,12 @@ import type {
   const itemsData = itemsRes.data ?? [];
   const beveragesData = beveragesRes.data ?? [];
 
-  console.log(`[fetchSiteByRestaurant] 📊 RESUMO PARA "${restaurant.slug}":`, {
+  debugLog(`[fetchSiteByRestaurant] 📊 RESUMO PARA "${restaurant.slug}":`, {
     restaurant_id: restaurant.id,
-    categorias: catsData.length,
-    itens_sabores: itemsData.length,
-    bebidas: beveragesData.length,
+    categorias: (catsRes.data ?? []).length,
+    itens_sabores: (itemsRes.data ?? []).length,
+    bebidas: (beveragesRes.data ?? []).length,
     tamanhos_pizza: sizesRes.data?.length || 0,
-    motivo_vazio: catsData.length === 0 ? "Nenhuma categoria ativa encontrada." : (itemsData.length === 0 && beveragesData.length === 0 ? "Categorias existem, mas sem itens/bebidas ativos." : null)
   });
 
   const cats = catsData as unknown as MenuCategoryRow[];

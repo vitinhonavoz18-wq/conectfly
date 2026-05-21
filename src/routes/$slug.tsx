@@ -37,16 +37,20 @@ function PublicSite() {
   useEffect(() => {
     if (!mounted) return;
 
-    console.log("--- DEBUG ACESSO ---");
-    console.log("DOMAIN:", window.location.hostname);
-    console.log("PATHNAME:", window.location.pathname);
-    console.log("SLUG DETECTADO:", detectedSlug);
-    console.log("-------------------");
+    if (import.meta.env.DEV) {
+      console.log("--- DEBUG ACESSO ---");
+      console.log("DOMAIN:", window.location.hostname);
+      console.log("PATHNAME:", window.location.pathname);
+      console.log("SLUG DETECTADO:", detectedSlug);
+      console.log("-------------------");
+    }
 
     let alive = true;
     fetchSiteBySlug(detectedSlug)
       .then((d) => {
-        console.log("RESULTADO RESTAURANTE:", d?.restaurant ? `Encontrado (ID: ${d.restaurant.id})` : "Não encontrado");
+        if (import.meta.env.DEV) {
+          console.log("RESULTADO RESTAURANTE:", d?.restaurant ? `Encontrado (ID: ${d.restaurant.id})` : "Não encontrado");
+        }
         if (alive) setData(d);
       })
       .catch((err) => {
@@ -81,15 +85,18 @@ function PublicSite() {
   if (data === "error" || data === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-4 text-center">
-        <h1 className="text-3xl font-black">Site não encontrado</h1>
+        <h1 className="text-3xl font-black">Pizzaria não encontrada</h1>
          <p className="text-muted-foreground">
-           O endereço /{detectedSlug} não corresponde a nenhum restaurante.
+           Não encontramos nenhuma pizzaria ativa no endereço <strong>/{detectedSlug}</strong>.
+         </p>
+         <p className="text-sm text-muted-foreground max-w-sm">
+           Verifique se o nome está correto ou se a pizzaria já publicou o cardápio.
          </p>
         <Link
           to="/"
-          className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold"
+          className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:scale-105 transition-transform"
         >
-          Voltar
+          Ir para a página inicial
         </Link>
       </div>
     );
