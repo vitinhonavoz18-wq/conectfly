@@ -7,6 +7,13 @@ import { DeliverySite } from "@/components/site/DeliverySite";
 
 export const Route = createFileRoute("/$slug")({
   component: PublicSite,
+  loader: async ({ params }) => {
+    // Podemos fazer o fetch aqui se quisermos que o head seja dinâmico baseado nos dados
+    // Mas o component já faz o fetch. Por enquanto vamos manter o component fazendo o fetch
+    // e usar o estado local para o document title.
+    // Para canonical real-time no head, precisaríamos dos dados aqui.
+    return { slug: params.slug };
+  }
 });
 
 function PublicSite() {
