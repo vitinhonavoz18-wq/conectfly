@@ -8,28 +8,25 @@
    "Access-Control-Allow-Credentials": "true",
  };
  
- function getCorsHeaders(req: Request) {
-   const origin = req.headers.get("Origin");
+  function getCorsHeaders(req: Request) {
+    const origin = req.headers.get("Origin");
+    
+    // Lista explícita de origens permitidas (sem substrings frágeis para produção)
     const allowedOrigins = [
       "https://flycontrol-dash.lovable.app",
-      "https://preview--flycontrol-dash.lovable.app",
-      "https://preview--flycontrol-dsh.lovable.app",
       "https://conectfly.com.br",
-      "https://www.conectfly.com.br",
-      "https://conectfly.lovable.app"
+      "https://www.conectfly.com.br"
     ];
-   
-   const isAllowed = origin && (
-     allowedOrigins.includes(origin) || 
-     origin.endsWith(".lovable.app") ||
-     origin.includes("localhost")
-   );
-   
-   return {
-     ...CORS_HEADERS,
-     "Access-Control-Allow-Origin": isAllowed ? origin : "*",
-   };
- }
+    
+    // No ambiente de desenvolvimento do Lovable, permitimos subdomínios .lovable.app
+    const isDevelopment = origin && origin.endsWith(".lovable.app");
+    const isAllowed = origin && (allowedOrigins.includes(origin) || isDevelopment || origin.includes("localhost"));
+    
+    return {
+      ...CORS_HEADERS,
+      "Access-Control-Allow-Origin": isAllowed ? origin : "https://conectfly.com.br",
+    };
+  }
  
   const mapFields = (body: any, type: string) => {
     const originalData = { ...body };
