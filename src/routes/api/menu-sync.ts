@@ -8,6 +8,7 @@ const getCorsHeaders = (request: Request) => {
   // Allow all lovable.app subdomains and standard FlyControl domains
   const isAllowed = origin && (
     origin.includes("flycontrol") || 
+    origin.includes("conectfly.com.br") ||
     origin.endsWith(".lovable.app") ||
     origin.includes("localhost")
   );
