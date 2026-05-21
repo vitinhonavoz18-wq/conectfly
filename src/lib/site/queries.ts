@@ -18,19 +18,19 @@ const debugLog = (...args: any[]) => {
   }
 };
 
- export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
+ export async function fetchSiteBySlug(identifier: string): Promise<SiteData | null> {
     // Normalização extra do slug antes da query
-    const normalizedSlug = slug.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
+    const normalizedIdentifier = identifier.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
     
     console.log("--- PUBLIC PAGE ACCESS ---");
-    console.log("SLUG DETECTED:", normalizedSlug);
+    console.log("IDENTIFIER DETECTED:", normalizedIdentifier);
 
     // Buscamos apenas os dados públicos da view segura.
-    // Isso garante que segredos nunca cheguem ao frontend.
+    // Priorizamos custom_subdomain, depois slug.
     const { data, error } = await supabase
       .from("pizzerias_public")
       .select("*")
-      .eq("slug", normalizedSlug)
+      .or(`custom_subdomain.eq.${normalizedIdentifier},slug.eq.${normalizedIdentifier}`)
       .maybeSingle();
 
     if (error) {
