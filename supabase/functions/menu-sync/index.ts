@@ -10,12 +10,14 @@
  
  function getCorsHeaders(req: Request) {
    const origin = req.headers.get("Origin");
-   const allowedOrigins = [
-     "https://flycontrol-dash.lovable.app",
-     "https://preview--flycontrol-dash.lovable.app",
-     "https://preview--flycontrol-dsh.lovable.app",
-     "https://conectfly.lovable.app"
-   ];
+    const allowedOrigins = [
+      "https://flycontrol-dash.lovable.app",
+      "https://preview--flycontrol-dash.lovable.app",
+      "https://preview--flycontrol-dsh.lovable.app",
+      "https://conectfly.com.br",
+      "https://www.conectfly.com.br",
+      "https://conectfly.lovable.app"
+    ];
    
    const isAllowed = origin && (
      allowedOrigins.includes(origin) || 

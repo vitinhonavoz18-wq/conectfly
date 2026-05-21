@@ -1,4 +1,4 @@
-const PUBLIC_SITE_URL = typeof window !== "undefined" ? window.location.origin : (import.meta.env.VITE_PUBLIC_SITE_URL || "");
+const PUBLIC_SITE_URL = "https://conectfly.com.br";
 
 export function getPizzeriaPublicUrl(slug: string): string {
   if (!slug) return PUBLIC_SITE_URL;
