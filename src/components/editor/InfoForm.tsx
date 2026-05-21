@@ -82,6 +82,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
       .update({
         name: r.name,
         slug,
+        custom_subdomain: r.custom_subdomain,
         tagline: r.tagline,
         description: r.description,
         whatsapp_number: r.whatsapp_number,
@@ -221,15 +222,25 @@ export function InfoForm({ restaurant, onChange }: Props) {
             className="input"
           />
         </Field>
-        <Field label="URL (slug)">
+        <Field label="Identificador URL (slug)" hint="Caminho após conectfly.com.br/">
           <div className="flex gap-2 items-center">
             <input
               value={r.slug}
               onChange={(e) => set("slug", slugify(e.target.value))}
               className="input flex-1"
             />
+          </div>
+        </Field>
+        <Field label="Subdomínio Personalizado" hint="Ex: cheirosaa.conectfly.com.br">
+          <div className="flex gap-2 items-center">
+            <input
+              value={r.custom_subdomain ?? ""}
+              onChange={(e) => set("custom_subdomain", slugify(e.target.value))}
+              className="input flex-1"
+              placeholder="Ex: cheirosaa"
+            />
             <a
-              href={getPizzeriaPublicUrl(r.slug)}
+              href={getPizzeriaPublicUrl(r.slug, r.custom_subdomain)}
               target="_blank"
               rel="noreferrer"
               className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary transition-all shadow-xl"
