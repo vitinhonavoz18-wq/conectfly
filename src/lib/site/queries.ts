@@ -6,66 +6,51 @@ import type {
   MenuCategoryRow,
   MenuItemRow,
   RestaurantRow,
-   SiteData,
-   BeverageRow,
-   PizzaSize,
+  SiteData,
+  BeverageRow,
+  PizzaSize,
 } from "./types";
 
+// Função para gerar logs apenas em desenvolvimento
+const debugLog = (...args: any[]) => {
+  if (import.meta.env.DEV) {
+    console.log("[DEBUG]", ...args);
+  }
+};
+
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    console.log("--- PUBLIC PAGE ACCESS ---");
-    console.log("IS AUTH REQUIRED?", false);
-    console.log("SLUG:", slug);
-    console.log("SUPABASE USER:", user?.id || "None (Anonymous)");
-    
     // Normalização extra do slug antes da query
     const normalizedSlug = slug.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
     
+    console.log("--- PUBLIC PAGE ACCESS ---");
+    console.log("SLUG DETECTED:", normalizedSlug);
+
+    // Buscamos apenas os dados públicos da view segura.
+    // Isso garante que segredos nunca cheguem ao frontend.
     const { data, error } = await supabase
       .from("pizzerias_public")
       .select("*")
       .eq("slug", normalizedSlug)
       .maybeSingle();
 
-    console.log("RESTAURANT QUERY RESULT:", data ? `Encontrado: ${data.name}` : "Não encontrado");
-    console.log("RESTAURANT QUERY ERROR:", error);
-
     if (error) {
-      console.error(`[fetchSiteBySlug] ERRO REAL NA QUERY:`, error);
+      console.error(`[fetchSiteBySlug] Erro ao buscar restaurante:`, error);
       throw error;
     }
 
-    const restaurant = data as any;
- 
-    if (!restaurant) {
-      console.warn(`[fetchSiteBySlug] NENHUM RESTAURANTE ENCONTRADO para o slug: "${normalizedSlug}"`);
-      
-      // Log extra para depuração de RLS (head query para verificar se existe)
-      const { count, error: countErr } = await supabase
-        .from("restaurants")
-        .select("*", { count: 'exact', head: true })
-        .eq("slug", normalizedSlug);
-      
-      if (countErr) console.error(`[fetchSiteBySlug] Erro ao verificar existência na tabela principal:`, countErr);
-      
-      if (count && count > 0) {
-        console.warn(`[fetchSiteBySlug] O restaurante "${normalizedSlug}" EXISTE no banco, mas a view pizzerias_public não retornou. Verifique se published=true.`);
-      } else {
-        console.warn(`[fetchSiteBySlug] O restaurante "${normalizedSlug}" REALMENTE NÃO EXISTE na tabela principal.`);
-      }
-      
+    if (!data) {
+      console.warn(`[fetchSiteBySlug] Restaurante não encontrado para o slug: "${normalizedSlug}"`);
       return null;
     }
  
-    console.log(`[fetchSiteBySlug] SUCESSO: Restaurante "${restaurant.name}" encontrado (ID: ${restaurant.id})`);
-    return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
+    debugLog(`[fetchSiteBySlug] Sucesso: Restaurante "${data.name}" encontrado.`);
+    return fetchSiteByRestaurant(data as unknown as RestaurantRow);
  }
 
  export async function fetchSiteByRestaurant(
    restaurant: RestaurantRow,
  ): Promise<SiteData> {
-   console.log(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
+  debugLog(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
    
    const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, sizesRes] = await Promise.all([
      supabase
@@ -131,13 +116,12 @@ import type {
   const itemsData = itemsRes.data ?? [];
   const beveragesData = beveragesRes.data ?? [];
 
-  console.log(`[fetchSiteByRestaurant] 📊 RESUMO PARA "${restaurant.slug}":`, {
+  debugLog(`[fetchSiteByRestaurant] 📊 RESUMO PARA "${restaurant.slug}":`, {
     restaurant_id: restaurant.id,
-    categorias: catsData.length,
-    itens_sabores: itemsData.length,
-    bebidas: beveragesData.length,
+    categorias: (catsRes.data ?? []).length,
+    itens_sabores: (itemsRes.data ?? []).length,
+    bebidas: (beveragesRes.data ?? []).length,
     tamanhos_pizza: sizesRes.data?.length || 0,
-    motivo_vazio: catsData.length === 0 ? "Nenhuma categoria ativa encontrada." : (itemsData.length === 0 && beveragesData.length === 0 ? "Categorias existem, mas sem itens/bebidas ativos." : null)
   });
 
   const cats = catsData as unknown as MenuCategoryRow[];

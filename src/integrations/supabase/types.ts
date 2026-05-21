@@ -596,7 +596,6 @@ export type Database = {
           address: string | null
           city: string | null
           description: string | null
-          flycontrol_api_key_masked: string | null
           flycontrol_api_url: string | null
           flycontrol_base_url: string | null
           flycontrol_enabled: boolean | null
@@ -621,7 +620,6 @@ export type Database = {
           address?: string | null
           city?: string | null
           description?: string | null
-          flycontrol_api_key_masked?: never
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
           flycontrol_enabled?: boolean | null
@@ -646,7 +644,6 @@ export type Database = {
           address?: string | null
           city?: string | null
           description?: string | null
-          flycontrol_api_key_masked?: never
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
           flycontrol_enabled?: boolean | null
