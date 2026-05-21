@@ -12,18 +12,24 @@ import type {
 } from "./types";
 
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
-    console.log(`[fetchSiteBySlug] --- INICIANDO BUSCA ---`);
-    console.log(`[fetchSiteBySlug] Slug recebido: "${slug}"`);
-    console.log(`[fetchSiteBySlug] Tabela: restaurants (via pizzerias_public)`);
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    console.log("--- PUBLIC PAGE ACCESS ---");
+    console.log("IS AUTH REQUIRED?", false);
+    console.log("SLUG:", slug);
+    console.log("SUPABASE USER:", user?.id || "None (Anonymous)");
     
     // Normalização extra do slug antes da query
     const normalizedSlug = slug.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
     
-     const { data, error } = await supabase
-       .from("pizzerias_public")
-       .select("*")
-       .eq("slug", normalizedSlug)
-       .maybeSingle();
+    const { data, error } = await supabase
+      .from("pizzerias_public")
+      .select("*")
+      .eq("slug", normalizedSlug)
+      .maybeSingle();
+
+    console.log("RESTAURANT QUERY RESULT:", data ? `Encontrado: ${data.name}` : "Não encontrado");
+    console.log("RESTAURANT QUERY ERROR:", error);
 
     if (error) {
       console.error(`[fetchSiteBySlug] ERRO REAL NA QUERY:`, error);
@@ -35,7 +41,7 @@ import type {
     if (!restaurant) {
       console.warn(`[fetchSiteBySlug] NENHUM RESTAURANTE ENCONTRADO para o slug: "${normalizedSlug}"`);
       
-      // Log extra para depuração de RLS
+      // Log extra para depuração de RLS (head query para verificar se existe)
       const { count, error: countErr } = await supabase
         .from("restaurants")
         .select("*", { count: 'exact', head: true })
