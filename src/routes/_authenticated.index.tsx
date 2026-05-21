@@ -73,7 +73,13 @@ function Dashboard() {
 
     const { data, error: insErr } = await supabase
       .from("restaurants")
-      .insert({ name: trimmed, slug, flycontrol_api_key: generateApiKey(), owner_id: user?.id })
+      .insert({ 
+        name: trimmed, 
+        slug, 
+        flycontrol_api_key: generateApiKey(), 
+        owner_id: user?.id,
+        published: true // Garante que o site seja público imediatamente após criação
+      })
       .select()
       .single();
     if (insErr || !data) {

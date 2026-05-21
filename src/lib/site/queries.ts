@@ -12,39 +12,47 @@ import type {
 } from "./types";
 
  export async function fetchSiteBySlug(slug: string): Promise<SiteData | null> {
-   console.log(`[fetchSiteBySlug] Buscando restaurante pelo slug: "${slug}"`);
-   
-    const { data, error } = await supabase
-      .from("pizzerias_public")
-      .select("*")
-      .eq("slug", slug)
-      .maybeSingle();
+    console.log(`[fetchSiteBySlug] --- INICIANDO BUSCA ---`);
+    console.log(`[fetchSiteBySlug] Slug recebido: "${slug}"`);
+    console.log(`[fetchSiteBySlug] Tabela: restaurants (via pizzerias_public)`);
+    
+    // Normalização extra do slug antes da query
+    const normalizedSlug = slug.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
+    
+     const { data, error } = await supabase
+       .from("pizzerias_public")
+       .select("*")
+       .eq("slug", normalizedSlug)
+       .maybeSingle();
+
+    if (error) {
+      console.error(`[fetchSiteBySlug] ERRO REAL NA QUERY:`, error);
+      throw error;
+    }
 
     const restaurant = data as any;
  
-   if (error) {
-     console.error(`[fetchSiteBySlug] Erro ao buscar restaurante "${slug}":`, error);
-     throw error;
-   }
- 
-   if (!restaurant) {
-     console.warn(`[fetchSiteBySlug] Restaurante não encontrado no banco para o slug: "${slug}"`);
-     // Verificar se o restaurante existe na tabela principal mas não está publicado
-     const { count } = await supabase
-       .from("restaurants")
-       .select("*", { count: 'exact', head: true })
-       .eq("slug", slug);
-     
-     if (count && count > 0) {
-       console.warn(`[fetchSiteBySlug] O restaurante "${slug}" existe mas possivelmente não está publicado ou há restrição de RLS.`);
-     }
-     
-     return null;
-   }
- 
-    if (restaurant) {
-      console.log(`[fetchSiteBySlug] Restaurante encontrado: ID=${restaurant.id}, Nome=${restaurant.name}`);
+    if (!restaurant) {
+      console.warn(`[fetchSiteBySlug] NENHUM RESTAURANTE ENCONTRADO para o slug: "${normalizedSlug}"`);
+      
+      // Log extra para depuração de RLS
+      const { count, error: countErr } = await supabase
+        .from("restaurants")
+        .select("*", { count: 'exact', head: true })
+        .eq("slug", normalizedSlug);
+      
+      if (countErr) console.error(`[fetchSiteBySlug] Erro ao verificar existência na tabela principal:`, countErr);
+      
+      if (count && count > 0) {
+        console.warn(`[fetchSiteBySlug] O restaurante "${normalizedSlug}" EXISTE no banco, mas a view pizzerias_public não retornou. Verifique se published=true.`);
+      } else {
+        console.warn(`[fetchSiteBySlug] O restaurante "${normalizedSlug}" REALMENTE NÃO EXISTE na tabela principal.`);
+      }
+      
+      return null;
     }
+ 
+    console.log(`[fetchSiteBySlug] SUCESSO: Restaurante "${restaurant.name}" encontrado (ID: ${restaurant.id})`);
     return fetchSiteByRestaurant(restaurant as unknown as RestaurantRow);
  }
 
