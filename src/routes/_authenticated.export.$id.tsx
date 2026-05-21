@@ -89,7 +89,7 @@ function ExportPage() {
     }
   };
 
-  const shareUrl = r ? getPizzeriaPublicUrl(r.slug) : "";
+  const shareUrl = r ? getPizzeriaPublicUrl(r.slug, r.custom_subdomain) : "";
 
   const handleCopyShare = async () => {
     if (!shareUrl) return;

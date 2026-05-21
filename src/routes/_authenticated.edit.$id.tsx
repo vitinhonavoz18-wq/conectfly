@@ -82,7 +82,7 @@ function EditPage() {
     setFinalized(true);
   };
 
-  const shareUrl = restaurant ? getPizzeriaPublicUrl(restaurant.slug) : "";
+  const shareUrl = restaurant ? getPizzeriaPublicUrl(restaurant.slug, restaurant.custom_subdomain) : "";
 
   const handleCopyShare = async () => {
     if (!shareUrl) return;
@@ -147,7 +147,8 @@ function EditPage() {
             <div className="flex items-center gap-3">
                <Link
                  to="/$slug"
-                 params={{ slug: restaurant.slug }}
+                  params={{ slug: restaurant.slug }}
+                  href={shareUrl}
                  target="_blank"
                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
                >
@@ -163,7 +164,7 @@ function EditPage() {
                </button>
                <button
                  onClick={() => {
-                   navigator.clipboard.writeText(getPizzeriaPublicUrl(restaurant.slug));
+                   navigator.clipboard.writeText(getPizzeriaPublicUrl(restaurant.slug, restaurant.custom_subdomain));
                    toast.success("Link copiado!");
                  }}
                  className="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-primary transition-all"
@@ -296,9 +297,10 @@ function EditPage() {
  
                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                      <Link
-                       to="/$slug"
-                       params={{ slug: restaurant.slug }}
-                       target="_blank"
+                        to="/$slug"
+                        params={{ slug: restaurant.slug }}
+                        href={shareUrl}
+                        target="_blank"
                        className="flex flex-col items-start gap-3 p-6 rounded-2xl bg-white/5 border border-white/5 hover:border-primary/50 hover:bg-white/10 transition-all group/item"
                      >
                        <ExternalLink className="h-6 w-6 text-primary group-hover/item:scale-110 transition-transform" />

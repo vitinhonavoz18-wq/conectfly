@@ -480,6 +480,7 @@ export type Database = {
           address: string | null
           city: string | null
           created_at: string
+          custom_subdomain: string | null
           description: string | null
           flycontrol_api_key: string | null
           flycontrol_api_url: string | null
@@ -510,6 +511,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
+          custom_subdomain?: string | null
           description?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
@@ -540,6 +542,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
+          custom_subdomain?: string | null
           description?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
@@ -595,6 +598,7 @@ export type Database = {
         Row: {
           address: string | null
           city: string | null
+          custom_subdomain: string | null
           description: string | null
           flycontrol_api_url: string | null
           flycontrol_base_url: string | null
@@ -619,6 +623,7 @@ export type Database = {
         Insert: {
           address?: string | null
           city?: string | null
+          custom_subdomain?: string | null
           description?: string | null
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
@@ -643,6 +648,7 @@ export type Database = {
         Update: {
           address?: string | null
           city?: string | null
+          custom_subdomain?: string | null
           description?: string | null
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null

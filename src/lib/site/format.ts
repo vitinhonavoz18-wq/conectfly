@@ -1,10 +1,15 @@
-const PUBLIC_SITE_URL = "https://conectfly.com.br";
+const PUBLIC_SITE_DOMAIN = "conectfly.com.br";
+const PUBLIC_SITE_URL = `https://${PUBLIC_SITE_DOMAIN}`;
 
-export function getPizzeriaPublicUrl(slug: string): string {
+export function getPizzeriaPublicUrl(slug: string, subdomain?: string | null): string {
+  if (subdomain) {
+    return `https://${subdomain}.${PUBLIC_SITE_DOMAIN}`;
+  }
+  
   if (!slug) return PUBLIC_SITE_URL;
-   // Remove trailing slash from base if present, then add /slug
-   const base = PUBLIC_SITE_URL.replace(/\/$/, "");
-   return `${base}/${slug}`;
+  // Remove trailing slash from base if present, then add /slug
+  const base = PUBLIC_SITE_URL.replace(/\/$/, "");
+  return `${base}/${slug}`;
 }
 
 export function formatDateTime(date?: string | Date): string {

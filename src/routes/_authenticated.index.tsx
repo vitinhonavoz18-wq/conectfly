@@ -23,6 +23,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
+import { getSubdomain } from "@/lib/utils/hostname";
+import { PublicSiteComponent } from "@/components/site/PublicSiteComponent";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -39,8 +41,13 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
+  const subdomain = getSubdomain();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  
+  if (subdomain) {
+    return <PublicSiteComponent />;
+  }
   const [list, setList] = useState<RestaurantRow[] | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
@@ -63,19 +70,29 @@ function Dashboard() {
     }
     let slug = slugify(trimmed);
     if (!slug) slug = `site-${Date.now()}`;
-    // ensure unique
+    
+    // Gera o subdomínio inicial a partir do slug
+    let custom_subdomain = slug;
+
+    // ensure unique for both slug and subdomain
     const { data: existing } = await supabase
       .from("restaurants")
-      .select("slug")
-      .eq("slug", slug)
+      .select("slug, custom_subdomain")
+      .or(`slug.eq.${slug},custom_subdomain.eq.${custom_subdomain}`)
       .maybeSingle();
-    if (existing) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+      
+    if (existing) {
+      const suffix = Math.random().toString(36).slice(2, 6);
+      slug = `${slug}-${suffix}`;
+      custom_subdomain = `${custom_subdomain}-${suffix}`;
+    }
 
     const { data, error: insErr } = await supabase
       .from("restaurants")
       .insert({ 
         name: trimmed, 
         slug, 
+        custom_subdomain,
         flycontrol_api_key: generateApiKey(), 
         owner_id: user?.id,
         published: true // Garante que o site seja público imediatamente após criação
@@ -244,7 +261,7 @@ function Dashboard() {
                        <h3 className="font-black text-lg truncate group-hover:text-primary transition-colors">{r.name}</h3>
                         <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
                           <Globe className="h-3 w-3" />
-                          conectfly.com.br/{r.slug}
+                          {r.custom_subdomain ? `${r.custom_subdomain}.conectfly.com.br` : `conectfly.com.br/${r.slug}`}
                         </p>
                      </div>
                   </div>
@@ -259,7 +276,7 @@ function Dashboard() {
                      <Pencil className="h-4 w-4 text-primary" /> Painel
                    </Link>
                     <a
-                      href={getPizzeriaPublicUrl(r.slug)}
+                      href={getPizzeriaPublicUrl(r.slug, r.custom_subdomain)}
                       target="_blank"
                       rel="noreferrer"
                       className="flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-bold rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all"
@@ -270,7 +287,7 @@ function Dashboard() {
                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
                    <button
                      onClick={() => {
-                       navigator.clipboard.writeText(getPizzeriaPublicUrl(r.slug));
+                       navigator.clipboard.writeText(getPizzeriaPublicUrl(r.slug, r.custom_subdomain));
                        toast.success("Link copiado!");
                      }}
                      className="text-xs font-bold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
