@@ -23,6 +23,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
+import { getSubdomain } from "@/lib/utils/hostname";
+import { PublicSiteComponent } from "@/components/site/PublicSiteComponent";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -39,8 +41,13 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
+  const subdomain = getSubdomain();
   const router = useRouter();
   const { user, signOut } = useAuth();
+  
+  if (subdomain) {
+    return <PublicSiteComponent />;
+  }
   const [list, setList] = useState<RestaurantRow[] | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
