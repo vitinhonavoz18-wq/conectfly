@@ -56,10 +56,23 @@ function PublicSite() {
     };
   }, [detectedIdentifier, mounted]);
 
-  // Update document title from restaurant
+  // Update document title and canonical from restaurant
   useEffect(() => {
     if (data && typeof data === "object" && "restaurant" in data) {
       document.title = data.restaurant.name;
+      
+      // Handle canonical link
+      const subdomain = data.restaurant.custom_subdomain;
+      if (subdomain) {
+        const canonicalUrl = `https://${subdomain}.conectfly.com.br`;
+        let link: HTMLLinkElement | null = document.querySelector("link[rel='canonical']");
+        if (!link) {
+          link = document.createElement("link");
+          link.rel = "canonical";
+          document.head.appendChild(link);
+        }
+        link.href = canonicalUrl;
+      }
     }
   }, [data]);
 
