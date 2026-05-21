@@ -113,38 +113,57 @@ import type {
      throw combosRes.error;
    }
  
-   console.log(`[fetchSiteByRestaurant] Sucesso ao carregar dados: ${catsRes.data?.length || 0} categorias, ${itemsRes.data?.length || 0} itens.`);
+  const catsData = catsRes.data ?? [];
+  const itemsData = itemsRes.data ?? [];
+  const beveragesData = beveragesRes.data ?? [];
 
-  const cats = (catsRes.data ?? []) as unknown as MenuCategoryRow[];
-  const items = (itemsRes.data ?? []) as unknown as MenuItemRow[];
+  console.log(`[fetchSiteByRestaurant] 📊 RESUMO PARA "${restaurant.slug}":`, {
+    restaurant_id: restaurant.id,
+    categorias: catsData.length,
+    itens_sabores: itemsData.length,
+    bebidas: beveragesData.length,
+    tamanhos_pizza: sizesRes.data?.length || 0,
+    motivo_vazio: catsData.length === 0 ? "Nenhuma categoria ativa encontrada." : (itemsData.length === 0 && beveragesData.length === 0 ? "Categorias existem, mas sem itens/bebidas ativos." : null)
+  });
+
+  const cats = catsData as unknown as MenuCategoryRow[];
+  const items = itemsData as unknown as MenuItemRow[];
   const groups = (groupsRes.data ?? []) as unknown as ComboGroupRow[];
   const combos = (combosRes.data ?? []) as unknown as ComboRow[];
   const zones = (zonesRes.data ?? []) as unknown as DeliveryZoneRow[];
-   const beverages = (beveragesRes.data ?? []) as unknown as BeverageRow[];
-   const pizzaSizes = (sizesRes?.data ?? []).map(s => ({
-     id: s.id,
-     label: s.name,
-     price: Number(s.price),
-     max_flavors: s.max_flavors,
-     slices: s.slices,
-     active: s.is_active,
-     sort_order: s.sort_order
-   })) as PizzaSize[];
+  const beverages = beveragesData as unknown as BeverageRow[];
+  
+  const pizzaSizesFromTable = (sizesRes?.data ?? []).map(s => ({
+    id: s.id,
+    label: s.name,
+    price: Number(s.price),
+    max_flavors: s.max_flavors,
+    slices: s.slices,
+    active: s.is_active,
+    sort_order: s.sort_order
+  })) as PizzaSize[];
 
   return {
     restaurant,
-     categories: cats.map((c) => ({
-       ...c,
-       items: items.filter((i) => i.category_id === c.id),
-       pizza_sizes: c.is_pizza ? pizzaSizes : c.pizza_sizes
-     })),
+    categories: cats.map((c) => {
+      // Use os tamanhos da tabela se existirem, senão use o JSONB da categoria (fallback para dados legados)
+      const sizes = (c.is_pizza && pizzaSizesFromTable.length > 0) 
+        ? pizzaSizesFromTable 
+        : (c.pizza_sizes || []);
+      
+      return {
+        ...c,
+        items: items.filter((i) => i.category_id === c.id),
+        pizza_sizes: c.is_pizza ? sizes : null
+      };
+    }),
     comboGroups: groups.map((g) => ({
       ...g,
       combos: combos.filter((cb) => cb.group_id === g.id),
     })),
-     deliveryZones: zones,
-     beverages,
-     pizzaSizes,
+    deliveryZones: zones,
+    beverages,
+    pizzaSizes: pizzaSizesFromTable,
   };
 }
 

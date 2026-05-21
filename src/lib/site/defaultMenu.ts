@@ -180,23 +180,60 @@ export async function seedDefaultMenu(
         is_pizza: cat.is_pizza,
         pizza_sizes: cat.pizza_sizes as never,
         sort_order: ci,
+        is_active: true,
       })
       .select()
       .single();
-    if (catErr || !catRow) continue;
+    if (catErr || !catRow) {
+      console.error(`[seedDefaultMenu] Erro ao criar categoria ${cat.name}:`, catErr);
+      continue;
+    }
+
+    const isBeverageCat = cat.name.toLowerCase() === "bebidas" || cat.name.toLowerCase() === "bebida";
 
     if (cat.flavors.length > 0) {
-      const rows = cat.flavors.map((f, idx) => ({
-        restaurant_id: restaurantId,
-        category_id: catRow.id,
-        name: f.name,
-        description: f.description,
-        price: cat.is_pizza ? 0 : 0,
-        is_special: f.is_special,
-        special_extra: f.special_extra,
+      if (isBeverageCat) {
+        // Inserir na tabela específica de bebidas
+        const beverageRows = cat.flavors.map((f, idx) => ({
+          pizzeria_id: restaurantId,
+          name: f.name,
+          price: f.name.includes("Lata") ? 6 : (f.name.includes("2L") ? 14 : 8),
+          is_active: true,
+          sort_order: idx,
+        }));
+        const { error: bevErr } = await supabase.from("pizzeria_beverages").insert(beverageRows);
+        if (bevErr) console.error("[seedDefaultMenu] Erro ao criar bebidas padrão:", bevErr);
+      } else {
+        // Inserir na tabela genérica de itens
+        const rows = cat.flavors.map((f, idx) => ({
+          restaurant_id: restaurantId,
+          category_id: catRow.id,
+          name: f.name,
+          description: f.description,
+          price: 0,
+          is_special: f.is_special,
+          special_extra: f.special_extra,
+          sort_order: idx,
+          is_active: true,
+        }));
+        const { error: itemErr } = await supabase.from("menu_items").insert(rows);
+        if (itemErr) console.error(`[seedDefaultMenu] Erro ao criar itens para ${cat.name}:`, itemErr);
+      }
+    }
+
+    // Se for categoria de pizza, inserir também na tabela de tamanhos
+    if (cat.is_pizza && cat.pizza_sizes) {
+      const sizeRows = cat.pizza_sizes.map((s, idx) => ({
+        pizzeria_id: restaurantId,
+        name: s.label,
+        price: s.price,
+        max_flavors: s.max_flavors,
+        slices: s.slices || 0,
+        is_active: true,
         sort_order: idx,
       }));
-      await supabase.from("menu_items").insert(rows);
+      const { error: sizeErr } = await supabase.from("pizzeria_pizza_sizes").insert(sizeRows);
+      if (sizeErr) console.error("[seedDefaultMenu] Erro ao criar tamanhos de pizza padrão:", sizeErr);
     }
   }
 

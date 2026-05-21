@@ -125,9 +125,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     try {
       console.log("🚀 Iniciando finalização do pedido");
 
-       const apiKey = restaurant?.flycontrol_api_key;
-       const endpoint = restaurant?.flycontrol_api_url || restaurant?.flycontrol_base_url;
-       const pizzeriaSlug = restaurant?.slug;
+        const pizzeriaSlug = restaurant?.slug;
 
         if (flycontrolOn && restaurant) {
           const payload = buildOrderPayload({
@@ -180,7 +178,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             toast.error("Erro no painel, mas o pedido seguirá via WhatsApp.");
           }
        } else {
-         console.log("ℹ️ Endpoint ou API Key ausente (ou desabilitado). Pulando registro no painel e seguindo para WhatsApp.");
+         console.log("ℹ️ Integração FlyControl não habilitada ou restaurante ausente. Pulando registro no painel e seguindo para WhatsApp.");
        }
 
     } catch (err) {

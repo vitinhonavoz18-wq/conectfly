@@ -1,11 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-idempotency-key",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = [
+  "https://conectfly.lovable.app",
+  "https://conectfly.com.br",
+  "https://www.conectfly.com.br",
+  "https://teste.conectfly.com.br",
+  "http://localhost:5173", // For development
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowOrigin = origin && (ALLOWED_ORIGINS.includes(origin) || origin.includes("--conectfly.lovable.app")) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "content-type, x-idempotency-key",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 function joinUrl(base: string, path: string) {
   return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
@@ -77,31 +89,33 @@ function resolveOrdersUrl(restaurant: {
 export const Route = createFileRoute("/api/public/submit-order")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { headers: corsHeaders }),
+      OPTIONS: async ({ request }) => new Response(null, { headers: getCorsHeaders(request.headers.get("origin")) }),
       POST: async ({ request }) => {
+        const origin = request.headers.get("origin");
+        const headers = { ...getCorsHeaders(origin), "Content-Type": "application/json" };
+        
         try {
           const ip = request.headers.get("x-forwarded-for") || "unknown";
           const body = (await request.json()) as {
             restaurant_id?: string;
             payload?: any;
           };
+          
           if (!body?.restaurant_id || !body?.payload) {
             return new Response(
-              JSON.stringify({ success: false, error: "restaurant_id e payload obrigatórios" }),
-              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              JSON.stringify({ success: false, error: "Dados incompletos" }),
+              { status: 400, headers },
             );
           }
 
-          // Validate restaurant_id is a UUID before any DB call
           const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (!uuidRe.test(body.restaurant_id)) {
             return new Response(
-              JSON.stringify({ success: false, error: "restaurant_id inválido" }),
-              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              JSON.stringify({ success: false, error: "ID inválido" }),
+              { status: 400, headers },
             );
           }
 
-          // Rate limiting
           const { data: allowed, error: limitErr } = await supabaseAdmin.rpc("check_order_rate_limit", {
             p_restaurant_id: body.restaurant_id,
             p_ip: ip
@@ -111,9 +125,9 @@ export const Route = createFileRoute("/api/public/submit-order")({
             return new Response(
               JSON.stringify({ 
                 success: false, 
-                error: "Muitas tentativas em pouco tempo. Aguarde alguns instantes e tente novamente." 
+                error: "Muitas tentativas. Aguarde um pouco." 
               }),
-              { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              { status: 429, headers },
             );
           }
 
@@ -124,96 +138,85 @@ export const Route = createFileRoute("/api/public/submit-order")({
             .maybeSingle();
 
           if (error || !r) {
-            console.error(`[API/SUBMIT-ORDER] Erro: Pizzaria ${body.restaurant_id} não encontrada no banco.`);
             return new Response(
               JSON.stringify({ success: false, error: "Pizzaria não encontrada" }),
-              { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              { status: 404, headers },
             );
           }
 
           if (!r.flycontrol_enabled) {
             return new Response(
-              JSON.stringify({ success: true, skipped: true, reason: "flycontrol disabled" }),
-              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              JSON.stringify({ success: true, skipped: true }),
+              { status: 200, headers },
             );
           }
 
           const url = resolveOrdersUrl(r);
           const key = (r.flycontrol_api_key ?? "").trim();
           if (!url || !key) {
-            console.error(`[API/SUBMIT-ORDER] Erro: Integração incompleta para ${body.restaurant_id}. URL: ${!!url}, Key: ${!!key}`);
             return new Response(
-              JSON.stringify({ success: false, error: "Integração FlyControl incompleta" }),
-              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+              JSON.stringify({ success: false, error: "Configuração incompleta" }),
+              { status: 500, headers },
             );
           }
 
-          // Fallback: Add API Key to payload body as well
           if (body.payload) {
             body.payload.api_key = key;
           }
 
-           const idempotencyKey = request.headers.get("x-idempotency-key") || body.payload?.order?.id || "";
+          const idempotencyKey = request.headers.get("x-idempotency-key") || body.payload?.order?.id || "";
+          const maxRetries = 3;
+          let lastErr = "";
+          let lastStatus = 0;
+          let finalData: any = null;
+          let isSuccess = false;
 
-          console.log(`[API/SUBMIT-ORDER] 📤 Encaminhando para FlyControl: ${url}`);
-          console.log(`[API/SUBMIT-ORDER] 🍕 Slug: ${body.payload?.pizzeria?.slug}`);
-          console.log(`[API/SUBMIT-ORDER] 🆔 Idempotency: ${idempotencyKey}`);
+          for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+              const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-api-key": key,
+                  "Authorization": `Bearer ${key}`,
+                  "x-idempotency-key": idempotencyKey,
+                },
+                body: JSON.stringify(body.payload),
+              });
+              const txt = await res.text().catch(() => "");
+              try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
+              lastStatus = res.status;
 
-           const maxRetries = 3;
-           let lastErr = "";
-           let lastStatus = 0;
-           let finalData: any = null;
-           let isSuccess = false;
- 
-           for (let attempt = 0; attempt <= maxRetries; attempt++) {
-             try {
-               const res = await fetch(url, {
-                 method: "POST",
-                 headers: {
-                   "Content-Type": "application/json",
-                   "x-api-key": key,
-                    "Authorization": `Bearer ${key}`,
-                   "x-idempotency-key": idempotencyKey,
-                  },
-                   body: JSON.stringify(body.payload),
-               });
-               const txt = await res.text().catch(() => "");
-                console.log(`[API/SUBMIT-ORDER] 📥 Resposta de ${url} [Tentativa ${attempt+1}/${maxRetries+1}]: Status ${res.status}`);
+              if (res.ok && finalData.status !== "error" && finalData.success !== false) {
+                isSuccess = true;
+                break;
+              }
+              lastErr = !res.ok ? `Erro ${res.status}` : (finalData.message || "Pedido rejeitado");
+              if (res.status >= 400 && res.status < 500) break;
+            } catch (e: any) {
+              lastErr = "Erro de conexão";
+            }
+            if (attempt < maxRetries) await new Promise((res_wait) => setTimeout(res_wait, 1000 * Math.pow(2, attempt)));
+          }
 
-               try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
-               lastStatus = res.status;
- 
-               if (res.ok && finalData.status !== "error" && finalData.success !== false) {
-                 isSuccess = true;
-                 break;
-               }
- 
-               lastErr = !res.ok ? `FLYCONTROL ${res.status}: ${txt || res.statusText}` : (finalData.message || "Pedido rejeitado");
-               if (res.status >= 400 && res.status < 500) break;
-             } catch (e: any) {
-               lastErr = e?.message || String(e);
-             }
-             if (attempt < maxRetries) await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
-           }
- 
-           await supabaseAdmin.from("flycontrol_order_logs").insert({
-             restaurant_id: body.restaurant_id,
-             idempotency_key: idempotencyKey,
-             payload: body.payload,
-             status_code: lastStatus,
-             success: isSuccess,
-             error_message: isSuccess ? null : lastErr,
-             response_body: finalData ? JSON.stringify(finalData) : null,
-           });
- 
-           return new Response(JSON.stringify({ success: isSuccess, data: finalData, error: isSuccess ? null : lastErr }), {
-             status: isSuccess ? 200 : 502,
-             headers: { ...corsHeaders, "Content-Type": "application/json" },
-           });
+          await supabaseAdmin.from("flycontrol_order_logs").insert({
+            restaurant_id: body.restaurant_id,
+            idempotency_key: idempotencyKey,
+            payload: body.payload,
+            status_code: lastStatus,
+            success: isSuccess,
+            error_message: isSuccess ? null : lastErr,
+            response_body: finalData ? JSON.stringify(finalData) : null,
+          });
+
+          return new Response(JSON.stringify({ success: isSuccess, error: isSuccess ? null : "Falha ao registrar pedido" }), {
+            status: isSuccess ? 200 : 502,
+            headers,
+          });
         } catch (e: any) {
           return new Response(
-            JSON.stringify({ success: false, error: e?.message || "internal error" }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            JSON.stringify({ success: false, error: "Erro interno" }),
+            { status: 500, headers },
           );
         }
       },
