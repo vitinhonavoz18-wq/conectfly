@@ -60,6 +60,7 @@ export interface ComboGroupRow {
 export interface RestaurantRow {
   id: string;
   slug: string;
+  custom_subdomain: string | null;
   name: string;
   tagline: string | null;
   description: string | null;
