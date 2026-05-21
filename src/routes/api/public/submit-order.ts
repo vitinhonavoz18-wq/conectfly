@@ -1,11 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, x-idempotency-key",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = [
+  "https://conectfly.lovable.app",
+  "https://conectfly.com.br",
+  "https://www.conectfly.com.br",
+  "https://teste.conectfly.com.br",
+  "http://localhost:5173", // For development
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Headers": "content-type, x-idempotency-key",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Vary": "Origin",
+  };
+}
 
 function joinUrl(base: string, path: string) {
   return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
