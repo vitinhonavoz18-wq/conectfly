@@ -7,7 +7,7 @@ export const ALTERNATIVE_DOMAIN = "conectfly.lovable.app";
 
 /**
  * Retorna o subdomínio se houver um, caso contrário retorna null.
- * Ignora "www", "localhost" e os domínios base.
+ * ATUALIZAÇÃO: Agora retorna null por padrão para ignorar subdomínios como identificadores de pizzaria.
  */
 export function getSubdomain(): string | null {
   if (typeof window === "undefined") return null;
@@ -19,70 +19,58 @@ export function getSubdomain(): string | null {
     return null;
   }
 
-  // Verifica se o hostname termina com os domínios base
-  const isBaseDomain = hostname === BASE_DOMAIN || hostname === ALTERNATIVE_DOMAIN;
-  if (isBaseDomain) return null;
-
-  // Extrai o subdomínio
+  // Se o hostname for diferente do domínio base, pode ser um subdomínio
+  // Mas conforme nova regra, não usaremos mais para identificar pizzarias
+  // Retornamos apenas para fins de log ou redirecionamento se necessário
   const parts = hostname.split(".");
-  let subdomain: string | null = null;
-  
-  // Ex: cheirosaa.conectfly.com.br -> ["cheirosaa", "conectfly", "com", "br"] -> sub seria "cheirosaa"
-  // Ex: cheirosaa.conectfly.lovable.app -> sub seria "cheirosaa"
-  
-  if (hostname.endsWith(BASE_DOMAIN)) {
-     // Para conectfly.com.br, o domínio tem 3 partes (conectfly, com, br)
-     if (parts.length > 3) {
-       const sub = parts[0];
-       if (sub !== "www") subdomain = sub;
-     }
-  } else if (hostname.endsWith(ALTERNATIVE_DOMAIN)) {
-    // Para conectfly.lovable.app, o domínio tem 3 partes
-    if (parts.length > 3) {
-      const sub = parts[0];
-      if (sub !== "www") subdomain = sub;
-    }
-  } else {
-    // Suporte genérico para outros domínios se houver mais de 2 partes
-    // Ex: pizzaria.outrodominio.com -> sub seria "pizzaria"
-    if (parts.length > 2) {
-      const sub = parts[0];
-      if (sub !== "www") subdomain = sub;
-    }
+  if (parts.length > 3 && hostname.endsWith(BASE_DOMAIN)) {
+    const sub = parts[0];
+    if (sub !== "www") return sub;
   }
-
-  // LOGS SEMPRE ATIVOS PARA DEPURAÇÃO (Conforme solicitado)
-  console.log("HOST:", hostname);
-  console.log("SUBDOMAIN:", subdomain);
-
-  return subdomain;
+  
+  return null;
 }
 
 /**
- * Resolve o identificador da pizzaria (seja via subdomínio ou via path/slug)
+ * Resolve o identificador da pizzaria (SEMPRE via path/slug agora)
  */
 export function getPizzeriaIdentifier(routeSlug?: string): string {
-  const subdomain = getSubdomain();
-  
-  // LOGS ADICIONAIS PARA DEPURAÇÃO
-  console.log("DEBUG IDENTIFIER - SUBDOMAIN:", subdomain);
-  console.log("DEBUG IDENTIFIER - ROUTE SLUG:", routeSlug);
-
-  if (subdomain) return subdomain;
-
-  if (routeSlug) return routeSlug;
+  // Se o routeSlug foi passado (via parâmetro de rota /$slug), usamos ele
+  if (routeSlug) {
+    console.log("DEBUG IDENTIFIER - ROUTE SLUG:", routeSlug);
+    return routeSlug;
+  }
 
   // Fallback para extração manual do pathname se não houver routeSlug
   if (typeof window !== "undefined") {
     const pathname = window.location.pathname;
-    const cleanSlug = pathname
-      .split('?')[0]
-      .replace(/^\/+|\/+$/g, '')
-      .trim();
+    const parts = pathname.split('/').filter(Boolean);
+    
+    // O primeiro segmento do path é o slug da pizzaria
+    // Ex: /cheirosaa-pizzaria -> cheirosaa-pizzaria
+    const cleanSlug = parts[0] || "";
     
     console.log("DEBUG IDENTIFIER - CLEAN SLUG FROM PATH:", cleanSlug);
     return cleanSlug;
   }
 
   return "";
+}
+
+/**
+ * Verifica se deve redirecionar de um subdomínio para o domínio principal
+ */
+export function checkSubdomainRedirect(): void {
+  if (typeof window === "undefined") return;
+
+  const hostname = window.location.hostname;
+  const subdomain = getSubdomain();
+
+  // Se estivermos em um subdomínio (que não seja www) e no domínio oficial
+  if (subdomain && hostname.endsWith(BASE_DOMAIN) && !hostname.startsWith("www.")) {
+    // Redireciona para conectfly.com.br/subdominio
+    const newUrl = `https://${BASE_DOMAIN}/${subdomain}${window.location.pathname}${window.location.search}`;
+    console.log("REDIRECTING FROM SUBDOMAIN TO PATH:", newUrl);
+    window.location.href = newUrl;
+  }
 }
