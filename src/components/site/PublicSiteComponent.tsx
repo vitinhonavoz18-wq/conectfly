@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { fetchSiteBySlug } from "@/lib/site/queries";
 import type { SiteData } from "@/lib/site/types";
 import { DeliverySite } from "@/components/site/DeliverySite";
-import { getPizzeriaIdentifier } from "@/lib/utils/hostname";
+import { getPizzeriaIdentifier, getSubdomain } from "@/lib/utils/hostname";
 
 interface Props {
   routeSlug?: string;
