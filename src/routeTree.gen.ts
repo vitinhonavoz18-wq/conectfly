@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as DebugHostRouteImport } from './routes/debug-host'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
@@ -23,6 +24,11 @@ import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DebugHostRoute = DebugHostRouteImport.update({
+  id: '/debug-host',
+  path: '/debug-host',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -74,6 +80,7 @@ const ApiPublicPizzeriasSlugMenuSyncRoute =
 export interface FileRoutesByFullPath {
   '/$slug': typeof SlugRoute
   '/': typeof AuthenticatedIndexRoute
+  '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/edit/$id': typeof AuthenticatedEditIdRoute
@@ -84,6 +91,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
+  '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/$slug': typeof SlugRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -111,6 +120,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/$slug'
     | '/'
+    | '/debug-host'
     | '/login'
     | '/api/menu-sync'
     | '/edit/$id'
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/$slug'
+    | '/debug-host'
     | '/login'
     | '/api/menu-sync'
     | '/'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/$slug'
     | '/_authenticated'
+    | '/debug-host'
     | '/login'
     | '/api/menu-sync'
     | '/_authenticated/'
@@ -146,6 +158,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  DebugHostRoute: typeof DebugHostRoute
   LoginRoute: typeof LoginRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/debug-host': {
+      id: '/debug-host'
+      path: '/debug-host'
+      fullPath: '/debug-host'
+      preLoaderRoute: typeof DebugHostRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -258,6 +278,7 @@ const ApiMenuSyncRouteWithChildren = ApiMenuSyncRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  DebugHostRoute: DebugHostRoute,
   LoginRoute: LoginRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
