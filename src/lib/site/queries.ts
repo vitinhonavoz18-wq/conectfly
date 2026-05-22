@@ -32,6 +32,8 @@ const debugLog = (...args: any[]) => {
       .select("*")
       .or(`custom_subdomain.eq.${normalizedIdentifier},slug.eq.${normalizedIdentifier}`)
       .maybeSingle();
+    
+    console.log("MATCHED RESTAURANT:", data ? data.name : "None");
 
     if (error) {
       console.error(`[fetchSiteBySlug] Erro ao buscar restaurante:`, error);
