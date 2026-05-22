@@ -41,13 +41,9 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
-  const subdomain = getSubdomain();
   const router = useRouter();
   const { user, signOut } = useAuth();
-  
-  if (subdomain) {
-    return <PublicSiteComponent />;
-  }
+
   const [list, setList] = useState<RestaurantRow[] | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
