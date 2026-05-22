@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
+import { getSubdomain } from "@/lib/utils/hostname";
 
 type Search = { redirect?: string };
 
