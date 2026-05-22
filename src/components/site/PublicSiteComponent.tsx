@@ -3,7 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { fetchSiteBySlug } from "@/lib/site/queries";
 import type { SiteData } from "@/lib/site/types";
 import { DeliverySite } from "@/components/site/DeliverySite";
-import { getPizzeriaIdentifier } from "@/lib/utils/hostname";
+import { getPizzeriaIdentifier, getSubdomain } from "@/lib/utils/hostname";
 
 interface Props {
   routeSlug?: string;
@@ -21,13 +21,14 @@ export function PublicSiteComponent({ routeSlug }: Props) {
   useEffect(() => {
     if (!mounted) return;
 
-    if (import.meta.env.DEV) {
-      console.log("--- DEBUG ACESSO ---");
-      console.log("DOMAIN:", window.location.hostname);
-      console.log("PATHNAME:", window.location.pathname);
-      console.log("IDENTIFIER DETECTADO:", detectedIdentifier);
-      console.log("-------------------");
-    }
+    // LOGS OBRIGATÓRIOS (Conforme solicitado)
+    console.log("--- DEBUG PUBLIC SITE ---");
+    console.log("HOST:", window.location.hostname);
+    console.log("PATH:", window.location.pathname);
+    console.log("IS SUBDOMAIN:", !!getSubdomain());
+    console.log("SUBDOMAIN:", getSubdomain());
+    console.log("IDENTIFIER DETECTADO:", detectedIdentifier);
+    console.log("-------------------------");
 
     let alive = true;
     fetchSiteBySlug(detectedIdentifier)

@@ -14,6 +14,9 @@ export function getSubdomain(): string | null {
 
   const hostname = window.location.hostname;
   
+  // LOGS PARA DEPURAÇÃO (Conforme solicitado)
+  const isDev = import.meta.env.DEV;
+  
   // Se estiver em localhost ou ip, não há subdomínio relevante
   if (hostname === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
     return null;
@@ -25,6 +28,7 @@ export function getSubdomain(): string | null {
 
   // Extrai o subdomínio
   const parts = hostname.split(".");
+  let subdomain: string | null = null;
   
   // Ex: cheirosaa.conectfly.com.br -> ["cheirosaa", "conectfly", "com", "br"] -> sub seria "cheirosaa"
   // Ex: cheirosaa.conectfly.lovable.app -> sub seria "cheirosaa"
@@ -33,17 +37,32 @@ export function getSubdomain(): string | null {
      // Para conectfly.com.br, o domínio tem 3 partes (conectfly, com, br)
      if (parts.length > 3) {
        const sub = parts[0];
-       if (sub !== "www") return sub;
+       if (sub !== "www") subdomain = sub;
      }
   } else if (hostname.endsWith(ALTERNATIVE_DOMAIN)) {
     // Para conectfly.lovable.app, o domínio tem 3 partes
     if (parts.length > 3) {
       const sub = parts[0];
-      if (sub !== "www") return sub;
+      if (sub !== "www") subdomain = sub;
+    }
+  } else {
+    // Suporte genérico para outros domínios se houver mais de 2 partes
+    // Ex: pizzaria.outrodominio.com -> sub seria "pizzaria"
+    if (parts.length > 2) {
+      const sub = parts[0];
+      if (sub !== "www") subdomain = sub;
     }
   }
 
-  return null;
+  if (isDev) {
+    console.log("--- HOSTNAME DETECTION ---");
+    console.log("HOST:", hostname);
+    console.log("IS SUBDOMAIN:", !!subdomain);
+    console.log("SUBDOMAIN:", subdomain);
+    console.log("--------------------------");
+  }
+
+  return subdomain;
 }
 
 /**
@@ -51,6 +70,12 @@ export function getSubdomain(): string | null {
  */
 export function getPizzeriaIdentifier(routeSlug?: string): string {
   const subdomain = getSubdomain();
+  
+  // LOGS ADICIONAIS
+  console.log("DEBUG IDENTIFIER - HOSTNAME:", typeof window !== "undefined" ? window.location.hostname : "SSR");
+  console.log("DEBUG IDENTIFIER - SUBDOMAIN:", subdomain);
+  console.log("DEBUG IDENTIFIER - ROUTE SLUG:", routeSlug);
+
   if (subdomain) return subdomain;
 
   if (routeSlug) return routeSlug;
@@ -62,6 +87,8 @@ export function getPizzeriaIdentifier(routeSlug?: string): string {
       .split('?')[0]
       .replace(/^\/+|\/+$/g, '')
       .trim();
+    
+    console.log("DEBUG IDENTIFIER - CLEAN SLUG FROM PATH:", cleanSlug);
     return cleanSlug;
   }
 
