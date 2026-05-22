@@ -678,6 +678,10 @@ export type Database = {
         Args: { p_ip: string; p_restaurant_id: string }
         Returns: boolean
       }
+      generate_clean_subdomain: {
+        Args: { input_text: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
