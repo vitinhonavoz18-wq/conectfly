@@ -235,7 +235,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
           <div className="flex gap-2 items-center">
             <input
               value={r.custom_subdomain ?? ""}
-              onChange={(e) => set("custom_subdomain", slugify(e.target.value))}
+              onChange={(e) => set("custom_subdomain", subdomainify(e.target.value))}
               className="input flex-1"
               placeholder="Ex: cheirosaa"
             />
