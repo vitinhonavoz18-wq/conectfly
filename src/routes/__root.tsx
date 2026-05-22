@@ -73,6 +73,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+   useEffect(() => {
+     checkSubdomainRedirect();
+   }, []);
+
    return (
      <AuthProvider>
        <Outlet />
