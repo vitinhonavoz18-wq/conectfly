@@ -14,37 +14,35 @@ export const Route = createFileRoute("/_authenticated")({
     }
     
     const hostname = window.location.hostname;
-    const subdomain = getSubdomain();
+    const pathname = window.location.pathname;
     
-    console.log("--- AUTH BEFORE_LOAD ---");
+    console.log("--- AUTH CHECK ---");
     console.log("HOSTNAME:", hostname);
-    console.log("SUBDOMAIN:", subdomain);
-    console.log("PATHNAME:", window.location.pathname);
+    console.log("PATHNAME:", pathname);
     
-    // Se estiver em um subdomínio válido, NUNCA redireciona para login
-    if (subdomain) {
-      console.log("SUBDOMÍNIO DETECTADO - MANTENDO NA PÁGINA PÚBLICA");
+    // Se o path não for "/" e não for rotas de admin conhecidas (se houvesse outras além de /admin/...)
+    // O router já cuida de casar /$slug, mas como _authenticated.index.tsx casa com "/",
+    // só precisamos garantir que "/" exija login.
+    
+    // Se estiver no path raiz "/", exige login para o painel
+    if (pathname === "/") {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        console.log("SEM SESSÃO NA RAIZ - REDIRECIONANDO PARA LOGIN");
+        throw redirect({
+          to: "/login",
+          search: { redirect: location.href },
+        });
+      }
+      console.log("SESSÃO ATIVA NO PAINEL");
       return;
     }
 
-    // Se estiver no domínio principal mas acessando um slug (ex: conectfly.com.br/slug)
-    // O router vai casar com /$slug e não com /_authenticated/ (que é "/")
-    // Mas para garantir, se o path não for "/" e estivermos no domínio base, não forçamos login
-    if (window.location.pathname !== "/" && (hostname === BASE_DOMAIN || hostname === "localhost")) {
-       console.log("ACESSANDO SLUG NO DOMÍNIO PRINCIPAL - MANTENDO");
-       return;
-    }
+    // Para outros caminhos, o TanStack Router deve decidir se cai em /$slug (público)
+    // ou em outras rotas autenticadas.
+    // Como estamos dentro do layout _authenticated, se o path não for "/", 
+    // e o componente que casou for descendente de _authenticated, ele passaria por aqui.
+    // Mas as rotas /edit/$id etc estão sob _authenticated.
 
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      console.log("SEM SESSÃO - REDIRECIONANDO PARA LOGIN");
-      throw redirect({
-        to: "/login",
-        search: { redirect: location.href },
-      });
-    }
-    
-    console.log("SESSÃO ATIVA - ACESSO PERMITIDO AO PAINEL");
-  },
   component: () => <Outlet />,
 });
