@@ -43,6 +43,6 @@ export const Route = createFileRoute("/_authenticated")({
     // Como estamos dentro do layout _authenticated, se o path não for "/", 
     // e o componente que casou for descendente de _authenticated, ele passaria por aqui.
     // Mas as rotas /edit/$id etc estão sob _authenticated.
-
+  },
   component: () => <Outlet />,
 });
