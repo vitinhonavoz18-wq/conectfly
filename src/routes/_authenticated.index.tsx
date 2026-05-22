@@ -262,7 +262,7 @@ function Dashboard() {
                        <h3 className="font-black text-lg truncate group-hover:text-primary transition-colors">{r.name}</h3>
                         <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
                           <Globe className="h-3 w-3" />
-                          {r.custom_subdomain ? `${r.custom_subdomain}.conectfly.com.br` : `conectfly.com.br/${r.slug}`}
+                          {`conectfly.com.br/${r.slug}`}
                         </p>
                      </div>
                   </div>
