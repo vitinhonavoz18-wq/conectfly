@@ -14,9 +14,6 @@ export function getSubdomain(): string | null {
 
   const hostname = window.location.hostname;
   
-  // LOGS PARA DEPURAÇÃO (Conforme solicitado)
-  const isDev = import.meta.env.DEV;
-  
   // Se estiver em localhost ou ip, não há subdomínio relevante
   if (hostname === "localhost" || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
     return null;
@@ -54,13 +51,9 @@ export function getSubdomain(): string | null {
     }
   }
 
-  if (isDev) {
-    console.log("--- HOSTNAME DETECTION ---");
-    console.log("HOST:", hostname);
-    console.log("IS SUBDOMAIN:", !!subdomain);
-    console.log("SUBDOMAIN:", subdomain);
-    console.log("--------------------------");
-  }
+  // LOGS SEMPRE ATIVOS PARA DEPURAÇÃO (Conforme solicitado)
+  console.log("HOST:", hostname);
+  console.log("SUBDOMAIN:", subdomain);
 
   return subdomain;
 }
@@ -71,8 +64,7 @@ export function getSubdomain(): string | null {
 export function getPizzeriaIdentifier(routeSlug?: string): string {
   const subdomain = getSubdomain();
   
-  // LOGS ADICIONAIS
-  console.log("DEBUG IDENTIFIER - HOSTNAME:", typeof window !== "undefined" ? window.location.hostname : "SSR");
+  // LOGS ADICIONAIS PARA DEPURAÇÃO
   console.log("DEBUG IDENTIFIER - SUBDOMAIN:", subdomain);
   console.log("DEBUG IDENTIFIER - ROUTE SLUG:", routeSlug);
 

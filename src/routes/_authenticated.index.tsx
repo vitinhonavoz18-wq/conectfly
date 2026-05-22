@@ -16,7 +16,7 @@ import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
-import { slugify } from "@/lib/site/format";
+import { slugify, subdomainify } from "@/lib/site/format";
 import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 import { generateApiKey } from "@/lib/site/flycontrol";
 import { useAuth } from "@/hooks/useAuth";
@@ -71,8 +71,9 @@ function Dashboard() {
     let slug = slugify(trimmed);
     if (!slug) slug = `site-${Date.now()}`;
     
-    // Gera o subdomínio inicial a partir do slug
-    let custom_subdomain = slug;
+    // Gera o subdomínio inicial a partir do nome de forma automática
+    let custom_subdomain = subdomainify(trimmed);
+    if (!custom_subdomain) custom_subdomain = `site${Date.now()}`;
 
     // ensure unique for both slug and subdomain
     const { data: existing } = await supabase
@@ -83,8 +84,8 @@ function Dashboard() {
       
     if (existing) {
       const suffix = Math.random().toString(36).slice(2, 6);
-      slug = `${slug}-${suffix}`;
-      custom_subdomain = `${custom_subdomain}-${suffix}`;
+      if (existing.slug === slug) slug = `${slug}-${suffix}`;
+      if (existing.custom_subdomain === custom_subdomain) custom_subdomain = `${custom_subdomain}${suffix}`;
     }
 
     const { data, error: insErr } = await supabase

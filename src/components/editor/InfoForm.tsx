@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy, Wand2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
-import { formatPhoneMask, slugify, getPizzeriaPublicUrl } from "@/lib/site/format";
+import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
 
 interface Props {
@@ -235,7 +235,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
           <div className="flex gap-2 items-center">
             <input
               value={r.custom_subdomain ?? ""}
-              onChange={(e) => set("custom_subdomain", slugify(e.target.value))}
+              onChange={(e) => set("custom_subdomain", subdomainify(e.target.value))}
               className="input flex-1"
               placeholder="Ex: cheirosaa"
             />
