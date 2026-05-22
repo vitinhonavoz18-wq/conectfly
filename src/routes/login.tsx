@@ -14,8 +14,18 @@ export const Route = createFileRoute("/login")({
   }),
   beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
+    
+    // Se estiver em um subdomínio, não redireciona se já estiver logado (deixa ver o cardápio)
+    // Mas se quiser logar, o login deve funcionar no subdomínio também.
+    // No entanto, para evitar o redirect para "/", vamos verificar o subdomínio.
     const { data } = await supabase.auth.getSession();
     if (data.session) {
+      const subdomain = getSubdomain();
+      if (subdomain) {
+        // Se estiver logado em um subdomínio, apenas redireciona para a home do subdomínio
+        // que já vai mostrar o site público através do Dashboard
+        throw redirect({ to: "/" });
+      }
       throw redirect({ to: search.redirect || "/" });
     }
   },
