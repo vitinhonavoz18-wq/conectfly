@@ -1,6 +1,8 @@
  import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
  import { Toaster } from "sonner";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useEffect } from "react";
+import { checkSubdomainRedirect } from "@/lib/utils/hostname";
 
 import appCss from "../styles.css?url";
 
