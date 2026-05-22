@@ -23,8 +23,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
-import { getSubdomain } from "@/lib/utils/hostname";
-import { PublicSiteComponent } from "@/components/site/PublicSiteComponent";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -41,13 +39,9 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function Dashboard() {
-  const subdomain = getSubdomain();
   const router = useRouter();
   const { user, signOut } = useAuth();
-  
-  if (subdomain) {
-    return <PublicSiteComponent />;
-  }
+
   const [list, setList] = useState<RestaurantRow[] | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
@@ -262,7 +256,7 @@ function Dashboard() {
                        <h3 className="font-black text-lg truncate group-hover:text-primary transition-colors">{r.name}</h3>
                         <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
                           <Globe className="h-3 w-3" />
-                          {r.custom_subdomain ? `${r.custom_subdomain}.conectfly.com.br` : `conectfly.com.br/${r.slug}`}
+                          {`conectfly.com.br/${r.slug}`}
                         </p>
                      </div>
                   </div>

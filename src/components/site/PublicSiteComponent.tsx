@@ -54,22 +54,14 @@ export function PublicSiteComponent({ routeSlug }: Props) {
       document.title = data.restaurant.name;
       
       // Handle canonical link
-      // REMOVIDO: Redirecionamentos ou sugestões de canonical que forcem o domínio principal.
-      // Manteremos apenas meta tags informativas se necessário, mas sem forçar URL absoluta fixa se estivermos em subdomínio.
-      const subdomain = data.restaurant.custom_subdomain;
-      const currentHostname = typeof window !== "undefined" ? window.location.hostname : "";
-      
-      if (subdomain && !currentHostname.includes(subdomain)) {
-        // Apenas adicionamos canonical se o hostname atual NÃO for o do subdomínio
-        const canonicalUrl = `https://${subdomain}.conectfly.com.br`;
-        let link: HTMLLinkElement | null = document.querySelector("link[rel='canonical']");
-        if (!link) {
-          link = document.createElement("link");
-          link.rel = "canonical";
-          document.head.appendChild(link);
-        }
-        link.href = canonicalUrl;
+      const canonicalUrl = `https://conectfly.com.br/${data.restaurant.slug}`;
+      let link: HTMLLinkElement | null = document.querySelector("link[rel='canonical']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "canonical";
+        document.head.appendChild(link);
       }
+      link.href = canonicalUrl;
     }
   }, [data]);
 

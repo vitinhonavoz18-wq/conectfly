@@ -31,14 +31,14 @@ function DebugHost() {
       </div>
 
       <div className="mt-8 p-4 border border-green-800 bg-green-950/20 rounded">
-        <h2 className="text-lg font-bold mb-2">Análise:</h2>
+        <h2 className="text-lg font-bold mb-2">Estratégia de Roteamento:</h2>
         <p>
-          Se você vê <strong>{window.location.hostname}</strong> acima e não houve redirect, 
-          então o roteamento no subdomínio está funcionando.
+          A plataforma agora utiliza <strong>Path-based Routing</strong> (/slug).
         </p>
-        <p className="mt-2 text-yellow-500 italic">
-          Nota: Se você foi redirecionado para cá a partir do domínio principal, 
-          isso indica que algo (pode ser a Lovable ou DNS) está normalizando o acesso.
+        <p className="mt-2">
+          Qualquer subdomínio acessado (ex: teste.conectfly.com.br) deve ser 
+          redirecionado automaticamente para o domínio principal com o slug no path 
+          (ex: conectfly.com.br/teste).
         </p>
       </div>
     </div>
