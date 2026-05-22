@@ -50,3 +50,13 @@ export function slugify(s: string): string {
     .replace(/-+/g, "-")
     .slice(0, 60);
 }
+
+export function subdomainify(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "") // Somente letras e números
+    .trim()
+    .slice(0, 40);
+}
