@@ -231,25 +231,6 @@ export function InfoForm({ restaurant, onChange }: Props) {
             />
           </div>
         </Field>
-        <Field label="Subdomínio Personalizado" hint="Ex: cheirosaa.conectfly.com.br">
-          <div className="flex gap-2 items-center">
-            <input
-              value={r.custom_subdomain ?? ""}
-              onChange={(e) => set("custom_subdomain", subdomainify(e.target.value))}
-              className="input flex-1"
-              placeholder="Ex: cheirosaa"
-            />
-            <a
-              href={getPizzeriaPublicUrl(r.slug, r.custom_subdomain)}
-              target="_blank"
-              rel="noreferrer"
-              className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-primary transition-all shadow-xl"
-              title="Ver site público"
-            >
-              <Eye className="h-5 w-5" />
-            </a>
-          </div>
-        </Field>
         <Field label="Slogan curto" hint="Ex: O melhor yakisoba de Salvador">
           <input
             value={r.tagline ?? ""}
