@@ -16,7 +16,7 @@ import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
-import { slugify } from "@/lib/site/format";
+import { slugify, subdomainify } from "@/lib/site/format";
 import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 import { generateApiKey } from "@/lib/site/flycontrol";
 import { useAuth } from "@/hooks/useAuth";
