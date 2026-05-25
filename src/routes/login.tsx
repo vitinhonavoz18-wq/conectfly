@@ -57,7 +57,7 @@ function LoginPage() {
         toast.success("Acesso autorizado. Bem-vindo, Admin.");
         navigate({ to: search.redirect || "/" });
       } else {
-        const errorMessage = data?.error || "Senha incorreta ou acesso negado.";
+        const errorMessage = data?.message || data?.error || "Senha incorreta ou acesso negado.";
         throw new Error(errorMessage);
       }
     } catch (err) {
