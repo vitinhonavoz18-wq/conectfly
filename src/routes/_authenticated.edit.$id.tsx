@@ -51,19 +51,25 @@ function EditPage() {
 
   useEffect(() => {
     console.log(`[Edit] Iniciando carregamento do restaurante: ${id} | isAdminRoute: true | adminSessionValid: true`);
-    supabase
-      .from("restaurants")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) {
-          console.log(`[Edit] Restaurante ${id} não encontrado.`);
+    
+    getRestaurantById(id)
+      .then((data) => {
+        console.log(`[Edit] Dados carregados com sucesso: ${data.name}`);
+        setRestaurant(data);
+      })
+      .catch((err) => {
+        console.error(`[Edit] Falha ao carregar restaurante ${id}:`, err);
+        const errorMessage = String(err.message || err);
+        
+        if (errorMessage.includes("não encontrado")) {
           setNotFound(true);
-          return;
+        } else if (errorMessage.includes("Unauthorized") || errorMessage.includes("Forbidden")) {
+          toast.error("Erro de permissão. Verifique sua sessão.");
+        } else if (errorMessage.includes("invalid input syntax for type uuid")) {
+          toast.error("ID inválido");
+        } else {
+          toast.error(`Falha ao carregar: ${errorMessage}`);
         }
-        console.log(`[Edit] Dados carregados: ${data.name}`);
-        setRestaurant(data as unknown as RestaurantRow);
       });
   }, [id]);
 
