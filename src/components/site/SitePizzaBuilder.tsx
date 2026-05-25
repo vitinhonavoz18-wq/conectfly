@@ -299,7 +299,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[#D9A441/30] bg-[#FFF9F6] text-[#D9A441] p-4 font-medium shadow-sm">
           <Info className="h-5 w-5 shrink-0 text-[#D9A441]" />
           <span>
-            Ao selecionar <strong className="font-extrabold">sabores especiais</strong>, o valor final da pizza poderá ser
+            Ao selecionar <strong className="font-extrabold">itens especiais</strong>, o valor final poderá ser
             alterado proporcionalmente.
           </span>
         </div>
