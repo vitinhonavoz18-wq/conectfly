@@ -175,7 +175,8 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
       const finalCategoryName = categoryName.trim() || "Nova Categoria";
       const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
       
-      let mainCat = existingCats?.find(c => c.name.toUpperCase() === finalCategoryName.toUpperCase());
+      const foundCat = existingCats?.find(c => c.name.toUpperCase() === finalCategoryName.toUpperCase());
+      let mainCat: any = foundCat;
       const pizzaSizes: PizzaSize[] = data.tamanhos?.map(t => ({ label: t.nome, price: t.preco, max_flavors: t.max_sabores })) || [];
 
       // Lógica de ação para categoria existente
