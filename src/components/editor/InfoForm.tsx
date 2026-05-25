@@ -181,6 +181,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
           slugUsed: result.slugUsed || slug,
           apiKeyExists: !!result.apiKeyExists,
           error: result.error || null,
+          details: result.details || null,
           data: result.data ? JSON.parse(JSON.stringify(result.data)) : null
         };
         
