@@ -219,7 +219,7 @@ function Dashboard() {
                     onClick={handleCreate}
                     className="btn-premium px-10 py-3 rounded-xl uppercase text-xs tracking-[0.2em]"
                   >
-                    Lançar Unidade
+                    Lançar Unidade Delivery
                   </button>
                   <button
                     onClick={() => {
@@ -234,28 +234,43 @@ function Dashboard() {
                 </div>
               </div>
 
-              <div className="pt-2">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 font-black">Selecione o estilo visual do site:</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {[
-                    { id: "black", name: "Black Premium", icon: "🌙" },
-                    { id: "white", name: "White Clean", icon: "☀️" },
-                    { id: "pizza_hut_style", name: "Pizza Red", icon: "🍕" },
-                    { id: "burger_style", name: "Burger Showcase", icon: "🍔" }
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTemplate(t.id as any)}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
-                        template === t.id
-                          ? "border-primary bg-primary/10 scale-105"
-                          : "border-white/5 bg-white/5 hover:border-white/10"
-                      }`}
-                    >
-                      <span className="text-2xl">{t.icon}</span>
-                      <span className="text-[10px] font-black uppercase tracking-tighter truncate w-full text-center">{t.name}</span>
-                    </button>
-                  ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 font-black">Tipo de negócio:</p>
+                  <select 
+                    value={businessType}
+                    onChange={(e) => setBusinessType(e.target.value as BusinessType)}
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 text-sm font-bold"
+                  >
+                    {["Pizzaria", "Pastelaria", "Hamburgueria", "Restaurante", "Lanchonete", "Açaíteria", "Farmácia", "Mercado", "Outro"].map(t => (
+                      <option key={t} value={t} className="bg-background text-foreground">{t}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 font-black">Estilo visual (Template):</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { id: "black", name: "Black Premium", icon: "🌙" },
+                      { id: "white", name: "White Clean", icon: "☀️" },
+                      { id: "pizza_hut_style", name: "Pizza Red", icon: "🍕" },
+                      { id: "burger_style", name: "Burger Showcase", icon: "🍔" }
+                    ].map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setTemplate(t.id as any)}
+                        className={`flex items-center gap-2 p-2 rounded-xl border transition-all ${
+                          template === t.id
+                            ? "border-primary bg-primary/10"
+                            : "border-white/5 bg-white/5 hover:border-white/10"
+                        }`}
+                      >
+                        <span className="text-base">{t.icon}</span>
+                        <span className="text-[9px] font-black uppercase tracking-tighter truncate">{t.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
