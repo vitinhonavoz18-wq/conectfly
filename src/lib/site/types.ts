@@ -116,7 +116,8 @@ export interface RestaurantRow {
     show_categories_section?: boolean;
     beverages_visibility?: boolean;
     beverages_position?: "after_products" | "after_combos" | "end";
-    primaryButtonText?: string; // Adding for robustness as per user search order
+    primaryButtonText?: string;
+    show_cart_button?: boolean;
   };
   customization?: {
     primaryButtonText?: string;
