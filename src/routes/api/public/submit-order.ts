@@ -143,7 +143,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           const { data: r, error } = await supabaseAdmin
             .from("restaurants")
-            .select("id, flycontrol_enabled, flycontrol_api_url, flycontrol_api_key, flycontrol_base_url")
+            .select("id, name, slug, flycontrol_enabled, flycontrol_api_url, flycontrol_api_key, flycontrol_base_url")
             .eq("id", body.restaurant_id)
             .maybeSingle();
 
