@@ -199,3 +199,33 @@ export async function listRestaurants(): Promise<RestaurantRow[]> {
     throw err;
   }
 }
+
+export async function getRestaurantById(id: string): Promise<RestaurantRow> {
+  console.log(`[getRestaurantById] Buscando restaurante: ${id}`);
+  
+  // Detecta tipo (UUID ou slug) para logs
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  console.log(`[getRestaurantById] Tipo detectado: ${isUuid ? "UUID" : "Slug"}`);
+
+  try {
+    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+      body: { id }
+    });
+    
+    if (error) {
+      console.error("[getRestaurantById] Erro na chamada da Edge Function:", error);
+      throw error;
+    }
+    
+    if (!data?.success) {
+      console.error("[getRestaurantById] Backend retornou erro:", data?.error);
+      throw new Error(data?.error || "Restaurante não encontrado");
+    }
+    
+    console.log(`[getRestaurantById] Sucesso: Restaurante "${data.data.name}" encontrado`);
+    return data.data as RestaurantRow;
+  } catch (err) {
+    console.error("[getRestaurantById] Erro completo:", err);
+    throw err;
+  }
+}
