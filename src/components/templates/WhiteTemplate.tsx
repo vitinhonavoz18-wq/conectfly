@@ -69,6 +69,14 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           border-color: hsl(var(--site-border)) !important;
         }
       `}} />
+  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+
+  return (
+    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
+      {/* ... style tag stays the same ... */}
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
       <main>
         <div className="site-hero-section">
@@ -80,6 +88,10 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
+            buttonText={r.site_settings?.hero_button_text}
+            showButton={r.site_settings?.show_hero_button !== false}
+            hasCombos={hasCombos}
+            combosVisibility={combosVisibility}
           />
         </div>
         <div id="pizzas-container">
@@ -91,11 +103,17 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {showCombos && (
+          <div>
+            <SiteComboSection groups={data.comboGroups} />
+          </div>
+        )}
         <div>
-          <SiteComboSection groups={data.comboGroups} />
-        </div>
-        <div>
-          <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
+          <SiteMenuSection 
+            categories={nonPizzaCategories} 
+            restaurant={r} 
+            entryMode={entryMode}
+          />
         </div>
       </main>
       <SiteFooter

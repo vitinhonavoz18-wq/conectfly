@@ -102,7 +102,12 @@ export interface RestaurantRow {
   selected_template?: SiteTemplate;
   business_type?: BusinessType;
   theme_settings?: any;
-  site_settings?: any;
+  site_settings?: {
+    hero_button_text?: string;
+    show_hero_button?: boolean;
+    entry_mode?: "navigation" | "direct";
+    combos_visibility?: "auto" | "always" | "hide";
+  };
   checkout_settings?: any;
   delivery_settings?: any;
   seo_settings?: any;
