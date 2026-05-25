@@ -107,10 +107,10 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
       if (bordasCategory && bordasCategory.items.length > 0) {
         targetRef = bordasRef;
-        message = "Agora escolha sua borda recheada 🍕";
+        message = "Agora escolha seu adicional ✨";
       } else if (beverages && beverages.length > 0) {
         targetRef = beveragesRef;
-        message = "Que tal uma bebida para acompanhar? 🥤";
+        message = "Que tal algo para acompanhar? 🥤";
       } else {
         targetRef = summaryRef;
         message = "Tudo pronto! Revise seu pedido abaixo. ✨";
@@ -299,7 +299,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[#D9A441/30] bg-[#FFF9F6] text-[#D9A441] p-4 font-medium shadow-sm">
           <Info className="h-5 w-5 shrink-0 text-[#D9A441]" />
           <span>
-            Ao selecionar <strong className="font-extrabold">sabores especiais</strong>, o valor final da pizza poderá ser
+            Ao selecionar <strong className="font-extrabold">itens especiais</strong>, o valor final poderá ser
             alterado proporcionalmente.
           </span>
         </div>
@@ -308,7 +308,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       {/* Step 2 — Flavors */}
       <div>
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os sabores</h4>
+          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os itens</h4>
           {size && (
             <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-white border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
               {selectedFlavors.length}/{maxFlavors} selecionados
@@ -351,11 +351,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                           <Flame className="h-6 w-6 text-white" />
                         </span>
                         <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
-                          Sabores Especiais
+                          Destaques Especiais
                         </h3>
                       </div>
                       <p className="text-white/90 font-medium max-w-lg text-lg">
-                        Experimente nossas combinações premium e ingredientes exclusivos da casa.
+                        Experimente nossas opções premium e itens exclusivos da casa.
                       </p>
                     </div>
                     <span className="px-6 py-3 rounded-2xl bg-white text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
@@ -384,12 +384,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         )}
       </div>
 
-        {/* Step 3 — Bordas Recheadas */}
+        {/* Step 3 — Adicionais */}
         {bordasCategory && bordasCategory.items.length > 0 && (
           <div className="space-y-4" ref={bordasRef}>
             <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("borda") && (
+              <h4 className="text-lg font-bold">3. Escolha um adicional (opcional)</h4>
+              {scrollMessage && scrollMessage.includes("escolha") && (
                 <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
                   {scrollMessage}
                 </span>
@@ -447,7 +447,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
           <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
             <div className="flex items-baseline justify-between mb-3">
               <h4 className="text-xl font-extrabold text-[#111]">4. Escolha as bebidas (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("bebida") && (
+              {scrollMessage && scrollMessage.includes("acompanhar") && (
                 <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-bounce">
                   {scrollMessage}
                 </span>
@@ -550,7 +550,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                )}
                 {selectedBorder && (
                   <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-secondary))]">
-                    <span className="font-medium">Borda recheada: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
+                    <span className="font-medium">Adicional: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
                   </li>
                 )}

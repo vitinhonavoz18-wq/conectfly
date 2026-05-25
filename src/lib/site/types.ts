@@ -59,6 +59,17 @@ export interface ComboGroupRow {
 
 export type SiteTemplate = "black" | "white" | "pizza_hut_style" | "burger_style";
 
+export type BusinessType = 
+  | "Pizzaria"
+  | "Pastelaria"
+  | "Hamburgueria"
+  | "Restaurante"
+  | "Lanchonete"
+  | "Açaíteria"
+  | "Farmácia"
+  | "Mercado"
+  | "Outro";
+
 export interface RestaurantRow {
   id: string;
   slug: string;
@@ -82,7 +93,6 @@ export interface RestaurantRow {
   updated_at: string;
   flycontrol_enabled?: boolean;
   flycontrol_api_url?: string | null;
-  // flycontrol_api_key is sensitive and handled server-side/via RPC
   flycontrol_api_key?: string | null;
   flycontrol_base_url?: string | null;
   flycontrol_register_url?: string | null;
@@ -90,6 +100,12 @@ export interface RestaurantRow {
   whatsapp_enabled?: boolean;
   show_item_images?: boolean;
   selected_template?: SiteTemplate;
+  business_type?: BusinessType;
+  theme_settings?: any;
+  site_settings?: any;
+  checkout_settings?: any;
+  delivery_settings?: any;
+  seo_settings?: any;
 }
 
 export interface BeverageRow {
