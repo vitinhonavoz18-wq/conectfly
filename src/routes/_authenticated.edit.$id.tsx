@@ -81,14 +81,17 @@ function EditPage() {
   const handleFinalize = async () => {
     if (!restaurant) return;
     setFinalizing(true);
-    const { error } = await supabase
-      .from("restaurants")
-      .update({ published: true })
-      .eq("id", restaurant.id);
-    setFinalizing(false);
-    if (error) return;
-    setRestaurant({ ...restaurant, published: true });
-    setFinalized(true);
+    try {
+      await updateRestaurant(restaurant.id, { published: true });
+      setRestaurant({ ...restaurant, published: true });
+      setFinalized(true);
+      toast.success("Vitrine inaugurada com sucesso!");
+    } catch (err) {
+      console.error("[Edit] Erro ao inaugurar:", err);
+      toast.error("Falha ao inaugurar vitrine.");
+    } finally {
+      setFinalizing(false);
+    }
   };
 
   const shareUrl = restaurant ? getPizzeriaPublicUrl(restaurant.slug, restaurant.custom_subdomain) : "";
