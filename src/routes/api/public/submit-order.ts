@@ -224,6 +224,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
+              console.log(`[SUBMIT-ORDER] Tentativa ${attempt + 1} para: ${url}`);
               const res = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -231,21 +232,32 @@ export const Route = createFileRoute("/api/public/submit-order")({
                   "x-api-key": key,
                   "Authorization": `Bearer ${key}`,
                   "x-idempotency-key": idempotencyKey,
+                  "User-Agent": "SiteCreatorFly-Proxy/1.0",
                 },
                 body: JSON.stringify(payload),
               });
+              
               const txt = await res.text().catch(() => "");
-              try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
               lastStatus = res.status;
+              
+              try { 
+                finalData = JSON.parse(txt); 
+              } catch { 
+                finalData = { text: txt }; 
+              }
 
-              if (res.ok && finalData.status !== "error" && finalData.success !== false) {
+              if (res.ok && finalData?.status !== "error" && finalData?.success !== false) {
                 isSuccess = true;
                 break;
               }
-              lastErr = !res.ok ? `Erro ${res.status}` : (finalData.message || "Pedido rejeitado");
+              
+              lastErr = !res.ok ? `HTTP ${res.status}: ${txt.slice(0, 100)}` : (finalData?.message || finalData?.error || "Pedido rejeitado");
+              console.warn(`[SUBMIT-ORDER] Tentativa ${attempt + 1} falhou: ${lastErr}`);
+              
               if (res.status >= 400 && res.status < 500) break;
             } catch (e: any) {
-              lastErr = "Erro de conexão";
+              lastErr = `Erro de conexão: ${e.message}`;
+              console.error(`[SUBMIT-ORDER] Erro na tentativa ${attempt + 1}:`, e);
             }
             if (attempt < maxRetries) await new Promise((res_wait) => setTimeout(res_wait, 1000 * Math.pow(2, attempt)));
           }
