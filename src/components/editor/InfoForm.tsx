@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
+import { updateRestaurant } from "@/lib/site/queries";
 
 interface Props {
   restaurant: RestaurantRow;
