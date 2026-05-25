@@ -118,6 +118,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
         flycontrol_tenant_id: r.flycontrol_tenant_id ?? null,
         whatsapp_enabled: r.whatsapp_enabled ?? true,
         show_item_images: r.show_item_images ?? true,
+        selected_template: r.selected_template || "black",
       })
       .eq("id", r.id);
     setSaving(false);
