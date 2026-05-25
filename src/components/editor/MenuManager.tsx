@@ -19,26 +19,28 @@ export function MenuManager({ restaurantId }: Props) {
   const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   const reload = async () => {
-    const [c, i, r] = await Promise.all([
-      supabase
-        .from("menu_categories")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("sort_order"),
-      supabase
-        .from("menu_items")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("sort_order"),
-      supabase
-        .from("restaurants")
-        .select("*")
-        .eq("id", restaurantId)
-        .single(),
-    ]);
-    setCats((c.data ?? []) as unknown as MenuCategoryRow[]);
-    setItems((i.data ?? []) as unknown as MenuItemRow[]);
-    setRestaurant(r.data as unknown as RestaurantRow);
+    try {
+      console.log(`[MenuManager] Recarregando dados para restaurante: ${restaurantId}`);
+      const [c, i, r] = await Promise.all([
+        supabase
+          .from("menu_categories")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .order("sort_order"),
+        supabase
+          .from("menu_items")
+          .select("*")
+          .eq("restaurant_id", restaurantId)
+          .order("sort_order"),
+        getRestaurantById(restaurantId)
+      ]);
+      
+      setCats((c.data ?? []) as unknown as MenuCategoryRow[]);
+      setItems((i.data ?? []) as unknown as MenuItemRow[]);
+      setRestaurant(r);
+    } catch (err) {
+      console.error("[MenuManager] Falha ao recarregar:", err);
+    }
   };
 
   useEffect(() => {
