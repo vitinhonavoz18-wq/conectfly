@@ -343,13 +343,25 @@ export const Route = createFileRoute("/api/public/submit-order")({
             response_body: finalData ? JSON.stringify(finalData) : null,
           });
 
+          const responseBody = { 
+            success: isSuccess, 
+            error: isSuccess ? null : `Falha ao conectar com o FlyControl (${lastStatus}). Motivo: ${lastErr || 'Erro desconhecido'}. Tente novamente ou use o WhatsApp.`,
+            status: lastStatus,
+            response: finalData,
+            details: {
+              restaurant_id: body.restaurant_id,
+              slug: r.slug,
+              endpoint_called: url,
+              is_test: isTest,
+              remote_status: lastStatus,
+              remote_error: lastErr
+            }
+          };
+
+          console.log(`[SUBMIT-ORDER] 🏁 Finalizando Request - Sucesso: ${isSuccess}`, responseBody);
+
           return new Response(
-            JSON.stringify({ 
-              success: isSuccess, 
-              error: isSuccess ? null : `Falha ao conectar com o FlyControl (${lastStatus}). Tente novamente ou use o WhatsApp.`,
-              status: lastStatus,
-              response: isSuccess ? { success: true } : null
-            }), 
+            JSON.stringify(responseBody), 
             {
               status: isSuccess ? 200 : (lastStatus >= 400 && lastStatus < 600 ? lastStatus : 502),
               headers,
