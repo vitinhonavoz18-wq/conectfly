@@ -178,35 +178,62 @@ function Dashboard() {
               <Sparkles className="h-4 w-4 text-accent" />
               Criar novo site
             </h3>
-            <div className="flex flex-col sm:flex-row gap-2">
-               <div className="relative flex-1">
-                 <input
-                   autoFocus
-                   value={name}
-                   onChange={(e) => setName(e.target.value)}
-                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                   placeholder="Ex.: Pizzaria do João"
-                   className="w-full px-5 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all text-lg font-medium placeholder:text-muted-foreground/50"
-                 />
-               </div>
-               <div className="flex gap-3">
-                 <button
-                   onClick={handleCreate}
-                   className="btn-premium px-10 py-3 rounded-xl uppercase text-xs tracking-[0.2em]"
-                 >
-                   Lançar Unidade
-                 </button>
-                 <button
-                   onClick={() => {
-                     setCreating(false);
-                     setName("");
-                     setError("");
-                   }}
-                   className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-semibold"
-                 >
-                   Cancelar
-                 </button>
-               </div>
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <input
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                    placeholder="Ex.: Pizzaria do João"
+                    className="w-full px-5 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all text-lg font-medium placeholder:text-muted-foreground/50"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleCreate}
+                    className="btn-premium px-10 py-3 rounded-xl uppercase text-xs tracking-[0.2em]"
+                  >
+                    Lançar Unidade
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCreating(false);
+                      setName("");
+                      setError("");
+                    }}
+                    className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-semibold"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-3 font-black">Selecione o estilo visual do site:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { id: "black", name: "Black Premium", icon: "🌙" },
+                    { id: "white", name: "White Clean", icon: "☀️" },
+                    { id: "pizza_hut_style", name: "Pizza Red", icon: "🍕" },
+                    { id: "burger_style", name: "Burger Showcase", icon: "🍔" }
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setTemplate(t.id as any)}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                        template === t.id
+                          ? "border-primary bg-primary/10 scale-105"
+                          : "border-white/5 bg-white/5 hover:border-white/10"
+                      }`}
+                    >
+                      <span className="text-2xl">{t.icon}</span>
+                      <span className="text-[10px] font-black uppercase tracking-tighter truncate w-full text-center">{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             {error && <p className="text-sm text-destructive mt-2">{error}</p>}
           </div>
