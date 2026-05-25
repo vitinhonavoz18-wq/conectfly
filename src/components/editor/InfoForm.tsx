@@ -15,10 +15,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [registering, setRegistering] = useState(false);
-   const [regMsg, setRegMsg] = useState("");
-    const [testing, setTesting] = useState(false);
-    const [testDebug, setTestDebug] = useState<any>(null);
-    const [secureApiKey, setSecureApiKey] = useState<string | null>(null);
+  const [regMsg, setRegMsg] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testDebug, setTestDebug] = useState<any>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
 
     useEffect(() => {
       if (r.id) {
