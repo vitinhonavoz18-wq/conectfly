@@ -146,7 +146,11 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           if (!r.flycontrol_enabled) {
             return new Response(
-              JSON.stringify({ success: true, skipped: true }),
+              JSON.stringify({ 
+                success: false, 
+                skipped: true, 
+                message: "Integração FlyControl desativada para esta pizzaria" 
+              }),
               { status: 200, headers },
             );
           }
@@ -209,10 +213,18 @@ export const Route = createFileRoute("/api/public/submit-order")({
             response_body: finalData ? JSON.stringify(finalData) : null,
           });
 
-          return new Response(JSON.stringify({ success: isSuccess, error: isSuccess ? null : "Falha ao registrar pedido" }), {
-            status: isSuccess ? 200 : 502,
-            headers,
-          });
+          return new Response(
+            JSON.stringify({ 
+              success: isSuccess, 
+              error: isSuccess ? null : lastErr,
+              status: lastStatus,
+              response: finalData
+            }), 
+            {
+              status: isSuccess ? 200 : (lastStatus >= 400 && lastStatus < 600 ? lastStatus : 502),
+              headers,
+            }
+          );
         } catch (e: any) {
           return new Response(
             JSON.stringify({ success: false, error: "Erro interno" }),
