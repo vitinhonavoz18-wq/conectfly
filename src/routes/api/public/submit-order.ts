@@ -146,17 +146,27 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           if (!r.flycontrol_enabled) {
             return new Response(
-              JSON.stringify({ success: true, skipped: true }),
+              JSON.stringify({ 
+                success: false, 
+                skipped: true, 
+                message: "Integração FlyControl desativada para esta pizzaria" 
+              }),
               { status: 200, headers },
             );
           }
 
           const url = resolveOrdersUrl(r);
           const key = (r.flycontrol_api_key ?? "").trim();
+          
           if (!url || !key) {
+            console.error(`[SUBMIT-ORDER] Configuração incompleta para pizzaria ${body.restaurant_id}: url=${!!url}, key=${!!key}`);
             return new Response(
-              JSON.stringify({ success: false, error: "Configuração incompleta" }),
-              { status: 500, headers },
+              JSON.stringify({ 
+                success: false, 
+                error: "Configuração incompleta no painel (URL ou API Key ausente)",
+                details: { url_configured: !!url, api_key_configured: !!key }
+              }),
+              { status: 400, headers },
             );
           }
 
@@ -209,10 +219,20 @@ export const Route = createFileRoute("/api/public/submit-order")({
             response_body: finalData ? JSON.stringify(finalData) : null,
           });
 
-          return new Response(JSON.stringify({ success: isSuccess, error: isSuccess ? null : "Falha ao registrar pedido" }), {
-            status: isSuccess ? 200 : 502,
-            headers,
-          });
+          return new Response(
+            JSON.stringify({ 
+              success: isSuccess, 
+              error: isSuccess ? null : lastErr,
+              status: lastStatus,
+              endpoint: url,
+              payload: body.payload, // Repassar para log se necessário
+              response: finalData
+            }), 
+            {
+              status: isSuccess ? 200 : (lastStatus >= 400 && lastStatus < 600 ? lastStatus : 502),
+              headers,
+            }
+          );
         } catch (e: any) {
           return new Response(
             JSON.stringify({ success: false, error: "Erro interno" }),
