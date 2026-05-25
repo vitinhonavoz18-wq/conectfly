@@ -34,6 +34,11 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
     ["--site-muted-fg" as string]: "215 16% 47%", // #64748b
   };
 
+  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+
   return (
     <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -69,14 +74,6 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           border-color: hsl(var(--site-border)) !important;
         }
       `}} />
-  const combosVisibility = r.site_settings?.combos_visibility || "auto";
-  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
-  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
-  const entryMode = r.site_settings?.entry_mode || "navigation";
-
-  return (
-    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
-      {/* ... style tag stays the same ... */}
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
       <main>
         <div className="site-hero-section">

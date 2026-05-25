@@ -35,6 +35,11 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
     ["--site-primary" as string]: "35 100% 43%", // #D99000 Burger Yellow/Orange
   };
 
+  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+
   return (
     <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -72,14 +77,6 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
           color: white !important;
         }
       `}} />
-  const combosVisibility = r.site_settings?.combos_visibility || "auto";
-  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
-  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
-  const entryMode = r.site_settings?.entry_mode || "navigation";
-
-  return (
-    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
-      {/* ... style tag stays the same ... */}
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
       <main>
         <div className="site-hero-section">

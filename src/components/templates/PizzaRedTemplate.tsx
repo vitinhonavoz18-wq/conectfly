@@ -36,6 +36,11 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
     ["--site-secondary" as string]: "39 68% 55%", // #D9A441 (Premium Gold)
   };
 
+  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+
   return (
     <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -162,14 +167,6 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           text-align: center;
         }
       `}} />
-  const combosVisibility = r.site_settings?.combos_visibility || "auto";
-  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
-  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
-  const entryMode = r.site_settings?.entry_mode || "navigation";
-
-  return (
-    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans">
-      {/* ... style tag stays the same ... */}
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
       <main>
         <div className="site-hero-section">
