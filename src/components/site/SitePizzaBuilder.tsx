@@ -398,49 +398,49 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
              <button
                onClick={() => setSelectedBorderId(null)}
-               className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
-                 selectedBorderId === null
-                   ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent"
-                   : "border-white/5 bg-white/5 hover:border-white/20"
-               }`}
-             >
-               {selectedBorderId === null && (
-                 <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
-                   <Check className="h-3 w-3" />
-                 </span>
-               )}
-               <p className="font-bold leading-tight">Sem Borda</p>
-               <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
-                 Grátis
-               </p>
-             </button>
-             {bordasCategory.items.map((b) => {
-               const active = selectedBorderId === b.id;
-               return (
-                 <button
-                   key={b.id}
-                   onClick={() => setSelectedBorderId(b.id)}
-                   className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
-                     active
-                       ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent shadow-[0_0_20px_rgba(255,90,0,0.15)]"
-                       : "border-white/5 bg-white/5 hover:border-white/20"
-                   }`}
-                 >
-                   {active && (
-                     <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
-                       <Check className="h-3 w-3" />
-                     </span>
-                   )}
-                   <p className="font-bold leading-tight">{b.name}</p>
-                   <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
-                     +{formatBRL(b.price)}
-                   </p>
-                 </button>
-               );
-             })}
-            </div>
-          </div>
-        )}
+                className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                  selectedBorderId === null
+                    ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                    : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                }`}
+              >
+                {selectedBorderId === null && (
+                  <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
+                <p className="font-extrabold text-[#111] leading-tight">Sem Borda</p>
+                <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
+                  Grátis
+                </p>
+              </button>
+              {bordasCategory.items.map((b) => {
+                const active = selectedBorderId === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBorderId(b.id)}
+                    className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                      active
+                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                    <p className="font-extrabold text-[#111] leading-tight">{b.name}</p>
+                    <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
+                      +{formatBRL(b.price)}
+                    </p>
+                  </button>
+                );
+              })}
+             </div>
+           </div>
+         )}
 
         {/* Step 4 — Bebidas */}
         {beverages && beverages.length > 0 && (
