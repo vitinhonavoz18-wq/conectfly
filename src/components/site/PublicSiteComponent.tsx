@@ -80,12 +80,12 @@ export function PublicSiteComponent({ routeSlug }: Props) {
   if (data === "error" || data === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 px-4 text-center">
-        <h1 className="text-3xl font-black">Pizzaria não encontrada</h1>
+        <h1 className="text-3xl font-black">Loja não encontrada</h1>
          <p className="text-muted-foreground">
-           Não encontramos nenhuma pizzaria ativa no endereço <strong>{detectedIdentifier}</strong>.
+           Não encontramos nenhum estabelecimento ativo no endereço <strong>{detectedIdentifier}</strong>.
          </p>
          <p className="text-sm text-muted-foreground max-w-sm">
-           Verifique se o nome está correto ou se a pizzaria já publicou o cardápio.
+           Verifique se o nome está correto ou se o estabelecimento já publicou o cardápio.
          </p>
         <Link
           to="/"
