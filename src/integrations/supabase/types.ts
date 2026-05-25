@@ -693,6 +693,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin: { Args: never; Returns: boolean }
       owns_restaurant: {
         Args: { _restaurant_id: string; _user_id: string }
         Returns: boolean
