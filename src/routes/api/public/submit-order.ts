@@ -5,25 +5,20 @@ const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
   "https://www.conectfly.com.br",
   "https://conectfly.lovable.app",
-  "https://teste.conectfly.com.br",
-  "http://localhost:5173",
 ];
 
 function getCorsHeaders(origin: string | null) {
   let allowOrigin = ALLOWED_ORIGINS[0];
   
-  if (origin) {
-    if (ALLOWED_ORIGINS.includes(origin) || 
-        origin.endsWith(".lovable.app") || 
-        origin.includes("--") && origin.endsWith(".lovable.app")) {
-      allowOrigin = origin;
-    }
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    allowOrigin = origin;
   }
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers": "content-type, x-idempotency-key, authorization, x-api-key",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
 }
