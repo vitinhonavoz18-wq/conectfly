@@ -308,6 +308,69 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </Field>
       </div>
 
+      <div className="space-y-4">
+        <h3 className="text-lg font-black uppercase tracking-widest text-primary flex items-center gap-2">
+          <Wand2 className="h-5 w-5" /> Modelo do Site (Template)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { 
+              id: "black", 
+              name: "Black Premium", 
+              desc: "Escuro, elegante e gastronômico.",
+              colors: ["#000", "#D97706"],
+              mood: "Sofisticado"
+            },
+            { 
+              id: "white", 
+              name: "White Clean", 
+              desc: "Versão clara, leve e moderna.",
+              colors: ["#FFF", "#3B82F6"],
+              mood: "Leve"
+            },
+            { 
+              id: "pizza_hut_style", 
+              name: "Pizza Red", 
+              desc: "Estilo fast-food, visual vermelho.",
+              colors: ["#E50914", "#FFF"],
+              mood: "Popular"
+            },
+            { 
+              id: "burger_style", 
+              name: "Burger Showcase", 
+              desc: "Moderno, foco em hamburguerias.",
+              colors: ["#F3F4F6", "#D99000"],
+              mood: "Comercial"
+            }
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => set("selected_template", t.id as any)}
+              className={`relative overflow-hidden group flex flex-col p-4 rounded-2xl border-2 transition-all text-left ${
+                (r.selected_template || "black") === t.id
+                  ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                  : "border-white/5 bg-white/5 hover:border-white/20"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60">{t.mood}</span>
+                {(r.selected_template || "black") === t.id && (
+                  <Zap className="h-3 w-3 text-primary fill-primary animate-pulse" />
+                )}
+              </div>
+              
+              <div className="h-20 rounded-xl mb-4 relative overflow-hidden flex items-center justify-center border border-white/10" style={{ background: t.colors[0] }}>
+                 <div className="h-8 w-12 rounded-md shadow-2xl" style={{ background: t.colors[1] }} />
+                 {t.id === "black" && <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/60" />}
+              </div>
+
+              <h4 className="font-black text-sm uppercase tracking-tight truncate">{t.name}</h4>
+              <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed">{t.desc}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Configurações Visuais">
           <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
