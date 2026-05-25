@@ -130,6 +130,11 @@ export const Route = createFileRoute("/api/public/submit-order")({
             test?: boolean;
           };
           
+          console.log(`[SUBMIT-ORDER] 🚀 Request Iniciado - IP: ${ip}`, { 
+            restaurant_id: body.restaurant_id, 
+            is_test: !!body.test 
+          });
+          
           if (!body?.restaurant_id || (!body?.payload && !body?.test)) {
             return new Response(
               JSON.stringify({ success: false, error: "Dados incompletos" }),
@@ -167,11 +172,15 @@ export const Route = createFileRoute("/api/public/submit-order")({
             .maybeSingle();
 
           if (error || !r) {
+            console.error(`[SUBMIT-ORDER] ❌ Restaurante não encontrado: ${body.restaurant_id}`);
             return new Response(
               JSON.stringify({ success: false, error: "Pizzaria não encontrada" }),
               { status: 404, headers },
             );
           }
+
+          console.log(`[SUBMIT-ORDER] 🏠 Restaurante encontrado: ${r.name} (${r.slug})`);
+          console.log(`[SUBMIT-ORDER] ⚙️ Integração ativa: ${r.flycontrol_enabled}`);
 
           if (!r.flycontrol_enabled) {
             return new Response(
@@ -187,8 +196,11 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const url = resolveOrdersUrl(r);
           const key = (r.flycontrol_api_key ?? "").trim();
           
+          console.log(`[SUBMIT-ORDER] 🔗 Endpoint FlyControl: ${url}`);
+          console.log(`[SUBMIT-ORDER] 🔑 API Key configurada: ${key ? "Sim (presente)" : "Não (ausente)"}`);
+
           if (!url || !key) {
-            console.error(`[SUBMIT-ORDER] Configuração incompleta para pizzaria ${body.restaurant_id}: url=${!!url}, key=${!!key}`);
+            console.error(`[SUBMIT-ORDER] ❌ Configuração incompleta: url=${!!url}, key=${!!key}`);
             return new Response(
               JSON.stringify({ 
                 success: false, 
@@ -202,6 +214,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const isTest = body.test === true;
           
           if (isTest) {
+            console.log("[SUBMIT-ORDER] 🧪 Validando autenticação para teste...");
             // Se for teste, exige autenticação de admin para evitar abuso
             const authHeader = request.headers.get("Authorization");
             if (!authHeader) {
@@ -210,23 +223,10 @@ export const Route = createFileRoute("/api/public/submit-order")({
             const token = authHeader.replace("Bearer ", "");
             const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
             if (authErr || !user || user.email !== 'vitinhonavoz18@gmail.com') {
+              console.error("[SUBMIT-ORDER] ❌ Acesso negado para teste:", authErr?.message || "Usuário não autorizado");
               return new Response(JSON.stringify({ success: false, error: "Acesso negado" }), { status: 403, headers });
             }
-          }
-
-          const isTest = body.test === true;
-          
-          if (isTest) {
-            // Se for teste, exige autenticação de admin para evitar abuso
-            const authHeader = request.headers.get("Authorization");
-            if (!authHeader) {
-              return new Response(JSON.stringify({ success: false, error: "Autenticação necessária para testes" }), { status: 401, headers });
-            }
-            const token = authHeader.replace("Bearer ", "");
-            const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
-            if (authErr || !user || user.email !== 'vitinhonavoz18@gmail.com') {
-              return new Response(JSON.stringify({ success: false, error: "Acesso negado" }), { status: 403, headers });
-            }
+            console.log("[SUBMIT-ORDER] ✅ Autenticação validada");
           }
 
           // Payload de teste específico conforme solicitado pelo usuário
@@ -285,7 +285,9 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-              console.log(`[SUBMIT-ORDER] Tentativa ${attempt + 1} para: ${url}`);
+              console.log(`[SUBMIT-ORDER] 📡 Tentativa ${attempt + 1} para: ${url}`);
+              console.log(`[SUBMIT-ORDER] 📦 Payload:`, JSON.stringify({ ...payload, api_key: "***" }));
+              
               const res = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -301,6 +303,8 @@ export const Route = createFileRoute("/api/public/submit-order")({
               const txt = await res.text().catch(() => "");
               lastStatus = res.status;
               
+              console.log(`[SUBMIT-ORDER] 📥 Resposta (${lastStatus}) - Body: ${txt.slice(0, 500)}`);
+
               try { 
                 finalData = JSON.parse(txt); 
               } catch { 
