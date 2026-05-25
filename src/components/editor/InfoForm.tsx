@@ -154,12 +154,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
     const handleTestConnection = async () => {
       setRegMsg("");
       setTestDebug(null);
-      const endpoint = (r.flycontrol_api_url ?? "").trim();
-      const apiKey = (r.flycontrol_api_key ?? "").trim();
       const slug = (r.slug ?? "").trim();
 
-      if (!endpoint || !apiKey) {
-        setRegMsg("Informe o Endpoint de Pedidos e a API Key primeiro.");
+      if (!r.id) {
+        setRegMsg("Salve as alterações primeiro.");
         return;
       }
 
@@ -168,7 +166,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
         const { testFlycontrolConnection } = await import("@/lib/site/flycontrol");
         console.log("[FLYCONTROL] Iniciando teste de conexão real...");
         
-        const result = await testFlycontrolConnection(endpoint, apiKey, slug);
+        const result = await testFlycontrolConnection(r.id, slug);
         setTestDebug(result);
 
         if (result.success) {

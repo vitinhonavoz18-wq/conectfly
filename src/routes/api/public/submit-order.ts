@@ -6,14 +6,23 @@ const ALLOWED_ORIGINS = [
   "https://www.conectfly.com.br",
   "https://conectfly.lovable.app",
   "https://teste.conectfly.com.br",
-  "http://localhost:5173", // For development
+  "http://localhost:5173",
 ];
 
 function getCorsHeaders(origin: string | null) {
-  const allowOrigin = origin && (ALLOWED_ORIGINS.includes(origin) || origin.includes("--conectfly.lovable.app")) ? origin : ALLOWED_ORIGINS[0];
+  let allowOrigin = ALLOWED_ORIGINS[0];
+  
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin) || 
+        origin.endsWith(".lovable.app") || 
+        origin.includes("--") && origin.endsWith(".lovable.app")) {
+      allowOrigin = origin;
+    }
+  }
+
   return {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Headers": "content-type, x-idempotency-key",
+    "Access-Control-Allow-Headers": "content-type, x-idempotency-key, authorization, x-api-key",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Vary": "Origin",
   };
@@ -99,9 +108,10 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const body = (await request.json()) as {
             restaurant_id?: string;
             payload?: any;
+            test?: boolean;
           };
           
-          if (!body?.restaurant_id || !body?.payload) {
+          if (!body?.restaurant_id || (!body?.payload && !body?.test)) {
             return new Response(
               JSON.stringify({ success: false, error: "Dados incompletos" }),
               { status: 400, headers },
@@ -111,7 +121,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           if (!uuidRe.test(body.restaurant_id)) {
             return new Response(
-              JSON.stringify({ success: false, error: "ID inválido" }),
+              JSON.stringify({ success: false, error: "ID de restaurante inválido" }),
               { status: 400, headers },
             );
           }
@@ -170,12 +180,40 @@ export const Route = createFileRoute("/api/public/submit-order")({
             );
           }
 
-          if (body.payload) {
-            body.payload.api_key = key;
+          const isTest = body.test === true;
+          const payload = body.payload || {
+            event: "order.created",
+            source: "sitecreatorfly-test",
+            pizzeria: {
+              slug: r.slug || "pizzaria-teste",
+              name: (r.name || "Pizzaria Teste") + " (TESTE)"
+            },
+            customer: {
+              name: "Admin SiteCreatorFly",
+              phone: "71999999999",
+              address: "Teste de Conexão",
+              neighborhood: "Backend Proxy",
+              reference: "OK"
+            },
+            order: {
+              id: "test-" + Date.now(),
+              created_at: new Date().toISOString(),
+              items: [{ name: "Teste de Conexão", quantity: 1, unit_price: 1, total_price: 1 }],
+              total: 1,
+              subtotal: 1,
+              delivery_fee: 0,
+              payment_method: "TESTE",
+              delivery_type: "retirada",
+              notes: "Este é um teste de conexão vindo do painel admin."
+            }
+          };
+
+          if (payload) {
+            payload.api_key = key;
           }
 
-          const idempotencyKey = request.headers.get("x-idempotency-key") || body.payload?.order?.id || "";
-          const maxRetries = 3;
+          const idempotencyKey = request.headers.get("x-idempotency-key") || payload.order?.id || "";
+          const maxRetries = isTest ? 0 : 3;
           let lastErr = "";
           let lastStatus = 0;
           let finalData: any = null;
@@ -191,7 +229,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
                   "Authorization": `Bearer ${key}`,
                   "x-idempotency-key": idempotencyKey,
                 },
-                body: JSON.stringify(body.payload),
+                body: JSON.stringify(payload),
               });
               const txt = await res.text().catch(() => "");
               try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
@@ -212,7 +250,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
           await supabaseAdmin.from("flycontrol_order_logs").insert({
             restaurant_id: body.restaurant_id,
             idempotency_key: idempotencyKey,
-            payload: body.payload,
+            payload: payload,
             status_code: lastStatus,
             success: isSuccess,
             error_message: isSuccess ? null : lastErr,
@@ -225,7 +263,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
               error: isSuccess ? null : lastErr,
               status: lastStatus,
               endpoint: url,
-              payload: body.payload, // Repassar para log se necessário
+              payload: payload, // Repassar para log se necessário
               response: finalData
             }), 
             {
