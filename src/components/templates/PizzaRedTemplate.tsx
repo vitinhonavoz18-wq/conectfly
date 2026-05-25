@@ -8,6 +8,7 @@ import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
+import { getPrimaryButtonText } from "@/lib/site/format";
 
 export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen } = useCart();
@@ -179,7 +180,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
-            buttonText={r.site_settings?.hero_button_text}
+            buttonText={getPrimaryButtonText(r)}
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
             combosVisibility={combosVisibility}
@@ -194,9 +195,25 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_products" && (
+          <div className="bg-slate-50 py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
+          </div>
+        )}
+
         {showCombos && (
           <div className="bg-slate-50 py-12">
             <SiteComboSection groups={data.comboGroups} />
+          </div>
+        )}
+
+        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_combos" && (
+          <div className="bg-white py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
           </div>
         )}
         
@@ -208,10 +225,10 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {(data.beverages && data.beverages.length > 0) && (
+        {r.site_settings?.beverages_visibility !== false && (r.site_settings?.beverages_position === "end" || !r.site_settings?.beverages_position) && (
           <div className="bg-slate-50 py-12 px-4">
             <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
             </div>
           </div>
         )}

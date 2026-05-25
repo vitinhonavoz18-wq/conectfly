@@ -56,3 +56,16 @@ export function subdomainify(s: string): string {
     .trim()
     .slice(0, 40);
 }
+
+export function getPrimaryButtonText(project: any): string {
+  if (!project) return "EXPLORAR CARDÁPIO";
+  
+  return (
+    project.site_settings?.primaryButtonText ||
+    project.site_settings?.hero_button_text || // Compatibility with existing field
+    project.theme_settings?.primaryButtonText ||
+    project.customization?.primaryButtonText ||
+    project.hero_settings?.primaryButtonText ||
+    "EXPLORAR CARDÁPIO"
+  );
+}

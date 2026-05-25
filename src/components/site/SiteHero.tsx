@@ -33,7 +33,14 @@ export function SiteHero({
 
   const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
-    const element = document.getElementById(id);
+    let targetId = id;
+    
+    // If we're looking for pizzas but it doesn't exist, try cardapio
+    if (id === "pizzas" && !document.getElementById("pizzas")) {
+      targetId = "cardapio";
+    }
+
+    const element = document.getElementById(targetId);
     if (element) {
       const offset = 80;
       const elementPosition = element.getBoundingClientRect().top;
@@ -120,10 +127,10 @@ export function SiteHero({
           )}
         <div 
           onClick={() => {
-            const element = document.getElementById("pizzas");
-            if (element) {
+            const el = document.getElementById("pizzas") || document.getElementById("cardapio");
+            if (el) {
               const offset = 80;
-              const elementPosition = element.getBoundingClientRect().top;
+              const elementPosition = el.getBoundingClientRect().top;
               const offsetPosition = elementPosition + window.pageYOffset - offset;
               window.scrollTo({ top: offsetPosition, behavior: "smooth" });
             }

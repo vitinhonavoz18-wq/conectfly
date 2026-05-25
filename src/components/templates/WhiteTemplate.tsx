@@ -4,9 +4,11 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
+import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
+import { getPrimaryButtonText } from "@/lib/site/format";
 
 export function WhiteTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen } = useCart();
@@ -38,6 +40,19 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
+
+  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
+  const beveragesPosition = r.site_settings?.beverages_position || "end";
+
+  const renderBeverages = () => (
+    (beveragesVisible && data.beverages && data.beverages.length > 0) && (
+      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
+        <div className="max-w-6xl mx-auto">
+          <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+        </div>
+      </div>
+    )
+  );
 
   return (
     <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
@@ -85,7 +100,7 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
-            buttonText={r.site_settings?.hero_button_text}
+            buttonText={getPrimaryButtonText(r)}
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
             combosVisibility={combosVisibility}
@@ -100,11 +115,16 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {beveragesPosition === "after_products" && renderBeverages()}
+
         {showCombos && (
           <div>
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
+
+        {beveragesPosition === "after_combos" && renderBeverages()}
+
         <div>
           <SiteMenuSection 
             categories={nonPizzaCategories} 
@@ -112,6 +132,8 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             entryMode={entryMode}
           />
         </div>
+
+        {beveragesPosition === "end" && renderBeverages()}
       </main>
       <SiteFooter
         name={r.name}

@@ -4,9 +4,11 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
+import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
+import { getPrimaryButtonText } from "@/lib/site/format";
 
 export function BurgerTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen } = useCart();
@@ -88,7 +90,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
-            buttonText={r.site_settings?.hero_button_text}
+            buttonText={getPrimaryButtonText(r)}
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
             combosVisibility={combosVisibility}
@@ -103,11 +105,28 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_products" && (
+          <div className="py-8 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
+          </div>
+        )}
+
         {showCombos && (
           <div className="py-8">
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
+
+        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_combos" && (
+          <div className="py-8 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
+          </div>
+        )}
+
         <div className="py-8">
           <SiteMenuSection 
             categories={nonPizzaCategories} 
@@ -115,6 +134,14 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
             entryMode={entryMode}
           />
         </div>
+
+        {r.site_settings?.beverages_visibility !== false && (r.site_settings?.beverages_position === "end" || !r.site_settings?.beverages_position) && (
+          <div className="py-8 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
+          </div>
+        )}
       </main>
       <SiteFooter
         name={r.name}

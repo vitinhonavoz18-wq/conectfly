@@ -108,6 +108,15 @@ export interface RestaurantRow {
     entry_mode?: "navigation" | "direct";
     combos_visibility?: "auto" | "always" | "hide";
     show_categories_section?: boolean;
+    beverages_visibility?: boolean;
+    beverages_position?: "after_products" | "after_combos" | "end";
+    primaryButtonText?: string; // Adding for robustness as per user search order
+  };
+  customization?: {
+    primaryButtonText?: string;
+  };
+  hero_settings?: {
+    primaryButtonText?: string;
   };
   checkout_settings?: any;
   delivery_settings?: any;
@@ -123,6 +132,9 @@ export interface BeverageRow {
   price: number;
   is_active: boolean;
   sort_order: number;
+  description: string | null;
+  image_url: string | null;
+  category: string | null;
   created_at?: string;
   updated_at?: string;
 }
