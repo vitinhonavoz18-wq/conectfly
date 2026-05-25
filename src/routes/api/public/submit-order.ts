@@ -255,11 +255,9 @@ export const Route = createFileRoute("/api/public/submit-order")({
           return new Response(
             JSON.stringify({ 
               success: isSuccess, 
-              error: isSuccess ? null : lastErr,
+              error: isSuccess ? null : "Falha ao processar o pedido. Tente novamente ou use o WhatsApp.",
               status: lastStatus,
-              endpoint: url,
-              payload: payload, // Repassar para log se necessário
-              response: finalData
+              response: isSuccess ? { success: true } : null
             }), 
             {
               status: isSuccess ? 200 : (lastStatus >= 400 && lastStatus < 600 ? lastStatus : 502),
