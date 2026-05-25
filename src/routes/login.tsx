@@ -1,11 +1,9 @@
-import { createFileRoute, Link, useNavigate, useSearch, redirect } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Loader2, LogIn, UserPlus, ChefHat } from "lucide-react";
+import { Loader2, Lock, ChefHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
-import { getSubdomain } from "@/lib/utils/hostname";
 
 type Search = { redirect?: string };
 
@@ -16,17 +14,8 @@ export const Route = createFileRoute("/login")({
   beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
     
-    // Se estiver em um subdomínio, não redireciona se já estiver logado (deixa ver o cardápio)
-    // Mas se quiser logar, o login deve funcionar no subdomínio também.
-    // No entanto, para evitar o redirect para "/", vamos verificar o subdomínio.
     const { data } = await supabase.auth.getSession();
     if (data.session) {
-      const subdomain = getSubdomain();
-      if (subdomain) {
-        // Se estiver logado em um subdomínio, apenas redireciona para a home do subdomínio
-        // que já vai mostrar o site público através do Dashboard
-        throw redirect({ to: "/" });
-      }
       throw redirect({ to: search.redirect || "/" });
     }
   },
@@ -36,41 +25,37 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Preencha email e senha");
+    if (!password) {
+      toast.error("Informe a senha administrativa");
       return;
     }
     setBusy(true);
     try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
+      // Call the secure edge function to validate the password and get a session
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: { password }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.session) {
+        // Set the session manually in the supabase client
+        const { error: setSessionError } = await supabase.auth.setSession(data.session);
+        if (setSessionError) throw setSessionError;
         
-        if (data.session) {
-          toast.success("Conta criada com sucesso! Bem-vindo.");
-          navigate({ to: search.redirect || "/" });
-        } else {
-          toast.success("Conta criada! Verifique seu email para confirmar.");
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("Bem-vindo!");
+        toast.success("Acesso autorizado. Bem-vindo, Admin.");
         navigate({ to: search.redirect || "/" });
+      } else {
+        throw new Error("Resposta inválida do servidor de autenticação.");
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro de autenticação");
+      toast.error(err instanceof Error ? err.message : "Senha incorreta ou erro de conexão");
     } finally {
       setBusy(false);
     }
@@ -90,39 +75,28 @@ function LoginPage() {
             <div className="mt-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] text-primary/80 font-bold">
               <span className="h-px w-8 bg-gradient-to-r from-transparent to-primary/60" />
               <ChefHat className="h-3 w-3" />
-              <span>Plataforma Premium</span>
+              <span>Plataforma Privada</span>
               <span className="h-px w-8 bg-gradient-to-l from-transparent to-primary/60" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mt-5 italic">
-            {mode === "login" ? "Bem-vindo de volta ao seu estúdio gastronômico" : "Crie sua conta e comece a servir"}
+          <h2 className="text-xl font-black mt-8 tracking-tight uppercase">Acesso Administrativo</h2>
+          <p className="text-sm text-muted-foreground mt-2 italic">
+            Área restrita para gestão da ConnectFly
           </p>
         </div>
 
         <div className="card-premium p-8 space-y-5 border-primary/10">
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full mt-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50"
-                placeholder="seu@email.com"
-                autoComplete="email"
-              />
-            </div>
-            <div>
-              <label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Senha</label>
+              <label className="text-xs uppercase tracking-widest font-bold text-muted-foreground">Senha Admin</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full mt-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50"
+                className="w-full mt-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 text-center text-2xl tracking-[0.5em]"
                 placeholder="••••••••"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                minLength={6}
+                autoComplete="current-password"
+                autoFocus
               />
             </div>
             <button
@@ -132,29 +106,17 @@ function LoginPage() {
             >
               {busy ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
-              ) : mode === "login" ? (
-                <>
-                  <LogIn className="h-4 w-4" /> Entrar
-                </>
               ) : (
                 <>
-                  <UserPlus className="h-4 w-4" /> Criar Conta
+                  <Lock className="h-4 w-4" /> Acessar Painel
                 </>
               )}
             </button>
           </form>
-
-          <button
-            type="button"
-            onClick={() => setMode((m) => (m === "login" ? "signup" : "login"))}
-            className="w-full text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            {mode === "login" ? "Não tem conta? Criar agora" : "Já tem conta? Entrar"}
-          </button>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          <Link to="/" className="hover:text-primary">← Voltar ao site</Link>
+        <p className="text-center text-[10px] text-muted-foreground/50 mt-10 uppercase tracking-[0.2em]">
+          ConnectFly v2.0 — Sistema de Uso Interno
         </p>
       </div>
     </div>
