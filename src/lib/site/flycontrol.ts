@@ -176,11 +176,16 @@ export async function testFlycontrolConnection(
   slug: string
 ) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
   try {
-    console.log("🧪 Testando conexão com FlyControl via Proxy Seguro");
-    const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
+    console.log("[FLYCONTROL] 🧪 Iniciando teste de conexão via Proxy Seguro...");
+    const supabaseClient = (await import("@/integrations/supabase/client")).supabase;
+    const { data: { session } } = await supabaseClient.auth.getSession();
+
+    if (!session?.access_token) {
+      console.warn("[FLYCONTROL] ⚠️ Sessão não encontrada para o teste de conexão.");
+    }
 
     const response = await fetch("/api/public/submit-order", {
       method: "POST",
@@ -196,33 +201,38 @@ export async function testFlycontrolConnection(
     });
 
     clearTimeout(timeoutId);
+    const status = response.status;
     const responseText = await response.text();
     
-    let result = null;
+    console.log(`[FLYCONTROL] 📡 Proxy retornou status: ${status}`);
+
+    let result: any = null;
     try { 
       result = JSON.parse(responseText); 
     } catch { 
-      result = { text: responseText }; 
+      result = { text: responseText.slice(0, 500) }; 
     }
 
     return {
       success: response.ok && result.success === true,
-      status: response.status,
+      status: status,
       data: result.response || result,
-      error: result.error || (response.ok ? null : "Erro na resposta do servidor"),
+      error: result.error || (response.ok ? null : `Erro HTTP ${status}`),
       url: result.endpoint || "/api/public/submit-order",
-      apiKeyExists: true, // Se chegou aqui o proxy achou a chave no DB
+      apiKeyExists: true,
       slugUsed: slug
     };
   } catch (error: any) {
     clearTimeout(timeoutId);
+    const isTimeout = error.name === 'AbortError' || error.message?.includes("aborted");
     console.error("❌ Erro no teste de conexão:", error);
     return {
       success: false,
-      error: error.message === "The user aborted a request." ? "Timeout: O servidor demorou muito para responder." : error.message,
+      error: isTimeout ? "Timeout: O servidor demorou muito para responder (20s)." : error.message,
       url: "/api/public/submit-order",
       apiKeyExists: true,
-      slugUsed: slug
+      slugUsed: slug,
+      status: 0
     };
   }
 }
