@@ -107,10 +107,10 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
       if (bordasCategory && bordasCategory.items.length > 0) {
         targetRef = bordasRef;
-        message = "Agora escolha sua borda recheada 🍕";
+        message = "Agora escolha seu adicional ✨";
       } else if (beverages && beverages.length > 0) {
         targetRef = beveragesRef;
-        message = "Que tal uma bebida para acompanhar? 🥤";
+        message = "Que tal algo para acompanhar? 🥤";
       } else {
         targetRef = summaryRef;
         message = "Tudo pronto! Revise seu pedido abaixo. ✨";
@@ -550,7 +550,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                )}
                 {selectedBorder && (
                   <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-secondary))]">
-                    <span className="font-medium">Borda recheada: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
+                    <span className="font-medium">Adicional: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
                   </li>
                 )}
