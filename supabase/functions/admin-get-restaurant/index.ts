@@ -8,6 +8,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -35,6 +36,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     
     if (userError || !user) {
+      console.error(`[${requestId}] Erro de autenticação:`, userError?.message)
       return new Response(JSON.stringify({ error: `Unauthorized: ${userError?.message || 'No user'}` }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -43,6 +45,7 @@ serve(async (req) => {
 
     const ADMIN_EMAIL = 'vitinhonavoz18@gmail.com'
     if (user.email !== ADMIN_EMAIL) {
+      console.warn(`[${requestId}] Acesso negado para o email: ${user.email}`)
       return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -50,96 +53,134 @@ serve(async (req) => {
     }
 
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    if (!supabaseServiceKey) {
+      console.error(`[${requestId}] SUPABASE_SERVICE_ROLE_KEY não configurada`)
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
+    }
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-    if (method === 'GET' || (method === 'POST' && req.headers.get('Content-Type') === 'application/json')) {
-      const url = new URL(req.url)
-      const id = body?.id || url.searchParams.get('id')
-      const action = body?.action || 'get'
-      const includeFullData = body?.full === true || url.searchParams.get('full') === 'true'
+    // Parse body for POST/PUT requests
+    let body: any = {}
+    if (method === 'POST' || method === 'PUT') {
+      try {
+        const text = await req.text()
+        if (text) {
+          body = JSON.parse(text)
+        }
+      } catch (e) {
+        console.warn(`[${requestId}] Falha ao parsear JSON do body:`, e.message)
+      }
+    }
 
-      if (!id) {
-        return new Response(JSON.stringify({ error: 'ID is required' }), {
+    const url = new URL(req.url)
+    const id = body?.id || url.searchParams.get('id')
+    const action = body?.action || url.searchParams.get('action') || 'get'
+    const includeFullData = body?.full === true || url.searchParams.get('full') === 'true'
+
+    if (!id) {
+      return new Response(JSON.stringify({ error: 'ID is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Corrigido regex de UUID (8-4-4-4-12)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    console.log(`[${requestId}] Action: ${action} | Target ${isUuid ? 'ID' : 'SLUG'}: ${id} | Full: ${includeFullData}`)
+
+    if (action === 'get') {
+      const query = supabaseAdmin.from('restaurants').select('*')
+      if (isUuid) {
+        query.eq('id', id)
+      } else {
+        query.eq('slug', id)
+      }
+
+      const { data: restaurant, error } = await query.maybeSingle()
+
+      if (error) {
+        console.error(`[${requestId}] Erro na query de restaurante:`, error.message)
+        throw error
+      }
+      
+      if (!restaurant) {
+        console.warn(`[${requestId}] Restaurante não encontrado: ${id}`)
+        return new Response(JSON.stringify({ error: 'Restaurante não encontrado' }), { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        })
+      }
+
+      let responseData: any = { restaurant }
+
+      if (includeFullData) {
+        console.log(`[${requestId}] Buscando dados completos (cardápio, combos, etc)`)
+        const [cats, items, groups, combos, zones, beverages, sizes] = await Promise.all([
+          supabaseAdmin.from('menu_categories').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('menu_items').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('combo_groups').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('combos').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('delivery_zones').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('pizzeria_beverages').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('pizzeria_pizza_sizes').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
+        ])
+
+        responseData = {
+          ...responseData,
+          categories: cats.data || [],
+          items: items.data || [],
+          comboGroups: groups.data || [],
+          combos: combos.data || [],
+          deliveryZones: zones.data || [],
+          beverages: beverages.data || [],
+          pizzaSizes: sizes.data || [],
+        }
+      }
+
+      return new Response(JSON.stringify({ 
+        success: true,
+        data: includeFullData ? responseData : restaurant
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'update') {
+      const { updates } = body
+      if (!updates) {
+        return new Response(JSON.stringify({ error: 'Updates are required' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
 
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-      console.log(`[${requestId}] Action: ${action} | Target ${isUuid ? 'ID' : 'SLUG'}: ${id} | Full: ${includeFullData}`)
+      console.log(`[${requestId}] Executando update para restaurante: ${id}`)
+      const { data, error } = await supabaseAdmin
+        .from('restaurants')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
 
-      if (action === 'get') {
-        const query = supabaseAdmin.from('restaurants').select('*')
-        if (isUuid) query.eq('id', id)
-        else query.eq('slug', id)
-
-        const { data: restaurant, error } = await query.maybeSingle()
-
-        if (error) throw error
-        if (!restaurant) return new Response(JSON.stringify({ error: 'Restaurante não encontrado' }), { status: 404, headers: corsHeaders })
-
-        let responseData: any = { restaurant }
-
-        if (includeFullData) {
-          console.log(`[${requestId}] Buscando dados completos (cardápio, combos, etc)`)
-          const [cats, items, groups, combos, zones, beverages, sizes] = await Promise.all([
-            supabaseAdmin.from('menu_categories').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
-            supabaseAdmin.from('menu_items').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
-            supabaseAdmin.from('combo_groups').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
-            supabaseAdmin.from('combos').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
-            supabaseAdmin.from('delivery_zones').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
-            supabaseAdmin.from('pizzeria_beverages').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
-            supabaseAdmin.from('pizzeria_pizza_sizes').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
-          ])
-
-          responseData = {
-            ...responseData,
-            categories: cats.data || [],
-            items: items.data || [],
-            comboGroups: groups.data || [],
-            combos: combos.data || [],
-            deliveryZones: zones.data || [],
-            beverages: beverages.data || [],
-            pizzaSizes: sizes.data || [],
-          }
-        }
-
-        return new Response(JSON.stringify({ 
-          success: true,
-          data: includeFullData ? responseData : restaurant
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
+      if (error) {
+        console.error(`[${requestId}] Erro no update:`, error.message)
+        throw error
       }
 
-      if (action === 'update') {
-        const { updates } = body
-        if (!updates) throw new Error('Updates are required')
-
-        const { data, error } = await supabaseAdmin
-          .from('restaurants')
-          .update(updates)
-          .eq('id', id) // Always use ID for updates for safety
-          .select()
-          .single()
-
-        if (error) throw error
-
-        return new Response(JSON.stringify({ success: true, data }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
+      return new Response(JSON.stringify({ success: true, data }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+    return new Response(JSON.stringify({ error: 'Method not allowed or invalid action' }), {
       status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
   } catch (error: any) {
-    console.error(`[${requestId}] Erro:`, error.message)
+    console.error(`[${requestId}] Erro Fatal:`, error.message)
     return new Response(JSON.stringify({ 
       success: false,
       error: error.message 

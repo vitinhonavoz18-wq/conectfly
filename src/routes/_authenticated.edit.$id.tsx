@@ -9,14 +9,15 @@ import {
   Eye,
   FileText,
   Link as LinkIcon,
-   MapPin,
-   Pencil,
-   Rocket,
-   Sparkles,
-   Tag,
-   Utensils,
-   LogOut,
- } from "lucide-react";
+  MapPin,
+  Pencil,
+  Rocket,
+  Sparkles,
+  Tag,
+  Utensils,
+  LogOut,
+  Loader2,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
 import { fetchSiteByRestaurant, getRestaurantById, updateRestaurant, adminFetchSiteData } from "@/lib/site/queries";
@@ -45,6 +46,7 @@ function EditPage() {
   const [preview, setPreview] = useState<SiteData | null>(null);
   const [previewBust, setPreviewBust] = useState(0);
   const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [finalizing, setFinalizing] = useState(false);
   const [finalized, setFinalized] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -60,6 +62,7 @@ function EditPage() {
       .catch((err) => {
         console.error(`[Edit] Falha ao carregar restaurante ${id}:`, err);
         const errorMessage = String(err.message || err);
+        setError(errorMessage);
         
         if (errorMessage.includes("não encontrado")) {
           setNotFound(true);
@@ -111,21 +114,35 @@ function EditPage() {
     }
   };
 
-  if (notFound) {
+  if (notFound || error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
-        <p>Restaurante não encontrado.</p>
-        <Link to="/" className="text-primary underline">
-          Voltar
-        </Link>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <div className="bg-destructive/10 p-6 rounded-2xl border border-destructive/20 max-w-md">
+          <h2 className="text-xl font-bold text-destructive mb-2 uppercase tracking-tight">
+            {notFound ? "Restaurante não encontrado" : "Erro no Carregamento"}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            {error || "O restaurante solicitado não existe ou você não tem permissão para acessá-lo."}
+          </p>
+          <Link 
+            to="/" 
+            className="btn-premium px-8 py-3 rounded-xl inline-flex items-center gap-2 uppercase text-xs tracking-widest"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar ao Painel
+          </Link>
+        </div>
       </div>
     );
   }
 
   if (!restaurant) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        Carregando...
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="uppercase tracking-[0.3em] text-[10px] font-black animate-pulse">
+          Sincronizando Dados...
+        </span>
       </div>
     );
   }
