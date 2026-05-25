@@ -26,64 +26,140 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const bordasCategory = data.categories.find(isBordas);
 
   const style = {
-    ["--site-bg" as string]: "0 0% 100%", // White
-    ["--site-fg" as string]: "0 0% 7%", // Black
+    ["--site-bg" as string]: "30 100% 99%", // #FFF9F6 (aprox)
+    ["--site-fg" as string]: "0 0% 7%", // #111111
     ["--site-card" as string]: "0 0% 100%", // White
-    ["--site-border" as string]: "0 100% 90%", // Light red border
-    ["--site-muted" as string]: "0 100% 98%", // Very light red
-    ["--site-muted-fg" as string]: "0 0% 40%",
-    ["--site-primary" as string]: "0 84% 45%", // Deep Red #E50914
+    ["--site-border" as string]: "24 25% 91%", // #EFE7E2
+    ["--site-muted" as string]: "24 25% 98%", 
+    ["--site-muted-fg" as string]: "0 0% 33%", // #555555
+    ["--site-primary" as string]: "358 92% 46%", // #E50914
+    ["--site-secondary" as string]: "39 68% 55%", // #D9A441 (Premium Gold)
   };
 
   return (
-    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
+    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans">
       <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+          background-color: #FFF9F6 !important;
+          color: #111111 !important;
+        }
+
         header {
           background: #E50914 !important;
           color: white !important;
           border-bottom: none !important;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.12) !important;
         }
+
         header * {
           color: white !important;
         }
+
+        .bg-gradient-gold {
+          background: linear-gradient(135deg, #D9A441, #B8860B) !important;
+        }
+
+        .bg-gradient-red {
+          background: linear-gradient(135deg, #E50914, #B80000) !important;
+        }
+
         .card-premium {
           background: white !important;
-          border-color: #fecaca !important; /* red-200 */
+          border: 1px solid #EFE7E2 !important;
           border-radius: 1.5rem !important;
-          color: #1a1a1a !important;
-          box-shadow: 0 4px 12px rgba(229, 9, 20, 0.05) !important;
+          color: #111111 !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04) !important;
+          transition: all 0.3s ease !important;
         }
-        .btn-premium {
-          background: #E50914 !important;
+        
+        .card-premium:hover {
+          box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+          transform: translateY(-2px) !important;
+        }
+
+        .btn-premium-gold {
+          background: linear-gradient(135deg, #D9A441, #B8860B) !important;
           color: white !important;
+          box-shadow: 0 8px 25px rgba(217, 164, 65, 0.25) !important;
           border-radius: 9999px !important;
           font-weight: 800 !important;
-          text-transform: uppercase !important;
+          transition: all 0.3s ease !important;
         }
+
+        .btn-premium-red {
+          background: linear-gradient(135deg, #E50914, #B80000) !important;
+          color: white !important;
+          box-shadow: 0 12px 30px rgba(229, 9, 20, 0.30) !important;
+          border-radius: 9999px !important;
+          font-weight: 800 !important;
+          transition: all 0.3s ease !important;
+        }
+
+        .btn-premium-red:hover {
+          transform: scale(1.05) !important;
+          box-shadow: 0 15px 35px rgba(229, 9, 20, 0.40) !important;
+        }
+
+        .text-gold {
+          color: #D9A441 !important;
+        }
+
         .text-primary {
           color: #E50914 !important;
         }
+
         .bg-primary {
           background-color: #E50914 !important;
         }
-        .text-secondary {
-          color: #C80000 !important;
-        }
+
         footer {
           background: #111 !important;
           color: white !important;
         }
+
         .site-hero-section {
-          background: #f8f8f8;
-          border-bottom: 4px solid #E50914;
+          background: #FFF9F6;
+          border-bottom: 6px solid #E50914;
         }
+
         h1, h2, h3, h4 {
           font-family: 'Space Grotesk', sans-serif !important;
           font-weight: 800 !important;
+          letter-spacing: -0.02em !important;
         }
+
         .site-hero-section h1 {
           color: #E50914 !important;
+        }
+
+        .stepper-btn {
+          width: 36px;
+          height: 36px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
+        }
+
+        .stepper-btn-minus {
+          background: #F3F4F6 !important;
+          color: #9CA3AF !important;
+        }
+
+        .stepper-btn-plus {
+          background: #E50914 !important;
+          color: white !important;
+        }
+
+        .stepper-count {
+          background: white !important;
+          color: #111 !important;
+          font-weight: 700 !important;
+          min-width: 32px;
+          text-align: center;
         }
       `}} />
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
