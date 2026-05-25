@@ -229,3 +229,29 @@ export async function getRestaurantById(id: string): Promise<RestaurantRow> {
     throw err;
   }
 }
+
+export async function updateRestaurant(id: string, updates: Partial<RestaurantRow>): Promise<RestaurantRow> {
+  console.log(`[updateRestaurant] Atualizando restaurante: ${id}`);
+  
+  try {
+    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+      body: { id, action: "update", updates }
+    });
+    
+    if (error) {
+      console.error("[updateRestaurant] Erro na chamada da Edge Function:", error);
+      throw error;
+    }
+    
+    if (!data?.success) {
+      console.error("[updateRestaurant] Backend retornou erro:", data?.error);
+      throw new Error(data?.error || "Falha ao atualizar restaurante");
+    }
+    
+    console.log(`[updateRestaurant] Sucesso: Restaurante "${data.data.name}" atualizado`);
+    return data.data as RestaurantRow;
+  } catch (err) {
+    console.error("[updateRestaurant] Erro completo:", err);
+    throw err;
+  }
+}
