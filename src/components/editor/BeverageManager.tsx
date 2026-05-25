@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
- import { Plus, Trash2, Save, ShoppingBag, Loader2 } from "lucide-react";
- import { supabase } from "@/integrations/supabase/client";
- import { toast } from "sonner";
+import { Plus, Trash2, Save, ShoppingBag, Loader2, FileJson } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { BeverageRow } from "@/lib/site/types";
+import { BeverageImport } from "./BeverageImport";
 
 interface Props {
   restaurantId: string;
@@ -11,6 +12,7 @@ interface Props {
 export function BeverageManager({ restaurantId }: Props) {
   const [beverages, setBeverages] = useState<BeverageRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showImport, setShowImport] = useState(false);
 
   const reload = async () => {
     setLoading(true);
@@ -191,12 +193,20 @@ export function BeverageManager({ restaurantId }: Props) {
           <ShoppingBag className="h-5 w-5 text-primary" />
           <h3 className="text-lg font-bold">Bebidas</h3>
         </div>
-        <button
-          onClick={addBeverage}
-          className="btn-premium px-4 py-2 rounded-xl flex items-center gap-2 text-xs uppercase tracking-widest shadow-lg"
-        >
-          <Plus className="h-4 w-4" /> Adicionar Bebida
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:border-primary/50 transition-all text-xs font-black uppercase tracking-widest"
+          >
+            <FileJson className="h-4 w-4 text-primary" /> Importar via JSON
+          </button>
+          <button
+            onClick={addBeverage}
+            className="btn-premium px-4 py-2 rounded-xl flex items-center gap-2 text-xs uppercase tracking-widest shadow-lg"
+          >
+            <Plus className="h-4 w-4" /> Adicionar Bebida
+          </button>
+        </div>
       </div>
 
       {beverages.length === 0 ? (
@@ -214,6 +224,14 @@ export function BeverageManager({ restaurantId }: Props) {
             />
           ))}
         </div>
+      )}
+
+      {showImport && (
+        <BeverageImport
+          restaurantId={restaurantId}
+          onImportComplete={reload}
+          onClose={() => setShowImport(false)}
+        />
       )}
     </div>
   );

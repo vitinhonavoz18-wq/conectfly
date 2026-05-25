@@ -399,18 +399,33 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Configurações Visuais">
-          <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
-            <input
-              type="checkbox"
-              checked={r.show_item_images ?? true}
-              onChange={(e) => set("show_item_images", e.target.checked)}
-              className="h-5 w-5 accent-primary"
-            />
-            <div className="flex flex-col">
-              <span className="text-sm font-bold">Exibir imagens nos sabores/itens</span>
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Habilita o anexo de fotos no cardápio</span>
-            </div>
-          </label>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+              <input
+                type="checkbox"
+                checked={r.show_item_images ?? true}
+                onChange={(e) => set("show_item_images", e.target.checked)}
+                className="h-5 w-5 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-bold">Exibir imagens nos sabores/itens</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Habilita o anexo de fotos no cardápio</span>
+              </div>
+            </label>
+
+            <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+              <input
+                type="checkbox"
+                checked={r.site_settings?.show_categories_section ?? true}
+                onChange={(e) => set("site_settings", { ...r.site_settings, show_categories_section: e.target.checked })}
+                className="h-5 w-5 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-bold">Mostrar seção de categorias no início</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Exibe "Curadoria Gastronômica / Nossa Cozinha"</span>
+              </div>
+            </label>
+          </div>
         </Field>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Cor primária (HSL)" hint='Ex: "0 84% 55%"'>

@@ -4,6 +4,7 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
+import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
@@ -198,6 +199,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
+        
         <div className="bg-white py-12">
           <SiteMenuSection 
             categories={nonPizzaCategories} 
@@ -205,6 +207,14 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             entryMode={entryMode}
           />
         </div>
+
+        {(data.beverages && data.beverages.length > 0) && (
+          <div className="bg-slate-50 py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+            </div>
+          </div>
+        )}
       </main>
       <SiteFooter
         name={r.name}
