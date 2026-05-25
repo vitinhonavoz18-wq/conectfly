@@ -304,115 +304,167 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
     }
   };
  
-   const reset = () => {
-     setFile(null);
-     setData(null);
-     setError(null);
-     if (fileInputRef.current) fileInputRef.current.value = "";
-   };
- 
-   return (
-     <Dialog open={isOpen} onOpenChange={(v) => { setIsOpen(v); if (!v) reset(); }}>
-       <DialogTrigger asChild>
-         <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all">
-           <FileJson className="h-4 w-4 text-primary" />
-           <span>Importar Cardápio</span>
-         </button>
-       </DialogTrigger>
-       <DialogContent className="sm:max-w-[500px] border-white/10 bg-zinc-950 text-white">
-         <DialogHeader>
-           <DialogTitle className="text-2xl font-black uppercase tracking-tight">Importar Cardápio JSON</DialogTitle>
-         </DialogHeader>
- 
-         <div className="space-y-6 py-4">
-           {!data ? (
-             <div 
-               onClick={() => fileInputRef.current?.click()}
-               className="border-2 border-dashed border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/50 hover:bg-white/5 transition-all"
-             >
-               <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                 <Upload className="h-6 w-6 text-primary" />
-               </div>
-               <div className="text-center">
-                 <p className="font-bold">Clique para anexar o arquivo .json</p>
-                 <p className="text-xs text-muted-foreground mt-1 text-zinc-400">Arraste e solte o arquivo aqui</p>
-               </div>
-               <input 
-                 type="file" 
-                 ref={fileInputRef} 
-                 onChange={handleFileChange} 
-                 accept=".json" 
-                 className="hidden" 
-               />
-             </div>
-           ) : (
-             <div className="space-y-4">
-               <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/10">
-                 <div className="flex items-center gap-3">
-                   <FileJson className="h-8 w-8 text-primary" />
-                   <div>
-                     <p className="font-bold text-sm truncate max-w-[200px]">{file?.name}</p>
-                     <p className="text-xs text-zinc-400">Pronto para importar</p>
-                   </div>
-                 </div>
-                 <button onClick={reset} className="p-2 hover:bg-white/10 rounded-lg text-zinc-400">
-                   <X className="h-4 w-4" />
-                 </button>
-               </div>
- 
-               <div className="grid grid-cols-2 gap-3">
-                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                   <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-1">Sabores</p>
-                   <p className="text-2xl font-black">{data.sabores?.length || 0}</p>
-                 </div>
-                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                   <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-1">Tamanhos</p>
-                   <p className="text-2xl font-black">{data.tamanhos?.length || 0}</p>
-                 </div>
-                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                   <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-1">Bordas</p>
-                   <p className="text-2xl font-black">{data.bordas_recheadas?.length || 0}</p>
-                 </div>
-                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                   <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-1">Tipo</p>
-                   <p className="text-lg font-bold truncate uppercase">{data.tipo_cardapio || "Pizzas"}</p>
-                 </div>
-               </div>
- 
-               {data.tamanhos && data.tamanhos.length > 0 && (
-                 <div className="text-[11px] text-zinc-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg flex gap-2">
-                   <AlertCircle className="h-4 w-4 shrink-0 text-amber-500" />
-                   <p>Os tamanhos encontrados no arquivo serão atualizados na categoria principal.</p>
-                 </div>
-               )}
-             </div>
-           )}
- 
-           {error && (
-             <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl flex gap-3 items-center text-destructive">
-               <AlertCircle className="h-5 w-5 shrink-0" />
-               <p className="text-sm font-medium">{error}</p>
-             </div>
-           )}
-         </div>
- 
-         <DialogFooter className="gap-2 sm:gap-0">
-           <button
-             onClick={() => setIsOpen(false)}
-             className="flex-1 px-6 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
-           >
-             Cancelar
-           </button>
-           <button
-             disabled={!data || loading}
-             onClick={handleImport}
-             className="flex-1 btn-premium px-6 py-3 rounded-xl flex items-center justify-center gap-2 uppercase text-xs tracking-widest shadow-xl disabled:opacity-50"
-           >
-             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-             <span>Confirmar Importação</span>
-           </button>
-         </DialogFooter>
-       </DialogContent>
-     </Dialog>
-   );
- }
+  const reset = () => {
+    setFile(null);
+    setData(null);
+    setError(null);
+    setCategoryName("");
+    setCategoryType("SIMPLE");
+    setImportAction("ADD");
+    setItemsList([]);
+    setStats({ total: 0, withPrice: 0, withoutPrice: 0 });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(v) => { setIsOpen(v); if (!v) reset(); }}>
+      <DialogTrigger asChild>
+        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all">
+          <FileJson className="h-4 w-4 text-primary" />
+          <span>Importar Cardápio</span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[500px] border-white/10 bg-zinc-950 text-white max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-black uppercase tracking-tight">Importar Cardápio JSON</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {!data ? (
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              className="border-2 border-dashed border-white/10 rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/50 hover:bg-white/5 transition-all"
+            >
+              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Upload className="h-6 w-6 text-primary" />
+              </div>
+              <div className="text-center">
+                <p className="font-bold">Clique para anexar o arquivo .json</p>
+                <p className="text-xs text-muted-foreground mt-1 text-zinc-400">Arraste e solte o arquivo aqui</p>
+              </div>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept=".json" 
+                className="hidden" 
+              />
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {/* Arquivo e Stats */}
+              <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/10">
+                <div className="flex items-center gap-3">
+                  <FileJson className="h-8 w-8 text-primary" />
+                  <div>
+                    <p className="font-bold text-sm truncate max-w-[200px]">{file?.name}</p>
+                    <p className="text-xs text-zinc-400">Detectado {stats.total} itens</p>
+                  </div>
+                </div>
+                <button onClick={reset} className="p-2 hover:bg-white/10 rounded-lg text-zinc-400">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Campos de Configuração */}
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label className="text-xs uppercase font-bold text-zinc-500">Nome da Categoria</Label>
+                  <Input 
+                    value={categoryName}
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    placeholder="Ex: Pizzas, Bebidas, Pastéis..."
+                    className="bg-white/5 border-white/10 rounded-xl"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label className="text-xs uppercase font-bold text-zinc-500">Tipo de Categoria</Label>
+                    <Select value={categoryType} onValueChange={(v: any) => setCategoryType(v)}>
+                      <SelectTrigger className="bg-white/5 border-white/10 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                        <SelectItem value="SIMPLE">Produto Simples</SelectItem>
+                        <SelectItem value="FLAVORS">Produto com Sabores</SelectItem>
+                        <SelectItem value="PIZZA">Pizza</SelectItem>
+                        <SelectItem value="BEVERAGE">Bebida</SelectItem>
+                        <SelectItem value="SIDE">Acompanhamento</SelectItem>
+                        <SelectItem value="OTHER">Outro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label className="text-xs uppercase font-bold text-zinc-500">Ação</Label>
+                    <Select value={importAction} onValueChange={(v: any) => setImportAction(v)}>
+                      <SelectTrigger className="bg-white/5 border-white/10 rounded-xl">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-zinc-900 border-white/10 text-white">
+                        <SelectItem value="ADD">Adicionar itens</SelectItem>
+                        <SelectItem value="REPLACE">Substituir tudo</SelectItem>
+                        <SelectItem value="NEW">Criar nova</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Resumo Detalhado */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-1">Com Preço</p>
+                  <p className="text-xl font-black text-green-500">{stats.withPrice}</p>
+                </div>
+                <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 mb-1">Sem Preço</p>
+                  <p className="text-xl font-black text-amber-500">{stats.withoutPrice}</p>
+                </div>
+              </div>
+
+              {stats.withoutPrice > 0 && categoryType !== "PIZZA" && (
+                <div className="text-[11px] text-amber-400 bg-amber-500/10 border border-amber-500/20 p-3 rounded-lg flex gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <p>Atenção: {stats.withoutPrice} itens não possuem preço detectado e serão importados com R$ 0,00.</p>
+                </div>
+              )}
+
+              {categoryType === "PIZZA" && (
+                <div className="text-[11px] text-zinc-400 bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg flex gap-2">
+                  <Info className="h-4 w-4 shrink-0 text-blue-400" />
+                  <p>Modo Pizza: Os preços individuais dos sabores serão ignorados (usa os preços dos tamanhos).</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-destructive/10 border border-destructive/20 p-4 rounded-xl flex gap-3 items-center text-destructive">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <p className="text-sm font-medium">{error}</p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <button
+            onClick={() => setIsOpen(false)}
+            className="flex-1 px-6 py-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-sm font-bold transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            disabled={!data || loading}
+            onClick={handleImport}
+            className="flex-1 btn-premium px-6 py-3 rounded-xl flex items-center justify-center gap-2 uppercase text-xs tracking-widest shadow-xl disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            <span>Confirmar Importação</span>
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
