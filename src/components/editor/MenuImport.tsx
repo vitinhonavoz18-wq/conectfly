@@ -173,6 +173,8 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
 
     try {
       const finalCategoryName = categoryName.trim() || "Nova Categoria";
+      console.log(`[MenuImport] Iniciando importação para categoria: ${finalCategoryName} (${categoryType})`);
+      
       const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
       
       const foundCat = existingCats?.find(c => c.name.toUpperCase() === finalCategoryName.toUpperCase());
