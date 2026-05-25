@@ -168,29 +168,33 @@ const debugLog = (...args: any[]) => {
 }
 
 export async function listRestaurants(): Promise<RestaurantRow[]> {
-  const { data: userData } = await supabase.auth.getUser();
-  const uid = userData?.user?.id;
-  if (!uid) return [];
-
-  // Check admin role (best-effort); admins see all, owners see only their own.
-  let isAdmin = false;
-  try {
-    const { data: adminCheck } = await supabase.rpc("has_role", {
-      _user_id: uid,
-      _role: "admin",
-    });
-    isAdmin = adminCheck === true;
-  } catch {
-    isAdmin = false;
+  console.log("[listRestaurants] Iniciando carregamento de pizzarias...");
+  
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    console.warn("[listRestaurants] Token admin ausente (sem sessão)");
+    return [];
   }
-
-  let query = supabase
-    .from("restaurants")
-    .select("*")
-    .order("created_at", { ascending: false });
-  if (!isAdmin) query = query.eq("owner_id", uid);
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data ?? []) as unknown as RestaurantRow[];
+  
+  console.log("[listRestaurants] Chamando backend seguro (admin-list-restaurants)...");
+  
+  try {
+    const { data, error } = await supabase.functions.invoke("admin-list-restaurants");
+    
+    if (error) {
+      console.error("[listRestaurants] Erro na chamada da Edge Function:", error);
+      throw error;
+    }
+    
+    if (!data?.success) {
+      console.error("[listRestaurants] Backend retornou erro:", data?.error);
+      throw new Error(data?.error || "Falha ao carregar pizzarias");
+    }
+    
+    console.log(`[listRestaurants] Sucesso: ${data.data?.length || 0} pizzarias retornadas`);
+    return (data.data ?? []) as RestaurantRow[];
+  } catch (err) {
+    console.error("[listRestaurants] Erro completo:", err);
+    throw err;
+  }
 }
