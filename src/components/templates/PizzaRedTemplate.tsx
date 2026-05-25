@@ -8,6 +8,7 @@ import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
+import { getPrimaryButtonText } from "@/lib/site/format";
 
 export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen } = useCart();
@@ -179,7 +180,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
-            buttonText={r.site_settings?.hero_button_text}
+            buttonText={getPrimaryButtonText(r)}
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
             combosVisibility={combosVisibility}

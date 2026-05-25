@@ -427,6 +427,14 @@ export function InfoForm({ restaurant, onChange }: Props) {
             </label>
           </div>
         </Field>
+        <Field label="Texto do botão principal" hint='Ex: "Explorar Sabores"'>
+          <input
+            value={r.site_settings?.hero_button_text ?? ""}
+            onChange={(e) => set("site_settings", { ...r.site_settings, hero_button_text: e.target.value })}
+            placeholder="EXPLORAR CARDÁPIO"
+            className="input"
+          />
+        </Field>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Cor primária (HSL)" hint='Ex: "0 84% 55%"'>
           <div className="flex gap-2 items-center">
