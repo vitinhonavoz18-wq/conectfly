@@ -19,7 +19,7 @@ import {
  } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
-import { fetchSiteByRestaurant, getRestaurantById } from "@/lib/site/queries";
+import { fetchSiteByRestaurant, getRestaurantById, updateRestaurant } from "@/lib/site/queries";
  import { useAuth } from "@/hooks/useAuth";
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { InfoForm } from "@/components/editor/InfoForm";
