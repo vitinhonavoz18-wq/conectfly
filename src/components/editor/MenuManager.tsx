@@ -575,3 +575,133 @@ function PizzaSettings({
     </div>
   );
 }
+
+function CatalogSettings({
+  category,
+  onUpdate,
+}: {
+  category: MenuCategoryRow;
+  onUpdate: (p: Partial<MenuCategoryRow>) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(category.name);
+  const [type, setType] = useState(category.type || (category.is_pizza ? "PIZZA" : "SIMPLE"));
+  const [order, setOrder] = useState(String(category.sort_order || 0));
+
+  const commit = () => {
+    onUpdate({
+      name: name.trim() || "Nova Categoria",
+      type: type,
+      sort_order: Number(order) || 0,
+    });
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="space-y-4 pt-2 border-t border-white/5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={category.show_on_public_site !== false}
+              onChange={(e) => onUpdate({ show_on_public_site: e.target.checked })}
+              className="accent-primary h-4 w-4"
+            />
+            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">Público</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={category.show_directly_in_menu !== false}
+              onChange={(e) => onUpdate({ show_directly_in_menu: e.target.checked })}
+              className="accent-primary h-4 w-4"
+            />
+            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">Direto</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={category.show_as_clickable_category !== false}
+              onChange={(e) => onUpdate({ show_as_clickable_category: e.target.checked })}
+              className="accent-primary h-4 w-4"
+            />
+            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">Aba</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={category.allow_cart_addition !== false}
+              onChange={(e) => onUpdate({ allow_cart_addition: e.target.checked })}
+              className="accent-primary h-4 w-4"
+            />
+            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">Carrinho</span>
+          </label>
+        </div>
+
+        <button 
+          onClick={() => setIsEditing(!isEditing)}
+          className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all flex items-center gap-2"
+        >
+          <Settings2 className="h-4 w-4" />
+          <span className="text-[10px] uppercase font-bold tracking-widest">Configurar</span>
+        </button>
+      </div>
+
+      {isEditing && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-black/40 p-4 rounded-xl border border-white/5 animate-in fade-in slide-in-from-top-2">
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Nome</label>
+            <input 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={commit}
+              className="input h-9 bg-zinc-900/50 border-white/5 text-sm"
+              placeholder="Ex: Pastéis"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Tipo</label>
+            <select 
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              onBlur={commit}
+              className="input h-9 bg-zinc-900/50 border-white/5 text-sm appearance-none"
+            >
+              <option value="SIMPLE">Produto Simples</option>
+              <option value="FLAVORS">Sabores</option>
+              <option value="BEVERAGE">Bebidas</option>
+              <option value="SIDE">Acompanhamentos</option>
+              <option value="ADDITIONAL">Adicionais</option>
+              <option value="COMBOS">Combos</option>
+              <option value="PIZZA">Pizza</option>
+              <option value="OTHER">Outro</option>
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] uppercase font-black tracking-widest text-zinc-500 ml-1">Ordem</label>
+            <input 
+              type="number"
+              value={order}
+              onChange={(e) => setOrder(e.target.value)}
+              onBlur={commit}
+              className="input h-9 bg-zinc-900/50 border-white/5 text-sm"
+              placeholder="0"
+            />
+          </div>
+        </div>
+      )}
+      
+      {type === "PIZZA" && (
+        <div className="mt-2">
+          <PizzaSettings category={category} onUpdate={onUpdate} />
+        </div>
+      )}
+    </div>
+  );
+}
