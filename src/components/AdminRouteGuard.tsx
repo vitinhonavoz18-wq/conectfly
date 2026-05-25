@@ -12,12 +12,11 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function checkAuth() {
+      if (typeof window === "undefined") return;
+
       const path = location.pathname;
       const isAdminRoute = true; 
-      const isPublicPizzeriaSlug = false; 
       
-      console.log(`[AdminGuard] Rota: ${path} | isAdminRoute: ${isAdminRoute}`);
-
       // 1. Verificar nova chave de sessão v2
       const sessionV2 = localStorage.getItem(SESSION_KEY);
       
@@ -26,10 +25,10 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
       
       const adminSessionValid = !!(sessionV2 === "true" && user && user.email === 'vitinhonavoz18@gmail.com');
 
-      console.log(`[AdminGuard] sessionV2: ${!!sessionV2} | user: ${user?.email} | valid: ${adminSessionValid}`);
+      console.log(`[AdminGuard] Rota: ${path} | isAdminRoute: ${isAdminRoute} | isPublicPizzeriaSlug: false | adminSessionValid: ${adminSessionValid}`);
 
       if (!adminSessionValid) {
-        console.log("[AdminGuard] Sessão inválida. Redirecionando para /login");
+        console.log("[AdminGuard] Sessão inválida detectada no Guard. Redirecionando...");
         
         localStorage.removeItem(SESSION_KEY);
         localStorage.removeItem("sitecreatorfly_admin_session");
