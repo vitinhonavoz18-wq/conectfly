@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
- import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 import { BeverageManager } from "./BeverageManager";
- import { MenuImport } from "./MenuImport";
+import { MenuImport } from "./MenuImport";
+import { getRestaurantById } from "@/lib/site/queries";
 
 interface Props {
   restaurantId: string;
