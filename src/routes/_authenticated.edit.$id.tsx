@@ -19,7 +19,7 @@ import {
  } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
- import { fetchSiteByRestaurant } from "@/lib/site/queries";
+import { fetchSiteByRestaurant, getRestaurantById, updateRestaurant, adminFetchSiteData } from "@/lib/site/queries";
  import { useAuth } from "@/hooks/useAuth";
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { InfoForm } from "@/components/editor/InfoForm";
@@ -51,38 +51,51 @@ function EditPage() {
 
   useEffect(() => {
     console.log(`[Edit] Iniciando carregamento do restaurante: ${id} | isAdminRoute: true | adminSessionValid: true`);
-    supabase
-      .from("restaurants")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) {
-          console.log(`[Edit] Restaurante ${id} não encontrado.`);
+    
+    getRestaurantById(id)
+      .then((data) => {
+        console.log(`[Edit] Dados carregados com sucesso: ${data.name}`);
+        setRestaurant(data);
+      })
+      .catch((err) => {
+        console.error(`[Edit] Falha ao carregar restaurante ${id}:`, err);
+        const errorMessage = String(err.message || err);
+        
+        if (errorMessage.includes("não encontrado")) {
           setNotFound(true);
-          return;
+        } else if (errorMessage.includes("Unauthorized") || errorMessage.includes("Forbidden")) {
+          toast.error("Erro de permissão. Verifique sua sessão.");
+        } else if (errorMessage.includes("invalid input syntax for type uuid")) {
+          toast.error("ID inválido");
+        } else {
+          toast.error(`Falha ao carregar: ${errorMessage}`);
         }
-        console.log(`[Edit] Dados carregados: ${data.name}`);
-        setRestaurant(data as unknown as RestaurantRow);
       });
   }, [id]);
 
   useEffect(() => {
     if (tab !== "preview" || !restaurant) return;
-    fetchSiteByRestaurant(restaurant).then(setPreview);
+    console.log(`[Edit] Atualizando preview via backend seguro...`);
+    adminFetchSiteData(restaurant.id).then(setPreview).catch(err => {
+      console.error("[Edit] Erro ao carregar preview:", err);
+      toast.error("Falha ao gerar preview do site.");
+    });
   }, [tab, restaurant, previewBust]);
 
   const handleFinalize = async () => {
     if (!restaurant) return;
     setFinalizing(true);
-    const { error } = await supabase
-      .from("restaurants")
-      .update({ published: true })
-      .eq("id", restaurant.id);
-    setFinalizing(false);
-    if (error) return;
-    setRestaurant({ ...restaurant, published: true });
-    setFinalized(true);
+    try {
+      await updateRestaurant(restaurant.id, { published: true });
+      setRestaurant({ ...restaurant, published: true });
+      setFinalized(true);
+      toast.success("Vitrine inaugurada com sucesso!");
+    } catch (err) {
+      console.error("[Edit] Erro ao inaugurar:", err);
+      toast.error("Falha ao inaugurar vitrine.");
+    } finally {
+      setFinalizing(false);
+    }
   };
 
   const shareUrl = restaurant ? getPizzeriaPublicUrl(restaurant.slug, restaurant.custom_subdomain) : "";

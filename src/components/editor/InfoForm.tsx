@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
+import { updateRestaurant } from "@/lib/site/queries";
 
 interface Props {
   restaurant: RestaurantRow;
@@ -90,44 +91,46 @@ export function InfoForm({ restaurant, onChange }: Props) {
     setMsg("");
     let slug = r.slug;
     if (!slug) slug = slugify(r.name);
-    const { error } = await supabase
-      .from("restaurants")
-      .update({
-        name: r.name,
-        slug,
-        custom_subdomain: r.custom_subdomain,
-        tagline: r.tagline,
-        description: r.description,
-        whatsapp_number: r.whatsapp_number,
-        whatsapp_display: r.whatsapp_display,
-        address: r.address,
-        hours: r.hours,
-        city: r.city,
-        logo_url: r.logo_url,
-        hero_image_url: r.hero_image_url,
-        hero_media_type: r.hero_media_type,
-        hero_video_url: r.hero_video_url,
-        primary_color: r.primary_color,
-        secondary_color: r.secondary_color,
-        flycontrol_enabled: r.flycontrol_enabled ?? false,
-        flycontrol_api_url: r.flycontrol_api_url ?? null,
-        flycontrol_api_key: r.flycontrol_api_key ?? null,
-        flycontrol_base_url: r.flycontrol_base_url ?? null,
-        flycontrol_register_url: r.flycontrol_register_url ?? null,
-        flycontrol_tenant_id: r.flycontrol_tenant_id ?? null,
-        whatsapp_enabled: r.whatsapp_enabled ?? true,
-        show_item_images: r.show_item_images ?? true,
-        selected_template: r.selected_template || "black",
-      })
-      .eq("id", r.id);
-    setSaving(false);
-    if (error) {
-      setMsg("Erro: " + error.message);
-      return;
+    
+    const updates: Partial<RestaurantRow> = {
+      name: r.name,
+      slug,
+      custom_subdomain: r.custom_subdomain,
+      tagline: r.tagline,
+      description: r.description,
+      whatsapp_number: r.whatsapp_number,
+      whatsapp_display: r.whatsapp_display,
+      address: r.address,
+      hours: r.hours,
+      city: r.city,
+      logo_url: r.logo_url,
+      hero_image_url: r.hero_image_url,
+      hero_media_type: r.hero_media_type,
+      hero_video_url: r.hero_video_url,
+      primary_color: r.primary_color,
+      secondary_color: r.secondary_color,
+      flycontrol_enabled: r.flycontrol_enabled ?? false,
+      flycontrol_api_url: r.flycontrol_api_url ?? null,
+      flycontrol_api_key: r.flycontrol_api_key ?? null,
+      flycontrol_base_url: r.flycontrol_base_url ?? null,
+      flycontrol_register_url: r.flycontrol_register_url ?? null,
+      flycontrol_tenant_id: r.flycontrol_tenant_id ?? null,
+      whatsapp_enabled: r.whatsapp_enabled ?? true,
+      show_item_images: r.show_item_images ?? true,
+      selected_template: r.selected_template || "black",
+    };
+
+    try {
+      await updateRestaurant(r.id, updates);
+      setMsg("Informações salvas!");
+      onChange({ ...r, slug });
+      setTimeout(() => setMsg(""), 2500);
+    } catch (err: any) {
+      console.error("[InfoForm] Erro ao salvar:", err);
+      setMsg("Erro ao salvar: " + (err.message || String(err)));
+    } finally {
+      setSaving(false);
     }
-    setMsg("Informações salvas!");
-    onChange({ ...r, slug });
-    setTimeout(() => setMsg(""), 2500);
   };
 
    const regenerateKey = () => {
@@ -210,11 +213,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
       const next = { ...r, ...updates } as RestaurantRow;
       setR(next);
       // Persist immediately so the credentials don't get lost on page refresh
-      const { error } = await supabase
-        .from("restaurants")
-        .update(updates)
-        .eq("id", r.id);
-      if (error) throw error;
+      await updateRestaurant(r.id, updates);
       onChange(next);
       setRegMsg("Pizzaria registrada no FLYCONTROL com sucesso!");
     } catch (err) {

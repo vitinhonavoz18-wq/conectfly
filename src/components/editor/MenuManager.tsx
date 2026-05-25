@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
- import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 import { BeverageManager } from "./BeverageManager";
- import { MenuImport } from "./MenuImport";
+import { MenuImport } from "./MenuImport";
+import { adminFetchSiteData, updateRestaurant } from "@/lib/site/queries";
 
 interface Props {
   restaurantId: string;
@@ -18,26 +19,23 @@ export function MenuManager({ restaurantId }: Props) {
   const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   const reload = async () => {
-    const [c, i, r] = await Promise.all([
-      supabase
-        .from("menu_categories")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("sort_order"),
-      supabase
-        .from("menu_items")
-        .select("*")
-        .eq("restaurant_id", restaurantId)
-        .order("sort_order"),
-      supabase
-        .from("restaurants")
-        .select("*")
-        .eq("id", restaurantId)
-        .single(),
-    ]);
-    setCats((c.data ?? []) as unknown as MenuCategoryRow[]);
-    setItems((i.data ?? []) as unknown as MenuItemRow[]);
-    setRestaurant(r.data as unknown as RestaurantRow);
+    try {
+      console.log(`[MenuManager] Recarregando dados seguros para restaurante: ${restaurantId}`);
+      const data = await adminFetchSiteData(restaurantId);
+      
+      // Converte categorias para incluir itens filtrados conforme esperado pelo componente
+      setCats(data.categories as unknown as MenuCategoryRow[]);
+      
+      // Coleta todos os itens de todas as categorias
+      const allItems: MenuItemRow[] = [];
+      data.categories.forEach(cat => {
+        if (cat.items) allItems.push(...(cat.items as MenuItemRow[]));
+      });
+      setItems(allItems);
+      setRestaurant(data.restaurant);
+    } catch (err) {
+      console.error("[MenuManager] Falha ao recarregar:", err);
+    }
   };
 
   useEffect(() => {
@@ -99,7 +97,9 @@ export function MenuManager({ restaurantId }: Props) {
   };
 
   const updateItem = async (id: string, patch: Partial<MenuItemRow>) => {
-    await supabase.from("menu_items").update(patch).eq("id", id);
+    // Para simplificar e manter a segurança, usamos o supabase client direto se o RLS permitir,
+    // ou poderíamos criar um endpoint admin-update-item. Por enquanto, focamos no restaurante.
+    await supabase.from("menu_items").update(patch as never).eq("id", id);
     setItems((cur) => cur.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   };
 
