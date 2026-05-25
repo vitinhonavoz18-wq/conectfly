@@ -117,10 +117,8 @@ function Dashboard() {
   };
 
   const handleClaim = async (id: string) => {
-    if (!user) return;
-    const { error } = await supabase.from("restaurants").update({ owner_id: user.id }).eq("id", id);
-    if (error) toast.error("Falha ao reivindicar: " + error.message);
-    else { toast.success("Pizzaria reivindicada!"); reload(); }
+    // Reivindicação desativada em modelo de admin único
+    toast.error("Funcionalidade desativada");
   };
 
   const togglePublished = async (r: RestaurantRow) => {
