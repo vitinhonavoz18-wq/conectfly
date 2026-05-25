@@ -184,6 +184,20 @@ export const Route = createFileRoute("/api/public/submit-order")({
           }
 
           const isTest = body.test === true;
+          
+          if (isTest) {
+            // Se for teste, exige autenticação de admin para evitar abuso
+            const authHeader = request.headers.get("Authorization");
+            if (!authHeader) {
+              return new Response(JSON.stringify({ success: false, error: "Autenticação necessária para testes" }), { status: 401, headers });
+            }
+            const token = authHeader.replace("Bearer ", "");
+            const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+            if (authErr || !user || user.id !== 'fb13f4ba-a3fe-45c4-917c-1ae6d09377a3') {
+              return new Response(JSON.stringify({ success: false, error: "Acesso negado" }), { status: 403, headers });
+            }
+          }
+
           const payload = body.payload || {
             event: "order.created",
             source: "sitecreatorfly-test",
