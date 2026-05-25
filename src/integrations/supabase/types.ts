@@ -499,6 +499,7 @@ export type Database = {
           primary_color: string
           published: boolean
           secondary_color: string
+          selected_template: string
           show_item_images: boolean | null
           slug: string
           tagline: string | null
@@ -530,6 +531,7 @@ export type Database = {
           primary_color?: string
           published?: boolean
           secondary_color?: string
+          selected_template?: string
           show_item_images?: boolean | null
           slug: string
           tagline?: string | null
@@ -561,6 +563,7 @@ export type Database = {
           primary_color?: string
           published?: boolean
           secondary_color?: string
+          selected_template?: string
           show_item_images?: boolean | null
           slug?: string
           tagline?: string | null
@@ -613,6 +616,7 @@ export type Database = {
           primary_color: string | null
           published: boolean | null
           secondary_color: string | null
+          selected_template: string | null
           show_item_images: boolean | null
           slug: string | null
           tagline: string | null
@@ -638,6 +642,7 @@ export type Database = {
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
+          selected_template?: string | null
           show_item_images?: boolean | null
           slug?: string | null
           tagline?: string | null
@@ -663,6 +668,7 @@ export type Database = {
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
+          selected_template?: string | null
           show_item_images?: boolean | null
           slug?: string | null
           tagline?: string | null
