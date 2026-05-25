@@ -86,18 +86,18 @@ export function SiteHero({
              {description}
            </p>
          )}
-          <div className="mt-12 flex gap-4 justify-center flex-wrap">
+          <div className="mt-12 flex gap-5 justify-center flex-wrap">
             <a
               href="#combos"
               onClick={(e) => scrollTo(e, "combos")}
-              className="px-10 py-5 rounded-2xl bg-gradient-bronze text-primary-foreground font-black text-lg transition-all transform hover:scale-110 hover:shadow-[0_0_40px_rgba(205,127,50,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-primary/20"
+              className="px-10 py-5 rounded-full bg-gradient-gold text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_rgba(217,164,65,0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
             >
-              Cardápio de Combos
+              Combos Premium
             </a>
             <a
               href="#pizzas"
               onClick={(e) => scrollTo(e, "pizzas")}
-              className="px-8 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-lg transition-all transform hover:scale-110 hover:bg-white/10 active:scale-95 shadow-2xl backdrop-blur-md"
+              className="px-10 py-5 rounded-full bg-gradient-red text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_rgba(229,9,20,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
             >
               Explorar Pizzas
             </a>

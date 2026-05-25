@@ -26,18 +26,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     <button
       onClick={() => toggleFlavor(it.id)}
       disabled={!size || disabled}
-      className={`relative text-left rounded-2xl border p-4 transition-all duration-500 flex items-start gap-4 overflow-hidden group ${
+      className={`relative text-left rounded-3xl border p-5 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
         checked
-          ? isSpecialSection 
-            ? "border-red-500 bg-gradient-to-br from-red-600/20 to-transparent shadow-[0_0_25px_rgba(220,38,38,0.2)]"
-            : "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.15)] to-transparent"
-          : isSpecialSection
-            ? "border-red-900/30 bg-red-950/10 hover:border-red-500/50 hover:bg-red-900/10"
-            : "border-white/5 bg-white/5 hover:border-white/20"
-      } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01] hover:shadow-xl"}`}
+          ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+          : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
+      } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.02]"}`}
     >
       {(restaurant?.show_item_images ?? true) && it.image_url && (
-        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg border border-[hsl(var(--site-border))] bg-black/20">
+        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-2xl border border-[#EFE7E2] bg-[#FDF8F5]">
           <img
             src={it.image_url}
             alt={it.name}
@@ -52,39 +48,30 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         </div>
       )}
       <div
-        className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center transition-colors duration-300 ${
+        className={`mt-1 h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
           checked
-            ? isSpecialSection ? "bg-red-600 border-red-600 text-white" : "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white"
-            : isSpecialSection ? "border-red-800" : "border-[hsl(var(--site-border))]"
+            ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white shadow-[0_4px_12px_rgba(229,9,20,0.3)] scale-110"
+            : "border-[#EFE7E2] bg-white group-hover:border-[hsl(var(--site-primary)/0.5)]"
         }`}
       >
-        {checked && <Check className="h-3 w-3" />}
+        {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-semibold leading-tight">{it.name}</p>
+          <p className="font-bold text-base leading-tight text-[#111]">{it.name}</p>
           {it.is_special && (
-            <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full font-bold border ${
-              isSpecialSection 
-                ? "bg-red-600/30 text-red-200 border-red-500/40" 
-                : "bg-amber-500/20 text-amber-300 border-amber-500/40"
-            }`}>
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[#E50914] text-white shadow-sm">
               <Sparkles className="h-3 w-3" /> Especial
               {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
             </span>
           )}
         </div>
         {it.description && (
-          <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+          <p className="text-sm text-[#555] mt-1.5 leading-relaxed">
             {it.description}
           </p>
         )}
       </div>
-      {isSpecialSection && !checked && !disabled && (
-        <div className="absolute -right-1 -bottom-1 opacity-10 group-hover:opacity-30 transition-opacity">
-          <Flame className="h-12 w-12 text-red-600" />
-        </div>
-      )}
     </button>
   );
 }
@@ -279,29 +266,29 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             preço definido pelo tamanho
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {sizes.map((s, i) => {
             const active = sizeIdx === i;
             return (
                <button
                  key={`${s.label}-${i}`}
                  onClick={() => handleSelectSize(i)}
-                 className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
+                 className={`relative rounded-3xl border-2 p-5 text-left transition-all duration-300 transform ${
                    active
-                     ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent shadow-[0_0_20px_rgba(255,90,0,0.15)]"
-                     : "border-white/5 bg-white/5 hover:border-white/20"
+                     ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
+                     : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[#FFF9F6]"
                  }`}
                >
                 {active && (
-                  <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
-                    <Check className="h-3 w-3" />
+                  <span className="absolute top-3 right-3 h-6 w-6 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center shadow-lg">
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
                   </span>
                 )}
-                <p className="font-bold leading-tight">{s.label}</p>
-                <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
+                <p className={`font-extrabold text-lg leading-tight ${active ? "text-[hsl(var(--site-primary))]" : "text-[#111]"}`}>{s.label}</p>
+                <p className="text-[hsl(var(--site-secondary))] font-black text-xl mt-1.5">
                   {formatBRL(s.price)}
                 </p>
-                <p className="text-[11px] text-[hsl(var(--site-muted-fg))] mt-0.5">
+                <p className="text-xs font-medium text-[#555] mt-1">
                   {s.slices ? `${s.slices} fatias · ` : ""}
                   até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}
                 </p>
@@ -309,11 +296,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             );
           })}
         </div>
-        <div className="mt-3 flex items-start gap-2 text-xs sm:text-sm rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 p-3">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[#D9A441/30] bg-[#FFF9F6] text-[#D9A441] p-4 font-medium shadow-sm">
+          <Info className="h-5 w-5 shrink-0 text-[#D9A441]" />
           <span>
-            Ao selecionar <strong>sabores especiais</strong>, o valor final da pizza poderá ser
-            alterado.
+            Ao selecionar <strong className="font-extrabold">sabores especiais</strong>, o valor final da pizza poderá ser
+            alterado proporcionalmente.
           </span>
         </div>
       </div>
@@ -321,22 +308,22 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       {/* Step 2 — Flavors */}
       <div>
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <h4 className="text-lg font-bold">2. Escolha os sabores</h4>
+          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os sabores</h4>
           {size && (
-            <span className="text-xs px-2 py-1 rounded-full bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))]">
+            <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-white border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
               {selectedFlavors.length}/{maxFlavors} selecionados
               {remaining > 0 && ` · ${remaining} restante${remaining > 1 ? "s" : ""}`}
             </span>
           )}
         </div>
         {category.items.length === 0 ? (
-          <p className="text-sm text-[hsl(var(--site-muted-fg))]">
+          <p className="text-sm text-[#555]">
             Nenhum sabor cadastrado ainda.
           </p>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-16">
             {/* Classic Flavors */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {classicFlavors.map((it) => (
                 <FlavorCard 
                   key={it.id} 
@@ -352,32 +339,32 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
             {/* Special Flavors Section */}
             {specialFlavors.length > 0 && (
-              <div className="space-y-6" id="sabores-especiais">
-                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-600 via-red-800 to-black p-8 shadow-[0_20px_50px_rgba(220,38,38,0.3)] border border-red-500/30">
+              <div className="space-y-8" id="sabores-especiais">
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-red p-10 shadow-[0_20px_50px_rgba(229,9,20,0.3)] border border-white/10">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Flame className="h-32 w-32 text-white" />
+                    <Sparkles className="h-40 w-40 text-white" />
                   </div>
-                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="flex items-center justify-center h-8 w-8 rounded-full bg-white/20 backdrop-blur-sm">
-                          <Flame className="h-5 w-5 text-red-400" />
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="flex items-center justify-center h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-md">
+                          <Flame className="h-6 w-6 text-white" />
                         </span>
-                        <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tighter uppercase">
+                        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
                           Sabores Especiais
                         </h3>
                       </div>
-                      <p className="text-red-100/80 font-medium max-w-lg italic">
-                        Experimente combinações premium e sabores exclusivos da casa.
+                      <p className="text-white/90 font-medium max-w-lg text-lg">
+                        Experimente nossas combinações premium e ingredientes exclusivos da casa.
                       </p>
                     </div>
-                    <span className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-xs uppercase tracking-widest shadow-lg">
-                      Seleção Premium
+                    <span className="px-6 py-3 rounded-2xl bg-white text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
+                      Seleção Gourmet
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {specialFlavors.map((it) => (
                     <FlavorCard 
                       key={it.id} 
@@ -411,83 +398,83 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
              <button
                onClick={() => setSelectedBorderId(null)}
-               className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
-                 selectedBorderId === null
-                   ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent"
-                   : "border-white/5 bg-white/5 hover:border-white/20"
-               }`}
-             >
-               {selectedBorderId === null && (
-                 <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
-                   <Check className="h-3 w-3" />
-                 </span>
-               )}
-               <p className="font-bold leading-tight">Sem Borda</p>
-               <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
-                 Grátis
-               </p>
-             </button>
-             {bordasCategory.items.map((b) => {
-               const active = selectedBorderId === b.id;
-               return (
-                 <button
-                   key={b.id}
-                   onClick={() => setSelectedBorderId(b.id)}
-                   className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
-                     active
-                       ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent shadow-[0_0_20px_rgba(255,90,0,0.15)]"
-                       : "border-white/5 bg-white/5 hover:border-white/20"
-                   }`}
-                 >
-                   {active && (
-                     <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
-                       <Check className="h-3 w-3" />
-                     </span>
-                   )}
-                   <p className="font-bold leading-tight">{b.name}</p>
-                   <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
-                     +{formatBRL(b.price)}
-                   </p>
-                 </button>
-               );
-             })}
-            </div>
-          </div>
-        )}
+                className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                  selectedBorderId === null
+                    ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                    : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                }`}
+              >
+                {selectedBorderId === null && (
+                  <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                    <Check className="h-3 w-3" />
+                  </span>
+                )}
+                <p className="font-extrabold text-[#111] leading-tight">Sem Borda</p>
+                <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
+                  Grátis
+                </p>
+              </button>
+              {bordasCategory.items.map((b) => {
+                const active = selectedBorderId === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBorderId(b.id)}
+                    className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                      active
+                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                    }`}
+                  >
+                    {active && (
+                      <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                    <p className="font-extrabold text-[#111] leading-tight">{b.name}</p>
+                    <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
+                      +{formatBRL(b.price)}
+                    </p>
+                  </button>
+                );
+              })}
+             </div>
+           </div>
+         )}
 
         {/* Step 4 — Bebidas */}
         {beverages && beverages.length > 0 && (
           <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
             <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-lg font-bold">4. Escolha as bebidas (opcional)</h4>
+              <h4 className="text-xl font-extrabold text-[#111]">4. Escolha as bebidas (opcional)</h4>
               {scrollMessage && scrollMessage.includes("bebida") && (
-                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-bounce">
                   {scrollMessage}
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {beverages.map((bev) => {
                 const qty = selectedBeverages[bev.id] || 0;
                 return (
                   <div
                     key={bev.id}
-                    className={`relative rounded-2xl border p-4 flex items-center justify-between transition-all duration-300 ${
+                    className={`relative rounded-3xl border p-5 flex items-center justify-between transition-all duration-300 ${
                       qty > 0
-                        ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.1)] to-transparent"
-                        : "border-white/5 bg-white/5 hover:border-white/20"
+                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
+                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold leading-tight truncate">{bev.name}</p>
-                      <p className="text-[11px] text-[hsl(var(--site-muted-fg))]">
+                      <p className="font-extrabold text-[#111] leading-tight truncate">{bev.name}</p>
+                      <p className="text-xs text-[#555] font-medium">
                         {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
                       </p>
-                      <p className="text-[hsl(var(--site-secondary))] font-bold mt-0.5">
+                      <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
                         {formatBRL(bev.price)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-black/40 p-1 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-[#EFE7E2] shadow-sm">
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -496,11 +483,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                           }));
                         }}
                         disabled={qty === 0}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-20 transition-all active:scale-90"
+                        className="stepper-btn stepper-btn-minus disabled:opacity-30"
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-4 w-4" />
                       </button>
-                      <span className="w-6 text-center font-bold text-sm">{qty}</span>
+                      <span className="stepper-count">{qty}</span>
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -508,9 +495,9 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                             [bev.id]: (cur[bev.id] || 0) + 1,
                           }));
                         }}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-[hsl(var(--site-primary))] text-white hover:opacity-80 transition-all active:scale-90"
+                        className="stepper-btn stepper-btn-plus hover:scale-110"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -524,92 +511,95 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         <div 
           id={`summary-${category.id}`}
           ref={summaryRef}
-         className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden"
+         className="rounded-[2.5rem] border border-[#EFE7E2] bg-white p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative overflow-hidden"
        >
          {scrollMessage && scrollMessage.includes("pronto") && (
            <div className="absolute top-4 right-8 z-10">
-             <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-pulse">
+             <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-pulse">
                {scrollMessage}
              </span>
            </div>
          )}
-         <div className="absolute top-0 right-0 p-8 opacity-5">
-           <Sparkles className="h-24 w-24 text-primary" />
+         <div className="absolute top-0 right-0 p-10 opacity-5">
+           <ShoppingBag className="h-32 w-32 text-[hsl(var(--site-primary))]" />
          </div>
-         <h4 className="text-2xl font-black mb-4 tracking-tight">Resumo da sua Pizza</h4>
+         <h4 className="text-2xl font-black mb-6 tracking-tight text-[#111]">Resumo da sua Pizza</h4>
         {size ? (
-          <ul className="text-sm text-[hsl(var(--site-muted-fg))] space-y-1">
-            <li>
-              <strong className="text-[hsl(var(--site-fg,var(--site-muted-fg)))]">Tamanho:</strong>{" "}
-              {size.label} — {formatBRL(size.price)}
-            </li>
-            <li>
-              <strong className="text-[hsl(var(--site-fg,var(--site-muted-fg)))]">Sabores:</strong>{" "}
-              {selectedFlavors.length === 0
-                ? "nenhum selecionado"
-                : selectedFlavors
-                    .map((id) => flavorMap.get(id)?.name)
-                    .filter(Boolean)
-                    .join(" + ")}
-            </li>
-             {specialExtras > 0 && (
-               <li>
-                 <strong className="text-amber-300">Adicional especial:</strong>{" "}
-                 +{formatBRL(specialExtras)}
-                 {specialNames.length > 0 && (
-                   <span className="text-xs"> ({specialNames.join(", ")})</span>
-                 )}
-               </li>
-             )}
-              {selectedBorder && (
-                <li>
-                  <strong className="text-amber-300">Borda recheada:</strong>{" "}
-                  {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
-                </li>
-              )}
-              {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
-                <li className="pt-2 mt-2 border-t border-white/5">
-                  <strong className="text-emerald-400">Bebidas:</strong>
-                  <ul className="pl-4 space-y-0.5 mt-1">
-                    {Object.entries(selectedBeverages).map(([id, qty]) => {
-                      if (qty === 0) return null;
-                      const bev = beverages?.find(b => b.id === id);
-                      if (!bev) return null;
-                      return (
-                        <li key={id} className="text-xs">
-                          {qty}x {bev.name} — {formatBRL(Number(bev.price) * qty)}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              )}
-          </ul>
+          <div className="space-y-4">
+            <ul className="text-base text-[#555] space-y-2">
+              <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2">
+                <span className="font-medium">Tamanho: <strong className="text-[#111] font-extrabold">{size.label}</strong></span>
+                <span className="font-extrabold text-[#111]">{formatBRL(size.price)}</span>
+              </li>
+              <li className="flex flex-col border-b border-[#F3F4F6] pb-2">
+                <span className="font-medium">Sabores:</span>
+                <span className="text-[#111] font-extrabold leading-relaxed">
+                  {selectedFlavors.length === 0
+                    ? "Nenhum selecionado"
+                    : selectedFlavors
+                        .map((id) => flavorMap.get(id)?.name)
+                        .filter(Boolean)
+                        .join(" + ")}
+                </span>
+              </li>
+               {specialExtras > 0 && (
+                 <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-primary))]">
+                   <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
+                   <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
+                 </li>
+               )}
+                {selectedBorder && (
+                  <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-secondary))]">
+                    <span className="font-medium">Borda recheada: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
+                    <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
+                  </li>
+                )}
+                {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
+                  <div className="pt-2">
+                    <span className="font-medium text-[#111] block mb-2">Bebidas adicionais:</span>
+                    <ul className="space-y-1">
+                      {Object.entries(selectedBeverages).map(([id, qty]) => {
+                        if (qty === 0) return null;
+                        const bev = beverages?.find(b => b.id === id);
+                        if (!bev) return null;
+                        return (
+                          <li key={id} className="flex justify-between text-sm italic">
+                            <span>{qty}x {bev.name}</span>
+                            <span className="font-bold">{formatBRL(Number(bev.price) * qty)}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+            </ul>
+          </div>
         ) : (
-          <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
+          <p className="text-base text-[#555] font-medium">Selecione um tamanho para ver o resumo.</p>
         )}
-        <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
+        
+        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[#F3F4F6] flex-wrap">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wide text-[hsl(var(--site-muted-fg))]">
-              Total
+            <span className="text-xs uppercase tracking-widest text-[#555] font-bold mb-1">
+              Total do Pedido
             </span>
-            <span className="text-2xl font-black text-[hsl(var(--site-secondary))]">
+            <span className="text-4xl font-black text-[hsl(var(--site-secondary))]">
               {size ? formatBRL(finalPrice) : "—"}
             </span>
           </div>
             <button
               onClick={(e) => handleAddToCart(false, e)}
               disabled={!canAdd}
-              className="btn-premium px-10 py-5 rounded-2xl text-lg flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-2xl"
+              className="btn-premium-red px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-[0_15px_40px_rgba(229,9,20,0.3)] active:scale-95 transition-all group"
             >
-              <Plus className="h-6 w-6 text-primary-foreground" /> 
+              <Plus className="h-7 w-7 text-white group-hover:rotate-90 transition-transform" /> 
               <span>Adicionar ao Pedido</span>
             </button>
         </div>
         {confirm && (
-          <p className="mt-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center">
+          <div className="mt-6 text-base font-bold text-[#22C55E] bg-[#F0FDF4] border-2 border-[#22C55E]/20 rounded-2xl p-4 text-center animate-in zoom-in duration-300">
             ✓ {confirm}
-          </p>
+          </div>
         )}
       </div>
 

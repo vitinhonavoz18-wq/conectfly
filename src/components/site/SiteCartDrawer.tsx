@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
@@ -221,78 +221,81 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         onClick={onClose}
       />
        <aside
-         className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-[hsl(var(--site-bg)/0.8)] backdrop-blur-2xl border-l border-white/10 shadow-[0_0_100px_rgba(0,0,0,0.5)] flex flex-col transition-transform duration-500 ${
-           open ? "translate-x-0" : "translate-x-full"
-         }`}
-       >
-         <div className="flex items-center justify-between p-6 border-b border-white/5">
-           <div className="flex flex-col">
-             <h2 className="font-black text-2xl tracking-tighter uppercase">Minha Seleção</h2>
-             <span className="text-[10px] text-primary font-black uppercase tracking-[0.2em]">Cozinha Gourmet</span>
-           </div>
-           <button
-             onClick={onClose}
-             className="p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all active:scale-90"
-             aria-label="Fechar"
-           >
-             <X className="h-6 w-6" />
-           </button>
-         </div>
+          className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-white shadow-[0_0_80px_rgba(0,0,0,0.15)] flex flex-col transition-transform duration-500 ${
+            open ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between p-6 border-b border-[#F3F4F6]">
+            <div className="flex flex-col">
+              <h2 className="font-black text-2xl tracking-tighter uppercase text-[#111]">Minha Seleção</h2>
+              <span className="text-[10px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">Cozinha Gourmet</span>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-3 rounded-2xl bg-[#FDF8F5] border border-[#EFE7E2] hover:bg-[#F3F4F6] transition-all active:scale-90 text-[#111]"
+              aria-label="Fechar"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
 
-         <div className="flex-1 overflow-y-auto overscroll-contain">
-           <div className="p-4 space-y-3">
-          {items.length === 0 ? (
-            <p className="text-center text-[hsl(var(--site-muted-fg))] py-12">
-              Carrinho vazio. Adicione itens do cardápio.
-            </p>
+          <div className="flex-1 overflow-y-auto overscroll-contain bg-[#FFF9F6]">
+            <div className="p-5 space-y-4">
+           {items.length === 0 ? (
+             <div className="text-center py-16 flex flex-col items-center gap-4">
+                <ShoppingBag className="h-16 w-16 text-[#EFE7E2]" />
+                <p className="text-[#555] font-medium">
+                  Seu carrinho está vazio.<br/>Adicione itens do cardápio.
+                </p>
+             </div>
           ) : (
             items.map((l) => (
                <div
                  key={`${l.itemId}-${l.sizeLabel ?? ""}`}
-                 className="rounded-2xl border border-white/5 bg-white/5 p-5 relative overflow-hidden group"
+                 className="rounded-[2rem] border border-[#EFE7E2] bg-white p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
                >
-                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="flex justify-between gap-2">
+                 <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.03)] to-transparent" />
+                <div className="flex justify-between gap-3">
                    <div className="flex-1 relative z-10">
-                     <p className="font-black text-lg tracking-tight uppercase group-hover:text-primary transition-colors">
+                     <p className="font-black text-lg tracking-tight uppercase text-[#111] group-hover:text-[hsl(var(--site-primary))] transition-colors">
                        {l.name}
-                       {l.sizeLabel ? <span className="text-xs text-primary ml-2 font-bold bg-primary/10 px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
+                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[#FFF5F5] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
                      </p>
                     {l.flavors && l.flavors.length > 0 ? (
-                      <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
-                        Sabores: {l.flavors.join(" + ")}
+                      <p className="text-sm text-[#555] mt-1.5 leading-relaxed font-medium">
+                        <strong className="text-[#111]">Sabores:</strong> {l.flavors.join(" + ")}
                       </p>
                     ) : l.description ? (
-                      <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+                      <p className="text-sm text-[#555] mt-1.5 leading-relaxed">
                         {l.description}
                       </p>
                     ) : null}
                   </div>
                    <button
                      onClick={() => removeLine(l.itemId, l.sizeLabel)}
-                     className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all relative z-10"
+                     className="p-2.5 text-[#9CA3AF] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-2xl transition-all relative z-10"
                      aria-label="Remover"
                    >
                      <Trash2 className="h-5 w-5" />
                    </button>
                 </div>
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex items-center gap-2">
-                     <button
-                       onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
-                       className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 inline-flex items-center justify-center hover:border-primary/50 transition-all active:scale-90"
-                     >
-                       <Minus className="h-4 w-4" />
-                     </button>
-                     <span className="w-10 text-center font-black text-lg">{l.quantity}</span>
-                     <button
-                       onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
-                       className="h-9 w-9 rounded-xl border border-white/10 bg-white/5 inline-flex items-center justify-center hover:border-primary/50 transition-all active:scale-90"
-                     >
-                       <Plus className="h-4 w-4" />
-                     </button>
-                   </div>
-                   <span className="font-black text-xl text-primary tracking-tighter">
+                <div className="flex justify-between items-center mt-5">
+                   <div className="flex items-center gap-3 bg-[#FDF8F5] p-1.5 rounded-2xl border border-[#EFE7E2]">
+                      <button
+                        onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
+                        className="h-9 w-9 rounded-xl bg-white border border-[#EFE7E2] inline-flex items-center justify-center hover:bg-[#F3F4F6] transition-all active:scale-90 text-[#111]"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="w-8 text-center font-black text-lg text-[#111]">{l.quantity}</span>
+                      <button
+                        onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
+                        className="h-9 w-9 rounded-xl bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center hover:opacity-90 transition-all active:scale-90"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
+                   <span className="font-black text-2xl text-[#111] tracking-tighter">
                      {formatBRL(l.unitPrice * l.quantity)}
                    </span>
                 </div>
@@ -301,28 +304,31 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           )}
           </div>
 
-          <div className="p-4 space-y-6" ref={fieldsContainerRef}>
+          <div className="p-6 space-y-8 bg-white" ref={fieldsContainerRef}>
             {validationAttempted && error && (
-              <div className="bg-primary/10 border border-primary/20 rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-sm font-black text-primary text-center">
+              <div className="bg-[#FEF2F2] border-2 border-[#DC2626]/20 rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-base font-extrabold text-[#DC2626] text-center leading-tight">
                   Quase lá! Preencha seus dados para finalizar o pedido. 🍕
                 </p>
               </div>
             )}
 
-            <div className="space-y-4">
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b border-white/5 pb-2">Seus Dados</h3>
-                <div className="space-y-3">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#D9A441] flex items-center gap-2">
+                  <span className="h-1 w-8 bg-[#D9A441] rounded-full"></span>
+                  Seus Dados
+                </h3>
+                <div className="grid gap-3">
                   <input
                     ref={nameRef}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo"
-                    className={`w-full px-4 py-3 rounded-2xl bg-white/5 border transition-all font-bold focus:outline-none ${
+                    className={`w-full px-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] ${
                       validationAttempted && !name.trim() 
-                        ? "border-red-500/50 ring-1 ring-red-500/20" 
-                        : "border-white/10 focus:border-primary/50"
+                        ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
+                        : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
                   <input
@@ -331,34 +337,37 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
                     placeholder="(00) 00000-0000"
                     inputMode="numeric"
-                    className={`w-full px-4 py-3 rounded-2xl bg-white/5 border transition-all font-bold focus:outline-none ${
+                    className={`w-full px-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] ${
                       validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10)
-                        ? "border-red-500/50 ring-1 ring-red-500/20" 
-                        : "border-white/10 focus:border-primary/50"
+                        ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
+                        : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b border-white/5 pb-2">Entrega</h3>
-                <div className="space-y-3">
+              <div className="space-y-4">
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#D9A441] flex items-center gap-2">
+                  <span className="h-1 w-8 bg-[#D9A441] rounded-full"></span>
+                  Entrega
+                </h3>
+                <div className="grid gap-3">
                   {hasZones && (
                     <div className="relative group">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--site-primary))]" />
                       <select
                         ref={zoneRef}
                         value={zoneId}
                         onChange={(e) => setZoneId(e.target.value)}
-                        className={`w-full pl-12 pr-4 py-3 rounded-2xl bg-white/5 border transition-all font-black text-xs uppercase tracking-widest appearance-none focus:outline-none ${
+                        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[#111] ${
                           validationAttempted && !selectedZone
-                            ? "border-red-500/50 ring-1 ring-red-500/20" 
-                            : "border-white/10 focus:border-primary/50"
+                            ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
+                            : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
                         }`}
                       >
-                        <option value="" className="bg-[hsl(var(--site-bg))] text-white">Local de Entrega *</option>
+                        <option value="">Local de Entrega *</option>
                         {deliveryZones.map((z) => (
-                          <option key={z.id} value={z.id} className="bg-[hsl(var(--site-bg))] text-white">
+                          <option key={z.id} value={z.id}>
                             {z.neighborhood} • {formatBRL(Number(z.fee) || 0)}
                           </option>
                         ))}
@@ -366,73 +375,74 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     </div>
                   )}
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                    <MapPin className="absolute left-4 top-5 h-5 w-5 text-[#9CA3AF]" />
                     <textarea
                       ref={addressRef}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Endereço completo (Rua, nº, complemento)"
-                      rows={2}
-                      className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border transition-all resize-none focus:outline-none ${
+                      rows={3}
+                      className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] resize-none ${
                         validationAttempted && !address.trim()
-                          ? "border-red-500/50 ring-1 ring-red-500/20" 
-                          : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))]"
+                          ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
+                          : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
                       }`}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-4 border border-white/5 space-y-4">
-                <h3 className="text-xs font-black uppercase tracking-widest text-primary border-b border-white/5 pb-2">Pagamento e Obs.</h3>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-1 gap-3">
-                    <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
-                      <select
-                        ref={paymentRef}
-                        value={paymentMethod}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
-                        className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border transition-all appearance-none focus:outline-none ${
-                          validationAttempted && !paymentMethod
-                            ? "border-red-500/50 ring-1 ring-red-500/20" 
-                            : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))]"
-                        }`}
-                      >
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Dinheiro">Dinheiro</option>
-                      </select>
-                    </div>
-
-                    {paymentMethod === "Dinheiro" && (
-                      <div className="relative">
-                        <Banknote className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
-                        <input
-                          ref={changeRef}
-                          value={changeFor}
-                          onChange={(e) => setChangeFor(e.target.value)}
-                          placeholder="Troco para quanto?"
-                          inputMode="numeric"
-                          className={`w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border transition-all focus:outline-none ${
-                            validationAttempted && !changeFor.trim()
-                              ? "border-red-500/50 ring-1 ring-red-500/20" 
-                              : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))]"
-                          }`}
-                        />
-                      </div>
-                    )}
+              <div className="space-y-4">
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#D9A441] flex items-center gap-2">
+                  <span className="h-1 w-8 bg-[#D9A441] rounded-full"></span>
+                  Pagamento e Obs.
+                </h3>
+                <div className="grid gap-3">
+                  <div className="relative group">
+                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#9CA3AF]" />
+                    <select
+                      ref={paymentRef}
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[#111] ${
+                        validationAttempted && !paymentMethod
+                          ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
+                          : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                      }`}
+                    >
+                      <option value="PIX">PIX</option>
+                      <option value="Cartão de Crédito">Cartão de Crédito</option>
+                      <option value="Cartão de Débito">Cartão de Débito</option>
+                      <option value="Dinheiro">Dinheiro</option>
+                    </select>
                   </div>
 
+                  {paymentMethod === "Dinheiro" && (
+                    <div className="relative">
+                      <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#9CA3AF]" />
+                      <input
+                        ref={changeRef}
+                        value={changeFor}
+                        onChange={(e) => setChangeFor(e.target.value)}
+                        placeholder="Troco para quanto?"
+                        inputMode="numeric"
+                        className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] ${
+                          validationAttempted && !changeFor.trim()
+                            ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
+                            : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                        }`}
+                      />
+                    </div>
+                  )}
+
                   <div className="relative">
-                    <MessageSquare className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                    <MessageSquare className="absolute left-4 top-5 h-5 w-5 text-[#9CA3AF]" />
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Observações do pedido..."
+                      placeholder="Alguma observação importante?"
                       rows={2}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] focus:outline-none focus:border-[hsl(var(--site-primary))] resize-none"
+                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 border-[#EFE7E2] transition-all font-bold focus:outline-none focus:border-[hsl(var(--site-primary))/0.4] text-[#111] placeholder:text-[#9CA3AF] resize-none"
                     />
                   </div>
                 </div>
@@ -440,28 +450,28 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </div>
 
             {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+              <p className="text-sm font-bold text-[#DC2626] bg-[#FEF2F2] border-2 border-[#DC2626]/20 rounded-2xl p-4 text-center">
                 {error}
               </p>
             )}
           </div>
         </div>
 
-        <div className="p-6 border-t border-white/5 space-y-4 bg-black/40 backdrop-blur-xl sticky bottom-0 mt-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
+        <div className="p-8 border-t border-[#F3F4F6] space-y-5 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(2rem+env(safe-area-inset-bottom))]">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center text-xs font-bold text-[#555] uppercase tracking-widest">
               <span>Subtotal</span>
-              <span>{formatBRL(totalPrice)}</span>
+              <span className="text-[#111]">{formatBRL(totalPrice)}</span>
             </div>
             {hasZones && (
-              <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">
-                <span>Logística {selectedZone ? <span className="text-primary italic ml-1">({selectedZone.neighborhood})</span> : ""}</span>
-                <span>{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
+              <div className="flex justify-between items-center text-xs font-bold text-[#555] uppercase tracking-widest">
+                <span>Logística {selectedZone ? <span className="text-[hsl(var(--site-primary))] italic ml-1">({selectedZone.neighborhood})</span> : ""}</span>
+                <span className="text-[#111]">{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
               </div>
             )}
-            <div className="flex justify-between items-end pt-1">
-              <span className="font-black text-xs tracking-tighter uppercase text-muted-foreground pb-1">Total a Pagar</span>
-              <span className="text-3xl font-black text-primary tracking-tighter glow-bronze">
+            <div className="flex justify-between items-end pt-3 border-t border-dashed border-[#EFE7E2]">
+              <span className="font-black text-sm uppercase tracking-tighter text-[#111]">Total a Pagar</span>
+              <span className="text-4xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
                 {formatBRL(grandTotal)}
               </span>
             </div>
@@ -470,17 +480,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           <button
             onClick={handleFinish}
             disabled={sending}
-            className="btn-leaf w-full py-5 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 shadow-2xl group transition-all"
+            className="w-full py-6 rounded-full bg-[#22C55E] text-white font-black text-xl flex items-center justify-center gap-4 disabled:opacity-30 shadow-[0_15px_40px_rgba(34,197,94,0.35)] transition-all hover:scale-[1.03] active:scale-95 group uppercase tracking-widest"
           >
-            {sending ? "Transmitindo Cozinha..." : (
+            {sending ? (
+              <span className="animate-pulse">PROCESSANDO...</span>
+            ) : (
               <>
-                <span className="uppercase text-sm tracking-[0.2em] font-black">Finalizar Pedido</span>
-                <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform" />
+                <span>Finalizar Pedido</span>
+                <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform" />
               </>
             )}
           </button>
           
-          <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight opacity-50 px-4">
+          <p className="text-[11px] text-center text-[#9CA3AF] leading-tight font-medium">
             {flycontrolOn && whatsappOn
               ? `Pedido enviado para o painel e WhatsApp do ${restaurantName}`
               : flycontrolOn
