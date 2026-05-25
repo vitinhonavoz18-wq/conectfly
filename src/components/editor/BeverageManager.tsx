@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Save, ShoppingBag, Loader2, FileJson, ImageIcon, Upload, Settings2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { BeverageRow } from "@/lib/site/types";
+import type { BeverageRow, RestaurantRow } from "@/lib/site/types";
 import { BeverageImport } from "./BeverageImport";
 
 interface Props {
