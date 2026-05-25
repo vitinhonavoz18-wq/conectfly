@@ -12,13 +12,16 @@ export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     redirect: typeof s.redirect === "string" ? s.redirect : undefined,
   }),
-  beforeLoad: async ({ search }) => {
+  beforeLoad: async ({ search, location }) => {
     if (typeof window === "undefined") return;
     
     const sessionV2 = localStorage.getItem(SESSION_KEY);
     const { data } = await supabase.auth.getSession();
+    const isAdmin = data.session?.user.email === 'vitinhonavoz18@gmail.com';
     
-    if (sessionV2 === "true" && data.session && data.session.user.email === 'vitinhonavoz18@gmail.com') {
+    console.log(`[Login] Verificando acesso. Rota: ${location.pathname} | isAdminRoute: false | isPublicPizzeriaSlug: false | adminSessionValid: ${!!sessionV2 && isAdmin}`);
+
+    if (sessionV2 === "true" && data.session && isAdmin) {
       console.log("[Login] Sessão V2 válida detectada. Redirecionando para o painel.");
       throw redirect({ to: search.redirect || "/" });
     }
