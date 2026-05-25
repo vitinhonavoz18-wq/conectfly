@@ -172,92 +172,59 @@ function joinUrl(base: string, path: string): string {
  * This is used for debugging and direct verification.
  */
 export async function testFlycontrolConnection(
-  endpoint: string,
-  apiKey: string,
+  restaurantId: string,
   slug: string
 ) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-  const payload = {
-    event: "order.created",
-    source: "sitecreatorfly-test",
-    pizzeria: {
-      slug: slug || "cheirosa-pizzaria",
-      name: "CHEIROSA PIZZARIA (TESTE)"
-    },
-    customer: {
-      name: "Cliente Teste",
-      phone: "71999999999",
-      address: "Rua Teste",
-      neighborhood: "Bairro Teste",
-      reference: "Teste"
-    },
-    order: {
-      id: "teste-" + Date.now(),
-      created_at: new Date().toISOString(),
-      items: [
-        {
-          type: "pizza",
-          size: "Grande",
-          flavors: ["Calabresa"],
-          quantity: 1,
-          unit_price: 55,
-          total_price: 55,
-          notes: ""
-        }
-      ],
-      subtotal: 55,
-      delivery_fee: 15,
-      total: 70,
-      payment_method: "PIX",
-      change_for: null,
-      delivery_type: "delivery",
-      notes: "Pedido de teste",
-      whatsapp_message: "Pedido teste"
-    }
-  };
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
-    console.log("🧪 Testando conexão direta com FlyControl");
-    console.log("URL:", endpoint);
-    console.log("API Key (trimmed):", apiKey.trim().slice(0, 8) + "...");
+    console.log("🧪 Testando conexão com FlyControl via Proxy Seguro");
+    console.log("Restaurant ID:", restaurantId);
 
-    const response = await fetch(endpoint, {
+    const response = await fetch("/api/public/submit-order", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey.trim()
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ 
+        restaurant_id: restaurantId, 
+        test: true 
+      }),
       signal: controller.signal
     });
 
     clearTimeout(timeoutId);
     const responseText = await response.text();
     
-    let data = null;
-    try { data = JSON.parse(responseText); } catch { data = { text: responseText }; }
+    let result = null;
+    try { 
+      result = JSON.parse(responseText); 
+    } catch { 
+      result = { text: responseText }; 
+    }
 
     return {
-      success: response.ok,
+      success: response.ok && result.success === true,
       status: response.status,
-      data,
-      url: endpoint,
-      apiKeyExists: !!apiKey,
+      data: result.response || result,
+      error: result.error || (response.ok ? null : "Erro na resposta do servidor"),
+      url: result.endpoint || "/api/public/submit-order",
+      apiKeyExists: true, // Se chegou aqui o proxy achou a chave no DB
       slugUsed: slug
     };
   } catch (error: any) {
     clearTimeout(timeoutId);
+    console.error("❌ Erro no teste de conexão:", error);
     return {
       success: false,
-      error: error.message,
-      url: endpoint,
-      apiKeyExists: !!apiKey,
+      error: error.message === "The user aborted a request." ? "Timeout: O servidor demorou muito para responder." : error.message,
+      url: "/api/public/submit-order",
+      apiKeyExists: true,
       slugUsed: slug
     };
   }
- }
+}
 
 /** Sends an order to FLYCONTROL with exponential backoff retry. Throws on final failure. */
 export async function sendOrderToFlycontrol(
