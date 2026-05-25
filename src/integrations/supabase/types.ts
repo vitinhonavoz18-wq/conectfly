@@ -478,9 +478,12 @@ export type Database = {
       restaurants: {
         Row: {
           address: string | null
+          business_type: string | null
+          checkout_settings: Json | null
           city: string | null
           created_at: string
           custom_subdomain: string | null
+          delivery_settings: Json | null
           description: string | null
           flycontrol_api_key: string | null
           flycontrol_api_url: string | null
@@ -500,9 +503,12 @@ export type Database = {
           published: boolean
           secondary_color: string
           selected_template: string
+          seo_settings: Json | null
           show_item_images: boolean | null
+          site_settings: Json | null
           slug: string
           tagline: string | null
+          theme_settings: Json | null
           updated_at: string
           whatsapp_display: string | null
           whatsapp_enabled: boolean
@@ -510,9 +516,12 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          business_type?: string | null
+          checkout_settings?: Json | null
           city?: string | null
           created_at?: string
           custom_subdomain?: string | null
+          delivery_settings?: Json | null
           description?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
@@ -532,9 +541,12 @@ export type Database = {
           published?: boolean
           secondary_color?: string
           selected_template?: string
+          seo_settings?: Json | null
           show_item_images?: boolean | null
+          site_settings?: Json | null
           slug: string
           tagline?: string | null
+          theme_settings?: Json | null
           updated_at?: string
           whatsapp_display?: string | null
           whatsapp_enabled?: boolean
@@ -542,9 +554,12 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          business_type?: string | null
+          checkout_settings?: Json | null
           city?: string | null
           created_at?: string
           custom_subdomain?: string | null
+          delivery_settings?: Json | null
           description?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
@@ -564,9 +579,12 @@ export type Database = {
           published?: boolean
           secondary_color?: string
           selected_template?: string
+          seo_settings?: Json | null
           show_item_images?: boolean | null
+          site_settings?: Json | null
           slug?: string
           tagline?: string | null
+          theme_settings?: Json | null
           updated_at?: string
           whatsapp_display?: string | null
           whatsapp_enabled?: boolean
