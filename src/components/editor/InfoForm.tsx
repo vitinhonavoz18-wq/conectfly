@@ -555,7 +555,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                className="btn-premium px-12 py-4 rounded-2xl flex items-center gap-3 shadow-2xl uppercase text-xs tracking-[0.2em]"
              >
                <Save className="h-6 w-6 text-primary-foreground" />
-               <span>{saving ? "Salvando..." : "Preservar Receita"}</span>
+               <span>{saving ? "Salvando..." : "Salvar Configurações"}</span>
              </button>
              {msg && <span className="text-sm font-black text-primary animate-pulse tracking-widest uppercase">{msg}</span>}
            </div>

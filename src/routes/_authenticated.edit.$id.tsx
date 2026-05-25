@@ -35,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/edit/$id")({
   component: EditPage,
 });
 
-type Tab = "info" | "menu" | "combo" | "delivery" | "preview";
+type Tab = "info" | "appearance" | "menu" | "combo" | "delivery" | "checkout" | "operations" | "seo" | "preview";
 
 function EditPage() {
    const { id } = Route.useParams();
@@ -148,10 +148,14 @@ function EditPage() {
   }
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "info", label: "Informações", icon: <FileText className="h-4 w-4" /> },
+    { id: "info", label: "Estabelecimento", icon: <FileText className="h-4 w-4" /> },
+    { id: "appearance", label: "Personalização", icon: <Sparkles className="h-4 w-4" /> },
     { id: "menu", label: "Cardápio", icon: <Utensils className="h-4 w-4" /> },
     { id: "combo", label: "Combos", icon: <Tag className="h-4 w-4" /> },
-    { id: "delivery", label: "Taxas de entrega", icon: <MapPin className="h-4 w-4" /> },
+    { id: "delivery", label: "Entrega", icon: <MapPin className="h-4 w-4" /> },
+    { id: "checkout", label: "Checkout", icon: <CheckCircle2 className="h-4 w-4" /> },
+    { id: "operations", label: "Funcionamento", icon: <Rocket className="h-4 w-4" /> },
+    { id: "seo", label: "SEO", icon: <LinkIcon className="h-4 w-4" /> },
     { id: "preview", label: "Preview", icon: <Eye className="h-4 w-4" /> },
   ];
 
@@ -172,9 +176,9 @@ function EditPage() {
              </Link>
              <div className="min-w-0 ml-1">
                <h1 className="font-black text-2xl truncate tracking-tight text-foreground uppercase">{restaurant.name}</h1>
-               <p className="text-xs text-primary font-black uppercase tracking-[0.3em] opacity-80">
-                 Estúdio Gastronômico
-               </p>
+                <p className="text-xs text-primary font-black uppercase tracking-[0.3em] opacity-80">
+                  {restaurant.business_type || "Delivery Premium"}
+                </p>
              </div>
           </div>
             <div className="flex items-center gap-3">
@@ -232,6 +236,13 @@ function EditPage() {
         {tab === "info" && (
           <InfoForm restaurant={restaurant} onChange={setRestaurant} />
         )}
+        {tab === "appearance" && (
+          <div className="card-premium p-8 border-primary/20 bg-primary/5 text-center">
+            <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
+            <h3 className="text-xl font-black uppercase tracking-widest mb-2">Personalização Visual</h3>
+            <p className="text-muted-foreground">Em breve: Controle total sobre logos, cores, banners e layouts do seu site delivery.</p>
+          </div>
+        )}
         {tab === "menu" && (
           <div className="space-y-6">
             <div className="card-premium p-6 border-primary/20 bg-primary/5 flex items-start gap-4">
@@ -239,7 +250,7 @@ function EditPage() {
               <div>
                 <h4 className="font-black uppercase text-sm tracking-widest">Gestão de Cardápio</h4>
                 <p className="text-sm text-muted-foreground mt-1">
-                  A edição detalhada de preços e sabores deve ser realizada através do painel <strong>FlyControl</strong>. 
+                  A edição detalhada de preços e itens deve ser realizada através do painel <strong>FlyControl</strong>. 
                   As alterações feitas aqui são aplicadas imediatamente ao site.
                 </p>
               </div>
@@ -262,6 +273,27 @@ function EditPage() {
           </div>
         )}
         {tab === "delivery" && <DeliveryZonesManager restaurantId={restaurant.id} />}
+        {tab === "checkout" && (
+          <div className="card-premium p-8 border-emerald-500/20 bg-emerald-500/5 text-center">
+            <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
+            <h3 className="text-xl font-black uppercase tracking-widest mb-2">Configurações de Checkout</h3>
+            <p className="text-muted-foreground">Em breve: Personalize taxas, formas de pagamento e mensagens de WhatsApp.</p>
+          </div>
+        )}
+        {tab === "operations" && (
+          <div className="card-premium p-8 border-amber-500/20 bg-amber-500/5 text-center">
+            <Rocket className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h3 className="text-xl font-black uppercase tracking-widest mb-2">Horários e Funcionamento</h3>
+            <p className="text-muted-foreground">Em breve: Gestão automatizada de horários de abertura e fechamento.</p>
+          </div>
+        )}
+        {tab === "seo" && (
+          <div className="card-premium p-8 border-blue-500/20 bg-blue-500/5 text-center">
+            <LinkIcon className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+            <h3 className="text-xl font-black uppercase tracking-widest mb-2">SEO e Marketing</h3>
+            <p className="text-muted-foreground">Em breve: Configure como seu site aparece no Google e redes sociais.</p>
+          </div>
+        )}
          {tab === "preview" && (
            <div className="space-y-8 site-hero-enter">
              <div className="rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black/40 backdrop-blur-md">
@@ -321,8 +353,8 @@ function EditPage() {
                      <div>
                        <h3 className="text-3xl font-black tracking-tight">Site ao Vivo!</h3>
                        <p className="text-muted-foreground text-lg">
-                         Sua pizzaria agora tem presença digital de elite.
-                       </p>
+                          Sua vitrine agora tem presença digital de elite.
+                        </p>
                      </div>
                    </div>
  
