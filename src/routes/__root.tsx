@@ -75,6 +75,8 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
    useEffect(() => {
      checkSubdomainRedirect();
+     // Log inicial para depuração de roteamento (Regra 10)
+     console.log(`[Root] Aplicação carregada. Path: ${window.location.pathname}`);
    }, []);
 
    return (

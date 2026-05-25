@@ -1,22 +1,32 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminRouteGuard, SESSION_KEY } from "@/components/AdminRouteGuard";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
-    // No servidor, window é undefined.
-    if (typeof window === "undefined") {
-      return;
+    if (typeof window === "undefined") return;
+
+    const path = location.pathname;
+    console.log(`[AuthGuard] Verificando acesso para: ${path} | Time: ${new Date().toISOString()}`);
+
+    // Limpeza de localStorage antigo (regra 6)
+    const legacySession = localStorage.getItem("sitecreatorfly_admin_session");
+    if (legacySession) {
+      console.log("[AuthGuard] Removendo sessão legada encontrada");
+      localStorage.removeItem("sitecreatorfly_admin_session");
     }
+
+    const sessionV2 = localStorage.getItem(SESSION_KEY);
+    const { data: { user } } = await supabase.auth.getUser();
     
-    console.log("[AuthGuard] Verificando sessão para:", location.pathname);
-    
-    // Todas as rotas sob _authenticated exigem login administrativo
-    // Usamos getUser() para garantir uma validação real contra o servidor (evita bypass por localStorage antigo)
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error || !user) {
-      console.log("[AuthGuard] Sessão inválida ou ausente. Redirecionando para /login");
-      // Limpa qualquer resquício de sessão local
+    const isValid = sessionV2 === "true" && user && user.email === 'vitinhonavoz18@gmail.com';
+
+    console.log(`[AuthGuard] Path: ${path} | isAdminRoute: true | isPublicPizzeriaSlug: false | adminSessionValid: ${isValid}`);
+
+    if (!isValid) {
+      console.log("[AuthGuard] Acesso NEGADO. Redirecionando para /login");
+      // Garantir limpeza total se estiver tentando acessar sem autorização
+      localStorage.removeItem(SESSION_KEY);
       await supabase.auth.signOut();
       
       throw redirect({
@@ -25,15 +35,12 @@ export const Route = createFileRoute("/_authenticated")({
       });
     }
 
-    // Validar se o usuário logado é de fato o admin único
-    if (user.email !== 'vitinhonavoz18@gmail.com') {
-      console.log("[AuthGuard] Usuário não autorizado (" + user.email + "). Fazendo logout.");
-      await supabase.auth.signOut();
-      throw redirect({ to: "/login" });
-    }
-
-    console.log("[AuthGuard] Sessão administrativa confirmada para:", user.email);
-    return;
+    console.log("[AuthGuard] Acesso AUTORIZADO.");
+    return { user };
   },
-  component: () => <Outlet />,
+  component: () => (
+    <AdminRouteGuard>
+      <Outlet />
+    </AdminRouteGuard>
+  ),
 });

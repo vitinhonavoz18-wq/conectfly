@@ -50,6 +50,7 @@ function ExportPage() {
   const [ghResult, setGhResult] = useState<{ repoUrl: string; branch: string; filesCount: number } | null>(null);
 
   useEffect(() => {
+    console.log(`[Export] Iniciando carregamento do restaurante: ${id} | isAdminRoute: true | adminSessionValid: true`);
     supabase
       .from("restaurants")
       .select("*")
@@ -58,7 +59,10 @@ function ExportPage() {
       .then(({ data }) => {
         const row = data as unknown as RestaurantRow | null;
         setR(row);
-        if (row && !ghRepo) setGhRepo(row.slug || "site-delivery");
+        if (row) {
+          console.log(`[Export] Dados do restaurante carregados: ${row.name}`);
+          if (!ghRepo) setGhRepo(row.slug || "site-delivery");
+        }
       });
 
     // Fetch API key securely via RPC

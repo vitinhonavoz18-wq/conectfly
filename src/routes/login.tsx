@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, useEffect } from "react";
 import { Loader2, Lock, ChefHat } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
+import { SESSION_KEY } from "@/components/AdminRouteGuard";
 
 type Search = { redirect?: string };
 
@@ -14,8 +15,11 @@ export const Route = createFileRoute("/login")({
   beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
     
+    const sessionV2 = localStorage.getItem(SESSION_KEY);
     const { data } = await supabase.auth.getSession();
-    if (data.session) {
+    
+    if (sessionV2 === "true" && data.session && data.session.user.email === 'vitinhonavoz18@gmail.com') {
+      console.log("[Login] Sessão V2 válida detectada. Redirecionando para o painel.");
       throw redirect({ to: search.redirect || "/" });
     }
   },
@@ -28,6 +32,10 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    console.log("[Login] Tela carregada. Rota: /login | isAdminRoute: false | isPublicPizzeriaSlug: false");
+  }, []);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!password) {
@@ -36,7 +44,6 @@ function LoginPage() {
     }
     setBusy(true);
     try {
-      // Call the secure edge function to validate the password and get a session
       console.log("Iniciando validação administrativa via Edge Function...");
       const { data, error } = await supabase.functions.invoke('admin-auth', {
         body: { password }
@@ -50,9 +57,15 @@ function LoginPage() {
       console.log("Resposta da Edge Function recebida:", data);
 
       if (data?.success && data?.session) {
-        // Set the session manually in the supabase client
+        // Limpar sessões antigas (Regra 6 e 9)
+        localStorage.removeItem("sitecreatorfly_admin_session");
+        
         const { error: setSessionError } = await supabase.auth.setSession(data.session);
         if (setSessionError) throw setSessionError;
+        
+        // Criar nova sessão V2
+        localStorage.setItem(SESSION_KEY, "true");
+        console.log("[Login] Sessão sitecreatorfly_admin_session_v2 criada.");
         
         toast.success("Acesso autorizado. Bem-vindo, Admin.");
         navigate({ to: search.redirect || "/" });

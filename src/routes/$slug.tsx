@@ -13,10 +13,15 @@ const ADMIN_PATHS = [
 ];
 
 export const Route = createFileRoute("/$slug")({
-  beforeLoad: ({ params }) => {
+  beforeLoad: ({ params, location }) => {
+    const slug = params.slug.toLowerCase();
+    const isPublicPizzeriaSlug = !ADMIN_PATHS.includes(slug);
+    
+    console.log(`[Router] Path: ${location.pathname} | isPublicPizzeriaSlug: ${isPublicPizzeriaSlug}`);
+
     // Se o slug for uma rota administrativa conhecida, redireciona para a raiz (que é protegida)
-    if (ADMIN_PATHS.includes(params.slug.toLowerCase())) {
-      console.log(`[Router] Rota admin detectada no path: /${params.slug}. Redirecionando...`);
+    if (!isPublicPizzeriaSlug) {
+      console.log(`[Router] Rota admin detectada no path: /${params.slug}. Redirecionando para Auth Guard...`);
       throw redirect({ to: "/" });
     }
   },

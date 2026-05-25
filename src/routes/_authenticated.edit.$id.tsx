@@ -50,6 +50,7 @@ function EditPage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    console.log(`[Edit] Iniciando carregamento do restaurante: ${id} | isAdminRoute: true | adminSessionValid: true`);
     supabase
       .from("restaurants")
       .select("*")
@@ -57,9 +58,11 @@ function EditPage() {
       .maybeSingle()
       .then(({ data }) => {
         if (!data) {
+          console.log(`[Edit] Restaurante ${id} não encontrado.`);
           setNotFound(true);
           return;
         }
+        console.log(`[Edit] Dados carregados: ${data.name}`);
         setRestaurant(data as unknown as RestaurantRow);
       });
   }, [id]);
