@@ -198,6 +198,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
+        
         <div className="bg-white py-12">
           <SiteMenuSection 
             categories={nonPizzaCategories} 
@@ -205,6 +206,14 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             entryMode={entryMode}
           />
         </div>
+
+        {(data.beverages && data.beverages.length > 0) && (
+          <div className="bg-slate-50 py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+            </div>
+          </div>
+        )}
       </main>
       <SiteFooter
         name={r.name}

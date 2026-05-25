@@ -67,19 +67,21 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   return (
     <section id="cardapio" className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
-         <div className="text-center mb-12">
-           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
-             Curadoria Gastronômica
-           </span>
-           <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4">
-             Nossa <span className="text-primary glow-bronze">Cozinha</span>
-           </h2>
-           <p className="text-muted-foreground mt-2 max-w-xl mx-auto italic">
-             {current ? `Explorando a seleção de ${current.name}` : "Selecione uma categoria para descobrir nossas especialidades artesanais."}
-           </p>
-         </div>
+        {(restaurant.site_settings?.show_categories_section !== false) && (
+          <div className="text-center mb-12">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
+              Curadoria Gastronômica
+            </span>
+            <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4">
+              Nossa <span className="text-primary glow-bronze">Cozinha</span>
+            </h2>
+            <p className="text-muted-foreground mt-2 max-w-xl mx-auto italic">
+              {current ? `Explorando a seleção de ${current.name}` : "Selecione uma categoria para descobrir nossas especialidades artesanais."}
+            </p>
+          </div>
+        )}
 
-        {(!current && entryMode !== "direct") ? (
+        {(restaurant.site_settings?.show_categories_section === false || (!current && entryMode !== "direct")) ? (
           <div className="space-y-12">
             {otherCategories.length > 0 && renderCategoryList(otherCategories)}
           </div>

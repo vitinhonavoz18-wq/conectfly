@@ -107,6 +107,7 @@ export interface RestaurantRow {
     show_hero_button?: boolean;
     entry_mode?: "navigation" | "direct";
     combos_visibility?: "auto" | "always" | "hide";
+    show_categories_section?: boolean;
   };
   checkout_settings?: any;
   delivery_settings?: any;
