@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useRouter, useSearch } from "@tanstack/react-router";
+import { BusinessType } from "@/lib/site/types";
 import { useEffect, useState } from "react";
 import {
   Plus,
@@ -48,6 +49,7 @@ function Dashboard() {
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [template, setTemplate] = useState<"black" | "white" | "pizza_hut_style" | "burger_style">("black");
+  const [businessType, setBusinessType] = useState<BusinessType>("Pizzaria");
 
   const reload = () => {
     console.log("[Dashboard] Recarregando lista...");
@@ -113,7 +115,8 @@ function Dashboard() {
         flycontrol_api_key: generateApiKey(), 
         owner_id: user?.id,
         published: true, // Garante que o site seja público imediatamente após criação
-        selected_template: template
+        selected_template: template,
+        business_type: businessType
       })
       .select()
       .single();
@@ -165,7 +168,7 @@ function Dashboard() {
                 Painel Administrativo
               </p>
               <p className="text-xs text-muted-foreground italic mt-0.5">
-                Sites de delivery premium para chefs visionários
+                Sites de delivery premium para negócios visionários
               </p>
             </div>
           </div>
@@ -175,7 +178,7 @@ function Dashboard() {
                className="btn-premium px-6 py-3 rounded-xl flex items-center gap-2 group shadow-2xl"
              >
                <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform text-primary-foreground" />
-               <span className="uppercase text-xs tracking-[0.2em]">Novo Site Gourmet</span>
+               <span className="uppercase text-xs tracking-[0.2em]">Novo Site Delivery</span>
              </button>
              <button
                onClick={() => signOut()}
@@ -207,7 +210,7 @@ function Dashboard() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                    placeholder="Ex.: Pizzaria do João"
+                    placeholder="Ex.: Burguer do João ou Farmácia Central"
                     className="w-full px-5 py-3 rounded-xl bg-white/5 border border-white/10 focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all text-lg font-medium placeholder:text-muted-foreground/50"
                   />
                 </div>
@@ -263,7 +266,7 @@ function Dashboard() {
         {list === null ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground animate-pulse font-medium">Carregando pizzarias cadastradas...</p>
+            <p className="text-muted-foreground animate-pulse font-medium">Carregando estabelecimentos cadastrados...</p>
           </div>
         ) : error ? (
           <div className="card-premium p-8 border-destructive/20 bg-destructive/5 text-center">
@@ -315,7 +318,12 @@ function Dashboard() {
                        <div className={`absolute -top-2 -right-2 h-4 w-4 rounded-full border-2 border-background ${r.published ? 'bg-emerald-500 shadow-[0_0_10px_oklch(0.7_0.2_160)]' : 'bg-orange-500 shadow-[0_0_10px_oklch(0.6_0.2_40)]'}`} />
                      </div>
                      <div className="min-w-0 ml-4">
-                       <h3 className="font-black text-lg truncate group-hover:text-primary transition-colors">{r.name}</h3>
+                       <h3 className="font-black text-lg truncate group-hover:text-primary transition-colors">
+                         {r.name}
+                         <span className="ml-2 px-1.5 py-0.5 rounded-md bg-white/5 text-[9px] text-muted-foreground font-black uppercase tracking-tighter border border-white/5">
+                           {r.business_type || "Pizzaria"}
+                         </span>
+                       </h3>
                         <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
                           <Globe className="h-3 w-3" />
                           {`conectfly.com.br/${r.slug}`}
@@ -395,7 +403,7 @@ function Dashboard() {
             className="btn-premium px-10 py-4 rounded-2xl text-lg flex items-center gap-3 mx-auto shadow-2xl uppercase tracking-[0.1em]"
           >
             <Plus className="h-6 w-6 text-primary-foreground" />
-            <span>Criar Minha Vitrine Gourmet</span>
+            <span>Criar Minha Vitrine de Delivery</span>
           </button>
        </div>
      </div>
