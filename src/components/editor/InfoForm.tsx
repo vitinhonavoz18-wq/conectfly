@@ -557,7 +557,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
             <Field label="Modo de Entrada" hint="Como o cliente visualiza o cardápio ao entrar">
               <select
                 value={r.site_settings?.entry_mode || "navigation"}
-                onChange={(e) => set("site_settings", { ...r.site_settings, entry_mode: e.target.value })}
+                onChange={(e) => set("site_settings", { ...r.site_settings, entry_mode: e.target.value as any })}
                 className="input"
               >
                 <option value="navigation">Navegação por botão (modelo antigo)</option>
@@ -568,7 +568,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
             <Field label="Visibilidade dos Combos" hint="Exibição da seção de combos especiais">
               <select
                 value={r.site_settings?.combos_visibility || "auto"}
-                onChange={(e) => set("site_settings", { ...r.site_settings, combos_visibility: e.target.value })}
+                onChange={(e) => set("site_settings", { ...r.site_settings, combos_visibility: e.target.value as any })}
                 className="input"
               >
                 <option value="auto">Automático (mostrar apenas se existir)</option>
