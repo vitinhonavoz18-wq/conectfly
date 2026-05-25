@@ -23,17 +23,23 @@ const debugLog = (...args: any[]) => {
     const normalizedIdentifier = identifier.toLowerCase().trim().replace(/^\/+|\/+$/g, '');
     
     console.log("--- PUBLIC PAGE ACCESS ---");
-    console.log("IDENTIFIER DETECTED:", normalizedIdentifier);
+    console.log("SLUG RECEIVED:", identifier);
+    console.log("NORMALIZED SLUG:", normalizedIdentifier);
 
     // Buscamos apenas os dados públicos da view segura.
     // Priorizamos custom_subdomain, depois slug.
+    console.log(`[fetchSiteBySlug] Querying pizzerias_public where slug or custom_subdomain = "${normalizedIdentifier}"`);
+    
     const { data, error } = await supabase
       .from("pizzerias_public")
       .select("*")
       .or(`custom_subdomain.eq.${normalizedIdentifier},slug.eq.${normalizedIdentifier}`)
       .maybeSingle();
     
-    console.log("MATCHED RESTAURANT:", data ? data.name : "None");
+    console.log("[fetchSiteBySlug] QUERY RESULT:", data ? "Found" : "Not Found");
+    if (data) {
+      console.log(`[fetchSiteBySlug] Pizzeria: ${data.name} | ID: ${data.id} | Published: ${data.published} | Slug: ${data.slug}`);
+    }
 
     if (error) {
       console.error(`[fetchSiteBySlug] Erro ao buscar restaurante:`, error);

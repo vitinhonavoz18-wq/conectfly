@@ -217,8 +217,9 @@ export async function testFlycontrolConnection(
       success: response.ok && result.success === true,
       status: status,
       data: result.response || result,
+      details: result.details || null,
       error: result.error || (response.ok ? null : `Erro HTTP ${status}`),
-      url: result.endpoint || "/api/public/submit-order",
+      url: result.endpoint || result?.details?.endpoint_called || "/api/public/submit-order",
       apiKeyExists: true,
       slugUsed: slug
     };
