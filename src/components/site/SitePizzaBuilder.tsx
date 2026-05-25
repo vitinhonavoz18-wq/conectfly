@@ -308,7 +308,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       {/* Step 2 — Flavors */}
       <div>
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os sabores</h4>
+          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os itens</h4>
           {size && (
             <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-white border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
               {selectedFlavors.length}/{maxFlavors} selecionados
