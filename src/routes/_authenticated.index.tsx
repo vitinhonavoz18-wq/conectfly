@@ -7,11 +7,12 @@ import {
   Copy,
   Trash2,
   Download,
-   Eye,
-   Globe,
-   Rocket,
-   Sparkles,
- } from "lucide-react";
+  Eye,
+  Globe,
+  Rocket,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
 import { listRestaurants } from "@/lib/site/queries";
 import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,7 +50,17 @@ function Dashboard() {
   const [template, setTemplate] = useState<"black" | "white" | "pizza_hut_style" | "burger_style">("black");
 
   const reload = () => {
-    listRestaurants().then(setList).catch((e) => setError(String(e)));
+    console.log("[Dashboard] Recarregando lista...");
+    listRestaurants()
+      .then((res) => {
+        setList(res);
+        setError("");
+      })
+      .catch((e) => {
+        console.error("[Dashboard] Falha ao carregar:", e);
+        setError(String(e.message || e));
+        setList([]); // Interrompe o loading infinito em caso de erro
+      });
   };
 
   useEffect(() => {
@@ -240,7 +251,21 @@ function Dashboard() {
         )}
 
         {list === null ? (
-          <p className="text-muted-foreground">Carregando...</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground animate-pulse font-medium">Carregando pizzarias cadastradas...</p>
+          </div>
+        ) : error ? (
+          <div className="card-premium p-8 border-destructive/20 bg-destructive/5 text-center">
+            <h3 className="text-lg font-bold text-destructive mb-2 uppercase tracking-tight">Erro ao carregar dados</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <button 
+              onClick={reload}
+              className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs font-black uppercase tracking-widest"
+            >
+              Tentar Novamente
+            </button>
+          </div>
         ) : list.length === 0 ? (
           <EmptyState onCreate={() => setCreating(true)} />
         ) : (
