@@ -163,22 +163,23 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           });
 
           try {
-            await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
+            const result = await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
             clearTimeout(timeoutId);
-            painelRegistrado = true;
-            console.log("✅ [CHECKOUT] RESPOSTA FLYCONTROL: sucesso", { order_id: payload.order.id });
-            toast.success("Pedido registrado no FlyControl!");
+            
+            if (result.success) {
+              painelRegistrado = true;
+              console.log("✅ [CHECKOUT] Pedido confirmado no FlyControl", { order_id: result.order_id });
+              toast.success("Pedido registrado no FlyControl!");
+            } else if (result.skipped) {
+              console.log("ℹ️ [CHECKOUT] Envio FlyControl ignorado: " + (result.message || "desativado"));
+            }
           } catch (err: any) {
             clearTimeout(timeoutId);
-            console.error("❌ [CHECKOUT] ERRO ENVIO PEDIDO:", {
-              message: err?.message,
-              name: err?.name,
-              stack: err?.stack,
-            });
+            console.error("❌ [CHECKOUT] Erro ao enviar para FlyControl:", err.message);
             toast.error("Erro no painel, mas o pedido seguirá via WhatsApp.");
           }
        } else {
-         console.log("ℹ️ Integração FlyControl não habilitada ou restaurante ausente. Pulando registro no painel e seguindo para WhatsApp.");
+         console.log("ℹ️ Integração FlyControl desativada para esta pizzaria. Pulando registro no painel e seguindo para WhatsApp.");
        }
 
     } catch (err) {
