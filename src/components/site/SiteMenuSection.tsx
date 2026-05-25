@@ -82,8 +82,24 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
         )}
 
         {(restaurant.site_settings?.show_categories_section === false || (!current && entryMode !== "direct")) ? (
-          <div className="space-y-12">
-            {otherCategories.length > 0 && renderCategoryList(otherCategories)}
+          <div className="space-y-16">
+            {otherCategories.map(cat => (
+              <div key={cat.id} className="space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
+                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+                    {cat.icon ? `${cat.icon} ` : ""}
+                    {cat.name}
+                  </h3>
+                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                  {cat.items.map((it) => (
+                    <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <>
