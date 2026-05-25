@@ -370,8 +370,11 @@ export type Database = {
       pizzeria_beverages: {
         Row: {
           brand: string | null
+          category: string | null
           created_at: string | null
+          description: string | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           name: string
           pizzeria_id: string
@@ -382,8 +385,11 @@ export type Database = {
         }
         Insert: {
           brand?: string | null
+          category?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name: string
           pizzeria_id: string
@@ -394,8 +400,11 @@ export type Database = {
         }
         Update: {
           brand?: string | null
+          category?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           name?: string
           pizzeria_id?: string
