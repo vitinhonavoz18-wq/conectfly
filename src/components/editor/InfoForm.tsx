@@ -15,10 +15,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [registering, setRegistering] = useState(false);
-   const [regMsg, setRegMsg] = useState("");
-    const [testing, setTesting] = useState(false);
-    const [testDebug, setTestDebug] = useState<any>(null);
-    const [secureApiKey, setSecureApiKey] = useState<string | null>(null);
+  const [regMsg, setRegMsg] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testDebug, setTestDebug] = useState<any>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
 
     useEffect(() => {
       if (r.id) {
@@ -26,7 +26,6 @@ export function InfoForm({ restaurant, onChange }: Props) {
           .rpc("get_restaurant_flycontrol_key", { p_restaurant_id: r.id })
           .then(({ data }) => {
             if (data) {
-              setSecureApiKey(data);
               set("flycontrol_api_key", data);
             }
           });
@@ -629,19 +628,26 @@ export function InfoForm({ restaurant, onChange }: Props) {
                )}
              </div>
              
-             <div className="space-y-1">
-               <div className="text-xs text-muted-foreground mb-1 flex justify-between">
-                 <span>API Key (Gerada aqui ou colada do FLYCONTROL)</span>
-               </div>
-               <div className="flex gap-2">
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground mb-1 flex justify-between">
+                  <span>API Key (Gerada aqui ou colada do FLYCONTROL)</span>
+                </div>
+                <div className="flex gap-2">
                   <div className="relative flex-1">
                     <input
-                      type={r.flycontrol_api_key?.startsWith("fc_") ? "password" : "text"}
+                      type={showApiKey ? "text" : "password"}
                       value={r.flycontrol_api_key || ""}
                       onChange={(e) => set("flycontrol_api_key", e.target.value)}
                       placeholder="fc_..."
                       className="w-full font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg pr-10"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showApiKey ? <Eye className="h-4 w-4" /> : <Eye className="h-4 w-4 opacity-50" />}
+                    </button>
                   </div>
                  <button
                    type="button"
