@@ -80,6 +80,7 @@ export interface RestaurantRow {
   updated_at: string;
   flycontrol_enabled?: boolean;
   flycontrol_api_url?: string | null;
+  // flycontrol_api_key is sensitive and handled server-side/via RPC
   flycontrol_api_key?: string | null;
   flycontrol_base_url?: string | null;
   flycontrol_register_url?: string | null;

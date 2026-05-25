@@ -266,7 +266,7 @@ export async function sendOrderToFlycontrol(
     | "id"
     | "flycontrol_enabled"
     | "flycontrol_api_url"
-    | "flycontrol_api_key"
+    // flycontrol_api_key removed from frontend payload - handled by server proxy
     | "flycontrol_base_url"
   >,
   payload: FlycontrolOrderPayload,
@@ -274,7 +274,7 @@ export async function sendOrderToFlycontrol(
 ): Promise<{ success: boolean; skipped?: boolean; message?: string; order_id?: string }> {
   console.log("[FLYCONTROL] 🚀 Iniciando envio para FlyControl");
   console.log("[FLYCONTROL] ℹ️ Integração ativa:", !!restaurant.flycontrol_enabled);
-  console.log("[FLYCONTROL] ℹ️ API Key encontrada:", !!restaurant.flycontrol_api_key);
+  console.log("[FLYCONTROL] ℹ️ API Key handled server-side");
 
   if (!restaurant.flycontrol_enabled) {
     console.log("[FLYCONTROL] ℹ️ Integração FlyControl desativada para esta pizzaria");
