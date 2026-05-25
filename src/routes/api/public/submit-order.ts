@@ -84,18 +84,34 @@ function resolveOrdersUrl(restaurant: {
   let specific = (restaurant.flycontrol_api_url ?? "").trim();
   let base = (restaurant.flycontrol_base_url ?? "").trim();
 
+  // Preferência por domínio direto para evitar problemas de redirecionamento 302
+  const normalizeUrl = (url: string) => {
+    if (!url) return "";
+    let u = url.trim();
+    if (!u.startsWith("http")) u = "https://" + u;
+    
+    // Se for o domínio do lovable, redireciona para o domínio customizado direto
+    // Isso evita perda de headers em redirecionamentos 302 do Cloudflare
+    if (u.includes("flycontrol-dash.lovable.app")) {
+      u = u.replace("flycontrol-dash.lovable.app", "flycontrol.conectfly.com.br");
+    }
+    
+    if (isInvalidUrl(u)) return "";
+    return u;
+  };
+
   if (specific) {
-    if (!specific.startsWith("http")) specific = "https://" + specific;
-    if (isInvalidUrl(specific)) return "";
-    return specific;
+    return normalizeUrl(specific);
   }
-  if (!base) return "";
-  if (!base.startsWith("http")) base = "https://" + base;
-  if (isInvalidUrl(base)) return "";
   
-  base = base.replace(/\/+$/, "");
-  if (base.includes(".supabase.co")) return joinUrl(base, "functions/v1/create-order");
-  return joinUrl(base, "api/orders");
+  if (!base) return "";
+  let normalizedBase = normalizeUrl(base).replace(/\/+$/, "");
+  
+  if (normalizedBase.includes(".supabase.co")) {
+    return joinUrl(normalizedBase, "functions/v1/create-order");
+  }
+  
+  return joinUrl(normalizedBase, "api/orders");
 }
 
 export const Route = createFileRoute("/api/public/submit-order")({
@@ -113,6 +129,11 @@ export const Route = createFileRoute("/api/public/submit-order")({
             payload?: any;
             test?: boolean;
           };
+          
+          console.log(`[SUBMIT-ORDER] 🚀 Request Iniciado - IP: ${ip}`, { 
+            restaurant_id: body.restaurant_id, 
+            is_test: !!body.test 
+          });
           
           if (!body?.restaurant_id || (!body?.payload && !body?.test)) {
             return new Response(
@@ -151,11 +172,15 @@ export const Route = createFileRoute("/api/public/submit-order")({
             .maybeSingle();
 
           if (error || !r) {
+            console.error(`[SUBMIT-ORDER] ❌ Restaurante não encontrado: ${body.restaurant_id}`);
             return new Response(
               JSON.stringify({ success: false, error: "Pizzaria não encontrada" }),
               { status: 404, headers },
             );
           }
+
+          console.log(`[SUBMIT-ORDER] 🏠 Restaurante encontrado: ${r.name} (${r.slug})`);
+          console.log(`[SUBMIT-ORDER] ⚙️ Integração ativa: ${r.flycontrol_enabled}`);
 
           if (!r.flycontrol_enabled) {
             return new Response(
@@ -171,8 +196,11 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const url = resolveOrdersUrl(r);
           const key = (r.flycontrol_api_key ?? "").trim();
           
+          console.log(`[SUBMIT-ORDER] 🔗 Endpoint FlyControl: ${url}`);
+          console.log(`[SUBMIT-ORDER] 🔑 API Key configurada: ${key ? "Sim (presente)" : "Não (ausente)"}`);
+
           if (!url || !key) {
-            console.error(`[SUBMIT-ORDER] Configuração incompleta para pizzaria ${body.restaurant_id}: url=${!!url}, key=${!!key}`);
+            console.error(`[SUBMIT-ORDER] ❌ Configuração incompleta: url=${!!url}, key=${!!key}`);
             return new Response(
               JSON.stringify({ 
                 success: false, 
@@ -186,6 +214,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
           const isTest = body.test === true;
           
           if (isTest) {
+            console.log("[SUBMIT-ORDER] 🧪 Validando autenticação para teste...");
             // Se for teste, exige autenticação de admin para evitar abuso
             const authHeader = request.headers.get("Authorization");
             if (!authHeader) {
@@ -194,40 +223,58 @@ export const Route = createFileRoute("/api/public/submit-order")({
             const token = authHeader.replace("Bearer ", "");
             const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
             if (authErr || !user || user.email !== 'vitinhonavoz18@gmail.com') {
+              console.error("[SUBMIT-ORDER] ❌ Acesso negado para teste:", authErr?.message || "Usuário não autorizado");
               return new Response(JSON.stringify({ success: false, error: "Acesso negado" }), { status: 403, headers });
             }
+            console.log("[SUBMIT-ORDER] ✅ Autenticação validada");
           }
 
-          const payload = body.payload || {
+          // Payload de teste específico conforme solicitado pelo usuário
+          const payload = body.payload || (isTest ? {
+            test: true,
+            source: "sitecreatorfly",
+            restaurant_slug: r.slug,
+            api_key: key,
+            customer_name: "TESTE CONNECTFLY",
+            items: [
+              {
+                name: "Pedido Teste"
+              }
+            ],
+            // Compatibilidade com o parser atual do FlyControl
             event: "order.created",
-            source: "sitecreatorfly-test",
             pizzeria: {
-              slug: r.slug || "pizzaria-teste",
-              name: (r.name || "Pizzaria Teste") + " (TESTE)"
+              slug: r.slug,
+              name: r.name + " (TESTE)"
             },
             customer: {
-              name: "Admin SiteCreatorFly",
+              name: "TESTE CONNECTFLY",
               phone: "71999999999",
-              address: "Teste de Conexão",
-              neighborhood: "Backend Proxy",
-              reference: "OK"
+              address: "Endereço de Teste",
+              neighborhood: "Teste",
+              reference: "Proxy Fix"
             },
             order: {
               id: "test-" + Date.now(),
               created_at: new Date().toISOString(),
-              items: [{ name: "Teste de Conexão", quantity: 1, unit_price: 1, total_price: 1 }],
+              items: [{ name: "Pedido Teste", quantity: 1, unit_price: 1, total_price: 1 }],
               total: 1,
               subtotal: 1,
               delivery_fee: 0,
               payment_method: "TESTE",
               delivery_type: "retirada",
-              notes: "Este é um teste de conexão vindo do painel admin."
+              notes: "Teste de conexão real."
             }
-          };
+          } : null);
 
-          if (payload) {
-            payload.api_key = key;
+          if (!payload) {
+            return new Response(
+              JSON.stringify({ success: false, error: "Payload ausente" }),
+              { status: 400, headers },
+            );
           }
+
+          payload.api_key = key;
 
           const idempotencyKey = request.headers.get("x-idempotency-key") || payload.order?.id || "";
           const maxRetries = isTest ? 0 : 3;
@@ -238,7 +285,9 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
-              console.log(`[SUBMIT-ORDER] Tentativa ${attempt + 1} para: ${url}`);
+              console.log(`[SUBMIT-ORDER] 📡 Tentativa ${attempt + 1} para: ${url}`);
+              console.log(`[SUBMIT-ORDER] 📦 Payload:`, JSON.stringify({ ...payload, api_key: "***" }));
+              
               const res = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -254,18 +303,26 @@ export const Route = createFileRoute("/api/public/submit-order")({
               const txt = await res.text().catch(() => "");
               lastStatus = res.status;
               
+              console.log(`[SUBMIT-ORDER] 📥 Resposta (${lastStatus}) - Body: ${txt.slice(0, 500)}`);
+
               try { 
                 finalData = JSON.parse(txt); 
               } catch { 
                 finalData = { text: txt }; 
               }
 
-              if (res.ok && finalData?.status !== "error" && finalData?.success !== false) {
+              const isJson = res.headers.get("content-type")?.includes("application/json");
+
+              if (res.ok && isJson && finalData?.success === true) {
                 isSuccess = true;
                 break;
               }
               
-              lastErr = !res.ok ? `HTTP ${res.status}: ${txt.slice(0, 100)}` : (finalData?.message || finalData?.error || "Pedido rejeitado");
+              if (!isJson && txt.includes("<!DOCTYPE html>")) {
+                lastErr = "Erro de Configuração: O endpoint retornou HTML em vez de JSON. Verifique a URL do FlyControl.";
+              } else {
+                lastErr = !res.ok ? `HTTP ${res.status}: ${txt.slice(0, 100)}` : (finalData?.message || finalData?.error || "Pedido rejeitado");
+              }
               console.warn(`[SUBMIT-ORDER] Tentativa ${attempt + 1} falhou: ${lastErr}`);
               
               if (res.status >= 400 && res.status < 500) break;
