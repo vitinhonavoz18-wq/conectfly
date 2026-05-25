@@ -9,14 +9,15 @@ import {
   Eye,
   FileText,
   Link as LinkIcon,
-   MapPin,
-   Pencil,
-   Rocket,
-   Sparkles,
-   Tag,
-   Utensils,
-   LogOut,
- } from "lucide-react";
+  MapPin,
+  Pencil,
+  Rocket,
+  Sparkles,
+  Tag,
+  Utensils,
+  LogOut,
+  Loader2,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
 import { fetchSiteByRestaurant, getRestaurantById, updateRestaurant, adminFetchSiteData } from "@/lib/site/queries";
