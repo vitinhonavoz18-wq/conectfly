@@ -682,6 +682,10 @@ export type Database = {
         Args: { input_text: string }
         Returns: string
       }
+      get_restaurant_flycontrol_key: {
+        Args: { p_restaurant_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
