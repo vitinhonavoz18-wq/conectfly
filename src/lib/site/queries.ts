@@ -255,3 +255,54 @@ export async function updateRestaurant(id: string, updates: Partial<RestaurantRo
     throw err;
   }
 }
+
+export async function adminFetchSiteData(id: string): Promise<SiteData> {
+  console.log(`[adminFetchSiteData] Carregando dados completos via backend seguro: ${id}`);
+  
+  try {
+    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+      body: { id, action: "get", full: true }
+    });
+    
+    if (error) throw error;
+    if (!data?.success) throw new Error(data?.error || "Falha ao carregar dados do restaurante");
+
+    const { restaurant, categories, items, comboGroups, combos, deliveryZones, beverages, pizzaSizes } = data.data;
+
+    // Normalização local similar ao fetchSiteByRestaurant
+    const pizzaSizesFromTable = (pizzaSizes || []).map((s: any) => ({
+      id: s.id,
+      label: s.name,
+      price: Number(s.price),
+      max_flavors: s.max_flavors,
+      slices: s.slices,
+      active: s.is_active,
+      sort_order: s.sort_order
+    })) as PizzaSize[];
+
+    return {
+      restaurant: restaurant as RestaurantRow,
+      categories: categories.map((c: any) => {
+        const sizes = (c.is_pizza && pizzaSizesFromTable.length > 0) 
+          ? pizzaSizesFromTable 
+          : (c.pizza_sizes || []);
+        
+        return {
+          ...c,
+          items: items.filter((i: any) => i.category_id === c.id),
+          pizza_sizes: c.is_pizza ? sizes : null
+        };
+      }),
+      comboGroups: comboGroups.map((g: any) => ({
+        ...g,
+        combos: combos.filter((cb: any) => cb.group_id === g.id),
+      })),
+      deliveryZones: deliveryZones as DeliveryZoneRow[],
+      beverages: beverages as BeverageRow[],
+      pizzaSizes: pizzaSizesFromTable,
+    };
+  } catch (err) {
+    console.error("[adminFetchSiteData] Erro completo:", err);
+    throw err;
+  }
+}
