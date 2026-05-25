@@ -203,7 +203,9 @@ export type Database = {
       }
       menu_categories: {
         Row: {
+          allow_cart_addition: boolean | null
           created_at: string
+          description: string | null
           icon: string | null
           id: string
           image_url: string | null
@@ -212,11 +214,17 @@ export type Database = {
           name: string
           pizza_sizes: Json | null
           restaurant_id: string
+          show_as_clickable_category: boolean | null
+          show_directly_in_menu: boolean | null
+          show_on_public_site: boolean | null
           sort_order: number
+          type: string | null
           updated_at: string | null
         }
         Insert: {
+          allow_cart_addition?: boolean | null
           created_at?: string
+          description?: string | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -225,11 +233,17 @@ export type Database = {
           name: string
           pizza_sizes?: Json | null
           restaurant_id: string
+          show_as_clickable_category?: boolean | null
+          show_directly_in_menu?: boolean | null
+          show_on_public_site?: boolean | null
           sort_order?: number
+          type?: string | null
           updated_at?: string | null
         }
         Update: {
+          allow_cart_addition?: boolean | null
           created_at?: string
+          description?: string | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -238,7 +252,11 @@ export type Database = {
           name?: string
           pizza_sizes?: Json | null
           restaurant_id?: string
+          show_as_clickable_category?: boolean | null
+          show_directly_in_menu?: boolean | null
+          show_on_public_site?: boolean | null
           sort_order?: number
+          type?: string | null
           updated_at?: string | null
         }
         Relationships: [
