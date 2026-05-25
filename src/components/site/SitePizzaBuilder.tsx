@@ -266,29 +266,29 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             preço definido pelo tamanho
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {sizes.map((s, i) => {
             const active = sizeIdx === i;
             return (
                <button
                  key={`${s.label}-${i}`}
                  onClick={() => handleSelectSize(i)}
-                 className={`relative rounded-2xl border p-4 text-left transition-all duration-300 transform hover:scale-[1.03] active:scale-95 ${
+                 className={`relative rounded-3xl border-2 p-5 text-left transition-all duration-300 transform ${
                    active
-                     ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-transparent shadow-[0_0_20px_rgba(255,90,0,0.15)]"
-                     : "border-white/5 bg-white/5 hover:border-white/20"
+                     ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
+                     : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[#FFF9F6]"
                  }`}
                >
                 {active && (
-                  <span className="absolute top-2 right-2 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
-                    <Check className="h-3 w-3" />
+                  <span className="absolute top-3 right-3 h-6 w-6 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center shadow-lg">
+                    <Check className="h-3.5 w-3.5 stroke-[3]" />
                   </span>
                 )}
-                <p className="font-bold leading-tight">{s.label}</p>
-                <p className="text-[hsl(var(--site-secondary))] font-bold mt-1">
+                <p className={`font-extrabold text-lg leading-tight ${active ? "text-[hsl(var(--site-primary))]" : "text-[#111]"}`}>{s.label}</p>
+                <p className="text-[hsl(var(--site-secondary))] font-black text-xl mt-1.5">
                   {formatBRL(s.price)}
                 </p>
-                <p className="text-[11px] text-[hsl(var(--site-muted-fg))] mt-0.5">
+                <p className="text-xs font-medium text-[#555] mt-1">
                   {s.slices ? `${s.slices} fatias · ` : ""}
                   até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}
                 </p>
@@ -296,11 +296,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             );
           })}
         </div>
-        <div className="mt-3 flex items-start gap-2 text-xs sm:text-sm rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 p-3">
-          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+        <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[#D9A441/30] bg-[#FFF9F6] text-[#D9A441] p-4 font-medium shadow-sm">
+          <Info className="h-5 w-5 shrink-0 text-[#D9A441]" />
           <span>
-            Ao selecionar <strong>sabores especiais</strong>, o valor final da pizza poderá ser
-            alterado.
+            Ao selecionar <strong className="font-extrabold">sabores especiais</strong>, o valor final da pizza poderá ser
+            alterado proporcionalmente.
           </span>
         </div>
       </div>
