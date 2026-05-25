@@ -61,13 +61,14 @@ export function BeverageImport({ restaurantId, onImportComplete, onClose }: Prop
           }
         }
 
-        const nameKeys = ["nome", "name", "produto", "product_name", "title", "bebida"];
+        const nameKeys = ["nome", "name", "produto", "product_name", "title", "bebida", "beverage"];
         const priceKeys = ["preco", "preço", "price", "valor", "value", "amount"];
-        const catKeys = ["categoria", "category", "tipo", "type"];
+        const catKeys = ["categoria", "category", "tipo", "type", "subtipo"];
+        const descKeys = ["descricao", "descrição", "description", "desc"];
 
         const parsed = list.map(item => {
           let name = "";
-          for (const k of nameKeys) if (item[k]) { name = item[k]; break; }
+          for (const k of nameKeys) if (item[k]) { name = String(item[k]); break; }
           
           let price = 0;
           let hasPrice = false;
@@ -80,9 +81,12 @@ export function BeverageImport({ restaurantId, onImportComplete, onClose }: Prop
           }
 
           let category = "";
-          for (const k of catKeys) if (item[k]) { category = item[k]; break; }
+          for (const k of catKeys) if (item[k]) { category = String(item[k]); break; }
 
-          return { name, price: isNaN(price) ? 0 : price, category, hasPrice };
+          let description = "";
+          for (const k of descKeys) if (item[k]) { description = String(item[k]); break; }
+
+          return { name, price: isNaN(price) ? 0 : price, category, description, hasPrice };
         }).filter(it => it.name);
 
         const cats = Array.from(new Set(parsed.map(p => p.category).filter(Boolean)));
@@ -121,6 +125,8 @@ export function BeverageImport({ restaurantId, onImportComplete, onClose }: Prop
           name: p.name,
           price: p.price,
           brand: p.category || defaultCategory,
+          category: p.category || defaultCategory,
+          description: p.description || null,
           is_active: true,
           sort_order: idx + (existing?.length || 0)
         }));

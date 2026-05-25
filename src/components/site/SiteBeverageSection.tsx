@@ -1,4 +1,4 @@
-import { Minus, Plus, ShoppingBag } from "lucide-react";
+import { Minus, Plus, ShoppingBag, Info } from "lucide-react";
 import type { BeverageRow, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -30,7 +30,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
       addLine({
         itemId: `bev-${bev.id}`,
         name: bev.name,
-        description: bev.brand && bev.size ? `${bev.brand} - ${bev.size}` : bev.brand || bev.size || "",
+        description: bev.description || (bev.brand && bev.size ? `${bev.brand} - ${bev.size}` : bev.brand || bev.size || ""),
         unitPrice: Number(bev.price),
       }, 1);
     }
@@ -48,7 +48,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
   };
 
   return (
-    <div id="bebidas" className="mt-20 pt-16 border-t border-white/5 site-stagger">
+    <div id="bebidas" className="py-16 site-stagger">
       <div className="text-center mb-12">
         <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
           Refresque sua experiência
@@ -71,13 +71,27 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
           return (
             <div 
               key={bev.id} 
-              className={`rounded-[2rem] border p-6 flex flex-col gap-4 transition-all duration-500 backdrop-blur-md relative overflow-hidden group ${
+              className={`rounded-[2rem] border flex flex-col transition-all duration-500 backdrop-blur-md relative overflow-hidden group ${
                 qty > 0 ? 'border-primary bg-primary/5 shadow-glow' : 'border-white/5 bg-white/5 hover:border-white/20 shadow-2xl'
               }`}
             >
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <ShoppingBag className="h-16 w-16 text-primary" />
-              </div>
+              {bev.image_url && (
+                <div className="h-48 overflow-hidden relative">
+                   <img 
+                     src={bev.image_url} 
+                     alt={bev.name}
+                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                   />
+                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                </div>
+              )}
+              
+              <div className="p-6 flex flex-col flex-1 gap-4">
+                {!bev.image_url && (
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <ShoppingBag className="h-16 w-16 text-primary" />
+                  </div>
+                )}
 
               <div className="flex justify-between items-start gap-4 relative z-10">
                 <div className="min-w-0">
@@ -87,6 +101,11 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
                   <p className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-widest opacity-80">
                     {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
                   </p>
+                  {bev.description && (
+                    <p className="text-[10px] text-muted-foreground mt-2 line-clamp-2 italic">
+                      {bev.description}
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <span className="text-xl font-black text-primary block tracking-tighter">
@@ -118,7 +137,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
                     <p className="text-[10px] uppercase font-bold text-muted-foreground">Subtotal</p>
                     <p className="font-black text-white">{formatBRL(qty * Number(bev.price))}</p>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           );

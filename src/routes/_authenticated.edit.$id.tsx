@@ -151,6 +151,7 @@ function EditPage() {
     { id: "info", label: "Estabelecimento", icon: <FileText className="h-4 w-4" /> },
     { id: "appearance", label: "Personalização", icon: <Sparkles className="h-4 w-4" /> },
     { id: "menu", label: "Cardápio", icon: <Utensils className="h-4 w-4" /> },
+    { id: "beverages" as any, label: "Bebidas", icon: <ShoppingBag className="h-4 w-4" /> },
     { id: "combo", label: "Combos", icon: <Tag className="h-4 w-4" /> },
     { id: "delivery", label: "Entrega", icon: <MapPin className="h-4 w-4" /> },
     { id: "checkout", label: "Checkout", icon: <CheckCircle2 className="h-4 w-4" /> },
@@ -256,6 +257,23 @@ function EditPage() {
               </div>
             </div>
             <MenuManager restaurantId={restaurant.id} />
+          </div>
+        )}
+        {tab === ("beverages" as any) && (
+          <div className="space-y-6">
+            <div className="card-premium p-6 border-primary/20 bg-primary/5 flex items-start gap-4">
+              <ShoppingBag className="h-6 w-6 text-primary flex-shrink-0" />
+              <div>
+                <h4 className="font-black uppercase text-sm tracking-widest">Catálogo de Bebidas</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Gerencie o catálogo de bebidas do seu estabelecimento. Adicione itens manualmente ou importe via JSON para ganhar tempo.
+                </p>
+              </div>
+            </div>
+            <div className="card-premium p-8">
+              <import { BeverageManager } from "@/components/editor/BeverageManager"; />
+              <BeverageManager restaurantId={restaurant.id} />
+            </div>
           </div>
         )}
         {tab === "combo" && (
