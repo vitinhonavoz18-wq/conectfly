@@ -548,6 +548,63 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </Field>
       </div>
 
+      <div className="space-y-4">
+        <h3 className="text-lg font-black uppercase tracking-widest text-primary flex items-center gap-2">
+          <Zap className="h-5 w-5" /> Comportamento Inicial do Cardápio
+        </h3>
+        <div className="card-premium p-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <Field label="Modo de Entrada" hint="Como o cliente visualiza o cardápio ao entrar">
+              <select
+                value={r.site_settings?.entry_mode || "navigation"}
+                onChange={(e) => set("site_settings", { ...r.site_settings, entry_mode: e.target.value as any })}
+                className="input"
+              >
+                <option value="navigation">Navegação por botão (modelo antigo)</option>
+                <option value="direct">Exibir cardápio direto (novo padrão)</option>
+              </select>
+            </Field>
+            
+            <Field label="Visibilidade dos Combos" hint="Exibição da seção de combos especiais">
+              <select
+                value={r.site_settings?.combos_visibility || "auto"}
+                onChange={(e) => set("site_settings", { ...r.site_settings, combos_visibility: e.target.value as any })}
+                className="input"
+              >
+                <option value="auto">Automático (mostrar apenas se existir)</option>
+                <option value="always">Sempre mostrar</option>
+                <option value="hide">Ocultar</option>
+              </select>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={r.site_settings?.show_hero_button !== false}
+                onChange={(e) => set("site_settings", { ...r.site_settings, show_hero_button: e.target.checked })}
+                className="h-5 w-5 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-bold">Mostrar botão principal no Hero</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Habilita o botão de CTA inicial</span>
+              </div>
+            </label>
+
+            <Field label="Texto do botão principal" hint="Ex: Explorar Cardápio, Ver Sabores, Ver Delivery">
+              <input
+                value={r.site_settings?.hero_button_text ?? "Explorar Pizzas"}
+                onChange={(e) => set("site_settings", { ...r.site_settings, hero_button_text: e.target.value })}
+                placeholder="Explorar Cardápio"
+                className="input"
+                disabled={r.site_settings?.show_hero_button === false}
+              />
+            </Field>
+          </div>
+        </div>
+      </div>
+
            <div className="flex items-center gap-5 pt-6">
              <button
                onClick={save}

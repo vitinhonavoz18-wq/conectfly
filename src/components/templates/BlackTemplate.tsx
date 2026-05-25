@@ -25,6 +25,11 @@ export function BlackTemplate({ data }: { data: SiteData }) {
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
+  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+
   return (
     <>
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
@@ -38,6 +43,10 @@ export function BlackTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
+            buttonText={r.site_settings?.hero_button_text}
+            showButton={r.site_settings?.show_hero_button !== false}
+            hasCombos={hasCombos}
+            combosVisibility={combosVisibility}
           />
         </div>
         <div id="pizzas-container">
@@ -49,11 +58,17 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {showCombos && (
+          <div>
+            <SiteComboSection groups={data.comboGroups} />
+          </div>
+        )}
         <div>
-          <SiteComboSection groups={data.comboGroups} />
-        </div>
-        <div>
-          <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
+          <SiteMenuSection 
+            categories={nonPizzaCategories} 
+            restaurant={r} 
+            entryMode={entryMode}
+          />
         </div>
       </main>
       <SiteFooter

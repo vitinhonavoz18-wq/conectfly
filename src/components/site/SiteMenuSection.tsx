@@ -7,9 +7,10 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
+  entryMode?: "navigation" | "direct";
 }
  
-export function SiteMenuSection({ categories, restaurant }: Props) {
+export function SiteMenuSection({ categories, restaurant, entryMode = "navigation" }: Props) {
   const [active, setActive] = useState<string | null>(null);
   if (categories.length === 0) return null;
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
@@ -78,60 +79,86 @@ export function SiteMenuSection({ categories, restaurant }: Props) {
            </p>
          </div>
 
-        {!current ? (
+        {(!current && entryMode !== "direct") ? (
           <div className="space-y-12">
             {otherCategories.length > 0 && renderCategoryList(otherCategories)}
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-               <button
-                 onClick={() => setActive(null)}
-                 className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white/5 border border-white/10 hover:border-primary/50 transition-all"
-               >
-                 ← Voltar
-               </button>
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
-                {categories.map((c) => (
-                   <button
-                     key={c.id}
-                     onClick={() => setActive(c.id)}
-                     className={`px-6 py-2.5 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
-                       active === c.id
-                         ? "bg-gradient-bronze text-primary-foreground shadow-glow"
-                         : "bg-white/5 border border-white/10 hover:border-primary/30 text-muted-foreground"
-                     }`}
-                   >
-                    {c.icon ? `${c.icon} ` : ""}
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {current.image_url && (
-              <div className="relative h-40 sm:h-56 rounded-2xl overflow-hidden mb-6 border border-[hsl(var(--site-border))]">
-                <img
-                  src={current.image_url}
-                  alt={current.name}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                <h3 className="absolute bottom-4 left-4 text-3xl font-black text-white drop-shadow">
-                  {current.icon ? `${current.icon} ` : ""}
-                  {current.name}
-                </h3>
+            {(entryMode !== "direct") && (
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                 <button
+                   onClick={() => setActive(null)}
+                   className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white/5 border border-white/10 hover:border-primary/50 transition-all"
+                 >
+                   ← Voltar
+                 </button>
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
+                  {categories.map((c) => (
+                     <button
+                       key={c.id}
+                       onClick={() => setActive(c.id)}
+                       className={`px-6 py-2.5 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+                         active === c.id
+                           ? "bg-gradient-bronze text-primary-foreground shadow-glow"
+                           : "bg-white/5 border border-white/10 hover:border-primary/30 text-muted-foreground"
+                       }`}
+                     >
+                      {c.icon ? `${c.icon} ` : ""}
+                      {c.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
-            {current.is_pizza ? (
-              <SitePizzaBuilder category={current} restaurant={restaurant} />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
-                {current.items.map((it) => (
-                  <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+            {entryMode === "direct" ? (
+              <div className="space-y-16">
+                {otherCategories.map(cat => (
+                  <div key={cat.id} className="space-y-8">
+                    <div className="flex items-center gap-4">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
+                      <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+                        {cat.icon ? `${cat.icon} ` : ""}
+                        {cat.name}
+                      </h3>
+                      <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                      {cat.items.map((it) => (
+                        <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
+            ) : (
+              <>
+                {current && current.image_url && (
+                  <div className="relative h-40 sm:h-56 rounded-2xl overflow-hidden mb-6 border border-[hsl(var(--site-border))]">
+                    <img
+                      src={current.image_url}
+                      alt={current.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    <h3 className="absolute bottom-4 left-4 text-3xl font-black text-white drop-shadow">
+                      {current.icon ? `${current.icon} ` : ""}
+                      {current.name}
+                    </h3>
+                  </div>
+                )}
+
+                {current && current.is_pizza ? (
+                  <SitePizzaBuilder category={current} restaurant={restaurant} />
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                    {current?.items.map((it) => (
+                      <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

@@ -8,6 +8,10 @@ interface Props {
   heroImageUrl: string | null;
   heroMediaType?: string;
   heroVideoUrl?: string | null;
+  buttonText?: string;
+  showButton?: boolean;
+  hasCombos?: boolean;
+  combosVisibility?: "auto" | "always" | "hide";
 }
 
 export function SiteHero({
@@ -18,7 +22,13 @@ export function SiteHero({
   heroImageUrl,
   heroMediaType = "image",
   heroVideoUrl,
+  buttonText = "Explorar Pizzas",
+  showButton = true,
+  hasCombos = false,
+  combosVisibility = "auto",
 }: Props) {
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const showHeroButton = showButton;
   const showVideo = heroMediaType === "video" && heroVideoUrl;
 
   const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -86,22 +96,28 @@ export function SiteHero({
              {description}
            </p>
          )}
-          <div className="mt-12 flex gap-5 justify-center flex-wrap">
-            <a
-              href="#combos"
-              onClick={(e) => scrollTo(e, "combos")}
-              className="px-10 py-5 rounded-full bg-gradient-gold text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_rgba(217,164,65,0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
-            >
-              Combos Premium
-            </a>
-            <a
-              href="#pizzas"
-              onClick={(e) => scrollTo(e, "pizzas")}
-              className="px-10 py-5 rounded-full bg-gradient-red text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_rgba(229,9,20,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
-            >
-              Explorar Pizzas
-            </a>
-          </div>
+          {(showHeroButton || showCombos) && (
+            <div className="mt-12 flex gap-5 justify-center flex-wrap">
+              {showCombos && (
+                <a
+                  href="#combos"
+                  onClick={(e) => scrollTo(e, "combos")}
+                  className="px-10 py-5 rounded-full bg-gradient-gold text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_rgba(217,164,65,0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
+                >
+                  Combos Premium
+                </a>
+              )}
+              {showHeroButton && (
+                <a
+                  href="#pizzas"
+                  onClick={(e) => scrollTo(e, "pizzas")}
+                  className="px-10 py-5 rounded-full bg-gradient-red text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_rgba(229,9,20,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
+                >
+                  {buttonText}
+                </a>
+              )}
+            </div>
+          )}
         <div 
           onClick={() => {
             const element = document.getElementById("pizzas");
