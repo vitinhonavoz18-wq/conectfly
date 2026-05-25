@@ -440,6 +440,19 @@ export function InfoForm({ restaurant, onChange }: Props) {
                 No modo direto, todos os produtos aparecem um abaixo do outro.
               </p>
             </div>
+
+            <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+              <input
+                type="checkbox"
+                checked={r.site_settings?.show_cart_button !== false}
+                onChange={(e) => set("site_settings", { ...r.site_settings, show_cart_button: e.target.checked })}
+                className="h-5 w-5 accent-primary"
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-bold">Exibir botão "Ir pra sacola" (Meu Pedido)</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Mostra ou oculta o acesso ao carrinho no site público</span>
+              </div>
+            </label>
           </div>
         </Field>
         <Field label="Texto do botão principal" hint='Ex: "Explorar Sabores"'>

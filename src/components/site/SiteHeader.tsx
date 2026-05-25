@@ -6,9 +6,11 @@ interface Props {
   name: string;
   logoUrl: string | null;
   onOpenCart: () => void;
+  showCartButton?: boolean;
 }
 
-export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
+
+export function SiteHeader({ name, logoUrl, onOpenCart, showCartButton = true }: Props) {
   const { totalItems } = useCart();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -42,18 +44,20 @@ export function SiteHeader({ name, logoUrl, onOpenCart }: Props) {
             )}
            <span className="font-extrabold tracking-tighter text-2xl sm:text-3xl text-white group-hover:text-amber-200 transition-colors">{name}</span>
          </div>
-         <button
-           onClick={onOpenCart}
-           className="relative group inline-flex items-center gap-3 px-6 sm:px-8 py-3 rounded-full bg-gradient-gold text-white font-extrabold hover:scale-105 transition-all shadow-[0_8px_25px_rgba(217,164,65,0.35)] active:scale-95 uppercase text-xs tracking-widest border border-white/20"
-         >
-           <ShoppingBag className="h-5 w-5 group-hover:animate-bounce" />
-           <span className="hidden sm:inline">Meu Pedido</span>
-           {totalItems > 0 && (
-             <span className="absolute -top-2 -right-2 min-w-7 h-7 px-1 rounded-full bg-white text-red-600 text-xs font-black flex items-center justify-center shadow-xl border-2 border-amber-400 animate-in zoom-in duration-300">
-               {totalItems}
-             </span>
-           )}
-         </button>
+         {showCartButton && (
+           <button
+             onClick={onOpenCart}
+             className="relative group inline-flex items-center gap-3 px-6 sm:px-8 py-3 rounded-full bg-gradient-gold text-white font-extrabold hover:scale-105 transition-all shadow-[0_8px_25px_rgba(217,164,65,0.35)] active:scale-95 uppercase text-xs tracking-widest border border-white/20"
+           >
+             <ShoppingBag className="h-5 w-5 group-hover:animate-bounce" />
+             <span className="hidden sm:inline">Meu Pedido</span>
+             {totalItems > 0 && (
+               <span className="absolute -top-2 -right-2 min-w-7 h-7 px-1 rounded-full bg-white text-red-600 text-xs font-black flex items-center justify-center shadow-xl border-2 border-amber-400 animate-in zoom-in duration-300">
+                 {totalItems}
+               </span>
+             )}
+           </button>
+         )}
       </div>
     </header>
   );

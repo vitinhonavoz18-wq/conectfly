@@ -79,7 +79,12 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
           color: white !important;
         }
       `}} />
-      <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
+      <SiteHeader 
+        name={r.name} 
+        logoUrl={r.logo_url} 
+        onOpenCart={() => setCartOpen(true)} 
+        showCartButton={r.site_settings?.show_cart_button !== false}
+      />
       <main>
         <div className="site-hero-section">
           <SiteHero

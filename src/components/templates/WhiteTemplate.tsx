@@ -89,7 +89,12 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           border-color: hsl(var(--site-border)) !important;
         }
       `}} />
-      <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
+      <SiteHeader 
+        name={r.name} 
+        logoUrl={r.logo_url} 
+        onOpenCart={() => setCartOpen(true)} 
+        showCartButton={r.site_settings?.show_cart_button !== false}
+      />
       <main>
         <div className="site-hero-section">
           <SiteHero

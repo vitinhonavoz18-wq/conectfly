@@ -169,7 +169,12 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           text-align: center;
         }
       `}} />
-      <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
+      <SiteHeader 
+        name={r.name} 
+        logoUrl={r.logo_url} 
+        onOpenCart={() => setCartOpen(true)} 
+        showCartButton={r.site_settings?.show_cart_button !== false}
+      />
       <main>
         <div className="site-hero-section">
           <SiteHero
