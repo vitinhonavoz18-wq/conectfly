@@ -26,18 +26,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     <button
       onClick={() => toggleFlavor(it.id)}
       disabled={!size || disabled}
-      className={`relative text-left rounded-2xl border p-4 transition-all duration-500 flex items-start gap-4 overflow-hidden group ${
+      className={`relative text-left rounded-3xl border p-5 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
         checked
-          ? isSpecialSection 
-            ? "border-red-500 bg-gradient-to-br from-red-600/20 to-transparent shadow-[0_0_25px_rgba(220,38,38,0.2)]"
-            : "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.15)] to-transparent"
-          : isSpecialSection
-            ? "border-red-900/30 bg-red-950/10 hover:border-red-500/50 hover:bg-red-900/10"
-            : "border-white/5 bg-white/5 hover:border-white/20"
-      } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.01] hover:shadow-xl"}`}
+          ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+          : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
+      } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.02]"}`}
     >
       {(restaurant?.show_item_images ?? true) && it.image_url && (
-        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-lg border border-[hsl(var(--site-border))] bg-black/20">
+        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-2xl border border-[#EFE7E2] bg-[#FDF8F5]">
           <img
             src={it.image_url}
             alt={it.name}
@@ -52,39 +48,30 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         </div>
       )}
       <div
-        className={`mt-0.5 h-5 w-5 shrink-0 rounded border flex items-center justify-center transition-colors duration-300 ${
+        className={`mt-1 h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
           checked
-            ? isSpecialSection ? "bg-red-600 border-red-600 text-white" : "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white"
-            : isSpecialSection ? "border-red-800" : "border-[hsl(var(--site-border))]"
+            ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white shadow-[0_4px_12px_rgba(229,9,20,0.3)] scale-110"
+            : "border-[#EFE7E2] bg-white group-hover:border-[hsl(var(--site-primary)/0.5)]"
         }`}
       >
-        {checked && <Check className="h-3 w-3" />}
+        {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-semibold leading-tight">{it.name}</p>
+          <p className="font-bold text-base leading-tight text-[#111]">{it.name}</p>
           {it.is_special && (
-            <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded-full font-bold border ${
-              isSpecialSection 
-                ? "bg-red-600/30 text-red-200 border-red-500/40" 
-                : "bg-amber-500/20 text-amber-300 border-amber-500/40"
-            }`}>
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[#E50914] text-white shadow-sm">
               <Sparkles className="h-3 w-3" /> Especial
               {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
             </span>
           )}
         </div>
         {it.description && (
-          <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+          <p className="text-sm text-[#555] mt-1.5 leading-relaxed">
             {it.description}
           </p>
         )}
       </div>
-      {isSpecialSection && !checked && !disabled && (
-        <div className="absolute -right-1 -bottom-1 opacity-10 group-hover:opacity-30 transition-opacity">
-          <Flame className="h-12 w-12 text-red-600" />
-        </div>
-      )}
     </button>
   );
 }
