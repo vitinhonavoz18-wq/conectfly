@@ -425,6 +425,21 @@ export function InfoForm({ restaurant, onChange }: Props) {
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Exibe "Curadoria Gastronômica / Nossa Cozinha"</span>
               </div>
             </label>
+
+            <div className="space-y-2 mt-4 p-3 rounded-xl bg-white/5 border border-white/10">
+              <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">Modo de Navegação do Cardápio</label>
+              <select
+                value={r.site_settings?.entry_mode ?? "navigation"}
+                onChange={(e) => set("site_settings", { ...r.site_settings, entry_mode: e.target.value as any })}
+                className="input bg-black/20 border-white/5 text-sm"
+              >
+                <option value="navigation">Navegação por Categorias (Clique para abrir)</option>
+                <option value="direct">Exibição Direta (Scroll infinito)</option>
+              </select>
+              <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tight">
+                No modo direto, todos os produtos aparecem um abaixo do outro.
+              </p>
+            </div>
           </div>
         </Field>
         <Field label="Texto do botão principal" hint='Ex: "Explorar Sabores"'>

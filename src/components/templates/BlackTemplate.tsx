@@ -32,6 +32,19 @@ export function BlackTemplate({ data }: { data: SiteData }) {
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
 
+  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
+  const beveragesPosition = r.site_settings?.beverages_position || "end";
+
+  const renderBeverages = () => (
+    (beveragesVisible && data.beverages && data.beverages.length > 0) && (
+      <div className="py-12 px-4 border-t border-white/5">
+        <div className="max-w-6xl mx-auto">
+          <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+        </div>
+      </div>
+    )
+  );
+
   return (
     <>
       <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
@@ -51,6 +64,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
             combosVisibility={combosVisibility}
           />
         </div>
+        
         <div id="pizzas-container">
           <SitePizzaSection 
             categories={data.categories} 
@@ -60,11 +74,16 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {beveragesPosition === "after_products" && renderBeverages()}
+
         {showCombos && (
           <div>
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
+
+        {beveragesPosition === "after_combos" && renderBeverages()}
+
         <div>
           <SiteMenuSection 
             categories={nonPizzaCategories} 
@@ -72,6 +91,8 @@ export function BlackTemplate({ data }: { data: SiteData }) {
             entryMode={entryMode}
           />
         </div>
+
+        {beveragesPosition === "end" && renderBeverages()}
       </main>
       <SiteFooter
         name={r.name}

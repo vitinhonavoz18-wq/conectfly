@@ -41,6 +41,19 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
 
+  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
+  const beveragesPosition = r.site_settings?.beverages_position || "end";
+
+  const renderBeverages = () => (
+    (beveragesVisible && data.beverages && data.beverages.length > 0) && (
+      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
+        <div className="max-w-6xl mx-auto">
+          <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+        </div>
+      </div>
+    )
+  );
+
   return (
     <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -102,11 +115,16 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {beveragesPosition === "after_products" && renderBeverages()}
+
         {showCombos && (
           <div>
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
+
+        {beveragesPosition === "after_combos" && renderBeverages()}
+
         <div>
           <SiteMenuSection 
             categories={nonPizzaCategories} 
@@ -114,6 +132,8 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             entryMode={entryMode}
           />
         </div>
+
+        {beveragesPosition === "end" && renderBeverages()}
       </main>
       <SiteFooter
         name={r.name}

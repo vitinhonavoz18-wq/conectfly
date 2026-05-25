@@ -195,9 +195,25 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
+        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_products" && (
+          <div className="bg-slate-50 py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
+          </div>
+        )}
+
         {showCombos && (
           <div className="bg-slate-50 py-12">
             <SiteComboSection groups={data.comboGroups} />
+          </div>
+        )}
+
+        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_combos" && (
+          <div className="bg-white py-12 px-4">
+            <div className="max-w-6xl mx-auto">
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+            </div>
           </div>
         )}
         
@@ -209,10 +225,10 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {(data.beverages && data.beverages.length > 0) && (
+        {r.site_settings?.beverages_visibility !== false && (r.site_settings?.beverages_position === "end" || !r.site_settings?.beverages_position) && (
           <div className="bg-slate-50 py-12 px-4">
             <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
             </div>
           </div>
         )}
