@@ -26,7 +26,6 @@ export function InfoForm({ restaurant, onChange }: Props) {
           .rpc("get_restaurant_flycontrol_key", { p_restaurant_id: r.id })
           .then(({ data }) => {
             if (data) {
-              setSecureApiKey(data);
               set("flycontrol_api_key", data);
             }
           });
