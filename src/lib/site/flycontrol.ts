@@ -180,12 +180,13 @@ export async function testFlycontrolConnection(
 
   try {
     console.log("🧪 Testando conexão com FlyControl via Proxy Seguro");
-    console.log("Restaurant ID:", restaurantId);
+    const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
 
     const response = await fetch("/api/public/submit-order", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {}),
       },
       body: JSON.stringify({ 
         restaurant_id: restaurantId, 

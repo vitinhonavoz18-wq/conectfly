@@ -10,14 +10,22 @@ const ALLOWED_ORIGINS = [
 function getCorsHeaders(origin: string | null) {
   let allowOrigin = ALLOWED_ORIGINS[0];
   
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+  // Permite origens oficiais ou qualquer preview do Lovable para facilitar desenvolvimento
+  const isLovablePreview = origin && (
+    origin.endsWith(".lovable.app") || 
+    origin.includes("lovable.dev") ||
+    ALLOWED_ORIGINS.includes(origin)
+  );
+
+  if (origin && isLovablePreview) {
     allowOrigin = origin;
   }
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers": "content-type, x-idempotency-key, authorization, x-api-key",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
@@ -176,6 +184,20 @@ export const Route = createFileRoute("/api/public/submit-order")({
           }
 
           const isTest = body.test === true;
+          
+          if (isTest) {
+            // Se for teste, exige autenticação de admin para evitar abuso
+            const authHeader = request.headers.get("Authorization");
+            if (!authHeader) {
+              return new Response(JSON.stringify({ success: false, error: "Autenticação necessária para testes" }), { status: 401, headers });
+            }
+            const token = authHeader.replace("Bearer ", "");
+            const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
+            if (authErr || !user || user.id !== 'fb13f4ba-a3fe-45c4-917c-1ae6d09377a3') {
+              return new Response(JSON.stringify({ success: false, error: "Acesso negado" }), { status: 403, headers });
+            }
+          }
+
           const payload = body.payload || {
             event: "order.created",
             source: "sitecreatorfly-test",
@@ -216,6 +238,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           for (let attempt = 0; attempt <= maxRetries; attempt++) {
             try {
+              console.log(`[SUBMIT-ORDER] Tentativa ${attempt + 1} para: ${url}`);
               const res = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -223,21 +246,32 @@ export const Route = createFileRoute("/api/public/submit-order")({
                   "x-api-key": key,
                   "Authorization": `Bearer ${key}`,
                   "x-idempotency-key": idempotencyKey,
+                  "User-Agent": "SiteCreatorFly-Proxy/1.0",
                 },
                 body: JSON.stringify(payload),
               });
+              
               const txt = await res.text().catch(() => "");
-              try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
               lastStatus = res.status;
+              
+              try { 
+                finalData = JSON.parse(txt); 
+              } catch { 
+                finalData = { text: txt }; 
+              }
 
-              if (res.ok && finalData.status !== "error" && finalData.success !== false) {
+              if (res.ok && finalData?.status !== "error" && finalData?.success !== false) {
                 isSuccess = true;
                 break;
               }
-              lastErr = !res.ok ? `Erro ${res.status}` : (finalData.message || "Pedido rejeitado");
+              
+              lastErr = !res.ok ? `HTTP ${res.status}: ${txt.slice(0, 100)}` : (finalData?.message || finalData?.error || "Pedido rejeitado");
+              console.warn(`[SUBMIT-ORDER] Tentativa ${attempt + 1} falhou: ${lastErr}`);
+              
               if (res.status >= 400 && res.status < 500) break;
             } catch (e: any) {
-              lastErr = "Erro de conexão";
+              lastErr = `Erro de conexão: ${e.message}`;
+              console.error(`[SUBMIT-ORDER] Erro na tentativa ${attempt + 1}:`, e);
             }
             if (attempt < maxRetries) await new Promise((res_wait) => setTimeout(res_wait, 1000 * Math.pow(2, attempt)));
           }
@@ -255,7 +289,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
           return new Response(
             JSON.stringify({ 
               success: isSuccess, 
-              error: isSuccess ? null : "Falha ao processar o pedido. Tente novamente ou use o WhatsApp.",
+              error: isSuccess ? null : `Falha ao conectar com o FlyControl (${lastStatus}). Tente novamente ou use o WhatsApp.`,
               status: lastStatus,
               response: isSuccess ? { success: true } : null
             }), 
