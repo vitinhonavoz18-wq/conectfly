@@ -46,6 +46,7 @@ function Dashboard() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [template, setTemplate] = useState<"black" | "white" | "pizza_hut_style" | "burger_style">("black");
 
   const reload = () => {
     listRestaurants().then(setList).catch((e) => setError(String(e)));
