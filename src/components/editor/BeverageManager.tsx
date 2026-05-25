@@ -13,6 +13,7 @@ export function BeverageManager({ restaurantId }: Props) {
   const [beverages, setBeverages] = useState<BeverageRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [showImport, setShowImport] = useState(false);
+  const [restaurant, setRestaurant] = useState<RestaurantRow | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -27,6 +28,9 @@ export function BeverageManager({ restaurantId }: Props) {
         console.error("Error loading beverages:", error);
       } else {
         setBeverages((data ?? []) as unknown as BeverageRow[]);
+        // Also fetch restaurant for settings
+        const { data: rest } = await supabase.from("restaurants").select("*").eq("id", restaurantId).single();
+        if (rest) setRestaurant(rest as any);
       }
     } catch (err) {
       console.error("Caught error loading beverages:", err);
@@ -286,6 +290,7 @@ export function BeverageManager({ restaurantId }: Props) {
 
 function BeverageItemRow({
   beverage,
+  restaurantId,
   onUpdate,
   onRemove,
 }: {
