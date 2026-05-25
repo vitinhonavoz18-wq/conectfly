@@ -446,35 +446,35 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         {beverages && beverages.length > 0 && (
           <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
             <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-lg font-bold">4. Escolha as bebidas (opcional)</h4>
+              <h4 className="text-xl font-extrabold text-[#111]">4. Escolha as bebidas (opcional)</h4>
               {scrollMessage && scrollMessage.includes("bebida") && (
-                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-bounce">
                   {scrollMessage}
                 </span>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {beverages.map((bev) => {
                 const qty = selectedBeverages[bev.id] || 0;
                 return (
                   <div
                     key={bev.id}
-                    className={`relative rounded-2xl border p-4 flex items-center justify-between transition-all duration-300 ${
+                    className={`relative rounded-3xl border p-5 flex items-center justify-between transition-all duration-300 ${
                       qty > 0
-                        ? "border-[hsl(var(--site-primary))] bg-gradient-to-br from-[hsl(var(--site-primary)/0.1)] to-transparent"
-                        : "border-white/5 bg-white/5 hover:border-white/20"
+                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
+                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-bold leading-tight truncate">{bev.name}</p>
-                      <p className="text-[11px] text-[hsl(var(--site-muted-fg))]">
+                      <p className="font-extrabold text-[#111] leading-tight truncate">{bev.name}</p>
+                      <p className="text-xs text-[#555] font-medium">
                         {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
                       </p>
-                      <p className="text-[hsl(var(--site-secondary))] font-bold mt-0.5">
+                      <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
                         {formatBRL(bev.price)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-black/40 p-1 rounded-xl border border-white/10">
+                    <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-[#EFE7E2] shadow-sm">
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -483,11 +483,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                           }));
                         }}
                         disabled={qty === 0}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/5 hover:bg-white/10 text-white disabled:opacity-20 transition-all active:scale-90"
+                        className="stepper-btn stepper-btn-minus disabled:opacity-30"
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-4 w-4" />
                       </button>
-                      <span className="w-6 text-center font-bold text-sm">{qty}</span>
+                      <span className="stepper-count">{qty}</span>
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -495,9 +495,9 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                             [bev.id]: (cur[bev.id] || 0) + 1,
                           }));
                         }}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-[hsl(var(--site-primary))] text-white hover:opacity-80 transition-all active:scale-90"
+                        className="stepper-btn stepper-btn-plus hover:scale-110"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
@@ -511,92 +511,95 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         <div 
           id={`summary-${category.id}`}
           ref={summaryRef}
-         className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-md p-8 shadow-2xl relative overflow-hidden"
+         className="rounded-[2.5rem] border border-[#EFE7E2] bg-white p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative overflow-hidden"
        >
          {scrollMessage && scrollMessage.includes("pronto") && (
            <div className="absolute top-4 right-8 z-10">
-             <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-pulse">
+             <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-pulse">
                {scrollMessage}
              </span>
            </div>
          )}
-         <div className="absolute top-0 right-0 p-8 opacity-5">
-           <Sparkles className="h-24 w-24 text-primary" />
+         <div className="absolute top-0 right-0 p-10 opacity-5">
+           <ShoppingBag className="h-32 w-32 text-[hsl(var(--site-primary))]" />
          </div>
-         <h4 className="text-2xl font-black mb-4 tracking-tight">Resumo da sua Pizza</h4>
+         <h4 className="text-2xl font-black mb-6 tracking-tight text-[#111]">Resumo da sua Pizza</h4>
         {size ? (
-          <ul className="text-sm text-[hsl(var(--site-muted-fg))] space-y-1">
-            <li>
-              <strong className="text-[hsl(var(--site-fg,var(--site-muted-fg)))]">Tamanho:</strong>{" "}
-              {size.label} — {formatBRL(size.price)}
-            </li>
-            <li>
-              <strong className="text-[hsl(var(--site-fg,var(--site-muted-fg)))]">Sabores:</strong>{" "}
-              {selectedFlavors.length === 0
-                ? "nenhum selecionado"
-                : selectedFlavors
-                    .map((id) => flavorMap.get(id)?.name)
-                    .filter(Boolean)
-                    .join(" + ")}
-            </li>
-             {specialExtras > 0 && (
-               <li>
-                 <strong className="text-amber-300">Adicional especial:</strong>{" "}
-                 +{formatBRL(specialExtras)}
-                 {specialNames.length > 0 && (
-                   <span className="text-xs"> ({specialNames.join(", ")})</span>
-                 )}
-               </li>
-             )}
-              {selectedBorder && (
-                <li>
-                  <strong className="text-amber-300">Borda recheada:</strong>{" "}
-                  {selectedBorder.name} (+{formatBRL(selectedBorder.price)})
-                </li>
-              )}
-              {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
-                <li className="pt-2 mt-2 border-t border-white/5">
-                  <strong className="text-emerald-400">Bebidas:</strong>
-                  <ul className="pl-4 space-y-0.5 mt-1">
-                    {Object.entries(selectedBeverages).map(([id, qty]) => {
-                      if (qty === 0) return null;
-                      const bev = beverages?.find(b => b.id === id);
-                      if (!bev) return null;
-                      return (
-                        <li key={id} className="text-xs">
-                          {qty}x {bev.name} — {formatBRL(Number(bev.price) * qty)}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </li>
-              )}
-          </ul>
+          <div className="space-y-4">
+            <ul className="text-base text-[#555] space-y-2">
+              <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2">
+                <span className="font-medium">Tamanho: <strong className="text-[#111] font-extrabold">{size.label}</strong></span>
+                <span className="font-extrabold text-[#111]">{formatBRL(size.price)}</span>
+              </li>
+              <li className="flex flex-col border-b border-[#F3F4F6] pb-2">
+                <span className="font-medium">Sabores:</span>
+                <span className="text-[#111] font-extrabold leading-relaxed">
+                  {selectedFlavors.length === 0
+                    ? "Nenhum selecionado"
+                    : selectedFlavors
+                        .map((id) => flavorMap.get(id)?.name)
+                        .filter(Boolean)
+                        .join(" + ")}
+                </span>
+              </li>
+               {specialExtras > 0 && (
+                 <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-primary))]">
+                   <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
+                   <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
+                 </li>
+               )}
+                {selectedBorder && (
+                  <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-secondary))]">
+                    <span className="font-medium">Borda recheada: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
+                    <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
+                  </li>
+                )}
+                {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
+                  <div className="pt-2">
+                    <span className="font-medium text-[#111] block mb-2">Bebidas adicionais:</span>
+                    <ul className="space-y-1">
+                      {Object.entries(selectedBeverages).map(([id, qty]) => {
+                        if (qty === 0) return null;
+                        const bev = beverages?.find(b => b.id === id);
+                        if (!bev) return null;
+                        return (
+                          <li key={id} className="flex justify-between text-sm italic">
+                            <span>{qty}x {bev.name}</span>
+                            <span className="font-bold">{formatBRL(Number(bev.price) * qty)}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                )}
+            </ul>
+          </div>
         ) : (
-          <p className="text-sm text-[hsl(var(--site-muted-fg))]">Selecione um tamanho.</p>
+          <p className="text-base text-[#555] font-medium">Selecione um tamanho para ver o resumo.</p>
         )}
-        <div className="flex items-center justify-between gap-3 mt-4 flex-wrap">
+        
+        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[#F3F4F6] flex-wrap">
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wide text-[hsl(var(--site-muted-fg))]">
-              Total
+            <span className="text-xs uppercase tracking-widest text-[#555] font-bold mb-1">
+              Total do Pedido
             </span>
-            <span className="text-2xl font-black text-[hsl(var(--site-secondary))]">
+            <span className="text-4xl font-black text-[hsl(var(--site-secondary))]">
               {size ? formatBRL(finalPrice) : "—"}
             </span>
           </div>
             <button
               onClick={(e) => handleAddToCart(false, e)}
               disabled={!canAdd}
-              className="btn-premium px-10 py-5 rounded-2xl text-lg flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-2xl"
+              className="btn-premium-red px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-[0_15px_40px_rgba(229,9,20,0.3)] active:scale-95 transition-all group"
             >
-              <Plus className="h-6 w-6 text-primary-foreground" /> 
+              <Plus className="h-7 w-7 text-white group-hover:rotate-90 transition-transform" /> 
               <span>Adicionar ao Pedido</span>
             </button>
         </div>
         {confirm && (
-          <p className="mt-3 text-sm text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-2 text-center">
+          <div className="mt-6 text-base font-bold text-[#22C55E] bg-[#F0FDF4] border-2 border-[#22C55E]/20 rounded-2xl p-4 text-center animate-in zoom-in duration-300">
             ✓ {confirm}
-          </p>
+          </div>
         )}
       </div>
 
