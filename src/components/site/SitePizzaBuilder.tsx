@@ -351,11 +351,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                           <Flame className="h-6 w-6 text-white" />
                         </span>
                         <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
-                          Sabores Especiais
+                          Destaques Especiais
                         </h3>
                       </div>
                       <p className="text-white/90 font-medium max-w-lg text-lg">
-                        Experimente nossas combinações premium e ingredientes exclusivos da casa.
+                        Experimente nossas opções premium e itens exclusivos da casa.
                       </p>
                     </div>
                     <span className="px-6 py-3 rounded-2xl bg-white text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
@@ -384,12 +384,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         )}
       </div>
 
-        {/* Step 3 — Bordas Recheadas */}
+        {/* Step 3 — Adicionais */}
         {bordasCategory && bordasCategory.items.length > 0 && (
           <div className="space-y-4" ref={bordasRef}>
             <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-lg font-bold">3. Escolha a borda recheada (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("borda") && (
+              <h4 className="text-lg font-bold">3. Escolha um adicional (opcional)</h4>
+              {scrollMessage && scrollMessage.includes("escolha") && (
                 <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
                   {scrollMessage}
                 </span>
@@ -447,7 +447,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
           <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
             <div className="flex items-baseline justify-between mb-3">
               <h4 className="text-xl font-extrabold text-[#111]">4. Escolha as bebidas (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("bebida") && (
+              {scrollMessage && scrollMessage.includes("acompanhar") && (
                 <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-bounce">
                   {scrollMessage}
                 </span>
