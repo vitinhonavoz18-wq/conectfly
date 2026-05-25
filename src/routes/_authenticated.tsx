@@ -1,55 +1,39 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { getSubdomain, BASE_DOMAIN } from "@/lib/utils/hostname";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
-    // No servidor, window é undefined. No TanStack Start, podemos tentar detectar pelo host
-    // mas para simplificar e seguir a solicitação do usuário, focamos na lógica de não redirecionar.
-    
+    // No servidor, window é undefined.
     if (typeof window === "undefined") {
-      // No SSR, evitamos redirecionar se não tivermos certeza, 
-      // deixando para o cliente decidir após a hidratação.
       return;
     }
     
-    const hostname = window.location.hostname;
-    const pathname = window.location.pathname;
-    
-    console.log("--- AUTH CHECK ---");
-    console.log("HOSTNAME:", hostname);
-    console.log("PATHNAME:", pathname);
-    
-    // Se o path não for "/" e não for rotas de admin conhecidas (se houvesse outras além de /admin/...)
-    // O router já cuida de casar /$slug, mas como _authenticated.index.tsx casa com "/",
-    // só precisamos garantir que "/" exija login.
+    console.log("[AuthGuard] Verificando sessão para:", location.pathname);
     
     // Todas as rotas sob _authenticated exigem login administrativo
-    const { data } = await supabase.auth.getSession();
+    // Usamos getUser() para garantir uma validação real contra o servidor (evita bypass por localStorage antigo)
+    const { data: { user }, error } = await supabase.auth.getUser();
     
-    if (!data.session) {
-      console.log("SEM SESSÃO - REDIRECIONANDO PARA LOGIN");
+    if (error || !user) {
+      console.log("[AuthGuard] Sessão inválida ou ausente. Redirecionando para /login");
+      // Limpa qualquer resquício de sessão local
+      await supabase.auth.signOut();
+      
       throw redirect({
         to: "/login",
         search: { redirect: location.href },
       });
     }
 
-    // Opcional: Validar se o usuário logado é de fato o admin único
-    if (data.session.user.email !== 'vitinhonavoz18@gmail.com') {
-      console.log("USUÁRIO NÃO AUTORIZADO - LOGOUT");
+    // Validar se o usuário logado é de fato o admin único
+    if (user.email !== 'vitinhonavoz18@gmail.com') {
+      console.log("[AuthGuard] Usuário não autorizado (" + user.email + "). Fazendo logout.");
       await supabase.auth.signOut();
       throw redirect({ to: "/login" });
     }
 
-    console.log("SESSÃO ATIVA PARA ADMIN");
+    console.log("[AuthGuard] Sessão administrativa confirmada para:", user.email);
     return;
-
-    // Para outros caminhos, o TanStack Router deve decidir se cai em /$slug (público)
-    // ou em outras rotas autenticadas.
-    // Como estamos dentro do layout _authenticated, se o path não for "/", 
-    // e o componente que casou for descendente de _authenticated, ele passaria por aqui.
-    // Mas as rotas /edit/$id etc estão sob _authenticated.
   },
   component: () => <Outlet />,
 });

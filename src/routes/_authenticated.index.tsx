@@ -64,7 +64,17 @@ function Dashboard() {
   };
 
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      console.log("[Dashboard] Auth state change:", event);
+      if (event === "SIGNED_OUT") {
+        router.navigate({ to: "/login" });
+      }
+    });
+
+    console.log("[Dashboard] Iniciando carregamento de pizzarias...");
     reload();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleCreate = async () => {

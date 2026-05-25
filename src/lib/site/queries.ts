@@ -170,9 +170,10 @@ const debugLog = (...args: any[]) => {
 export async function listRestaurants(): Promise<RestaurantRow[]> {
   console.log("[listRestaurants] Iniciando carregamento de pizzarias...");
   
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    console.warn("[listRestaurants] Token admin ausente (sem sessão)");
+  // Usamos getUser() para garantir que a sessão é válida antes de tentar chamar o backend
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    console.warn("[listRestaurants] Usuário ausente ou sessão expirada");
     return [];
   }
   

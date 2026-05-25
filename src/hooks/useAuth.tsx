@@ -41,16 +41,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     user: session?.user ?? null,
     loading,
-   signOut: async () => {
-     try {
-       toast.info("Saindo...");
-       await supabase.auth.signOut();
-     } catch (e) {
-       console.error("SignOut error", e);
-     } finally {
-       window.location.href = "/login";
-     }
-   },
+    signOut: async () => {
+      try {
+        console.log("[Auth] Encerrando sessão administrativa...");
+        toast.info("Saindo...");
+        
+        // Limpa o Supabase
+        await supabase.auth.signOut();
+        
+        // Limpa qualquer outro resquício local se houver
+        localStorage.clear();
+        sessionStorage.clear();
+        
+      } catch (e) {
+        console.error("SignOut error", e);
+      } finally {
+        // Força recarregamento total para garantir que nenhum estado permaneça em memória
+        window.location.href = "/login";
+      }
+    },
   };
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
