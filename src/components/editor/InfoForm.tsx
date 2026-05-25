@@ -720,20 +720,25 @@ export function InfoForm({ restaurant, onChange }: Props) {
                         </div>
                       )}
                       {testDebug && (
-                        <div className="p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-[10px] space-y-2 overflow-auto max-h-60">
+                        <div className={`p-4 rounded-xl border font-mono text-[10px] space-y-2 overflow-auto max-h-60 ${
+                          testDebug.success ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"
+                        }`}>
                           <div className="flex justify-between border-b border-white/5 pb-1 mb-1">
-                            <span className="text-muted-foreground">DEBUG INFO</span>
-                            <span className={testDebug.success ? "text-green-500" : "text-red-500"}>
+                            <span className="font-bold uppercase">{testDebug.success ? "✅ Recebimento Confirmado" : "❌ Falha na Integração"}</span>
+                            <span className={testDebug.success ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
                               {testDebug.status || "ERROR"}
                             </span>
                           </div>
                           <p><span className="text-muted-foreground">ENDPOINT:</span> {testDebug.url}</p>
                           <p><span className="text-muted-foreground">SLUG:</span> {testDebug.slugUsed}</p>
-                          <p><span className="text-muted-foreground">API KEY:</span> {testDebug.apiKeyExists ? "Presente (OK)" : "Ausente"}</p>
-                          {testDebug.error && <p className="text-red-400"><span className="text-muted-foreground">ERROR:</span> {testDebug.error}</p>}
-                          {testDebug.data && (
+                          {testDebug.details?.remote_status && (
+                            <p><span className="text-muted-foreground">FLYCONTROL STATUS:</span> {testDebug.details.remote_status}</p>
+                          )}
+                          {testDebug.error && <p className="text-red-400 font-semibold"><span className="text-muted-foreground">MOTIVO:</span> {testDebug.error}</p>}
+                          {testDebug.success && <p className="text-green-400 mt-1">O FlyControl confirmou o recebimento do pedido de teste com sucesso!</p>}
+                          {testDebug.data && !testDebug.success && (
                             <div className="mt-2">
-                              <span className="text-muted-foreground">RESPONSE:</span>
+                              <span className="text-muted-foreground">RESPOSTA DO SERVIDOR:</span>
                               <pre className="mt-1 opacity-80 whitespace-pre-wrap">{JSON.stringify(testDebug.data, null, 2)}</pre>
                             </div>
                           )}
