@@ -31,7 +31,7 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
           <span className="inline-block text-xs uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] font-bold mb-2">
-            🍕 Monte sua pizza
+            ✨ Monte seu pedido
           </span>
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
             Escolha o tamanho e os sabores
