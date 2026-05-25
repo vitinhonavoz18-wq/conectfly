@@ -26,7 +26,7 @@ export function buildOrderMessage(order: OrderData, version: "compact" | "comple
   const sections: string[] = [];
 
   // Header
-  sections.push(`${SEPARATOR}\n🍕 NOVO PEDIDO\n${SEPARATOR}`);
+  sections.push(`${SEPARATOR}\n🛒 NOVO PEDIDO\n${SEPARATOR}`);
 
   // Customer info
   sections.push(`👤 CLIENTE:\n${customer.name || "Não informado"}`);
@@ -47,10 +47,10 @@ export function buildOrderMessage(order: OrderData, version: "compact" | "comple
        const sizeLabel = item.sizeLabel ? ` (${item.sizeLabel})` : "";
        let line = `${item.quantity}x ${item.name}${sizeLabel}\n💰 ${formatBRL(item.unitPrice * item.quantity)}`;
        
-       if (item.flavors && item.flavors.length > 0) {
-         const flavorTitle = item.flavors.length > 1 ? "🍕 Meio a Meio:" : "🍕 Sabor:";
-         line += `\n${flavorTitle}\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
-       }
+        if (item.flavors && item.flavors.length > 0) {
+          const flavorTitle = item.flavors.length > 1 ? "✨ Sabores:" : "✨ Sabor:";
+          line += `\n${flavorTitle}\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
+        }
        
        if (item.description) {
          if (isCombo || item.description.includes(",") || item.description.includes("\n")) {
