@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from "react";
-import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
