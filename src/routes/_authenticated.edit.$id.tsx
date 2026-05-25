@@ -75,7 +75,11 @@ function EditPage() {
 
   useEffect(() => {
     if (tab !== "preview" || !restaurant) return;
-    fetchSiteByRestaurant(restaurant).then(setPreview);
+    console.log(`[Edit] Atualizando preview via backend seguro...`);
+    adminFetchSiteData(restaurant.id).then(setPreview).catch(err => {
+      console.error("[Edit] Erro ao carregar preview:", err);
+      toast.error("Falha ao gerar preview do site.");
+    });
   }, [tab, restaurant, previewBust]);
 
   const handleFinalize = async () => {
