@@ -53,10 +53,10 @@ serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
     if (method === 'GET' || (method === 'POST' && req.headers.get('Content-Type') === 'application/json')) {
-      const body = method === 'POST' ? await req.json() : null
       const url = new URL(req.url)
       const id = body?.id || url.searchParams.get('id')
       const action = body?.action || 'get'
+      const includeFullData = body?.full === true || url.searchParams.get('full') === 'true'
 
       if (!id) {
         return new Response(JSON.stringify({ error: 'ID is required' }), {
@@ -65,20 +65,49 @@ serve(async (req) => {
         })
       }
 
-      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-      console.log(`[${requestId}] Action: ${action} | Target ${isUuid ? 'ID' : 'SLUG'}: ${id}`)
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      console.log(`[${requestId}] Action: ${action} | Target ${isUuid ? 'ID' : 'SLUG'}: ${id} | Full: ${includeFullData}`)
 
       if (action === 'get') {
         const query = supabaseAdmin.from('restaurants').select('*')
         if (isUuid) query.eq('id', id)
         else query.eq('slug', id)
 
-        const { data, error } = await query.maybeSingle()
+        const { data: restaurant, error } = await query.maybeSingle()
 
         if (error) throw error
-        if (!data) return new Response(JSON.stringify({ error: 'Restaurante não encontrado' }), { status: 404, headers: corsHeaders })
+        if (!restaurant) return new Response(JSON.stringify({ error: 'Restaurante não encontrado' }), { status: 404, headers: corsHeaders })
 
-        return new Response(JSON.stringify({ success: true, data }), {
+        let responseData: any = { restaurant }
+
+        if (includeFullData) {
+          console.log(`[${requestId}] Buscando dados completos (cardápio, combos, etc)`)
+          const [cats, items, groups, combos, zones, beverages, sizes] = await Promise.all([
+            supabaseAdmin.from('menu_categories').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+            supabaseAdmin.from('menu_items').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+            supabaseAdmin.from('combo_groups').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+            supabaseAdmin.from('combos').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+            supabaseAdmin.from('delivery_zones').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
+            supabaseAdmin.from('pizzeria_beverages').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
+            supabaseAdmin.from('pizzeria_pizza_sizes').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
+          ])
+
+          responseData = {
+            ...responseData,
+            categories: cats.data || [],
+            items: items.data || [],
+            comboGroups: groups.data || [],
+            combos: combos.data || [],
+            deliveryZones: zones.data || [],
+            beverages: beverages.data || [],
+            pizzaSizes: sizes.data || [],
+          }
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true,
+          data: includeFullData ? responseData : restaurant
+        }), {
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
