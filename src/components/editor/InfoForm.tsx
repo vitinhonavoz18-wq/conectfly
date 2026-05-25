@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy, Wand2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
@@ -18,6 +18,20 @@ export function InfoForm({ restaurant, onChange }: Props) {
    const [regMsg, setRegMsg] = useState("");
     const [testing, setTesting] = useState(false);
     const [testDebug, setTestDebug] = useState<any>(null);
+    const [secureApiKey, setSecureApiKey] = useState<string | null>(null);
+
+    useEffect(() => {
+      if (r.id) {
+        supabase
+          .rpc("get_restaurant_flycontrol_key", { p_restaurant_id: r.id })
+          .then(({ data }) => {
+            if (data) {
+              setSecureApiKey(data);
+              set("flycontrol_api_key", data);
+            }
+          });
+      }
+    }, [r.id]);
 
   const set = <K extends keyof RestaurantRow>(k: K, v: RestaurantRow[K]) =>
     setR((p) => ({ ...p, [k]: v }));
