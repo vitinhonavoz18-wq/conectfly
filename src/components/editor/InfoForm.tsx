@@ -118,6 +118,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
       whatsapp_enabled: r.whatsapp_enabled ?? true,
       show_item_images: r.show_item_images ?? true,
       selected_template: r.selected_template || "black",
+      business_type: r.business_type || "Pizzaria",
     };
 
     try {
@@ -242,12 +243,23 @@ export function InfoForm({ restaurant, onChange }: Props) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Nome do restaurante">
+        <Field label="Nome do Estabelecimento">
           <input
             value={r.name}
             onChange={(e) => set("name", e.target.value)}
             className="input"
           />
+        </Field>
+        <Field label="Tipo de Negócio">
+          <select 
+            value={r.business_type || "Pizzaria"}
+            onChange={(e) => set("business_type", e.target.value as any)}
+            className="input"
+          >
+            {["Pizzaria", "Pastelaria", "Hamburgueria", "Restaurante", "Lanchonete", "Açaíteria", "Farmácia", "Mercado", "Outro"].map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Identificador URL (slug)" hint="Caminho após conectfly.com.br/">
           <div className="flex gap-2 items-center">
@@ -258,7 +270,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
             />
           </div>
         </Field>
-        <Field label="Slogan curto" hint="Ex: O melhor yakisoba de Salvador">
+        <Field label="Slogan curto" hint="Ex: O melhor yakisoba ou a entrega mais rápida">
           <input
             value={r.tagline ?? ""}
             onChange={(e) => set("tagline", e.target.value)}
@@ -324,7 +336,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
       <div className="space-y-4">
         <h3 className="text-lg font-black uppercase tracking-widest text-primary flex items-center gap-2">
-          <Wand2 className="h-5 w-5" /> Modelo do Site (Template)
+          <Wand2 className="h-5 w-5" /> Aparência e Personalização do Site
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
