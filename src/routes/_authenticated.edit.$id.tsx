@@ -199,8 +199,35 @@ function EditPage() {
         {tab === "info" && (
           <InfoForm restaurant={restaurant} onChange={setRestaurant} />
         )}
-        {tab === "menu" && <MenuManager restaurantId={restaurant.id} />}
-        {tab === "combo" && <ComboManager restaurantId={restaurant.id} />}
+        {tab === "menu" && (
+          <div className="space-y-6">
+            <div className="card-premium p-6 border-primary/20 bg-primary/5 flex items-start gap-4">
+              <Sparkles className="h-6 w-6 text-primary flex-shrink-0" />
+              <div>
+                <h4 className="font-black uppercase text-sm tracking-widest">Gestão de Cardápio</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  A edição detalhada de preços e sabores deve ser realizada através do painel <strong>FlyControl</strong>. 
+                  As alterações feitas aqui são aplicadas imediatamente ao site.
+                </p>
+              </div>
+            </div>
+            <MenuManager restaurantId={restaurant.id} />
+          </div>
+        )}
+        {tab === "combo" && (
+          <div className="space-y-6">
+            <div className="card-premium p-6 border-primary/20 bg-primary/5 flex items-start gap-4">
+              <Tag className="h-6 w-6 text-primary flex-shrink-0" />
+              <div>
+                <h4 className="font-black uppercase text-sm tracking-widest">Gestão de Combos</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Crie e edite combos promocionais. Sincronize com o <strong>FlyControl</strong> para uma gestão integrada.
+                </p>
+              </div>
+            </div>
+            <ComboManager restaurantId={restaurant.id} />
+          </div>
+        )}
         {tab === "delivery" && <DeliveryZonesManager restaurantId={restaurant.id} />}
          {tab === "preview" && (
            <div className="space-y-8 site-hero-enter">
