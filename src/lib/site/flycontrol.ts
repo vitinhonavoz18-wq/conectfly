@@ -262,7 +262,16 @@ export async function sendOrderToFlycontrol(
   >,
   payload: FlycontrolOrderPayload,
   opts: { retries?: number; initialDelay?: number; signal?: AbortSignal } = {},
-): Promise<void> {
+): Promise<{ success: boolean; skipped?: boolean; message?: string; order_id?: string }> {
+  console.log("[FLYCONTROL] 🚀 Iniciando envio para FlyControl");
+  console.log("[FLYCONTROL] ℹ️ Integração ativa:", !!restaurant.flycontrol_enabled);
+  console.log("[FLYCONTROL] ℹ️ API Key encontrada:", !!restaurant.flycontrol_api_key);
+
+  if (!restaurant.flycontrol_enabled) {
+    console.log("[FLYCONTROL] ℹ️ Integração FlyControl desativada para esta pizzaria");
+    return { success: false, skipped: true, message: "Integração desativada" };
+  }
+
   // 1. Validações pré-envio conforme solicitado
   const missingFields: string[] = [];
   if (!payload.pizzeria?.slug) missingFields.push("pizzeria.slug");
@@ -273,30 +282,23 @@ export async function sendOrderToFlycontrol(
   if (payload.order?.total === undefined || payload.order?.total === null) missingFields.push("order.total");
 
   if (missingFields.length > 0) {
-  const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
-  console.error("Erro de validação antes do POST:", errorMsg);
-  console.log("Payload incompleto:", payload);
-  throw new Error(errorMsg);
+    const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
+    console.error("[FLYCONTROL] ❌ Erro de validação antes do POST:", errorMsg);
+    console.log("[FLYCONTROL] Payload incompleto:", payload);
+    throw new Error(errorMsg);
   }
 
   // 2. Consistência de dados
-if (payload.order.total <= 0) {
-  console.warn("Aviso: Total do pedido é zero ou negativo:", payload.order.total);
-}
-
-   if (!restaurant.flycontrol_enabled) return;
+  if (payload.order.total <= 0) {
+    console.warn("[FLYCONTROL] ⚠️ Aviso: Total do pedido é zero ou negativo:", payload.order.total);
+  }
 
   if (!restaurant.id) {
     throw new Error("restaurant.id ausente para envio do pedido.");
   }
 
-  console.log("[FLYCONTROL] 🚀 Iniciando envio via Proxy Seguro");
-  console.log("[FLYCONTROL] 🔗 Proxy:", "/api/public/submit-order");
-  console.log("[FLYCONTROL] 🔐 ID Pizzaria:", restaurant.id);
-  console.log("[FLYCONTROL] 🍕 Slug:", payload.pizzeria.slug);
-  console.log("[FLYCONTROL] 👤 Cliente:", payload.customer.name);
-  console.log("[FLYCONTROL] 💰 Total:", formatBRL(payload.order.total));
-  console.log("[FLYCONTROL] 📦 Itens:", payload.order.items.length);
+  console.log("[FLYCONTROL] 🔗 Endpoint FlyControl usado: /api/public/submit-order (Proxy)");
+  console.log("[FLYCONTROL] 📦 Payload enviado:", JSON.stringify(payload, null, 2));
 
   const idempotencyKey = payload.order.id;
   const headers: Record<string, string> = {
@@ -304,33 +306,59 @@ if (payload.order.total <= 0) {
     "x-idempotency-key": idempotencyKey,
   };
 
-  const response = await fetch("/api/public/submit-order", {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
-    signal: opts.signal,
-  });
-
-  const responseText = await response.text();
-  const status = response.status;
-  
-  let data: any = {};
   try {
-    data = JSON.parse(responseText);
-  } catch {
-    data = { text: responseText };
+    const response = await fetch("/api/public/submit-order", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
+      signal: opts.signal,
+    });
+
+    const responseText = await response.text();
+    const status = response.status;
+    
+    let data: any = {};
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      data = { text: responseText };
+    }
+
+    console.log(`[FLYCONTROL] 📡 Status recebido do FlyControl: ${status}`);
+    console.log(`[FLYCONTROL] 📡 Resposta recebida do FlyControl:`, data);
+
+    if (data?.skipped) {
+      console.log("[FLYCONTROL] ℹ️ Integração FlyControl desativada no servidor para esta pizzaria");
+      return { success: false, skipped: true, message: data.message || "Integração desativada" };
+    }
+
+    if (!response.ok || data?.success === false) {
+      const errorMsg = data?.error || `Falha no envio: ${status}`;
+      console.error("[FLYCONTROL] ❌ Falha ao enviar pedido ao FlyControl:", errorMsg);
+      
+      // Log detalhado solicitado no item 5
+      console.log("--- LOG DE ERRO FLYCONTROL ---");
+      console.log("Endpoint chamado (Proxy): /api/public/submit-order");
+      console.log("Status HTTP:", status);
+      console.log("Payload enviado:", payload);
+      console.log("Corpo da resposta:", data);
+      console.log("Erro retornado:", errorMsg);
+      console.log("------------------------------");
+
+      throw new Error(errorMsg);
+    }
+
+    const orderId = data?.response?.order_id || data?.order_id || payload.order.id;
+    console.log(`[FLYCONTROL] ✅ Pedido confirmado no FlyControl com ID: ${orderId}`);
+    
+    return { success: true, order_id: orderId };
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      console.error("[FLYCONTROL] ❌ Timeout ao enviar pedido para o FlyControl.");
+      throw new Error("Tempo limite esgotado ao conectar com o painel.");
+    }
+    throw err;
   }
-
-  console.log(`[FLYCONTROL] 📡 Resposta Proxy [${status}]:`, data);
-
-  if (!response.ok || data?.success === false) {
-    const errorMsg = data?.error || `Falha no envio: ${status}`;
-    console.error("[FLYCONTROL] ❌ Erro ao registrar:", errorMsg, data);
-    throw new Error(errorMsg);
-  }
-
-  console.log("[FLYCONTROL] ✅ Pedido registrado com sucesso");
-  void opts;
 }
 
 export function generateApiKey(): string {
