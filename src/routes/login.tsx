@@ -37,14 +37,19 @@ function LoginPage() {
     setBusy(true);
     try {
       // Call the secure edge function to validate the password and get a session
+      console.log("Iniciando validação administrativa via Edge Function...");
       const { data, error } = await supabase.functions.invoke('admin-auth', {
         body: { password }
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        console.error("Erro na chamada da Edge Function:", error);
+        throw new Error(error.message || "Erro de comunicação com o servidor.");
+      }
+      
+      console.log("Resposta da Edge Function recebida:", data);
 
-      if (data?.session) {
+      if (data?.success && data?.session) {
         // Set the session manually in the supabase client
         const { error: setSessionError } = await supabase.auth.setSession(data.session);
         if (setSessionError) throw setSessionError;
@@ -52,9 +57,11 @@ function LoginPage() {
         toast.success("Acesso autorizado. Bem-vindo, Admin.");
         navigate({ to: search.redirect || "/" });
       } else {
-        throw new Error("Resposta inválida do servidor de autenticação.");
+        const errorMessage = data?.error || "Senha incorreta ou acesso negado.";
+        throw new Error(errorMessage);
       }
     } catch (err) {
+      console.error("Erro no login admin:", err);
       toast.error(err instanceof Error ? err.message : "Senha incorreta ou erro de conexão");
     } finally {
       setBusy(false);
