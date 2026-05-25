@@ -24,19 +24,26 @@ export const Route = createFileRoute("/_authenticated")({
     // O router já cuida de casar /$slug, mas como _authenticated.index.tsx casa com "/",
     // só precisamos garantir que "/" exija login.
     
-    // Se estiver no path raiz "/", exige login para o painel
-    if (pathname === "/") {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        console.log("SEM SESSÃO NA RAIZ - REDIRECIONANDO PARA LOGIN");
-        throw redirect({
-          to: "/login",
-          search: { redirect: location.href },
-        });
-      }
-      console.log("SESSÃO ATIVA NO PAINEL");
-      return;
+    // Todas as rotas sob _authenticated exigem login administrativo
+    const { data } = await supabase.auth.getSession();
+    
+    if (!data.session) {
+      console.log("SEM SESSÃO - REDIRECIONANDO PARA LOGIN");
+      throw redirect({
+        to: "/login",
+        search: { redirect: location.href },
+      });
     }
+
+    // Opcional: Validar se o usuário logado é de fato o admin único
+    if (data.session.user.email !== 'vitinhonavoz18@gmail.com') {
+      console.log("USUÁRIO NÃO AUTORIZADO - LOGOUT");
+      await supabase.auth.signOut();
+      throw redirect({ to: "/login" });
+    }
+
+    console.log("SESSÃO ATIVA PARA ADMIN");
+    return;
 
     // Para outros caminhos, o TanStack Router deve decidir se cai em /$slug (público)
     // ou em outras rotas autenticadas.
