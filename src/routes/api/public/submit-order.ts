@@ -157,10 +157,16 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           const url = resolveOrdersUrl(r);
           const key = (r.flycontrol_api_key ?? "").trim();
+          
           if (!url || !key) {
+            console.error(`[SUBMIT-ORDER] Configuração incompleta para pizzaria ${body.restaurant_id}: url=${!!url}, key=${!!key}`);
             return new Response(
-              JSON.stringify({ success: false, error: "Configuração incompleta" }),
-              { status: 500, headers },
+              JSON.stringify({ 
+                success: false, 
+                error: "Configuração incompleta no painel (URL ou API Key ausente)",
+                details: { url_configured: !!url, api_key_configured: !!key }
+              }),
+              { status: 400, headers },
             );
           }
 
@@ -218,6 +224,8 @@ export const Route = createFileRoute("/api/public/submit-order")({
               success: isSuccess, 
               error: isSuccess ? null : lastErr,
               status: lastStatus,
+              endpoint: url,
+              payload: body.payload, // Repassar para log se necessário
               response: finalData
             }), 
             {
