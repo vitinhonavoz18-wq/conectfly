@@ -167,108 +167,141 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
     console.log("Itens com preço:", withPrice);
   };
  
-   const handleImport = async () => {
-     if (!data || !restaurantId) return;
-     setLoading(true);
- 
-     try {
-       const categoryName = data.tipo_cardapio?.toUpperCase() || "PIZZA";
-       const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
-       let mainCat = existingCats?.find(c => c.name.toUpperCase() === categoryName);
-       const pizzaSizes: PizzaSize[] = data.tamanhos?.map(t => ({ label: t.nome, price: t.preco, max_flavors: t.max_sabores })) || [];
- 
-       if (!mainCat) {
-         const { data: newCat, error: catErr } = await supabase.from("menu_categories").insert({
-           restaurant_id: restaurantId, name: categoryName, icon: "🍕", is_pizza: true,
-           pizza_sizes: pizzaSizes as any, sort_order: existingCats?.length || 0
-         }).select().single();
-         if (catErr) throw catErr;
-         mainCat = newCat;
-       } else if (pizzaSizes.length > 0) {
-         await supabase.from("menu_categories").update({ pizza_sizes: pizzaSizes as any }).eq("id", mainCat.id);
-       }
- 
-       // 1.5 Processar Bordas (Como Sabores Especiais na categoria BORDAS ou similar)
-       if (data.bordas_recheadas && data.bordas_recheadas.length > 0) {
-         let bordasCat = existingCats?.find(c => c.name.toUpperCase() === "BORDAS RECHEADAS");
-         if (!bordasCat) {
-           const { data: newBCat, error: bCatErr } = await supabase.from("menu_categories").insert({
-             restaurant_id: restaurantId, name: "BORDAS RECHEADAS", icon: "🥖", is_pizza: false, sort_order: (existingCats?.length || 0) + 1
-           }).select().single();
-           if (!bCatErr) bordasCat = newBCat;
-         }
-         if (bordasCat) {
-           const { data: exBordas } = await supabase.from("menu_items").select("*").eq("category_id", bordasCat.id);
-           for (const borda of data.bordas_recheadas) {
-             const exB = exBordas?.find(i => i.name.toUpperCase() === borda.nome.toUpperCase());
-             if (exB) {
-               await supabase.from("menu_items").update({ price: borda.acrescimo }).eq("id", exB.id);
-             } else {
-               await supabase.from("menu_items").insert({
-                 restaurant_id: restaurantId, category_id: bordasCat.id, name: borda.nome, price: borda.acrescimo, sort_order: exBordas?.length || 0
-               });
-             }
-           }
-         }
-       }
- 
-       // 2. Processar Sabores
-       const { data: existingItems } = await supabase
-         .from("menu_items")
-         .select("*")
-         .eq("category_id", mainCat.id);
- 
-       const sortedSabores = [...(data.sabores || [])].sort((a, b) => {
-         const codeA = parseInt(a.codigo || "0");
-         const codeB = parseInt(b.codigo || "0");
-         return codeA - codeB;
-       });
- 
-       for (let i = 0; i < sortedSabores.length; i++) {
-         const sabor = sortedSabores[i];
-         const existing = existingItems?.find(item => 
-           (sabor.codigo && item.name.includes(`[${sabor.codigo}]`)) || 
-           item.name.toUpperCase() === sabor.nome.toUpperCase()
-         );
- 
-         const displayName = sabor.codigo ? `[${sabor.codigo}] ${sabor.nome}` : sabor.nome;
-         const description = sabor.ingredientes_ordem_preparo?.join(", ") || "";
- 
-         if (existing) {
-           await supabase
-             .from("menu_items")
-             .update({
-               name: displayName,
-               description: description,
-               sort_order: i,
-             })
-             .eq("id", existing.id);
-         } else {
-           await supabase
-             .from("menu_items")
-             .insert({
-               restaurant_id: restaurantId,
-               category_id: mainCat.id,
-               name: displayName,
-               description: description,
-               price: 0,
-               sort_order: i,
-               is_special: false,
-               special_extra: 0
-             });
-         }
-       }
- 
-       toast.success("Cardápio importado com sucesso!");
-       setIsOpen(false);
-       onSuccess();
-     } catch (err: any) {
-       console.error("Erro na importação:", err);
-       toast.error("Erro ao importar: " + err.message);
-     } finally {
-       setLoading(false);
-     }
-   };
+  const handleImport = async () => {
+    if (!data || !restaurantId) return;
+    setLoading(true);
+
+    try {
+      const finalCategoryName = categoryName.trim() || "Nova Categoria";
+      const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
+      
+      let mainCat = existingCats?.find(c => c.name.toUpperCase() === finalCategoryName.toUpperCase());
+      const pizzaSizes: PizzaSize[] = data.tamanhos?.map(t => ({ label: t.nome, price: t.preco, max_flavors: t.max_sabores })) || [];
+
+      // Lógica de ação para categoria existente
+      if (mainCat && importAction === "NEW") {
+        mainCat = null; // Forçar criação de nova
+      }
+
+      if (!mainCat) {
+        const { data: newCat, error: catErr } = await supabase.from("menu_categories").insert({
+          restaurant_id: restaurantId,
+          name: finalCategoryName,
+          icon: categoryType === "PIZZA" ? "🍕" : "📦",
+          is_pizza: categoryType === "PIZZA",
+          pizza_sizes: categoryType === "PIZZA" ? pizzaSizes as any : null,
+          sort_order: existingCats?.length || 0
+        }).select().single();
+        if (catErr) throw catErr;
+        mainCat = newCat;
+      } else {
+        // Se for REPLACE, remover itens antigos
+        if (importAction === "REPLACE") {
+          await supabase.from("menu_items").delete().eq("category_id", mainCat.id);
+        }
+        
+        // Atualizar tamanhos se for pizza e tiver novos tamanhos
+        if (categoryType === "PIZZA" && pizzaSizes.length > 0) {
+          await supabase.from("menu_categories").update({ 
+            pizza_sizes: pizzaSizes as any,
+            is_pizza: true 
+          }).eq("id", mainCat.id);
+        }
+      }
+
+      // 1.5 Processar Bordas (Se for Pizza)
+      if (categoryType === "PIZZA" && data.bordas_recheadas && data.bordas_recheadas.length > 0) {
+        let bordasCat = existingCats?.find(c => c.name.toUpperCase() === "BORDAS RECHEADAS");
+        if (!bordasCat) {
+          const { data: newBCat, error: bCatErr } = await supabase.from("menu_categories").insert({
+            restaurant_id: restaurantId, name: "BORDAS RECHEADAS", icon: "🥖", is_pizza: false, sort_order: (existingCats?.length || 0) + 1
+          }).select().single();
+          if (!bCatErr) bordasCat = newBCat;
+        }
+        if (bordasCat) {
+          const { data: exBordas } = await supabase.from("menu_items").select("*").eq("category_id", bordasCat.id);
+          for (const borda of data.bordas_recheadas) {
+            const exB = exBordas?.find(i => i.name.toUpperCase() === borda.nome.toUpperCase());
+            if (exB) {
+              await supabase.from("menu_items").update({ price: borda.acrescimo }).eq("id", exB.id);
+            } else {
+              await supabase.from("menu_items").insert({
+                restaurant_id: restaurantId, category_id: bordasCat.id, name: borda.nome, price: borda.acrescimo, sort_order: exBordas?.length || 0
+              });
+            }
+          }
+        }
+      }
+
+      // 2. Processar Itens
+      const { data: existingItems } = await supabase
+        .from("menu_items")
+        .select("*")
+        .eq("category_id", mainCat.id);
+
+      const sortedItems = [...itemsList].sort((a, b) => {
+        const codeA = parseInt(getItemCode(a) || "0");
+        const codeB = parseInt(getItemCode(b) || "0");
+        return codeA - codeB;
+      });
+
+      for (let i = 0; i < sortedItems.length; i++) {
+        const item = sortedItems[i];
+        const itemName = getItemName(item);
+        const itemCode = getItemCode(item);
+        const itemPrice = getPrice(item);
+        
+        const existing = existingItems?.find(ex => 
+          (itemCode && ex.name.includes(`[${itemCode}]`)) || 
+          ex.name.toUpperCase() === itemName.toUpperCase()
+        );
+
+        const displayName = itemCode ? `[${itemCode}] ${itemName}` : itemName;
+        
+        // Descrição flexível
+        let description = "";
+        if (item.descricao || item.description || item.detalhes) {
+          description = item.descricao || item.description || item.detalhes;
+        } else if (item.ingredientes_ordem_preparo && Array.isArray(item.ingredientes_ordem_preparo)) {
+          description = item.ingredientes_ordem_preparo.join(", ");
+        }
+
+        if (existing) {
+          await supabase
+            .from("menu_items")
+            .update({
+              name: displayName,
+              description: description,
+              price: categoryType === "PIZZA" ? 0 : itemPrice,
+              sort_order: i,
+            })
+            .eq("id", existing.id);
+        } else {
+          await supabase
+            .from("menu_items")
+            .insert({
+              restaurant_id: restaurantId,
+              category_id: mainCat.id,
+              name: displayName,
+              description: description,
+              price: categoryType === "PIZZA" ? 0 : itemPrice,
+              sort_order: i,
+              is_special: false,
+              special_extra: 0
+            });
+        }
+      }
+
+      toast.success("Cardápio importado com sucesso!");
+      setIsOpen(false);
+      onSuccess();
+    } catch (err: any) {
+      console.error("Erro na importação:", err);
+      toast.error("Erro ao importar: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
  
    const reset = () => {
      setFile(null);
