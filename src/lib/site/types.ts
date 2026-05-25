@@ -29,12 +29,18 @@ export interface MenuCategoryRow {
   id: string;
   restaurant_id: string;
   name: string;
+  description: string | null;
   icon: string | null;
   image_url: string | null;
-   sort_order: number;
-   is_pizza: boolean;
-   pizza_sizes: PizzaSize[] | null;
-   is_active?: boolean;
+  sort_order: number;
+  is_pizza: boolean;
+  type: string;
+  pizza_sizes: PizzaSize[] | null;
+  is_active: boolean;
+  show_on_public_site: boolean;
+  show_directly_in_menu: boolean;
+  show_as_clickable_category: boolean;
+  allow_cart_addition: boolean;
 }
 
 export interface ComboRow {

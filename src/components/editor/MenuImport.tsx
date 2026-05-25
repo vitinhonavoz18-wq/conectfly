@@ -26,7 +26,7 @@ interface Props {
   onSuccess: () => void;
 }
 
-type CategoryType = "PIZZA" | "SIMPLE" | "FLAVORS" | "BEVERAGE" | "SIDE" | "OTHER";
+type CategoryType = "PIZZA" | "SIMPLE" | "FLAVORS" | "BEVERAGE" | "SIDE" | "ADDITIONAL" | "COMBOS" | "OTHER";
 
 interface ImportData {
   pizzaria?: string;
@@ -60,6 +60,9 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
   const [categoryName, setCategoryName] = useState("");
   const [categoryType, setCategoryType] = useState<CategoryType>("SIMPLE");
   const [importAction, setImportAction] = useState<"ADD" | "REPLACE" | "NEW">("ADD");
+  const [showOnPublic, setShowOnPublic] = useState(true);
+  const [showDirectly, setShowDirectly] = useState(true);
+  const [allowCart, setAllowCart] = useState(true);
   const [itemsList, setItemsList] = useState<any[]>([]);
   const [stats, setStats] = useState({
     total: 0,
@@ -120,7 +123,7 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
   };
 
   const validateData = (json: any) => {
-    const listFields = ["sabores", "items", "produtos", "products", "menu_items"];
+    const listFields = ["sabores", "items", "produtos", "products", "bebidas", "drinks", "menu_items"];
     let foundItems: any[] = [];
     let listFieldUsed = "";
 
@@ -193,7 +196,11 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
           icon: categoryType === "PIZZA" ? "🍕" : "📦",
           is_pizza: categoryType === "PIZZA",
           pizza_sizes: categoryType === "PIZZA" ? pizzaSizes as any : null,
-          sort_order: existingCats?.length || 0
+          sort_order: existingCats?.length || 0,
+          show_on_public_site: showOnPublic,
+          show_directly_in_menu: showDirectly,
+          allow_cart_addition: allowCart,
+          type: categoryType
         }).select().single();
         if (catErr) throw catErr;
         mainCat = newCat;
@@ -393,6 +400,8 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
                         <SelectItem value="PIZZA">Pizza</SelectItem>
                         <SelectItem value="BEVERAGE">Bebida</SelectItem>
                         <SelectItem value="SIDE">Acompanhamento</SelectItem>
+                        <SelectItem value="ADDITIONAL">Adicional</SelectItem>
+                        <SelectItem value="COMBOS">Combo</SelectItem>
                         <SelectItem value="OTHER">Outro</SelectItem>
                       </SelectContent>
                     </Select>
@@ -410,6 +419,39 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
                         <SelectItem value="NEW">Criar nova</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="showPublic" 
+                      checked={showOnPublic} 
+                      onChange={(e) => setShowOnPublic(e.target.checked)}
+                      className="accent-primary h-4 w-4"
+                    />
+                    <Label htmlFor="showPublic" className="text-xs font-bold cursor-pointer">Exibir no site público</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="showDirect" 
+                      checked={showDirectly} 
+                      onChange={(e) => setShowDirectly(e.target.checked)}
+                      className="accent-primary h-4 w-4"
+                    />
+                    <Label htmlFor="showDirect" className="text-xs font-bold cursor-pointer">Exibir direto no cardápio principal</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      id="allowCart" 
+                      checked={allowCart} 
+                      onChange={(e) => setAllowCart(e.target.checked)}
+                      className="accent-primary h-4 w-4"
+                    />
+                    <Label htmlFor="allowCart" className="text-xs font-bold cursor-pointer">Permitir adicionar ao carrinho</Label>
                   </div>
                 </div>
               </div>

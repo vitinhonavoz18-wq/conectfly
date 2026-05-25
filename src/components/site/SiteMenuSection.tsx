@@ -16,11 +16,12 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
 
   const isBeverageCategory = (c: MenuCategoryRow) => {
-    const name = c.name.toLowerCase();
-    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks";
+    return c.type === "BEVERAGE" || c.name.toLowerCase().includes("bebida");
   };
 
-  const otherCategories = categories.filter(c => !isBeverageCategory(c));
+  const visibleCategories = categories.filter(c => c.show_on_public_site !== false);
+  const clickableCategories = visibleCategories.filter(c => c.show_as_clickable_category !== false);
+  const directCategories = visibleCategories.filter(c => c.show_directly_in_menu !== false);
 
   const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
@@ -67,7 +68,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   return (
     <section id="cardapio" className="py-16 px-4">
       <div className="max-w-6xl mx-auto">
-        {(restaurant.site_settings?.show_categories_section !== false) && (
+        {(restaurant.site_settings?.show_categories_section !== false) && clickableCategories.length > 0 && (
           <div className="text-center mb-12">
             <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
               Curadoria Gastronômica
@@ -83,7 +84,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
 
         {(restaurant.site_settings?.show_categories_section === false || (!current && entryMode !== "direct")) ? (
           <div className="space-y-16">
-            {otherCategories.map(cat => (
+            {directCategories.map(cat => (
               <div key={cat.id} className="space-y-8">
                 <div className="flex items-center gap-4">
                   <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
@@ -112,7 +113,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                    ← Voltar
                  </button>
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
-                  {categories.map((c) => (
+                  {clickableCategories.map((c) => (
                      <button
                        key={c.id}
                        onClick={() => setActive(c.id)}
@@ -132,7 +133,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
 
             {entryMode === "direct" ? (
               <div className="space-y-16">
-                {otherCategories.map(cat => (
+                {directCategories.map(cat => (
                   <div key={cat.id} className="space-y-8">
                     <div className="flex items-center gap-4">
                       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
