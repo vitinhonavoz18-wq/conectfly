@@ -137,7 +137,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
                     <p className="text-[10px] uppercase font-bold text-muted-foreground">Subtotal</p>
                     <p className="font-black text-white">{formatBRL(qty * Number(bev.price))}</p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           );

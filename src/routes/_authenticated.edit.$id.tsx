@@ -25,6 +25,7 @@ import { fetchSiteByRestaurant, getRestaurantById, updateRestaurant, adminFetchS
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { InfoForm } from "@/components/editor/InfoForm";
 import { MenuManager } from "@/components/editor/MenuManager";
+import { BeverageManager } from "@/components/editor/BeverageManager";
 import { ComboManager } from "@/components/editor/ComboManager";
 import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
@@ -271,7 +272,6 @@ function EditPage() {
               </div>
             </div>
             <div className="card-premium p-8">
-              <import { BeverageManager } from "@/components/editor/BeverageManager"; />
               <BeverageManager restaurantId={restaurant.id} />
             </div>
           </div>
