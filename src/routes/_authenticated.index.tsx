@@ -91,7 +91,8 @@ function Dashboard() {
         custom_subdomain,
         flycontrol_api_key: generateApiKey(), 
         owner_id: user?.id,
-        published: true // Garante que o site seja público imediatamente após criação
+        published: true, // Garante que o site seja público imediatamente após criação
+        selected_template: template
       })
       .select()
       .single();
