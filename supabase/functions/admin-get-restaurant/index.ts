@@ -54,6 +54,7 @@ serve(async (req) => {
 
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     if (!supabaseServiceKey) {
+      console.error(`[${requestId}] SUPABASE_SERVICE_ROLE_KEY não configurada`)
       throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set')
     }
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -62,9 +63,12 @@ serve(async (req) => {
     let body: any = {}
     if (method === 'POST' || method === 'PUT') {
       try {
-        body = await req.json()
+        const text = await req.text()
+        if (text) {
+          body = JSON.parse(text)
+        }
       } catch (e) {
-        console.warn(`[${requestId}] Falha ao parsear JSON do body`)
+        console.warn(`[${requestId}] Falha ao parsear JSON do body:`, e.message)
       }
     }
 
@@ -80,7 +84,8 @@ serve(async (req) => {
       })
     }
 
-    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    // Corrigido regex de UUID (8-4-4-4-12)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
     console.log(`[${requestId}] Action: ${action} | Target ${isUuid ? 'ID' : 'SLUG'}: ${id} | Full: ${includeFullData}`)
 
     if (action === 'get') {
