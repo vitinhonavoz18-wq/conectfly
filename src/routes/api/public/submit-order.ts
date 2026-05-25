@@ -10,14 +10,22 @@ const ALLOWED_ORIGINS = [
 function getCorsHeaders(origin: string | null) {
   let allowOrigin = ALLOWED_ORIGINS[0];
   
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+  // Permite origens oficiais ou qualquer preview do Lovable para facilitar desenvolvimento
+  const isLovablePreview = origin && (
+    origin.endsWith(".lovable.app") || 
+    origin.includes("lovable.dev") ||
+    ALLOWED_ORIGINS.includes(origin)
+  );
+
+  if (origin && isLovablePreview) {
     allowOrigin = origin;
   }
 
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers": "content-type, x-idempotency-key, authorization, x-api-key",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
@@ -255,7 +263,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
           return new Response(
             JSON.stringify({ 
               success: isSuccess, 
-              error: isSuccess ? null : "Falha ao processar o pedido. Tente novamente ou use o WhatsApp.",
+              error: isSuccess ? null : `Falha ao conectar com o FlyControl (${lastStatus}). Tente novamente ou use o WhatsApp.`,
               status: lastStatus,
               response: isSuccess ? { success: true } : null
             }), 
