@@ -193,7 +193,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
             }
             const token = authHeader.replace("Bearer ", "");
             const { data: { user }, error: authErr } = await supabaseAdmin.auth.getUser(token);
-            if (authErr || !user || user.id !== 'fb13f4ba-a3fe-45c4-917c-1ae6d09377a3') {
+            if (authErr || !user || user.email !== 'vitinhonavoz18@gmail.com') {
               return new Response(JSON.stringify({ success: false, error: "Acesso negado" }), { status: 403, headers });
             }
           }
