@@ -54,12 +54,21 @@ export function buildOrderPayload(args: {
      const isCombo = l.itemId.startsWith('combo-');
      const isPizza = !isBeverage && !isCombo && ((l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza"));
      
+     // Tentar extrair borda da descrição
+     let crust = "";
+     if (l.description && l.description.toLowerCase().includes("borda")) {
+       const match = l.description.match(/borda:?\s*([^•\+\n,]+)/i);
+       if (match) crust = match[1].trim();
+     }
+
      if (isPizza) {
        return {
          type: "pizza",
          name: l.name,
          size: l.sizeLabel || "Padrão",
          flavors: l.flavors && l.flavors.length > 0 ? l.flavors : [l.name],
+         crust: crust,
+         extras: l.extras || 0,
          quantity: Number(l.quantity) || 0,
          unit_price: Number(l.unitPrice) || 0,
          total_price: (Number(l.unitPrice) || 0) * (Number(l.quantity) || 0),
