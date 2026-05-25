@@ -308,22 +308,22 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       {/* Step 2 — Flavors */}
       <div>
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <h4 className="text-lg font-bold">2. Escolha os sabores</h4>
+          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os sabores</h4>
           {size && (
-            <span className="text-xs px-2 py-1 rounded-full bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))]">
+            <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-white border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
               {selectedFlavors.length}/{maxFlavors} selecionados
               {remaining > 0 && ` · ${remaining} restante${remaining > 1 ? "s" : ""}`}
             </span>
           )}
         </div>
         {category.items.length === 0 ? (
-          <p className="text-sm text-[hsl(var(--site-muted-fg))]">
+          <p className="text-sm text-[#555]">
             Nenhum sabor cadastrado ainda.
           </p>
         ) : (
-          <div className="space-y-12">
+          <div className="space-y-16">
             {/* Classic Flavors */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {classicFlavors.map((it) => (
                 <FlavorCard 
                   key={it.id} 
@@ -339,32 +339,32 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
             {/* Special Flavors Section */}
             {specialFlavors.length > 0 && (
-              <div className="space-y-6" id="sabores-especiais">
-                <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-red-600 via-red-800 to-black p-8 shadow-[0_20px_50px_rgba(220,38,38,0.3)] border border-red-500/30">
+              <div className="space-y-8" id="sabores-especiais">
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-red p-10 shadow-[0_20px_50px_rgba(229,9,20,0.3)] border border-white/10">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Flame className="h-32 w-32 text-white" />
+                    <Sparkles className="h-40 w-40 text-white" />
                   </div>
-                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="flex items-center justify-center h-8 w-8 rounded-full bg-white/20 backdrop-blur-sm">
-                          <Flame className="h-5 w-5 text-red-400" />
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="flex items-center justify-center h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-md">
+                          <Flame className="h-6 w-6 text-white" />
                         </span>
-                        <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tighter uppercase">
+                        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
                           Sabores Especiais
                         </h3>
                       </div>
-                      <p className="text-red-100/80 font-medium max-w-lg italic">
-                        Experimente combinações premium e sabores exclusivos da casa.
+                      <p className="text-white/90 font-medium max-w-lg text-lg">
+                        Experimente nossas combinações premium e ingredientes exclusivos da casa.
                       </p>
                     </div>
-                    <span className="px-4 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-xs uppercase tracking-widest shadow-lg">
-                      Seleção Premium
+                    <span className="px-6 py-3 rounded-2xl bg-white text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
+                      Seleção Gourmet
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {specialFlavors.map((it) => (
                     <FlavorCard 
                       key={it.id} 
