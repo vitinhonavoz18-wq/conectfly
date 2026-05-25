@@ -213,11 +213,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
       const next = { ...r, ...updates } as RestaurantRow;
       setR(next);
       // Persist immediately so the credentials don't get lost on page refresh
-      const { error } = await supabase
-        .from("restaurants")
-        .update(updates)
-        .eq("id", r.id);
-      if (error) throw error;
+      await updateRestaurant(r.id, updates);
       onChange(next);
       setRegMsg("Pizzaria registrada no FLYCONTROL com sucesso!");
     } catch (err) {
