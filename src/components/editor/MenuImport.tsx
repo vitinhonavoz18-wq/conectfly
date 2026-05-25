@@ -1,39 +1,52 @@
- import { useState, useRef } from "react";
- import { Upload, FileJson, AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
- import { supabase } from "@/integrations/supabase/client";
- import {
-   Dialog,
-   DialogContent,
-   DialogHeader,
-   DialogTitle,
-   DialogFooter,
-   DialogTrigger,
- } from "@/components/ui/dialog";
- import { toast } from "sonner";
- import type { PizzaSize } from "@/lib/site/types";
- 
- interface Props {
-   restaurantId: string;
-   onSuccess: () => void;
- }
- 
- interface ImportData {
-   pizzaria?: string;
-   tipo_cardapio?: string;
-   tamanhos?: Array<{
-     nome: string;
-     preco: number;
-     fatias: number;
-     max_sabores: number;
-   }>;
-   bordas_recheadas?: Array<{ nome: string; acrescimo: number }>;
-   sabores?: Array<{
-     codigo?: string;
-     nome: string;
-     categoria: string;
-     ingredientes_ordem_preparo?: string[];
-   }>;
- }
+import { useState, useRef } from "react";
+import { Upload, FileJson, AlertCircle, CheckCircle2, Loader2, X, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+import type { PizzaSize } from "@/lib/site/types";
+
+interface Props {
+  restaurantId: string;
+  onSuccess: () => void;
+}
+
+type CategoryType = "PIZZA" | "SIMPLE" | "FLAVORS" | "BEVERAGE" | "SIDE" | "OTHER";
+
+interface ImportData {
+  pizzaria?: string;
+  tipo_cardapio?: string;
+  categoria?: string;
+  category?: string;
+  type?: string;
+  tamanhos?: Array<{
+    nome: string;
+    preco: number;
+    fatias: number;
+    max_sabores: number;
+  }>;
+  bordas_recheadas?: Array<{ nome: string; acrescimo: number }>;
+  sabores?: any[];
+  items?: any[];
+  produtos?: any[];
+  products?: any[];
+  menu_items?: any[];
+}
  
  export function MenuImport({ restaurantId, onSuccess }: Props) {
    const [isOpen, setIsOpen] = useState(false);
