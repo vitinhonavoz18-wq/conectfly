@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson } from "lucide-react";
+import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, ShoppingBag, FileJson, Settings2, Eye, EyeOff, LayoutGrid, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
@@ -248,8 +248,8 @@ export function MenuManager({ restaurantId }: Props) {
                 </p>
               </div>
             )}
-            <div className="px-3 pb-3 -mt-1">
-              <PizzaSettings category={c} onUpdate={(p) => updateCategory(c.id, p)} />
+            <div className="px-4 pb-4">
+              <CatalogSettings category={c} onUpdate={(p) => updateCategory(c.id, p)} />
             </div>
             {isOpen && (
               <div className="border-t border-border p-3 space-y-3">
