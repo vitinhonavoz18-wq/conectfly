@@ -1,0 +1,77 @@
+import { useCart } from "../site/CartContext";
+import { SiteHeader } from "../site/SiteHeader";
+import { SiteHero } from "../site/SiteHero";
+import { SiteComboSection } from "../site/SiteComboSection";
+import { SiteMenuSection } from "../site/SiteMenuSection";
+import { SitePizzaSection } from "../site/SitePizzaSection";
+import { SiteCartDrawer } from "../site/SiteCartDrawer";
+import { SiteFooter } from "../site/SiteFooter";
+import type { SiteData } from "@/lib/site/types";
+
+export function BlackTemplate({ data }: { data: SiteData }) {
+  const { isCartOpen, setCartOpen } = useCart();
+  const r = data.restaurant;
+  
+  const isBeverage = (c: any) => {
+    const name = c.name.toLowerCase();
+    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+  };
+  
+  const isBordas = (c: any) => {
+    const name = c.name.toLowerCase();
+    return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
+  };
+  
+  const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
+  const bordasCategory = data.categories.find(isBordas);
+
+  return (
+    <>
+      <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
+      <main>
+        <div className="site-hero-section">
+          <SiteHero
+            name={r.name}
+            tagline={r.tagline}
+            description={r.description}
+            logoUrl={r.logo_url}
+            heroImageUrl={r.hero_image_url}
+            heroMediaType={r.hero_media_type}
+            heroVideoUrl={r.hero_video_url}
+          />
+        </div>
+        <div id="pizzas-container">
+          <SitePizzaSection 
+            categories={data.categories} 
+            restaurant={r} 
+            bordasCategory={bordasCategory}
+            beverages={data.beverages ?? []}
+          />
+        </div>
+
+        <div>
+          <SiteComboSection groups={data.comboGroups} />
+        </div>
+        <div>
+          <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
+        </div>
+      </main>
+      <SiteFooter
+        name={r.name}
+        phoneDisplay={r.whatsapp_display}
+        hours={r.hours}
+        address={r.address}
+        city={r.city}
+      />
+
+      <SiteCartDrawer
+        open={isCartOpen}
+        onClose={() => setCartOpen(false)}
+        whatsappNumber={r.whatsapp_number}
+        restaurantName={r.name}
+        deliveryZones={data.deliveryZones ?? []}
+        restaurant={r}
+      />
+    </>
+  );
+}

@@ -57,6 +57,8 @@ export interface ComboGroupRow {
   sort_order: number;
 }
 
+export type SiteTemplate = "black" | "white" | "pizza_hut_style" | "burger_style";
+
 export interface RestaurantRow {
   id: string;
   slug: string;
@@ -87,6 +89,7 @@ export interface RestaurantRow {
   flycontrol_tenant_id?: string | null;
   whatsapp_enabled?: boolean;
   show_item_images?: boolean;
+  selected_template?: SiteTemplate;
 }
 
 export interface BeverageRow {
