@@ -1,55 +1,119 @@
-import { BlackTemplate } from "./BlackTemplate";
+import { useCart } from "../site/CartContext";
+import { SiteHeader } from "../site/SiteHeader";
+import { SiteHero } from "../site/SiteHero";
+import { SiteComboSection } from "../site/SiteComboSection";
+import { SiteMenuSection } from "../site/SiteMenuSection";
+import { SitePizzaSection } from "../site/SitePizzaSection";
+import { SiteCartDrawer } from "../site/SiteCartDrawer";
+import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 
-// WhiteTemplate is a clean version of BlackTemplate
-// We'll wrap it in a div with a class that overrides global styles or provides a theme context
 export function WhiteTemplate({ data }: { data: SiteData }) {
+  const { isCartOpen, setCartOpen } = useCart();
+  const r = data.restaurant;
+  
+  const isBeverage = (c: any) => {
+    const name = c.name.toLowerCase();
+    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+  };
+  
+  const isBordas = (c: any) => {
+    const name = c.name.toLowerCase();
+    return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
+  };
+  
+  const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
+  const bordasCategory = data.categories.find(isBordas);
+
+  const style = {
+    ["--site-bg" as string]: "0 0% 98%", // #FAFAFA
+    ["--site-fg" as string]: "222 47% 11%", // #0f172a
+    ["--site-card" as string]: "0 0% 100%", // White
+    ["--site-border" as string]: "214 32% 91%", // #e2e8f0
+    ["--site-muted" as string]: "210 40% 96%", // #f1f5f9
+    ["--site-muted-fg" as string]: "215 16% 47%", // #64748b
+  };
+
   return (
-    <div className="site-template-white min-h-screen bg-white text-slate-900">
+    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
       <style dangerouslySetInnerHTML={{ __html: `
-        .site-template-white {
-          --background: 0 0% 100%;
-          --foreground: 222.2 84% 4.9%;
-          --card: 0 0% 100%;
-          --card-foreground: 222.2 84% 4.9%;
-          --popover: 0 0% 100%;
-          --popover-foreground: 222.2 84% 4.9%;
-          --primary: 221.2 83.2% 53.3%;
-          --primary-foreground: 210 40% 98%;
-          --secondary: 210 40% 96.1%;
-          --secondary-foreground: 222.2 47.4% 11.2%;
-          --muted: 210 40% 96.1%;
-          --muted-foreground: 215.4 16.3% 46.9%;
-          --accent: 210 40% 96.1%;
-          --accent-foreground: 222.2 47.4% 11.2%;
-          --border: 214.3 31.8% 91.4%;
-          --input: 214.3 31.8% 91.4%;
-          --ring: 221.2 83.2% 53.3%;
+        .card-premium {
+          background: hsl(var(--site-card)) !important;
+          border-color: hsl(var(--site-border)) !important;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+          color: hsl(var(--site-fg)) !important;
         }
-        .site-template-white .card-premium {
-          background: white;
-          border-color: #f1f5f9;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-          color: #1e293b;
-        }
-        .site-template-white header {
+        header {
           background: rgba(255, 255, 255, 0.8) !important;
-          border-bottom: 1px solid #f1f5f9 !important;
-          color: #1e293b !important;
+          border-bottom: 1px solid hsl(var(--site-border)) !important;
+          backdrop-blur: 10px;
         }
-        .site-template-white .text-muted-foreground {
-          color: #64748b !important;
+        header * {
+          color: hsl(var(--site-fg)) !important;
         }
-        .site-template-white footer {
-          background: #f8fafc !important;
-          color: #1e293b !important;
-          border-top: 1px solid #f1f5f9;
+        footer {
+          background: hsl(var(--site-muted)) !important;
+          border-top: 1px solid hsl(var(--site-border)) !important;
+          color: hsl(var(--site-fg)) !important;
         }
-        .site-template-white .site-hero-section {
-           background: #ffffff;
+        .text-muted-foreground {
+          color: hsl(var(--site-muted-fg)) !important;
+        }
+        .site-hero-section {
+          background: #ffffff;
+        }
+        .bg-black\\/40 {
+          background-color: rgba(241, 245, 249, 0.8) !important;
+        }
+        .border-white\\/10 {
+          border-color: hsl(var(--site-border)) !important;
         }
       `}} />
-      <BlackTemplate data={data} />
+      <SiteHeader name={r.name} logoUrl={r.logo_url} onOpenCart={() => setCartOpen(true)} />
+      <main>
+        <div className="site-hero-section">
+          <SiteHero
+            name={r.name}
+            tagline={r.tagline}
+            description={r.description}
+            logoUrl={r.logo_url}
+            heroImageUrl={r.hero_image_url}
+            heroMediaType={r.hero_media_type}
+            heroVideoUrl={r.hero_video_url}
+          />
+        </div>
+        <div id="pizzas-container">
+          <SitePizzaSection 
+            categories={data.categories} 
+            restaurant={r} 
+            bordasCategory={bordasCategory}
+            beverages={data.beverages ?? []}
+          />
+        </div>
+
+        <div>
+          <SiteComboSection groups={data.comboGroups} />
+        </div>
+        <div>
+          <SiteMenuSection categories={nonPizzaCategories} restaurant={r} />
+        </div>
+      </main>
+      <SiteFooter
+        name={r.name}
+        phoneDisplay={r.whatsapp_display}
+        hours={r.hours}
+        address={r.address}
+        city={r.city}
+      />
+
+      <SiteCartDrawer
+        open={isCartOpen}
+        onClose={() => setCartOpen(false)}
+        whatsappNumber={r.whatsapp_number}
+        restaurantName={r.name}
+        deliveryZones={data.deliveryZones ?? []}
+        restaurant={r}
+      />
     </div>
   );
 }
