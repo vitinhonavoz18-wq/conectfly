@@ -36,6 +36,7 @@ function ExportPage() {
   const { id } = Route.useParams();
   const router = useRouter();
   const [r, setR] = useState<RestaurantRow | null>(null);
+  const [apiKey, setApiKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
@@ -58,6 +59,13 @@ function ExportPage() {
         const row = data as unknown as RestaurantRow | null;
         setR(row);
         if (row && !ghRepo) setGhRepo(row.slug || "site-delivery");
+      });
+
+    // Fetch API key securely via RPC
+    supabase
+      .rpc("get_restaurant_flycontrol_key", { p_restaurant_id: id })
+      .then(({ data }) => {
+        if (data) setApiKey(data);
       });
   }, [id]);
 
@@ -295,8 +303,8 @@ function ExportPage() {
             <div className="rounded-lg border border-border bg-muted/30 p-3">
               <div className="text-muted-foreground mb-1">API Key</div>
               <div className="font-mono break-all">
-                {r.flycontrol_api_key
-                  ? r.flycontrol_api_key.slice(0, 12) + "…"
+                {apiKey
+                  ? apiKey.slice(0, 12) + "…"
                   : "—"}
               </div>
             </div>
