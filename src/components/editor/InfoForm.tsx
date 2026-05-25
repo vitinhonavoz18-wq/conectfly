@@ -160,25 +160,40 @@ export function InfoForm({ restaurant, onChange }: Props) {
       const slug = (r.slug ?? "").trim();
 
       if (!r.id) {
-        setRegMsg("Salve as alterações primeiro.");
+        setRegMsg("SALVE as alterações antes de testar.");
         return;
       }
 
       setTesting(true);
+      console.log("[FLYCONTROL] Botão 'Testar Conexão' clicado", { restaurant_id: r.id, slug });
+
       try {
         const { testFlycontrolConnection } = await import("@/lib/site/flycontrol");
-        console.log("[FLYCONTROL] Iniciando teste de conexão real...");
         
         const result = await testFlycontrolConnection(r.id, slug);
-        setTestDebug(result);
+        console.log("[FLYCONTROL] Resposta do teste recebida:", result);
+        
+        // Garantir que o resultado seja serializável e seguro para o estado
+        const safeResult = {
+          success: !!result.success,
+          status: result.status || 0,
+          url: result.url || "N/A",
+          slugUsed: result.slugUsed || slug,
+          apiKeyExists: !!result.apiKeyExists,
+          error: result.error || null,
+          data: result.data ? JSON.parse(JSON.stringify(result.data)) : null
+        };
+        
+        setTestDebug(safeResult);
 
-        if (result.success) {
-          setRegMsg("STATUS: CONECTADO - O FlyControl aceitou o pedido de teste!");
+        if (safeResult.success) {
+          setRegMsg("SUCESSO: Conexão com FlyControl estabelecida!");
         } else {
-          setRegMsg("FALHA: O FlyControl recusou a conexão ou retornou erro.");
+          setRegMsg("FALHA: Não foi possível conectar ao FlyControl.");
         }
-      } catch (err) {
-        setRegMsg("Erro inesperado: " + (err instanceof Error ? err.message : String(err)));
+      } catch (err: any) {
+        console.error("[FLYCONTROL] Erro crítico no handleTestConnection:", err);
+        setRegMsg("Erro ao executar teste: " + (err.message || String(err)));
       } finally {
         setTesting(false);
       }
