@@ -48,46 +48,124 @@ interface ImportData {
   menu_items?: any[];
 }
  
- export function MenuImport({ restaurantId, onSuccess }: Props) {
-   const [isOpen, setIsOpen] = useState(false);
-   const [file, setFile] = useState<File | null>(null);
-   const [data, setData] = useState<ImportData | null>(null);
-   const [loading, setLoading] = useState(false);
-   const [error, setError] = useState<string | null>(null);
-   const fileInputRef = useRef<HTMLInputElement>(null);
- 
-   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-     const selectedFile = e.target.files?.[0];
-     if (!selectedFile) return;
- 
-     if (selectedFile.type !== "application/json") {
-       toast.error("Por favor, selecione um arquivo JSON válido.");
-       return;
-     }
- 
-     setFile(selectedFile);
-     const reader = new FileReader();
-     reader.onload = (event) => {
-       try {
-         const json = JSON.parse(event.target?.result as string);
-         validateData(json);
-       } catch (err) {
-         setError("O arquivo JSON é inválido ou está malformado.");
-         setData(null);
-       }
-     };
-     reader.readAsText(selectedFile);
-   };
- 
-   const validateData = (json: any) => {
-     if (!json.sabores || !Array.isArray(json.sabores)) {
-       setError("O arquivo deve conter uma lista de 'sabores'.");
-       setData(null);
-       return;
-     }
-     setError(null);
-     setData(json);
-   };
+export function MenuImport({ restaurantId, onSuccess }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [data, setData] = useState<ImportData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Novos campos editáveis
+  const [categoryName, setCategoryName] = useState("");
+  const [categoryType, setCategoryType] = useState<CategoryType>("SIMPLE");
+  const [importAction, setImportAction] = useState<"ADD" | "REPLACE" | "NEW">("ADD");
+  const [itemsList, setItemsList] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    withPrice: 0,
+    withoutPrice: 0
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== "application/json") {
+      toast.error("Por favor, selecione um arquivo JSON válido.");
+      return;
+    }
+
+    setFile(selectedFile);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        console.log("JSON Carregado:", json);
+        validateData(json);
+      } catch (err) {
+        setError("O arquivo JSON é inválido ou está malformado.");
+        setData(null);
+      }
+    };
+    reader.readAsText(selectedFile);
+  };
+
+  const getPrice = (item: any): number => {
+    const priceFields = ["preco", "preço", "price", "valor", "value", "amount"];
+    for (const field of priceFields) {
+      if (typeof item[field] === "number") return item[field];
+      if (typeof item[field] === "string") {
+        const val = parseFloat(item[field].replace("R$", "").replace(",", ".").trim());
+        if (!isNaN(val)) return val;
+      }
+    }
+    return 0;
+  };
+
+  const getItemName = (item: any): string => {
+    const nameFields = ["nome", "name", "sabor", "title", "produto", "product_name"];
+    for (const field of nameFields) {
+      if (item[field]) return String(item[field]);
+    }
+    return "Sem nome";
+  };
+
+  const getItemCode = (item: any): string => {
+    const codeFields = ["codigo", "código", "code", "sku", "id"];
+    for (const field of codeFields) {
+      if (item[field]) return String(item[field]);
+    }
+    return "";
+  };
+
+  const validateData = (json: any) => {
+    const listFields = ["sabores", "items", "produtos", "products", "menu_items"];
+    let foundItems: any[] = [];
+    let listFieldUsed = "";
+
+    for (const field of listFields) {
+      if (json[field] && Array.isArray(json[field])) {
+        foundItems = json[field];
+        listFieldUsed = field;
+        break;
+      }
+    }
+
+    if (foundItems.length === 0 && Array.isArray(json)) {
+      foundItems = json;
+    }
+
+    if (foundItems.length === 0) {
+      setError("Não encontramos uma lista de itens válida no JSON. Use campos como 'sabores', 'items' ou 'produtos'.");
+      setData(null);
+      return;
+    }
+
+    setError(null);
+    setData(json);
+    setItemsList(foundItems);
+
+    // Detectar nome da categoria
+    const detectedName = json.categoria || json.category || json.tipo || json.type || json.categoryName || json.tipo_cardapio || "Nova Categoria";
+    setCategoryName(detectedName);
+
+    // Detectar tipo
+    const isPizza = !!(json.tamanhos || json.bordas_recheadas);
+    setCategoryType(isPizza ? "PIZZA" : "SIMPLE");
+
+    // Calcular estatísticas
+    const withPrice = foundItems.filter(item => getPrice(item) > 0).length;
+    setStats({
+      total: foundItems.length,
+      withPrice: withPrice,
+      withoutPrice: foundItems.length - withPrice
+    });
+
+    console.log("Lista detectada:", listFieldUsed || "Array raiz");
+    console.log("Categoria detectada:", detectedName);
+    console.log("Itens com preço:", withPrice);
+  };
  
    const handleImport = async () => {
      if (!data || !restaurantId) return;
