@@ -41,23 +41,7 @@ export const Route = createFileRoute("/_authenticated/")({
 
 function Dashboard() {
   const router = useRouter();
-  const { user } = useAuth();
-  
-  const signOut = async () => {
-    console.log("[Dashboard] Iniciando logout completo...");
-    // Regra 9: Remover todas as sessões
-    localStorage.removeItem("sitecreatorfly_admin_session_v2");
-    localStorage.removeItem("sitecreatorfly_admin_session");
-    
-    // Limpar Supabase
-    await supabase.auth.signOut();
-    
-    // Limpar sessionStorage também por precaução
-    sessionStorage.clear();
-    
-    toast.success("Sessão encerrada");
-    router.navigate({ to: "/login" });
-  };
+  const { user, signOut } = useAuth();
 
   const [list, setList] = useState<RestaurantRow[] | null>(null);
   const [creating, setCreating] = useState(false);

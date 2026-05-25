@@ -43,20 +43,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signOut: async () => {
       try {
-        console.log("[Auth] Encerrando sessão administrativa...");
-        toast.info("Saindo...");
+        console.log("[Auth] Iniciando logout administrativo completo...");
+        console.log(`[Auth] Rota: ${window.location.pathname} | isAdminRoute: true | adminSessionValid: false | Action: Logout`);
         
-        // Limpa o Supabase
-        await supabase.auth.signOut();
-        
-        // Limpa qualquer outro resquício local se houver
+        // Limpa tudo (Regra 9)
         localStorage.clear();
         sessionStorage.clear();
         
+        // Limpar cookies do Supabase explicitamente se possível
+        await supabase.auth.signOut();
+        
+        toast.success("Sessão administrativa encerrada com sucesso.");
       } catch (e) {
-        console.error("SignOut error", e);
+        console.error("Erro no SignOut", e);
       } finally {
-        // Força recarregamento total para garantir que nenhum estado permaneça em memória
+        // Força o redirecionamento imediato para a tela de login
         window.location.href = "/login";
       }
     },
