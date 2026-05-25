@@ -138,6 +138,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
                     <p className="font-black text-white">{formatBRL(qty * Number(bev.price))}</p>
                   </div>
                 )}
+                </div>
               </div>
             </div>
           );
