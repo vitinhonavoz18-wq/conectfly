@@ -74,20 +74,20 @@ export function SiteComboSection({ groups }: Props) {
                      {formatBRL(c.price)}
                    </span>
                  </div>
-                 <button
-                   onClick={() =>
-                     addLine({
-                       itemId: c.id,
-                       name: c.name,
-                       description: c.items.join(" + "),
-                       unitPrice: c.price,
-                     })
-                   }
-                   className="btn-premium p-4 rounded-2xl shadow-xl active:scale-90"
-                   title="Adicionar ao pedido"
-                 >
-                   <Plus className="h-6 w-6 text-primary-foreground" />
-                 </button>
+                  <button
+                    onClick={() =>
+                      addLine({
+                        itemId: c.id,
+                        name: c.name,
+                        description: c.items.join(" + "),
+                        unitPrice: c.price,
+                      })
+                    }
+                    className="site-btn-primary p-4 rounded-2xl shadow-xl active:scale-90"
+                    title="Adicionar ao pedido"
+                  >
+                    <Plus className="h-6 w-6 text-white" />
+                  </button>
                </div>
              </div>
           ))}
