@@ -108,7 +108,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
               <div className="flex flex-wrap items-center gap-2 mb-6">
                  <button
                    onClick={() => setActive(null)}
-                   className="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest bg-white/5 border border-white/10 hover:border-primary/50 transition-all"
+                   className="px-6 py-2.5 site-btn-secondary !rounded-2xl"
                  >
                    ← Voltar
                  </button>
@@ -119,8 +119,8 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                        onClick={() => setActive(c.id)}
                        className={`px-6 py-2.5 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
                          active === c.id
-                           ? "bg-gradient-bronze text-primary-foreground shadow-glow"
-                           : "bg-white/5 border border-white/10 hover:border-primary/30 text-muted-foreground"
+                           ? "site-btn-primary shadow-glow"
+                           : "site-btn-secondary text-muted-foreground"
                        }`}
                      >
                       {c.icon ? `${c.icon} ` : ""}
