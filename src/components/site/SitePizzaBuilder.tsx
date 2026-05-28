@@ -543,20 +543,20 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 </span>
               </li>
                {specialExtras > 0 && (
-                 <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-primary))]">
-                   <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
-                   <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
-                 </li>
-               )}
+                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2 text-[hsl(var(--site-primary))]">
+                    <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
+                    <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
+                  </li>
+                )}
                 {selectedBorder && (
-                  <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-secondary))]">
+                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2 text-[hsl(var(--site-secondary))]">
                     <span className="font-medium">Adicional: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
                   </li>
                 )}
                 {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
                   <div className="pt-2">
-                    <span className="font-medium text-[#111] block mb-2">Bebidas adicionais:</span>
+                    <span className="font-medium text-[hsl(var(--site-fg))] block mb-2">Bebidas adicionais:</span>
                     <ul className="space-y-1">
                       {Object.entries(selectedBeverages).map(([id, qty]) => {
                         if (qty === 0) return null;
