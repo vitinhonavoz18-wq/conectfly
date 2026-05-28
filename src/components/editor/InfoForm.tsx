@@ -991,10 +991,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest text-center py-4">
               ID interno da unidade: <span className="font-mono text-white/40">{r.id}</span>
             </p>
-          </div>
-        </div>
-      );
-    }
+      </div>
+    );
+  }
 
 function Field({
   label,
