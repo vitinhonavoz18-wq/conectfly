@@ -304,19 +304,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           )}
           </div>
 
-          <div className="p-6 space-y-8 bg-white" ref={fieldsContainerRef}>
+          <div className="p-6 space-y-8 bg-[hsl(var(--site-card))]" ref={fieldsContainerRef}>
             {validationAttempted && error && (
-              <div className="bg-[#FEF2F2] border-2 border-[#DC2626]/20 rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-base font-extrabold text-[#DC2626] text-center leading-tight">
+              <div className="bg-destructive/10 border-2 border-destructive/20 rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-base font-extrabold text-destructive text-center leading-tight">
                   Quase lá! Preencha seus dados para finalizar o pedido. 🍕
                 </p>
               </div>
             )}
-
+ 
             <div className="space-y-6">
               <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#D9A441] flex items-center gap-2">
-                  <span className="h-1 w-8 bg-[#D9A441] rounded-full"></span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                  <span className="h-1 w-8 bg-[hsl(var(--site-secondary))] rounded-full"></span>
                   Seus Dados
                 </h3>
                 <div className="grid gap-3">
@@ -325,10 +325,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo"
-                    className={`w-full px-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] ${
+                    className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                       validationAttempted && !name.trim() 
-                        ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
-                        : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                        ? "border-destructive/40 bg-destructive/5" 
+                        : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
                   <input
