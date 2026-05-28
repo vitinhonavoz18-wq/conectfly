@@ -400,8 +400,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                onClick={() => setSelectedBorderId(null)}
                 className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
                   selectedBorderId === null
-                    ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-                    : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                    ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
                 }`}
               >
                 {selectedBorderId === null && (
