@@ -677,269 +677,323 @@ export function InfoForm({ restaurant, onChange }: Props) {
              <div className="absolute top-0 right-0 p-10 opacity-5">
                <Zap className="h-32 w-32 text-primary" />
              </div>
+             
              <div className="flex items-center gap-4 relative z-10">
                <div className="h-14 w-14 rounded-xl bg-gradient-bronze flex items-center justify-center shadow-glow">
                  <Zap className="h-8 w-8 text-primary-foreground" />
                </div>
                <div>
-                 <h3 className="text-3xl font-black tracking-tighter uppercase">Conexão FLYCONTROL</h3>
-                 <p className="text-muted-foreground italic">Engenharia gastronômica integrada em tempo real.</p>
+                 <h3 className="text-3xl font-black tracking-tighter uppercase">Fluxo de Pedidos</h3>
+                 <p className="text-muted-foreground italic">Configure como os pedidos são processados e enviados.</p>
                </div>
              </div>
-        <p className="text-sm text-muted-foreground">
-          Envia cada pedido em tempo real para o painel FLYCONTROL desta pizzaria.
-        </p>
 
-        <label className="flex items-center gap-3 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={!!r.flycontrol_enabled}
-            onChange={(e) => set("flycontrol_enabled", e.target.checked)}
-            className="h-4 w-4"
-          />
-          <span className="font-semibold">Ativar envio para FLYCONTROL</span>
-        </label>
-
-        <label className="flex items-center gap-3 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={r.whatsapp_enabled !== false}
-            onChange={(e) => set("whatsapp_enabled", e.target.checked)}
-            className="h-4 w-4"
-          />
-          <span>Continuar abrindo WhatsApp ao finalizar pedido</span>
-        </label>
-
-         <div className="space-y-4 pt-2">
-            <Field
-              label="URL do Painel FLYCONTROL"
-              hint="Copie a URL do seu painel aberto (ex: https://flycontrol.conectfly.com.br)"
-            >
-              <input
-                value={r.flycontrol_base_url ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  set("flycontrol_base_url", val);
-                  
-                  // Auto-generate endpoint if base URL is pasted or if current is a test endpoint
-                  if (val) {
-                    const currentApiUrl = (r.flycontrol_api_url ?? "").toLowerCase();
-                    const isTest = currentApiUrl.includes("test") || currentApiUrl.includes("connection");
-                    
-                    if (!r.flycontrol_api_url || isTest) {
-                      let base = val.trim();
-                      if (!base.startsWith("http")) base = "https://" + base;
-                      base = base.replace(/\/+$/, "");
-                      
-                      let autoEndpoint = "";
-                      if (base.includes(".supabase.co")) {
-                        autoEndpoint = base + "/functions/v1/create-order";
-                      } else {
-                        autoEndpoint = base + "/api/orders";
-                      }
-                      set("flycontrol_api_url", autoEndpoint);
-                    }
-                  }
-                }}
-                placeholder="https://flycontrol.conectfly.com.br"
-                className="input"
-              />
-            </Field>
-
-           <Field
-             label="Endpoint de Criação Automática"
-             hint="URL específica para registrar novas pizzarias no FLYCONTROL (Opcional)"
-           >
-             <input
-               value={r.flycontrol_register_url ?? ""}
-               onChange={(e) => set("flycontrol_register_url", e.target.value)}
-               placeholder="https://conectfly.com.br/api/pizzerias/create"
-               className="input"
-             />
-           </Field>
-
-           <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 space-y-3">
-             <div className="flex items-center justify-between">
-               <span className="text-sm font-semibold">Identificação da Pizzaria</span>
-               {r.flycontrol_tenant_id && (
-                 <span className="text-[10px] font-mono bg-secondary px-1.5 py-0.5 rounded uppercase">
-                   ID: {r.flycontrol_tenant_id}
-                 </span>
-               )}
+             <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3 relative z-10">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2 text-center">Fluxo Recomendado para Produção</p>
+               <div className="flex items-center justify-center gap-4 sm:gap-8">
+                 <div className="flex flex-col items-center gap-1">
+                   <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">SiteCreatorFly</div>
+                 </div>
+                 <div className="text-primary animate-pulse">→</div>
+                 <div className="flex flex-col items-center gap-1">
+                   <div className="h-10 px-4 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-xs uppercase tracking-tighter text-primary">FIQON</div>
+                 </div>
+                 <div className="text-primary animate-pulse">→</div>
+                 <div className="flex flex-col items-center gap-1">
+                   <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">FlyControl</div>
+                 </div>
+               </div>
+               <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest mt-2">
+                 A FIQON recebe o pedido, executa automações e envia para o FlyControl.
+               </p>
              </div>
-             
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground mb-1 flex justify-between">
-                  <span>API Key (Gerada aqui ou colada do FLYCONTROL)</span>
-                </div>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type={showApiKey ? "text" : "password"}
-                      value={r.flycontrol_api_key || ""}
-                      onChange={(e) => set("flycontrol_api_key", e.target.value)}
-                      placeholder="fc_..."
-                      className="w-full font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showApiKey ? <Eye className="h-4 w-4" /> : <Eye className="h-4 w-4 opacity-50" />}
-                    </button>
-                  </div>
+
+             <div className="space-y-4 relative z-10">
+               <label className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground">Escolha o Modo de Operação</label>
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                  <button
-                   type="button"
-                   onClick={copyKey}
-                   className="p-2 rounded-lg bg-secondary hover:bg-muted transition"
-                   title="Copiar Chave"
+                   onClick={() => set("site_settings", { ...r.site_settings, order_flow_mode: "fiqon" })}
+                   className={`p-6 rounded-2xl border-2 transition-all text-left group ${
+                     (r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "fiqon"
+                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                       : "border-white/5 bg-white/5 hover:border-white/20"
+                   }`}
                  >
-                   <Copy className="h-4 w-4" />
+                   <div className="flex justify-between items-start mb-2">
+                     <h4 className="font-black text-sm uppercase tracking-tight">Opção A: Usar FIQON</h4>
+                     {(r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "fiqon" && (
+                       <Zap className="h-4 w-4 text-primary fill-primary animate-pulse" />
+                     )}
+                   </div>
+                   <p className="text-[10px] text-muted-foreground leading-relaxed">
+                     Intermediador recomendado. Ideal para automações, logs, WhatsApp e controle avançado.
+                   </p>
+                   <div className="mt-4 inline-flex px-2 py-1 rounded bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest">Recomendado</div>
                  </button>
+
                  <button
-                   type="button"
-                   onClick={regenerateKey}
-                   className="p-2 rounded-lg bg-secondary hover:bg-muted transition"
-                   title="Gerar Nova Chave"
+                   onClick={() => {
+                     if (r.site_settings?.order_flow_mode === "fiqon" || r.site_settings?.external_webhook_url) {
+                       if (!confirm("Você já está usando FIQON como intermediador. Ativar envio direto pode duplicar pedidos se não for configurado corretamente. Deseja continuar?")) return;
+                     }
+                     set("site_settings", { ...r.site_settings, order_flow_mode: "direct" });
+                   }}
+                   className={`p-6 rounded-2xl border-2 transition-all text-left group ${
+                     (r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "direct"
+                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                       : "border-white/5 bg-white/5 hover:border-white/20"
+                   }`}
                  >
-                   <RefreshCw className="h-4 w-4" />
+                   <div className="flex justify-between items-start mb-2">
+                     <h4 className="font-black text-sm uppercase tracking-tight">Opção B: Direto FlyControl</h4>
+                   </div>
+                   <p className="text-[10px] text-muted-foreground leading-relaxed">
+                     Envio direto sem intermediários. Use apenas se não for utilizar FIQON ou automações externas.
+                   </p>
+                   <div className="mt-4 inline-flex px-2 py-1 rounded bg-white/10 text-muted-foreground text-[8px] font-black uppercase tracking-widest">Legado / Avançado</div>
                  </button>
                </div>
              </div>
 
-             <div className="flex flex-wrap items-center gap-2 pt-1">
-                <div className="flex flex-col gap-2 w-full">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleAutoRegister}
-                      disabled={registering}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition disabled:opacity-50"
+             <div className="space-y-6 pt-4 border-t border-white/5 relative z-10">
+               {((r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "fiqon") ? (
+                 <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                      <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Status: FIQON Ativo</p>
+                      <p className="text-[10px] text-muted-foreground italic">Neste modo, o FlyControl recebe os pedidos através da FIQON.</p>
+                    </div>
+
+                    <Field 
+                      label="URL do Webhook FIQON / Automação Externa" 
+                      hint="URL que recebe os pedidos finalizados do site e inicia automações externas."
                     >
-                      {registering ? (
-                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Wand2 className="h-3.5 w-3.5" />
-                      )}
-                      {registering ? "Vinculando..." : "Vincular / Registrar no FLYCONTROL"}
-                    </button>
-                    
-                    {r.flycontrol_api_key && (
+                      <input
+                        value={r.site_settings?.external_webhook_url ?? ""}
+                        onChange={(e) => set("site_settings", { ...r.site_settings, external_webhook_url: e.target.value })}
+                        placeholder="https://webhook.fiqon.app/..."
+                        className="input"
+                      />
+                    </Field>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={r.whatsapp_enabled !== false}
+                          onChange={(e) => set("whatsapp_enabled", e.target.checked)}
+                          className="h-5 w-5 accent-primary"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold">Continuar abrindo WhatsApp</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Abre o WhatsApp ao finalizar pedido</span>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                        <input
+                          type="checkbox"
+                          checked={r.site_settings?.allow_double_send ?? false}
+                          onChange={(e) => set("site_settings", { ...r.site_settings, allow_double_send: e.target.checked })}
+                          className="h-5 w-5 accent-primary"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold">Permitir envio duplo</span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Envia para FIQON e FlyControl (Debug)</span>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center gap-3">
                       <button
                         type="button"
-                        onClick={handleTestConnection}
+                        onClick={async () => {
+                          if (!r.site_settings?.external_webhook_url) {
+                            alert("Configure a URL do Webhook primeiro.");
+                            return;
+                          }
+                          setTesting(true);
+                          setRegMsg("Enviando pedido de teste para FIQON...");
+                          try {
+                            const { buildOrderPayload, sendOrderToExternalWebhook } = await import("@/lib/site/flycontrol");
+                            const payload = buildOrderPayload({
+                              name: "CLIENTE TESTE FIQON",
+                              phone: "5571999999999",
+                              address: "ENDEREÇO DE TESTE",
+                              items: [],
+                              subtotal: 0,
+                              total: 0,
+                              pizzeria_slug: r.slug,
+                              pizzeria_name: r.name,
+                              whatsapp_message: "TESTE",
+                            });
+                            const result = await sendOrderToExternalWebhook(r.site_settings.external_webhook_url, payload);
+                            setTestDebug({
+                              success: result.success,
+                              status: result.status,
+                              url: r.site_settings.external_webhook_url,
+                              data: result.response,
+                              slugUsed: r.slug
+                            });
+                            setRegMsg(result.success ? "Teste enviado com sucesso!" : "Falha ao enviar teste.");
+                          } catch (err: any) {
+                            setRegMsg("Erro: " + err.message);
+                          } finally {
+                            setTesting(false);
+                          }
+                        }}
                         disabled={testing}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-sm font-semibold hover:bg-muted transition disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-black text-xs uppercase tracking-widest shadow-xl hover:opacity-90 transition disabled:opacity-50"
                       >
-                        {testing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
-                        Testar Conexão
+                        {testing ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                        Testar envio para FIQON
                       </button>
-                    )}
-                  </div>
-                  {(regMsg || testDebug) && (
-                    <div className="space-y-2 mt-2">
-                      {regMsg && (
-                        <div className={`text-xs font-black p-3 rounded-xl border ${regMsg.includes("FALHA") || regMsg.includes("Erro") ? "bg-red-500/10 border-red-500/30 text-red-500" : "bg-primary/10 border-primary/20 text-primary"} uppercase tracking-wider`}>
-                          {regMsg}
-                        </div>
-                      )}
-                      {testDebug && (
-                        <div className={`p-4 rounded-xl border font-mono text-[10px] space-y-2 overflow-auto max-h-60 ${
-                          testDebug.success ? "bg-green-500/10 border-green-500/20" : "bg-red-500/10 border-red-500/20"
-                        }`}>
-                          <div className="flex justify-between border-b border-white/5 pb-1 mb-1">
-                            <span className="font-bold uppercase">{testDebug.success ? "✅ Recebimento Confirmado" : "❌ Falha na Integração"}</span>
-                            <span className={testDebug.success ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
-                              {testDebug.status || "ERROR"}
-                            </span>
-                          </div>
-                          <p><span className="text-muted-foreground">ENDPOINT:</span> {testDebug.url}</p>
-                          <p><span className="text-muted-foreground">SLUG:</span> {testDebug.slugUsed}</p>
-                          {testDebug.details?.remote_status && (
-                            <p><span className="text-muted-foreground">FLYCONTROL STATUS:</span> {testDebug.details.remote_status}</p>
-                          )}
-                          {testDebug.error && <p className="text-red-400 font-semibold"><span className="text-muted-foreground">MOTIVO:</span> {testDebug.error}</p>}
-                          {testDebug.success && <p className="text-green-400 mt-1">O FlyControl confirmou o recebimento do pedido de teste com sucesso!</p>}
-                          {testDebug.data && !testDebug.success && (
-                            <div className="mt-2">
-                              <span className="text-muted-foreground">RESPOSTA DO SERVIDOR:</span>
-                              <pre className="mt-1 opacity-80 whitespace-pre-wrap">{JSON.stringify(testDebug.data, null, 2)}</pre>
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
-                  )}
-                </div>
+                 </div>
+               ) : (
+                 <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                      <p className="text-[10px] font-black uppercase text-yellow-500 tracking-widest mb-1">Aviso: Modo Direto Ativo</p>
+                      <p className="text-[10px] text-muted-foreground italic">Não use este modo junto com FIQON para evitar pedidos duplicados.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Field label="URL do Painel FlyControl" hint="Ex: https://pizzaria.flycontrol.com.br">
+                        <input
+                          value={r.flycontrol_base_url ?? ""}
+                          onChange={(e) => set("flycontrol_base_url", e.target.value)}
+                          className="input"
+                        />
+                      </Field>
+                      <Field label="Endpoint de Pedidos" hint="URL do POST de pedidos">
+                        <input
+                          value={r.flycontrol_api_url ?? ""}
+                          onChange={(e) => set("flycontrol_api_url", e.target.value)}
+                          className="input"
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-widest">Autenticação Direta</span>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={!!r.flycontrol_enabled}
+                            onChange={(e) => set("flycontrol_enabled", e.target.checked)}
+                            className="h-4 w-4 accent-primary"
+                          />
+                          <span className="text-[10px] font-black uppercase">Ativar Envio Direto</span>
+                        </label>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type={showApiKey ? "text" : "password"}
+                            value={r.flycontrol_api_key || ""}
+                            onChange={(e) => set("flycontrol_api_key", e.target.value)}
+                            placeholder="Chave API FlyControl"
+                            className="w-full font-mono text-xs bg-background border border-input px-3 py-2 rounded-lg pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowApiKey(!showApiKey)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                          >
+                            <Eye className="h-4 w-4 opacity-50" />
+                          </button>
+                        </div>
+                        <button type="button" onClick={copyKey} className="p-2 bg-secondary rounded-lg"><Copy className="h-4 w-4"/></button>
+                        <button type="button" onClick={regenerateKey} className="p-2 bg-secondary rounded-lg"><RefreshCw className="h-4 w-4"/></button>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={handleAutoRegister}
+                          className="btn-secondary px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                        >
+                          <Wand2 className="h-3.5 w-3.5" /> Vincular Manualmente
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleTestConnection}
+                          className="btn-secondary px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                        >
+                          <Zap className="h-3.5 w-3.5" /> Testar Conexão Direta
+                        </button>
+                      </div>
+                    </div>
+                 </div>
+               )}
+             </div>
+
+             {(regMsg || testDebug) && (
+               <div className="space-y-3 relative z-10">
+                 {regMsg && (
+                   <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
+                     {regMsg}
+                   </div>
+                 )}
+                 {testDebug && (
+                   <div className="p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-[10px] space-y-2 max-h-40 overflow-auto">
+                     <p className="font-bold text-primary">{testDebug.success ? "✅ SUCESSO" : "❌ ERRO"}</p>
+                     <p>Status: {testDebug.status}</p>
+                     {testDebug.data && <pre className="opacity-70">{JSON.stringify(testDebug.data, null, 2)}</pre>}
+                   </div>
+                 )}
+               </div>
+             )}
+           </div>
+
+           <div className="card-premium p-10 space-y-8 border-white/10 bg-white/5">
+             <div className="flex items-center gap-4">
+               <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
+                 <RefreshCw className="h-6 w-6 text-muted-foreground" />
+               </div>
+               <div>
+                 <h3 className="text-2xl font-black tracking-tighter uppercase">Sincronização de Cardápio</h3>
+                 <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">SiteCreatorFly ↔ FlyControl</p>
+               </div>
+             </div>
+             
+             <p className="text-[10px] text-muted-foreground uppercase leading-relaxed tracking-wider">
+               Use esta área apenas para sincronizar produtos/cardápio entre SiteCreatorFly e FlyControl. Isso é separado do envio de pedidos.
+             </p>
+
+             <Field 
+               label="URL de Sincronização do Cardápio" 
+               hint="Copie esta URL e cole no seu FlyControl para importar o cardápio automaticamente."
+             >
+               <div className="flex gap-2">
+                 <input
+                   readOnly
+                   value={`https://watjejwgtieqfkpebkfz.supabase.co/functions/v1/menu-sync?slug=${r.slug}`}
+                   className="input text-xs flex-1 bg-black/20"
+                 />
+                 <button
+                   type="button"
+                   onClick={copySyncUrl}
+                   className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
+                 >
+                   <Copy className="h-5 w-5" />
+                 </button>
+               </div>
+             </Field>
+
+             <div className="pt-4 flex items-center gap-2">
+               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endpoint Ativo e Pronto</span>
              </div>
            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field
-                label="Endpoint de Pedidos"
-                hint="Preenchido automaticamente ao colar a URL do Painel."
-              >
-                <input
-                  value={r.flycontrol_api_url ?? ""}
-                  onChange={(e) => set("flycontrol_api_url", e.target.value)}
-                  placeholder="https://.../api/orders"
-                  className="input text-xs"
-                />
-              </Field>
-              <Field
-                label="Endpoint de Sincronização do Cardápio"
-                hint="Use esta URL no FlyControl para importar seu cardápio."
-              >
-                <div className="flex gap-2">
-                  <input
-                    readOnly
-                    value={`https://watjejwgtieqfkpebkfz.supabase.co/functions/v1/menu-sync?slug=${r.slug}`}
-                    className="input text-xs flex-1 bg-white/5"
-                  />
-                  <button
-                    type="button"
-                    onClick={copySyncUrl}
-                    className="p-2 rounded-lg bg-secondary hover:bg-muted transition"
-                    title="Copiar URL de Sincronização"
-                  >
-                    <Copy className="h-4 w-4" />
-                  </button>
-                </div>
-              </Field>
-            </div>
-          </div>
-
-          <div className="pt-6 border-t border-white/5 space-y-4">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Zap className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-black tracking-tighter uppercase">Webhooks Externos (API)</h3>
-                <p className="text-muted-foreground italic">Integração FIQON / Sistemas Externos.</p>
-              </div>
-            </div>
-            
-            <Field 
-              label="URL do Webhook Externo (POST)" 
-              hint="URL que receberá o JSON do pedido finalizado em tempo real. Use esta para teste FIQON: https://webhook.fiqon.app/webhook/test/019e701f-3ca0-71ad-9503-89135d600ce1/a6d11f02-77c1-4dc9-b031-3961112f0dc9"
-            >
-              <input
-                value={r.site_settings?.external_webhook_url ?? ""}
-                onChange={(e) => set("site_settings", { ...r.site_settings, external_webhook_url: e.target.value })}
-                placeholder="https://webhook.site/..."
-                className="input"
-              />
-            </Field>
-          </div>
-        <p className="text-xs text-muted-foreground">
-          ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
-        </p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest text-center py-4">
+              ID interno da unidade: <span className="font-mono text-white/40">{r.id}</span>
+            </p>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 function Field({
   label,

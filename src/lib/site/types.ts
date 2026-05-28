@@ -119,6 +119,8 @@ export interface RestaurantRow {
     primaryButtonText?: string;
     show_cart_button?: boolean;
     external_webhook_url?: string;
+    order_flow_mode?: "fiqon" | "direct";
+    allow_double_send?: boolean;
   };
   customization?: {
     primaryButtonText?: string;

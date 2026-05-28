@@ -125,101 +125,76 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     try {
       console.log("🚀 Iniciando finalização do pedido");
 
-        const pizzeriaSlug = restaurant?.slug;
+      const flowMode = restaurant?.site_settings?.order_flow_mode || (restaurant?.site_settings?.external_webhook_url ? "fiqon" : "direct");
+      const allowDoubleSend = !!restaurant?.site_settings?.allow_double_send;
+      
+      console.log(`[CHECKOUT] Modo de fluxo detectado: ${flowMode} (Double Send: ${allowDoubleSend})`);
 
-        if (flycontrolOn && restaurant) {
-          const payload = buildOrderPayload({
-          name,
-          phone,
-          address,
-          neighborhood: selectedZone?.neighborhood ?? null,
-          reference: null,
-          deliveryFee,
-          items,
-          subtotal: totalPrice,
-          total: grandTotal,
-          paymentMethod,
-          changeFor: orderData.changeFor,
-          notes: notes.trim(),
-          pizzeria_slug: restaurant.slug,
-          pizzeria_name: restaurant.name,
-           whatsapp_message: messageWhatsApp,
-           delivery_type: hasZones ? "delivery" : "retirada",
-         });
+      const orderPayload = buildOrderPayload({
+        name,
+        phone,
+        address,
+        neighborhood: selectedZone?.neighborhood ?? null,
+        reference: null,
+        deliveryFee,
+        items,
+        subtotal: totalPrice,
+        total: grandTotal,
+        paymentMethod,
+        changeFor: orderData.changeFor,
+        notes: notes.trim(),
+        pizzeria_slug: restaurant?.slug || "",
+        pizzeria_name: restaurant?.name || "",
+        whatsapp_message: messageWhatsApp,
+        delivery_type: hasZones ? "delivery" : "retirada",
+      });
 
-          // Timeout amplo (25s) para cobrir os retries (1s+2s+4s) do proxy
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => {
-            console.warn("⏱️ Timeout de 25s atingido no envio para o FlyControl. Abortando...");
-            controller.abort();
-          }, 25000);
-
-          console.log("📤 [CHECKOUT] INICIANDO ENVIO REAL para FlyControl", {
-            slug: restaurant.slug,
-            restaurant_id: restaurant.id,
-            items: payload.order.items.length,
-            total: payload.order.total,
-            order_id: payload.order.id,
-          });
-
-          try {
-            const result = await sendOrderToFlycontrol(restaurant, payload, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            
-            if (result.success) {
-              painelRegistrado = true;
-              console.log("✅ [CHECKOUT] Pedido confirmado no FlyControl", { order_id: result.order_id });
-              toast.success("Pedido registrado no FlyControl!");
-            } else if (result.skipped) {
-              console.log("ℹ️ [CHECKOUT] Envio FlyControl ignorado: " + (result.message || "desativado"));
-            }
-          } catch (err: any) {
-            clearTimeout(timeoutId);
-            console.error("❌ [CHECKOUT] Erro ao enviar para FlyControl:", err.message);
-            toast.error("Erro no painel, mas o pedido seguirá via WhatsApp.");
+      // 1. Envio para FIQON (Webhook Externo) se estiver no modo fiqon ou double send
+      const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
+      if (externalWebhookUrl && (flowMode === "fiqon" || allowDoubleSend)) {
+        console.log("📤 [WEBHOOK] Enviando para FIQON:", externalWebhookUrl);
+        try {
+          const result = await sendOrderToExternalWebhook(externalWebhookUrl, orderPayload);
+          if (result.success) {
+            console.log("✅ [WEBHOOK] Pedido enviado com sucesso para FIQON");
+            if (flowMode === "fiqon") painelRegistrado = true;
+          } else {
+            console.error("❌ [WEBHOOK] Falha ao enviar para FIQON. Status:", result.status);
           }
-       } else {
-         console.log("ℹ️ Integração FlyControl desativada para esta pizzaria. Pulando registro no painel e seguindo para WhatsApp.");
-       }
+        } catch (webhookErr: any) {
+          console.error("❌ [WEBHOOK] Erro fatal no envio para FIQON:", webhookErr.message);
+        }
+      }
 
-       // 3. Envio para Webhook Externo (Novo)
-       const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
-       
-       if (externalWebhookUrl) {
-         console.log("webhookExternalUrlLoaded:", externalWebhookUrl);
-         
-         const webhookPayload = buildOrderPayload({
-           name,
-           phone,
-           address,
-           neighborhood: selectedZone?.neighborhood ?? null,
-           reference: null,
-           deliveryFee,
-           items,
-           subtotal: totalPrice,
-           total: grandTotal,
-           paymentMethod,
-           changeFor: orderData.changeFor,
-           notes: notes.trim(),
-           pizzeria_slug: restaurant.slug,
-           pizzeria_name: restaurant.name,
-           whatsapp_message: messageWhatsApp,
-           delivery_type: hasZones ? "delivery" : "retirada",
-         });
+      // 2. Envio Direto para FlyControl se estiver no modo direct ou double send
+      if (flycontrolOn && restaurant && (flowMode === "direct" || allowDoubleSend)) {
+        console.log("📤 [CHECKOUT] Enviando DIRETAMENTE para FlyControl");
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          console.warn("⏱️ Timeout no envio direto para FlyControl. Abortando...");
+          controller.abort();
+        }, 25000);
 
-         try {
-           const result = await sendOrderToExternalWebhook(externalWebhookUrl, webhookPayload);
-           if (result.success) {
-             console.log("✅ [WEBHOOK] Pedido enviado com sucesso para o webhook externo");
-           } else {
-             console.error("❌ [WEBHOOK] Falha ao enviar para webhook externo. Status:", result.status);
-           }
-         } catch (webhookErr: any) {
-           console.error("❌ [WEBHOOK] Erro fatal no envio do webhook:", webhookErr.message);
-         }
-       } else {
-         console.log("Nenhum Webhook Externo configurado para esta pizzaria");
-       }
+        try {
+          const result = await sendOrderToFlycontrol(restaurant, orderPayload, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          
+          if (result.success) {
+            if (flowMode === "direct") painelRegistrado = true;
+            console.log("✅ [CHECKOUT] Pedido confirmado no FlyControl");
+            if (flowMode === "direct") toast.success("Pedido registrado no FlyControl!");
+          }
+        } catch (err: any) {
+          clearTimeout(timeoutId);
+          console.error("❌ [CHECKOUT] Erro no envio direto para FlyControl:", err.message);
+          if (flowMode === "direct") toast.error("Erro no painel direto, mas o pedido seguirá via WhatsApp.");
+        }
+      }
+
+      if (painelRegistrado) {
+        toast.success("Pedido confirmado com sucesso!");
+      }
 
     } catch (err) {
       console.error("❌ Erro geral ao finalizar pedido:", err);
