@@ -575,12 +575,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             </ul>
           </div>
         ) : (
-          <p className="text-base text-[#555] font-medium">Selecione um tamanho para ver o resumo.</p>
+          <p className="text-base text-[hsl(var(--site-muted-fg))] font-medium">Selecione um tamanho para ver o resumo.</p>
         )}
         
-        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[#F3F4F6] flex-wrap">
+        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[hsl(var(--site-border))] flex-wrap">
           <div className="flex flex-col">
-            <span className="text-xs uppercase tracking-widest text-[#555] font-bold mb-1">
+            <span className="text-xs uppercase tracking-widest text-[hsl(var(--site-muted-fg))] font-bold mb-1">
               Total do Pedido
             </span>
             <span className="text-4xl font-black text-[hsl(var(--site-secondary))]">
