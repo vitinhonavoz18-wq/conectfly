@@ -104,9 +104,9 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           transition: all 0.3s ease !important;
         }
 
-        .btn-premium-red:hover {
+        .btn-premium-red:hover, .btn-premium-gold:hover {
           transform: scale(1.05) !important;
-          box-shadow: 0 15px 35px rgba(229, 9, 20, 0.40) !important;
+          brightness: 1.1;
         }
 
         .text-gold {
