@@ -523,17 +523,17 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
          <div className="absolute top-0 right-0 p-10 opacity-5">
            <ShoppingBag className="h-32 w-32 text-[hsl(var(--site-primary))]" />
          </div>
-         <h4 className="text-2xl font-black mb-6 tracking-tight text-[#111]">Resumo da sua Pizza</h4>
+          <h4 className="text-2xl font-black mb-6 tracking-tight text-[hsl(var(--site-fg))]">Resumo da sua Pizza</h4>
         {size ? (
           <div className="space-y-4">
-            <ul className="text-base text-[#555] space-y-2">
-              <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2">
-                <span className="font-medium">Tamanho: <strong className="text-[#111] font-extrabold">{size.label}</strong></span>
-                <span className="font-extrabold text-[#111]">{formatBRL(size.price)}</span>
+            <ul className="text-base text-[hsl(var(--site-muted-fg))] space-y-2">
+              <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2">
+                <span className="font-medium">Tamanho: <strong className="text-[hsl(var(--site-fg))] font-extrabold">{size.label}</strong></span>
+                <span className="font-extrabold text-[hsl(var(--site-fg))]">{formatBRL(size.price)}</span>
               </li>
-              <li className="flex flex-col border-b border-[#F3F4F6] pb-2">
+              <li className="flex flex-col border-b border-[hsl(var(--site-border))] pb-2">
                 <span className="font-medium">Sabores:</span>
-                <span className="text-[#111] font-extrabold leading-relaxed">
+                <span className="text-[hsl(var(--site-fg))] font-extrabold leading-relaxed">
                   {selectedFlavors.length === 0
                     ? "Nenhum selecionado"
                     : selectedFlavors
