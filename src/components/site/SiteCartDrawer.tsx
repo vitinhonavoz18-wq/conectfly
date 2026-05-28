@@ -221,13 +221,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         onClick={onClose}
       />
        <aside
-          className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-white shadow-[0_0_80px_rgba(0,0,0,0.15)] flex flex-col transition-transform duration-500 ${
+          className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-[hsl(var(--site-card))] shadow-[0_0_80px_rgba(0,0,0,0.15)] flex flex-col transition-transform duration-500 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between p-6 border-b border-[#F3F4F6]">
+          <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--site-border))]">
             <div className="flex flex-col">
-              <h2 className="font-black text-2xl tracking-tighter uppercase text-[#111]">Minha Seleção</h2>
+              <h2 className="font-black text-2xl tracking-tighter uppercase text-[hsl(var(--site-fg))]">Minha Seleção</h2>
               <span className="text-[10px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">Cozinha Gourmet</span>
             </div>
             <button
