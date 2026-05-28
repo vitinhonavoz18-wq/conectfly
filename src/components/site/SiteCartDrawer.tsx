@@ -257,37 +257,37 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.03)] to-transparent" />
                 <div className="flex justify-between gap-3">
                    <div className="flex-1 relative z-10">
-                     <p className="font-black text-lg tracking-tight uppercase text-[#111] group-hover:text-[hsl(var(--site-primary))] transition-colors">
+                     <p className="font-black text-lg tracking-tight uppercase text-[hsl(var(--site-fg))] group-hover:text-[hsl(var(--site-primary))] transition-colors">
                        {l.name}
-                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[#FFF5F5] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
+                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.05)] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
                      </p>
                     {l.flavors && l.flavors.length > 0 ? (
-                      <p className="text-sm text-[#555] mt-1.5 leading-relaxed font-medium">
-                        <strong className="text-[#111]">Sabores:</strong> {l.flavors.join(" + ")}
+                      <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed font-medium">
+                        <strong className="text-[hsl(var(--site-fg))]">Sabores:</strong> {l.flavors.join(" + ")}
                       </p>
                     ) : l.description ? (
-                      <p className="text-sm text-[#555] mt-1.5 leading-relaxed">
+                      <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed">
                         {l.description}
                       </p>
                     ) : null}
                   </div>
                    <button
                      onClick={() => removeLine(l.itemId, l.sizeLabel)}
-                     className="p-2.5 text-[#9CA3AF] hover:text-[#DC2626] hover:bg-[#FEF2F2] rounded-2xl transition-all relative z-10"
+                     className="p-2.5 text-[hsl(var(--site-muted-fg))] hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all relative z-10"
                      aria-label="Remover"
                    >
                      <Trash2 className="h-5 w-5" />
                    </button>
                 </div>
                 <div className="flex justify-between items-center mt-5">
-                   <div className="flex items-center gap-3 bg-[#FDF8F5] p-1.5 rounded-2xl border border-[#EFE7E2]">
+                   <div className="flex items-center gap-3 bg-[hsl(var(--site-bg))] p-1.5 rounded-2xl border border-[hsl(var(--site-border))]">
                       <button
                         onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
                         className="h-9 w-9 site-btn-secondary !rounded-xl active:scale-90"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="w-8 text-center font-black text-lg text-[#111]">{l.quantity}</span>
+                      <span className="w-8 text-center font-black text-lg text-[hsl(var(--site-fg))]">{l.quantity}</span>
                       <button
                         onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
                         className="h-9 w-9 site-btn-primary !rounded-xl active:scale-90"
@@ -295,7 +295,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
-                   <span className="font-black text-2xl text-[#111] tracking-tighter">
+                   <span className="font-black text-2xl text-[hsl(var(--site-fg))] tracking-tighter">
                      {formatBRL(l.unitPrice * l.quantity)}
                    </span>
                 </div>
