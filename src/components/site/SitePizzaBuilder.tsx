@@ -590,7 +590,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             <button
               onClick={(e) => handleAddToCart(false, e)}
               disabled={!canAdd}
-              className="btn-premium-red px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-[0_15px_40px_rgba(229,9,20,0.3)] active:scale-95 transition-all group"
+              className="site-btn-primary px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest active:scale-95 transition-all group"
             >
               <Plus className="h-7 w-7 text-white group-hover:rotate-90 transition-transform" /> 
               <span>Adicionar ao Pedido</span>
