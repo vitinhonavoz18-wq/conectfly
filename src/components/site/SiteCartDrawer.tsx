@@ -239,12 +239,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain bg-[#FFF9F6]">
+          <div className="flex-1 overflow-y-auto overscroll-contain bg-[hsl(var(--site-bg))]">
             <div className="p-5 space-y-4">
            {items.length === 0 ? (
              <div className="text-center py-16 flex flex-col items-center gap-4">
-                <ShoppingBag className="h-16 w-16 text-[#EFE7E2]" />
-                <p className="text-[#555] font-medium">
+                <ShoppingBag className="h-16 w-16 text-[hsl(var(--site-border))]" />
+                <p className="text-[hsl(var(--site-muted-fg))] font-medium">
                   Seu carrinho está vazio.<br/>Adicione itens do cardápio.
                 </p>
              </div>
@@ -252,7 +252,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             items.map((l) => (
                <div
                  key={`${l.itemId}-${l.sizeLabel ?? ""}`}
-                 className="rounded-[2rem] border border-[#EFE7E2] bg-white p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
+                 className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
                >
                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.03)] to-transparent" />
                 <div className="flex justify-between gap-3">
