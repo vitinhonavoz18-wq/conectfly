@@ -118,6 +118,7 @@ export interface RestaurantRow {
     beverages_position?: "after_products" | "after_combos" | "end";
     primaryButtonText?: string;
     show_cart_button?: boolean;
+    external_webhook_url?: string;
   };
   customization?: {
     primaryButtonText?: string;
