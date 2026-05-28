@@ -283,14 +283,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                    <div className="flex items-center gap-3 bg-[#FDF8F5] p-1.5 rounded-2xl border border-[#EFE7E2]">
                       <button
                         onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
-                        className="h-9 w-9 rounded-xl bg-white border border-[#EFE7E2] inline-flex items-center justify-center hover:bg-[#F3F4F6] transition-all active:scale-90 text-[#111]"
+                        className="h-9 w-9 site-btn-secondary !rounded-xl active:scale-90"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
                       <span className="w-8 text-center font-black text-lg text-[#111]">{l.quantity}</span>
                       <button
                         onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
-                        className="h-9 w-9 rounded-xl bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center hover:opacity-90 transition-all active:scale-90"
+                        className="h-9 w-9 site-btn-primary !rounded-xl active:scale-90"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
