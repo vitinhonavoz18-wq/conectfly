@@ -337,18 +337,18 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
                     placeholder="(00) 00000-0000"
                     inputMode="numeric"
-                    className={`w-full px-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] ${
+                    className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                       validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10)
-                        ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
-                        : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                        ? "border-destructive/40 bg-destructive/5" 
+                        : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#D9A441] flex items-center gap-2">
-                  <span className="h-1 w-8 bg-[#D9A441] rounded-full"></span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                  <span className="h-1 w-8 bg-[hsl(var(--site-secondary))] rounded-full"></span>
                   Entrega
                 </h3>
                 <div className="grid gap-3">
@@ -359,10 +359,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                         ref={zoneRef}
                         value={zoneId}
                         onChange={(e) => setZoneId(e.target.value)}
-                        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[#111] ${
+                        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
                           validationAttempted && !selectedZone
-                            ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
-                            : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                            ? "border-destructive/40 bg-destructive/5" 
+                            : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                         }`}
                       >
                         <option value="">Local de Entrega *</option>
@@ -375,17 +375,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     </div>
                   )}
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-5 h-5 w-5 text-[#9CA3AF]" />
+                    <MapPin className="absolute left-4 top-5 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
                     <textarea
                       ref={addressRef}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       placeholder="Endereço completo (Rua, nº, complemento)"
                       rows={3}
-                      className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] resize-none ${
+                      className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
                         validationAttempted && !address.trim()
-                          ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
-                          : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                          ? "border-destructive/40 bg-destructive/5" 
+                          : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                       }`}
                     />
                   </div>
@@ -393,8 +393,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[#D9A441] flex items-center gap-2">
-                  <span className="h-1 w-8 bg-[#D9A441] rounded-full"></span>
+                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                  <span className="h-1 w-8 bg-[hsl(var(--site-secondary))] rounded-full"></span>
                   Pagamento e Obs.
                 </h3>
                 <div className="grid gap-3">
