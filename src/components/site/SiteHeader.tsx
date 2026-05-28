@@ -44,11 +44,11 @@ export function SiteHeader({ name, logoUrl, onOpenCart, showCartButton = true }:
             )}
            <span className="font-extrabold tracking-tighter text-2xl sm:text-3xl text-white group-hover:text-amber-200 transition-colors">{name}</span>
          </div>
-         {showCartButton && (
-           <button
-             onClick={onOpenCart}
-             className="relative group inline-flex items-center gap-3 px-6 sm:px-8 py-3 rounded-full bg-gradient-gold text-white font-extrabold hover:scale-105 transition-all shadow-[0_8px_25px_rgba(217,164,65,0.35)] active:scale-95 uppercase text-xs tracking-widest border border-white/20"
-           >
+          {showCartButton && (
+            <button
+              onClick={onOpenCart}
+              className="relative group site-btn-primary px-6 sm:px-8 py-3 rounded-full hover:scale-105 active:scale-95 uppercase text-xs tracking-widest border border-white/20"
+            >
              <ShoppingBag className="h-5 w-5 group-hover:animate-bounce" />
              <span className="hidden sm:inline">Meu Pedido</span>
              {totalItems > 0 && (
