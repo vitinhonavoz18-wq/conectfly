@@ -903,7 +903,31 @@ export function InfoForm({ restaurant, onChange }: Props) {
                 </div>
               </Field>
             </div>
-         </div>
+          </div>
+
+          <div className="pt-6 border-t border-white/5 space-y-4">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Zap className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-black tracking-tighter uppercase">Webhooks Externos (API)</h3>
+                <p className="text-muted-foreground italic">Integração FIQON / Sistemas Externos.</p>
+              </div>
+            </div>
+            
+            <Field 
+              label="URL do Webhook Externo (POST)" 
+              hint="URL que receberá o JSON do pedido finalizado em tempo real. Use esta para teste FIQON: https://webhook.fiqon.app/webhook/test/019e701f-3ca0-71ad-9503-89135d600ce1/a6d11f02-77c1-4dc9-b031-3961112f0dc9"
+            >
+              <input
+                value={r.site_settings?.external_webhook_url ?? ""}
+                onChange={(e) => set("site_settings", { ...r.site_settings, external_webhook_url: e.target.value })}
+                placeholder="https://webhook.site/..."
+                className="input"
+              />
+            </Field>
+          </div>
         <p className="text-xs text-muted-foreground">
           ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
         </p>

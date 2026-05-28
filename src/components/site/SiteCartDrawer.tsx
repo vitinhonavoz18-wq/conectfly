@@ -3,7 +3,7 @@ import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, Sh
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { buildOrderPayload, sendOrderToFlycontrol } from "@/lib/site/flycontrol";
+import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
  import { toast } from "sonner";
 
@@ -180,6 +180,42 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           }
        } else {
          console.log("ℹ️ Integração FlyControl desativada para esta pizzaria. Pulando registro no painel e seguindo para WhatsApp.");
+       }
+
+       // 3. Envio para Webhook Externo (Novo)
+       const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
+       if (externalWebhookUrl) {
+         console.log("📡 [WEBHOOK] Iniciando envio para webhook externo:", externalWebhookUrl);
+         
+         const webhookPayload = buildOrderPayload({
+           name,
+           phone,
+           address,
+           neighborhood: selectedZone?.neighborhood ?? null,
+           reference: null,
+           deliveryFee,
+           items,
+           subtotal: totalPrice,
+           total: grandTotal,
+           paymentMethod,
+           changeFor: orderData.changeFor,
+           notes: notes.trim(),
+           pizzeria_slug: restaurant.slug,
+           pizzeria_name: restaurant.name,
+           whatsapp_message: messageWhatsApp,
+           delivery_type: hasZones ? "delivery" : "retirada",
+         });
+
+         try {
+           const result = await sendOrderToExternalWebhook(externalWebhookUrl, webhookPayload);
+           if (result.success) {
+             console.log("✅ [WEBHOOK] Pedido enviado com sucesso para o webhook externo");
+           } else {
+             console.error("❌ [WEBHOOK] Falha ao enviar para webhook externo. Status:", result.status);
+           }
+         } catch (webhookErr: any) {
+           console.error("❌ [WEBHOOK] Erro fatal no envio do webhook:", webhookErr.message);
+         }
        }
 
     } catch (err) {
