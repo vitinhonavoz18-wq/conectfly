@@ -49,8 +49,8 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
               onClick={() => setActiveId(c.id)}
               className={`px-5 py-2 rounded-full font-semibold text-sm transition ${
                 active.id === c.id
-                  ? "bg-[hsl(var(--site-primary))] text-white"
-                  : "bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] hover:border-[hsl(var(--site-primary))]"
+                  ? "site-btn-primary"
+                  : "site-btn-secondary"
               }`}
             >
               {c.icon ? `${c.icon} ` : ""}
@@ -66,7 +66,7 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
                 window.scrollTo({ top: pos, behavior: "smooth" });
               }
             }}
-            className="px-5 py-2 rounded-full font-black text-sm transition bg-red-600/20 text-red-500 border border-red-500/30 hover:bg-red-600/30 shadow-[0_0_15px_rgba(220,38,38,0.2)]"
+            className="px-5 py-2 rounded-full font-black text-sm transition bg-destructive/20 text-destructive border border-destructive/30 hover:bg-destructive/30 shadow-[0_0_15px_rgba(220,38,38,0.2)]"
           >
             🔥 Especiais
           </button>
