@@ -62,7 +62,7 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
                   className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
                     selected?.label === s.label
                       ? "site-btn-primary border-primary/50 text-white shadow-lg"
-                      : "border-white/10 bg-white/5 hover:border-primary/30 text-white/70"
+                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] hover:border-primary/30 text-[hsl(var(--site-muted-fg))]"
                   }`}
                 >
                   {s.label}
