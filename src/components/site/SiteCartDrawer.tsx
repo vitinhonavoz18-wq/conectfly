@@ -184,8 +184,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
        // 3. Envio para Webhook Externo (Novo)
        const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
+       
        if (externalWebhookUrl) {
-         console.log("📡 [WEBHOOK] Iniciando envio para webhook externo:", externalWebhookUrl);
+         console.log("webhookExternalUrlLoaded:", externalWebhookUrl);
          
          const webhookPayload = buildOrderPayload({
            name,
@@ -216,6 +217,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
          } catch (webhookErr: any) {
            console.error("❌ [WEBHOOK] Erro fatal no envio do webhook:", webhookErr.message);
          }
+       } else {
+         console.log("Nenhum Webhook Externo configurado para esta pizzaria");
        }
 
     } catch (err) {
