@@ -51,7 +51,7 @@ export function SiteComboSection({ groups }: Props) {
           {current.combos.map((c) => (
              <div
                key={c.id}
-               className="rounded-3xl border border-white/5 bg-white/5 p-8 flex flex-col gap-6 relative group hover:border-primary/30 transition-all duration-500 shadow-2xl backdrop-blur-sm"
+               className="rounded-3xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-8 flex flex-col gap-6 relative group hover:border-primary/30 transition-all duration-500 shadow-2xl backdrop-blur-sm"
              >
                {c.badge && (
                  <span className="absolute -top-3 right-6 px-3 py-1.5 rounded-xl bg-gradient-leaf text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
