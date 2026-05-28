@@ -38,8 +38,8 @@ export function SiteComboSection({ groups }: Props) {
               onClick={() => setActive(g.id)}
                className={`px-8 py-3 rounded-2xl whitespace-nowrap font-black text-xs uppercase tracking-widest transition-all duration-300 ${
                  active === g.id
-                   ? "bg-gradient-bronze text-primary-foreground shadow-glow scale-110"
-                   : "bg-white/5 border border-white/10 hover:border-primary/50 text-muted-foreground"
+                   ? "site-btn-primary shadow-glow scale-110"
+                   : "site-btn-secondary text-muted-foreground"
                }`}
              >
               {g.title}
