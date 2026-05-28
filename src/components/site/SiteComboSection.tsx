@@ -67,7 +67,7 @@ export function SiteComboSection({ groups }: Props) {
                    </li>
                  ))}
                </ul>
-               <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+               <div className="flex items-center justify-between mt-auto pt-6 border-t border-[hsl(var(--site-border))]">
                  <div className="flex flex-col">
                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Investimento</span>
                    <span className="text-3xl font-black text-primary tracking-tighter">
