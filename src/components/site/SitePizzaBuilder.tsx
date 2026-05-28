@@ -474,7 +474,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                         {formatBRL(bev.price)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-[#EFE7E2] shadow-sm">
+                    <div className="flex items-center gap-3 bg-[hsl(var(--site-card))] p-1.5 rounded-2xl border border-[hsl(var(--site-border))] shadow-sm">
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -483,11 +483,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                           }));
                         }}
                         disabled={qty === 0}
-                        className="stepper-btn stepper-btn-minus disabled:opacity-30"
+                        className="h-8 w-8 site-btn-secondary !rounded-xl !p-0 disabled:opacity-30"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="stepper-count">{qty}</span>
+                      <span className="w-6 text-center font-black text-sm text-[hsl(var(--site-fg))]">{qty}</span>
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -495,7 +495,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                             [bev.id]: (cur[bev.id] || 0) + 1,
                           }));
                         }}
-                        className="stepper-btn stepper-btn-plus hover:scale-110"
+                        className="h-8 w-8 site-btn-primary !rounded-xl !p-0 hover:scale-110"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
