@@ -232,7 +232,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </div>
             <button
               onClick={onClose}
-              className="p-3 rounded-2xl bg-[#FDF8F5] border border-[#EFE7E2] hover:bg-[#F3F4F6] transition-all active:scale-90 text-[#111]"
+              className="p-3 rounded-2xl site-btn-secondary active:scale-90"
               aria-label="Fechar"
             >
               <X className="h-6 w-6" />
