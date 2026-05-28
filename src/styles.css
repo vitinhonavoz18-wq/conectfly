@@ -222,6 +222,10 @@
      @apply site-btn bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90;
    }
 
+   .site-btn-success {
+     @apply site-btn bg-[#22C55E] text-white shadow-[0_15px_40px_rgba(34,197,94,0.35)] hover:bg-[#1eb054] hover:scale-[1.03];
+   }
+
    /* Legacy Compatibility / Enhanced Variants */
    .btn-premium {
      @apply site-btn-primary py-3 px-6 rounded-2xl;
