@@ -115,7 +115,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
               </div>
 
               <div className="mt-auto flex items-center justify-between gap-4 pt-4 border-t border-white/5 relative z-10">
-                <div className="flex items-center gap-3 bg-black/40 p-1 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-3 bg-[hsl(var(--site-card))] p-1 rounded-2xl border border-[hsl(var(--site-border))]">
                    <button 
                      onClick={(e) => handleRemove(bev, e)}
                      disabled={qty === 0}
