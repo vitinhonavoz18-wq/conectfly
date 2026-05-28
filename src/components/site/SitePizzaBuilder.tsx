@@ -275,8 +275,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                  onClick={() => handleSelectSize(i)}
                  className={`relative rounded-3xl border-2 p-5 text-left transition-all duration-300 transform ${
                    active
-                     ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
-                     : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[#FFF9F6]"
+                     ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
+                     : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[hsl(var(--site-muted))]"
                  }`}
                >
                 {active && (
