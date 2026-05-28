@@ -461,8 +461,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                     key={bev.id}
                     className={`relative rounded-3xl border p-5 flex items-center justify-between transition-all duration-300 ${
                       qty > 0
-                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
-                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
+                        ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
+                        : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
