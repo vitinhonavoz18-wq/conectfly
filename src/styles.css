@@ -196,44 +196,96 @@
    .card-premium {
      @apply glass-card rounded-2xl shadow-card transition-all duration-300 hover:shadow-glow hover:border-primary/30;
    }
-   
-   /* Standardized Site Buttons */
-   .site-btn {
-     @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-black uppercase tracking-widest transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40 active:scale-[0.97];
-   }
-
-   .site-btn-primary {
-     @apply site-btn bg-[hsl(var(--site-primary))] text-white shadow-lg hover:brightness-110 hover:shadow-primary/25;
-   }
-
-   .site-btn-secondary {
-     @apply site-btn bg-[hsl(var(--site-card))] text-[hsl(var(--site-fg))] border border-[hsl(var(--site-border))] hover:bg-[hsl(var(--site-muted))];
-   }
-
-   .site-btn-outline {
-     @apply site-btn bg-transparent border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] hover:bg-[hsl(var(--site-primary))] hover:text-white;
-   }
-
-   .site-btn-ghost {
-     @apply site-btn bg-transparent text-[hsl(var(--site-muted-fg))] hover:bg-[hsl(var(--site-muted))] hover:text-[hsl(var(--site-fg))];
-   }
-
-   .site-btn-danger {
-     @apply site-btn bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90;
-   }
-
-   .site-btn-success {
-     @apply site-btn bg-[#22C55E] text-white shadow-[0_15px_40px_rgba(34,197,94,0.35)] hover:bg-[#1eb054] hover:scale-[1.03];
-   }
-
-   /* Legacy Compatibility / Enhanced Variants */
-   .btn-premium {
-     @apply site-btn-primary py-3 px-6 rounded-2xl;
-   }
 
    .btn-leaf {
      @apply bg-gradient-leaf text-white font-black tracking-tight shadow-leaf hover:scale-[1.03] active:scale-[0.97] transition-all duration-300;
    }
+ }
+
+ /* Standardized Site Buttons — defined as @utility so they work as Tailwind utilities */
+ @utility site-btn {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 0.5rem;
+   white-space: nowrap;
+   border-radius: 0.75rem;
+   font-size: 0.875rem;
+   font-weight: 900;
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+   transition: all 0.3s ease;
+   cursor: pointer;
+   &:focus-visible {
+     outline: none;
+     box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
+   }
+   &:disabled {
+     pointer-events: none;
+     opacity: 0.4;
+   }
+   &:active {
+     transform: scale(0.97);
+   }
+ }
+
+ @utility site-btn-primary {
+   @apply site-btn;
+   background-color: hsl(var(--site-primary));
+   color: #ffffff;
+   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+   &:hover { filter: brightness(1.1); }
+ }
+
+ @utility site-btn-secondary {
+   @apply site-btn;
+   background-color: hsl(var(--site-card));
+   color: hsl(var(--site-fg));
+   border: 1px solid hsl(var(--site-border));
+   &:hover { background-color: hsl(var(--site-muted)); }
+ }
+
+ @utility site-btn-outline {
+   @apply site-btn;
+   background-color: transparent;
+   border: 2px solid hsl(var(--site-primary));
+   color: hsl(var(--site-primary));
+   &:hover {
+     background-color: hsl(var(--site-primary));
+     color: #ffffff;
+   }
+ }
+
+ @utility site-btn-ghost {
+   @apply site-btn;
+   background-color: transparent;
+   color: hsl(var(--site-muted-fg));
+   &:hover {
+     background-color: hsl(var(--site-muted));
+     color: hsl(var(--site-fg));
+   }
+ }
+
+ @utility site-btn-danger {
+   @apply site-btn;
+   background-color: var(--destructive);
+   color: var(--destructive-foreground);
+   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+   &:hover { filter: brightness(1.1); }
+ }
+
+ @utility site-btn-success {
+   @apply site-btn;
+   background-color: #22C55E;
+   color: #ffffff;
+   box-shadow: 0 15px 40px rgba(34,197,94,0.35);
+   &:hover { background-color: #1eb054; transform: scale(1.03); }
+ }
+
+ @utility btn-premium {
+   @apply site-btn-primary;
+   padding: 0.75rem 1.5rem;
+   border-radius: 1rem;
  }
 @utility scrollbar-hide {
   scrollbar-width: none;
