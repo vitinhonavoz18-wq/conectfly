@@ -23,7 +23,7 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
   };
 
   return (
-     <div className="rounded-[2rem] border border-white/5 bg-white/5 flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
+     <div className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
        {(restaurant?.show_item_images ?? true) && item.image_url && (
          <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
