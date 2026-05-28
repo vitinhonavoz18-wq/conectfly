@@ -988,16 +988,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
              </div>
            </div>
 
-           <p className="text-[10px] text-muted-foreground uppercase tracking-widest text-center py-4">
-             ID interno da unidade: <span className="font-mono text-white/40">{r.id}</span>
-           </p>
-        <p className="text-xs text-muted-foreground">
-          ID interno desta pizzaria: <span className="font-mono">{r.id}</span>
-        </p>
-      </div>
-    </div>
-  );
-}
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest text-center py-4">
+              ID interno da unidade: <span className="font-mono text-white/40">{r.id}</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
 
 function Field({
   label,
