@@ -53,31 +53,31 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
          {item.description && (
            <p className="text-sm text-muted-foreground italic line-clamp-2">{item.description}</p>
          )}
-         {sizes.length > 0 && (
-           <div className="flex flex-wrap gap-2">
-             {sizes.map((s) => (
-               <button
-                 key={s.label}
-                 onClick={() => setSelected(s)}
-                 className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
-                   selected?.label === s.label
-                     ? "bg-gradient-bronze border-primary/50 text-primary-foreground shadow-lg"
-                     : "border-white/10 bg-white/5 hover:border-primary/30 text-muted-foreground"
-                 }`}
-               >
-                 {s.label}
-               </button>
-             ))}
-           </div>
-         )}
-         <button
-           onClick={handleAdd}
-           disabled={showConsult}
-           className="mt-auto btn-premium py-3 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95"
-         >
-           <Plus className="h-4 w-4 text-primary-foreground" />
-           <span className="text-[10px] uppercase tracking-[0.2em]">Adicionar à Experiência</span>
-         </button>
+          {sizes.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => setSelected(s)}
+                  className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
+                    selected?.label === s.label
+                      ? "site-btn-primary border-primary/50 text-white shadow-lg"
+                      : "border-white/10 bg-white/5 hover:border-primary/30 text-white/70"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={handleAdd}
+            disabled={showConsult}
+            className="mt-auto site-btn-primary py-3 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95"
+          >
+            <Plus className="h-4 w-4 text-white" />
+            <span className="text-[10px] uppercase tracking-[0.2em]">Adicionar à Experiência</span>
+          </button>
        </div>
      </div>
   );
