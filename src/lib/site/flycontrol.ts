@@ -349,6 +349,55 @@ export async function sendOrderToFlycontrol(
   }
 }
 
+/**
+ * Sends an order to an external webhook URL.
+ */
+export async function sendOrderToExternalWebhook(
+  webhookUrl: string,
+  payload: FlycontrolOrderPayload
+): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
+  console.log("--- DEBUG WEBHOOK EXTERNO ---");
+  console.log("URL:", webhookUrl);
+  console.log("Payload:", JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const status = response.status;
+    const responseText = await response.text();
+    let responseData = {};
+    try {
+      responseData = JSON.parse(responseText);
+    } catch {
+      responseData = { text: responseText };
+    }
+
+    console.log("Status:", status);
+    console.log("Resposta:", responseData);
+    console.log("------------------------------");
+
+    return {
+      success: response.ok,
+      status,
+      response: responseData,
+    };
+  } catch (err: any) {
+    console.error("Erro no envio do webhook:", err);
+    console.log("------------------------------");
+    return {
+      success: false,
+      status: 0,
+      error: err.message,
+    };
+  }
+}
+
 export function generateApiKey(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);
