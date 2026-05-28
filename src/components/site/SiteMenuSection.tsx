@@ -29,7 +29,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
          <button
            key={c.id}
            onClick={() => setActive(c.id)}
-           className="group relative aspect-square rounded-3xl overflow-hidden border border-white/5 bg-white/5 hover:border-primary/50 transition-all duration-500 shadow-2xl"
+           className="group relative aspect-square rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-all duration-500 shadow-2xl"
          >
           {c.image_url && (
             <img
