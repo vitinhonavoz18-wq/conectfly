@@ -119,6 +119,11 @@ export function InfoForm({ restaurant, onChange }: Props) {
       show_item_images: r.show_item_images ?? true,
       selected_template: r.selected_template || "black",
       business_type: r.business_type || "Pizzaria",
+      site_settings: r.site_settings || {},
+      theme_settings: r.theme_settings || {},
+      checkout_settings: r.checkout_settings || {},
+      delivery_settings: r.delivery_settings || {},
+      seo_settings: r.seo_settings || {},
     };
 
     try {

@@ -1,0 +1,35 @@
+CREATE OR REPLACE VIEW public.pizzerias_public AS
+ SELECT id,
+    slug,
+    custom_subdomain,
+    name,
+    tagline,
+    description,
+    whatsapp_number,
+    whatsapp_display,
+    whatsapp_enabled,
+    address,
+    hours,
+    city,
+    logo_url,
+    hero_image_url,
+    hero_media_type,
+    hero_video_url,
+    primary_color,
+    secondary_color,
+    published,
+    show_item_images,
+    flycontrol_enabled,
+    flycontrol_base_url,
+    flycontrol_api_url,
+    selected_template,
+    business_type,
+    site_settings,
+    theme_settings,
+    checkout_settings,
+    delivery_settings,
+    seo_settings
+   FROM restaurants
+  WHERE published = true;
+
+GRANT SELECT ON public.pizzerias_public TO anon, authenticated, service_role;
