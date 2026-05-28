@@ -480,7 +480,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           <button
             onClick={handleFinish}
             disabled={sending}
-            className="w-full py-6 rounded-full bg-[#22C55E] text-white font-black text-xl flex items-center justify-center gap-4 disabled:opacity-30 shadow-[0_15px_40px_rgba(34,197,94,0.35)] transition-all hover:scale-[1.03] active:scale-95 group uppercase tracking-widest"
+            className="w-full py-6 site-btn-success text-xl flex items-center justify-center gap-4 group uppercase tracking-widest"
           >
             {sending ? (
               <span className="animate-pulse">PROCESSANDO...</span>
