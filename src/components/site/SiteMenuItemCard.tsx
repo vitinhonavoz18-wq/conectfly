@@ -23,7 +23,7 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
   };
 
   return (
-     <div className="rounded-[2rem] border border-white/5 bg-white/5 flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
+     <div className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
        {(restaurant?.show_item_images ?? true) && item.image_url && (
          <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
@@ -53,31 +53,31 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
          {item.description && (
            <p className="text-sm text-muted-foreground italic line-clamp-2">{item.description}</p>
          )}
-         {sizes.length > 0 && (
-           <div className="flex flex-wrap gap-2">
-             {sizes.map((s) => (
-               <button
-                 key={s.label}
-                 onClick={() => setSelected(s)}
-                 className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
-                   selected?.label === s.label
-                     ? "bg-gradient-bronze border-primary/50 text-primary-foreground shadow-lg"
-                     : "border-white/10 bg-white/5 hover:border-primary/30 text-muted-foreground"
-                 }`}
-               >
-                 {s.label}
-               </button>
-             ))}
-           </div>
-         )}
-         <button
-           onClick={handleAdd}
-           disabled={showConsult}
-           className="mt-auto btn-premium py-3 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95"
-         >
-           <Plus className="h-4 w-4 text-primary-foreground" />
-           <span className="text-[10px] uppercase tracking-[0.2em]">Adicionar à Experiência</span>
-         </button>
+          {sizes.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => setSelected(s)}
+                  className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
+                    selected?.label === s.label
+                      ? "site-btn-primary border-primary/50 text-white shadow-lg"
+                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] hover:border-primary/30 text-[hsl(var(--site-muted-fg))]"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={handleAdd}
+            disabled={showConsult}
+            className="mt-auto site-btn-primary py-3 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95"
+          >
+            <Plus className="h-4 w-4 text-white" />
+            <span className="text-[10px] uppercase tracking-[0.2em]">Adicionar à Experiência</span>
+          </button>
        </div>
      </div>
   );

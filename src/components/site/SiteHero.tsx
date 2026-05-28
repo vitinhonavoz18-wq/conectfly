@@ -109,7 +109,7 @@ export function SiteHero({
                 <a
                   href="#combos"
                   onClick={(e) => scrollTo(e, "combos")}
-                  className="px-10 py-5 rounded-full bg-gradient-gold text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_rgba(217,164,65,0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
+                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_rgba(217,164,65,0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
                 >
                   Combos Premium
                 </a>
@@ -118,7 +118,7 @@ export function SiteHero({
                 <a
                   href="#pizzas"
                   onClick={(e) => scrollTo(e, "pizzas")}
-                  className="px-10 py-5 rounded-full bg-gradient-red text-white font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_rgba(229,9,20,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
+                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_rgba(229,9,20,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
                 >
                   {buttonText}
                 </a>

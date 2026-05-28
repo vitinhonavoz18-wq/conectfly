@@ -38,8 +38,8 @@ export function SiteComboSection({ groups }: Props) {
               onClick={() => setActive(g.id)}
                className={`px-8 py-3 rounded-2xl whitespace-nowrap font-black text-xs uppercase tracking-widest transition-all duration-300 ${
                  active === g.id
-                   ? "bg-gradient-bronze text-primary-foreground shadow-glow scale-110"
-                   : "bg-white/5 border border-white/10 hover:border-primary/50 text-muted-foreground"
+                   ? "site-btn-primary shadow-glow scale-110"
+                   : "site-btn-secondary text-muted-foreground"
                }`}
              >
               {g.title}
@@ -51,7 +51,7 @@ export function SiteComboSection({ groups }: Props) {
           {current.combos.map((c) => (
              <div
                key={c.id}
-               className="rounded-3xl border border-white/5 bg-white/5 p-8 flex flex-col gap-6 relative group hover:border-primary/30 transition-all duration-500 shadow-2xl backdrop-blur-sm"
+               className="rounded-3xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-8 flex flex-col gap-6 relative group hover:border-primary/30 transition-all duration-500 shadow-2xl backdrop-blur-sm"
              >
                {c.badge && (
                  <span className="absolute -top-3 right-6 px-3 py-1.5 rounded-xl bg-gradient-leaf text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
@@ -67,27 +67,27 @@ export function SiteComboSection({ groups }: Props) {
                    </li>
                  ))}
                </ul>
-               <div className="flex items-center justify-between mt-auto pt-6 border-t border-white/5">
+               <div className="flex items-center justify-between mt-auto pt-6 border-t border-[hsl(var(--site-border))]">
                  <div className="flex flex-col">
                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Investimento</span>
                    <span className="text-3xl font-black text-primary tracking-tighter">
                      {formatBRL(c.price)}
                    </span>
                  </div>
-                 <button
-                   onClick={() =>
-                     addLine({
-                       itemId: c.id,
-                       name: c.name,
-                       description: c.items.join(" + "),
-                       unitPrice: c.price,
-                     })
-                   }
-                   className="btn-premium p-4 rounded-2xl shadow-xl active:scale-90"
-                   title="Adicionar ao pedido"
-                 >
-                   <Plus className="h-6 w-6 text-primary-foreground" />
-                 </button>
+                  <button
+                    onClick={() =>
+                      addLine({
+                        itemId: c.id,
+                        name: c.name,
+                        description: c.items.join(" + "),
+                        unitPrice: c.price,
+                      })
+                    }
+                    className="site-btn-primary p-4 rounded-2xl shadow-xl active:scale-90"
+                    title="Adicionar ao pedido"
+                  >
+                    <Plus className="h-6 w-6 text-white" />
+                  </button>
                </div>
              </div>
           ))}

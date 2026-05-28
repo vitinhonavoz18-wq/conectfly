@@ -61,8 +61,13 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
         .btn-premium {
           background: #D99000 !important;
           color: white !important;
-          border-radius: 0.5rem !important;
-          font-weight: 700 !important;
+          border-radius: 0.75rem !important;
+          font-weight: 800 !important;
+          transition: all 0.3s ease !important;
+        }
+        .btn-premium:hover {
+          transform: scale(1.05) !important;
+          brightness: 1.1;
         }
         .site-hero-section {
           background: #111111;

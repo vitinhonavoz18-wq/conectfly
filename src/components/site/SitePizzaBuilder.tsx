@@ -28,8 +28,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       disabled={!size || disabled}
       className={`relative text-left rounded-3xl border p-5 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
         checked
-          ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-          : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
+          ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+          : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
       } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.02]"}`}
     >
       {(restaurant?.show_item_images ?? true) && it.image_url && (
@@ -275,8 +275,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                  onClick={() => handleSelectSize(i)}
                  className={`relative rounded-3xl border-2 p-5 text-left transition-all duration-300 transform ${
                    active
-                     ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
-                     : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[#FFF9F6]"
+                     ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
+                     : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[hsl(var(--site-muted))]"
                  }`}
                >
                 {active && (
@@ -400,8 +400,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                onClick={() => setSelectedBorderId(null)}
                 className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
                   selectedBorderId === null
-                    ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-                    : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                    ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
                 }`}
               >
                 {selectedBorderId === null && (
@@ -422,8 +422,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                     onClick={() => setSelectedBorderId(b.id)}
                     className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
                       active
-                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)]"
+                        ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                        : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
                     }`}
                   >
                     {active && (
@@ -461,8 +461,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                     key={bev.id}
                     className={`relative rounded-3xl border p-5 flex items-center justify-between transition-all duration-300 ${
                       qty > 0
-                        ? "border-[hsl(var(--site-primary))] bg-[#FFF5F5] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
-                        : "border-[#EFE7E2] bg-white hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
+                        ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
+                        : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
                     }`}
                   >
                     <div className="min-w-0 flex-1">
@@ -474,7 +474,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                         {formatBRL(bev.price)}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border border-[#EFE7E2] shadow-sm">
+                    <div className="flex items-center gap-3 bg-[hsl(var(--site-card))] p-1.5 rounded-2xl border border-[hsl(var(--site-border))] shadow-sm">
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -483,11 +483,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                           }));
                         }}
                         disabled={qty === 0}
-                        className="stepper-btn stepper-btn-minus disabled:opacity-30"
+                        className="h-8 w-8 site-btn-secondary !rounded-xl !p-0 disabled:opacity-30"
                       >
                         <Minus className="h-4 w-4" />
                       </button>
-                      <span className="stepper-count">{qty}</span>
+                      <span className="w-6 text-center font-black text-sm text-[hsl(var(--site-fg))]">{qty}</span>
                       <button
                         onClick={() => {
                           setSelectedBeverages((cur) => ({
@@ -495,7 +495,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                             [bev.id]: (cur[bev.id] || 0) + 1,
                           }));
                         }}
-                        className="stepper-btn stepper-btn-plus hover:scale-110"
+                        className="h-8 w-8 site-btn-primary !rounded-xl !p-0 hover:scale-110"
                       >
                         <Plus className="h-4 w-4" />
                       </button>
@@ -511,7 +511,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         <div 
           id={`summary-${category.id}`}
           ref={summaryRef}
-         className="rounded-[2.5rem] border border-[#EFE7E2] bg-white p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative overflow-hidden"
+         className="rounded-[2.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-8 sm:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.08)] relative overflow-hidden"
        >
          {scrollMessage && scrollMessage.includes("pronto") && (
            <div className="absolute top-4 right-8 z-10">
@@ -523,17 +523,17 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
          <div className="absolute top-0 right-0 p-10 opacity-5">
            <ShoppingBag className="h-32 w-32 text-[hsl(var(--site-primary))]" />
          </div>
-         <h4 className="text-2xl font-black mb-6 tracking-tight text-[#111]">Resumo da sua Pizza</h4>
+          <h4 className="text-2xl font-black mb-6 tracking-tight text-[hsl(var(--site-fg))]">Resumo da sua Pizza</h4>
         {size ? (
           <div className="space-y-4">
-            <ul className="text-base text-[#555] space-y-2">
-              <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2">
-                <span className="font-medium">Tamanho: <strong className="text-[#111] font-extrabold">{size.label}</strong></span>
-                <span className="font-extrabold text-[#111]">{formatBRL(size.price)}</span>
+            <ul className="text-base text-[hsl(var(--site-muted-fg))] space-y-2">
+              <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2">
+                <span className="font-medium">Tamanho: <strong className="text-[hsl(var(--site-fg))] font-extrabold">{size.label}</strong></span>
+                <span className="font-extrabold text-[hsl(var(--site-fg))]">{formatBRL(size.price)}</span>
               </li>
-              <li className="flex flex-col border-b border-[#F3F4F6] pb-2">
+              <li className="flex flex-col border-b border-[hsl(var(--site-border))] pb-2">
                 <span className="font-medium">Sabores:</span>
-                <span className="text-[#111] font-extrabold leading-relaxed">
+                <span className="text-[hsl(var(--site-fg))] font-extrabold leading-relaxed">
                   {selectedFlavors.length === 0
                     ? "Nenhum selecionado"
                     : selectedFlavors
@@ -543,20 +543,20 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 </span>
               </li>
                {specialExtras > 0 && (
-                 <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-primary))]">
-                   <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
-                   <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
-                 </li>
-               )}
+                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2 text-[hsl(var(--site-primary))]">
+                    <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
+                    <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
+                  </li>
+                )}
                 {selectedBorder && (
-                  <li className="flex justify-between items-center border-b border-[#F3F4F6] pb-2 text-[hsl(var(--site-secondary))]">
+                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2 text-[hsl(var(--site-secondary))]">
                     <span className="font-medium">Adicional: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
                   </li>
                 )}
                 {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
                   <div className="pt-2">
-                    <span className="font-medium text-[#111] block mb-2">Bebidas adicionais:</span>
+                    <span className="font-medium text-[hsl(var(--site-fg))] block mb-2">Bebidas adicionais:</span>
                     <ul className="space-y-1">
                       {Object.entries(selectedBeverages).map(([id, qty]) => {
                         if (qty === 0) return null;
@@ -575,12 +575,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             </ul>
           </div>
         ) : (
-          <p className="text-base text-[#555] font-medium">Selecione um tamanho para ver o resumo.</p>
+          <p className="text-base text-[hsl(var(--site-muted-fg))] font-medium">Selecione um tamanho para ver o resumo.</p>
         )}
         
-        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[#F3F4F6] flex-wrap">
+        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[hsl(var(--site-border))] flex-wrap">
           <div className="flex flex-col">
-            <span className="text-xs uppercase tracking-widest text-[#555] font-bold mb-1">
+            <span className="text-xs uppercase tracking-widest text-[hsl(var(--site-muted-fg))] font-bold mb-1">
               Total do Pedido
             </span>
             <span className="text-4xl font-black text-[hsl(var(--site-secondary))]">
@@ -590,7 +590,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             <button
               onClick={(e) => handleAddToCart(false, e)}
               disabled={!canAdd}
-              className="btn-premium-red px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest shadow-[0_15px_40px_rgba(229,9,20,0.3)] active:scale-95 transition-all group"
+              className="site-btn-primary px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest active:scale-95 transition-all group"
             >
               <Plus className="h-7 w-7 text-white group-hover:rotate-90 transition-transform" /> 
               <span>Adicionar ao Pedido</span>
