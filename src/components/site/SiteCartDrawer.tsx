@@ -129,11 +129,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
     const whatsappEnabled = restaurant?.continue_opening_whatsapp ?? (restaurant?.whatsapp_enabled !== false);
 
-    console.log("CHECKOUT REAL INICIADO");
-    console.log("Modo de fluxo ativo:", flowMode);
-    console.log("URL FIQON usada:", externalWebhookUrl || "Nenhuma");
+    // LOGS OBRIGATÓRIOS DO CHECKOUT PÚBLICO
+    console.log("CHECKOUT_PUBLICO_INICIADO");
+    console.log("MODO_FLUXO_ATIVO:", flowMode);
+    console.log("URL_FIQON_USADA:", externalWebhookUrl || "Nenhuma");
     console.log("Permitir envio duplo:", allowDoubleSend);
-    console.log("Abrindo WhatsApp após webhook:", whatsappEnabled ? "sim" : "não");
+    console.log("WHATSAPP_LIBERADO_APOS_WEBHOOK:", whatsappEnabled ? "SIM" : "NÃO");
 
     try {
       const orderPayload = buildOrderPayload({
@@ -170,16 +171,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         } else {
           console.log("📤 [WEBHOOK] Enviando para FIQON via função unificada...");
           try {
-            // Logs técnicos obrigatórios no checkout público
-            console.log("CHECKOUT_PUBLICO_INICIADO");
-            console.log("Modo de fluxo ativo:", flowMode);
-            console.log("URL FIQON usada:", externalWebhookUrl);
-            console.log("Payload enviado para FIQON:", payload);
+            // Logs técnicos obrigatórios no checkout público conforme solicitado
+            console.log("PAYLOAD_ENVIADO_FIQON:", payload);
 
             const result = await sendUnifiedOrderToFiqon(payload, restaurant as any, "public_checkout");
             
-            console.log("Status resposta FIQON:", result.status);
-            console.log("Body resposta FIQON:", result.response);
+            console.log("STATUS_RESPOSTA_FIQON:", result.status);
+            console.log("RESPOSTA_FIQON:", result.response);
 
             if (result.success) {
               console.log("✅ [WEBHOOK] Pedido confirmado pela FIQON");
