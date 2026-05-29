@@ -877,7 +877,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             console.log("URL FIQON usada:", webhookUrl);
                             console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
-                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any);
+                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any, true);
                             
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
