@@ -355,7 +355,8 @@ export async function sendOrderToFlycontrol(
  */
 export async function sendOrderToExternalWebhook(
   webhookUrl: string,
-  payload: FlycontrolOrderPayload
+  payload: FlycontrolOrderPayload,
+  requireAuth: boolean = false
 ): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
   // Logs técnicos obrigatórios solicitados
   console.log("--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (VIA PROXY) ---");
