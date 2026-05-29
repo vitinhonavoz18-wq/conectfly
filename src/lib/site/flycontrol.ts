@@ -363,9 +363,7 @@ export async function sendOrderToExternalWebhook(
   console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
   try {
-    const supabaseClient = (await import("@/integrations/supabase/client")).supabase;
-    
-    const { data, error: functionError } = await supabaseClient.functions.invoke('send-fiqon-webhook', {
+    const { data, error: functionError } = await safeInvoke('send-fiqon-webhook', {
       body: { webhookUrl, payload }
     });
 
