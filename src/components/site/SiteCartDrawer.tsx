@@ -121,14 +121,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     setSending(true);
     let painelRegistrado = false;
-    const flowMode = restaurant?.site_settings?.order_flow_mode || (restaurant?.site_settings?.external_webhook_url ? "fiqon" : "direct");
-    const allowDoubleSend = !!restaurant?.site_settings?.allow_double_send;
-    const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
+    const siteSettings = restaurant?.site_settings as any;
+    const flowMode = siteSettings?.order_flow_mode || (siteSettings?.external_webhook_url ? "fiqon" : "direct");
+    const allowDoubleSend = !!siteSettings?.allow_double_send;
+    const externalWebhookUrl = siteSettings?.external_webhook_url;
+    const whatsappEnabled = restaurant?.whatsapp_enabled !== false;
+
+    console.log("--- INICIANDO FLUXO DE FINALIZAÇÃO ---");
+    console.log("Modo de fluxo ativo:", flowMode);
+    console.log("URL Webhook FIQON usada:", externalWebhookUrl || "Nenhuma");
+    console.log("Permitir envio duplo:", allowDoubleSend);
+    console.log("Abrindo WhatsApp após webhook:", whatsappEnabled ? "sim" : "não");
 
     try {
-      console.log("🚀 [CHECKOUT] Iniciando finalização do pedido");
-      console.log(`[CHECKOUT] Modo: ${flowMode} | Double: ${allowDoubleSend} | Webhook: ${externalWebhookUrl ? "Configurado" : "Ausente"}`);
-
       const orderPayload = buildOrderPayload({
         name,
         phone,
@@ -148,6 +153,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         delivery_type: hasZones ? "delivery" : "retirada",
       });
 
+      console.log("Payload enviado para FIQON:", JSON.stringify(orderPayload, null, 2));
+
       // 1. Envio para FIQON (Webhook Externo)
       if (flowMode === "fiqon" || allowDoubleSend) {
         if (externalWebhookUrl) {
@@ -155,13 +162,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           try {
             const result = await sendOrderToExternalWebhook(externalWebhookUrl, orderPayload);
             
-            // Logs técnicos obrigatórios solicitados
-            console.log("--- LOG WEBHOOK FIQON ---");
-            console.log("webhookExternalUrlUsed:", externalWebhookUrl);
-            console.log("webhookPayload:", orderPayload);
-            console.log("webhookResponseStatus:", result.status);
-            console.log("webhookResponseBody:", result.response);
-            console.log("--------------------------");
+            console.log("Status da resposta FIQON:", result.status);
+            console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
 
             if (result.success) {
               console.log("✅ [WEBHOOK] Pedido enviado com sucesso para FIQON");
@@ -211,7 +213,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       }
 
       // Redirecionar para WhatsApp APÓS o envio (Requirement 4 & 5)
-      if (whatsappOn) {
+      if (whatsappEnabled) {
         console.log("📲 [CHECKOUT] Abrindo WhatsApp após conclusão do envio");
         openWhatsAppOrder(messageWhatsApp);
       }
