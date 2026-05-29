@@ -3,7 +3,7 @@ import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, C
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
-import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
+import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon, type FlycontrolOrderPayload } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
 
