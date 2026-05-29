@@ -385,6 +385,60 @@ export type Database = {
           },
         ]
       }
+      order_submission_logs: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          order_id: string | null
+          payload: Json | null
+          response: Json | null
+          restaurant_id: string | null
+          source: string
+          status: number | null
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          response?: Json | null
+          restaurant_id?: string | null
+          source: string
+          status?: number | null
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          response?: Json | null
+          restaurant_id?: string | null
+          source?: string
+          status?: number | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_submission_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_submission_logs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pizzeria_beverages: {
         Row: {
           brand: string | null
