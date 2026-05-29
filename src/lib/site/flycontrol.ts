@@ -381,7 +381,7 @@ export async function sendOrderToExternalWebhook(
           restaurant_id: restaurantId,
           order_id: payload.order.id,
           webhook_url: webhookUrl,
-          payload,
+          payload: payload as any,
           status: 0,
           error: `Edge Function error: ${functionError.message}`
         });
@@ -407,9 +407,9 @@ export async function sendOrderToExternalWebhook(
         restaurant_id: restaurantId,
         order_id: payload.order.id,
         webhook_url: webhookUrl,
-        payload,
+        payload: payload as any,
         status: status || 0,
-        response: responseData,
+        response: responseData as any,
         error: fiqonError || null
       });
     }
@@ -434,7 +434,7 @@ export async function sendOrderToExternalWebhook(
           restaurant_id: restaurantId,
           order_id: payload.order.id,
           webhook_url: webhookUrl,
-          payload,
+          payload: payload as any,
           status: 0,
           error: err.message
         });

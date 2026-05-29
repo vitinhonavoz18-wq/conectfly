@@ -3,7 +3,7 @@ import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, C
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
-import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
+import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 
 interface Props {
@@ -844,40 +844,37 @@ export function InfoForm({ restaurant, onChange }: Props) {
                           setTestDebug(null);
                           
                           try {
-                            const { sendOrderToExternalWebhook } = await import("@/lib/site/flycontrol");
+                            const { buildOrderPayload } = await import("@/lib/site/flycontrol");
                             
                             // Payload de teste real solicitado pelo usuário
-                            const payload = {
-                              event: "order.created",
-                              customer: {
-                                name: "Cliente Teste SF",
-                                phone: "71999999999",
-                                address: "Rua Teste",
-                                neighborhood: "Bairro Teste"
-                              },
-                              order: {
-                                id: "teste-sf-fiqon-" + Date.now(),
-                                delivery_fee: 0,
-                                total: 40,
-                                items: [
-                                  {
-                                    name: "Pizza Teste",
-                                    size: "Família",
-                                    type: "pizza",
-                                    crust: "Sem borda",
-                                    extras: [],
-                                    flavors: ["Calabresa", "Mussarela"],
-                                    notes: "Sabores: Calabresa + Mussarela"
-                                  }
-                                ]
-                              }
-                            };
+                            const orderPayload = buildOrderPayload({
+                              name: "Cliente Teste SF",
+                              phone: "71999999999",
+                              address: "Rua Teste",
+                              neighborhood: "Bairro Teste",
+                              reference: null,
+                              deliveryFee: 0,
+                              items: [
+                                {
+                                  itemId: "test-1",
+                                  name: "Pizza Teste",
+                                  description: "Sabores: Calabresa + Mussarela",
+                                  unitPrice: 40,
+                                  quantity: 1,
+                                  sizeLabel: "Família",
+                                  flavors: ["Calabresa", "Mussarela"]
+                                }
+                              ],
+                              subtotal: 40,
+                              total: 40,
+                              notes: "Pedido de teste do painel admin",
+                              pizzeria_slug: r.slug || "",
+                              pizzeria_name: r.name || "",
+                              whatsapp_message: "Pedido de teste via FIQON",
+                              delivery_type: "delivery"
+                            });
 
-                            console.log("--- TESTE WEBHOOK FIQON ---");
-                            console.log("URL FIQON usada:", webhookUrl);
-                            console.log("Payload enviado:", JSON.stringify(payload, null, 2));
-
-                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any, true);
+                            const result = await sendUnifiedOrderToFiqon(orderPayload, r as any, "admin_test");
                             
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
@@ -887,7 +884,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                               status: result.status,
                               url: webhookUrl,
                               data: result.response,
-                              payloadSent: payload,
+                              payloadSent: orderPayload,
                               error: result.error
                             });
 
