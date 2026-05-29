@@ -3,7 +3,7 @@ import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, C
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
-import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
+import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 
 interface Props {
@@ -844,40 +844,37 @@ export function InfoForm({ restaurant, onChange }: Props) {
                           setTestDebug(null);
                           
                           try {
-                            const { sendOrderToExternalWebhook } = await import("@/lib/site/flycontrol");
+                            const { buildOrderPayload } = await import("@/lib/site/flycontrol");
                             
                             // Payload de teste real solicitado pelo usuário
-                            const payload = {
-                              event: "order.created",
-                              customer: {
-                                name: "Cliente Teste SF",
-                                phone: "71999999999",
-                                address: "Rua Teste",
-                                neighborhood: "Bairro Teste"
-                              },
-                              order: {
-                                id: "teste-sf-fiqon-" + Date.now(),
-                                delivery_fee: 0,
-                                total: 40,
-                                items: [
-                                  {
-                                    name: "Pizza Teste",
-                                    size: "Família",
-                                    type: "pizza",
-                                    crust: "Sem borda",
-                                    extras: [],
-                                    flavors: ["Calabresa", "Mussarela"],
-                                    notes: "Sabores: Calabresa + Mussarela"
-                                  }
-                                ]
-                              }
-                            };
+                            const orderPayload = buildOrderPayload({
+                              name: "Cliente Teste SF",
+                              phone: "71999999999",
+                              address: "Rua Teste",
+                              neighborhood: "Bairro Teste",
+                              reference: null,
+                              deliveryFee: 0,
+                              items: [
+                                {
+                                  itemId: "test-1",
+                                  name: "Pizza Teste",
+                                  description: "Sabores: Calabresa + Mussarela",
+                                  unitPrice: 40,
+                                  quantity: 1,
+                                  sizeLabel: "Família",
+                                  flavors: ["Calabresa", "Mussarela"]
+                                }
+                              ],
+                              subtotal: 40,
+                              total: 40,
+                              notes: "Pedido de teste do painel admin",
+                              pizzeria_slug: r.slug || "",
+                              pizzeria_name: r.name || "",
+                              whatsapp_message: "Pedido de teste via FIQON",
+                              delivery_type: "delivery"
+                            });
 
-                            console.log("--- TESTE WEBHOOK FIQON ---");
-                            console.log("URL FIQON usada:", webhookUrl);
-                            console.log("Payload enviado:", JSON.stringify(payload, null, 2));
-
-                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any, true);
+                            const result = await sendUnifiedOrderToFiqon(orderPayload, r as any, "admin_test");
                             
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
@@ -887,7 +884,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                               status: result.status,
                               url: webhookUrl,
                               data: result.response,
-                              payloadSent: payload,
+                              payloadSent: orderPayload,
                               error: result.error
                             });
 
@@ -1008,7 +1005,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                )}
              </div>
 
-             {(regMsg || testDebug) && (
+              <OrderSubmissionLogsTable restaurantId={r.id} />
+
+              {(regMsg || testDebug) && (
                <div className="space-y-3 relative z-10">
                  {regMsg && (
                    <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
@@ -1112,5 +1111,104 @@ function Field({
       {children}
       {hint && <span className="text-xs text-muted-foreground block mt-1">{hint}</span>}
     </label>
+  );
+}
+
+function OrderSubmissionLogsTable({ restaurantId }: { restaurantId: string }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("order_submission_logs")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      
+      if (!error) setLogs(data);
+    } catch (err) {
+      console.error("Erro ao buscar logs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (restaurantId) fetchLogs();
+  }, [restaurantId]);
+
+  if (loading && logs.length === 0) return null;
+
+  return (
+    <div className="card-premium p-6 space-y-4 border-white/10 bg-white/5 mt-8 relative z-10">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+          Logs de Envio Recentes (FIQON)
+        </h3>
+        <button 
+          type="button"
+          onClick={fetchLogs}
+          className="p-2 hover:bg-white/5 rounded-lg transition"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 text-muted-foreground uppercase tracking-widest">
+              <th className="py-2 pr-4 font-black">Data/Hora</th>
+              <th className="py-2 pr-4 font-black">Origem</th>
+              <th className="py-2 pr-4 font-black">Status</th>
+              <th className="py-2 pr-4 font-black">Pedido</th>
+              <th className="py-2 font-black">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-muted-foreground italic">Nenhum log encontrado.</td>
+              </tr>
+            ) : logs.map((log) => (
+              <tr key={log.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="py-3 pr-4 opacity-70">
+                  {new Date(log.created_at).toLocaleString('pt-BR')}
+                </td>
+                <td className="py-3 pr-4">
+                  <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${
+                    log.source === 'admin_test' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                  }`}>
+                    {log.source === 'admin_test' ? 'Teste' : 'Checkout'}
+                  </span>
+                </td>
+                <td className="py-3 pr-4">
+                  <span className={`font-black ${
+                    log.status >= 200 && log.status < 300 ? 'text-green-500' : 'text-destructive'
+                  }`}>
+                    {log.status || 'Erro'}
+                  </span>
+                </td>
+                <td className="py-3 pr-4 opacity-70 truncate max-w-[100px]" title={log.order_id}>
+                  {log.order_id}
+                </td>
+                <td className="py-3 opacity-70">
+                  {log.error ? (
+                    <span className="text-destructive font-medium line-clamp-1" title={log.error}>
+                      {log.error}
+                    </span>
+                  ) : (
+                    <span className="text-green-500 font-medium">Sucesso</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }

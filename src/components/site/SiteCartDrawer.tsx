@@ -3,7 +3,7 @@ import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, Sh
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook } from "@/lib/site/flycontrol";
+import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
  import { toast } from "sonner";
 
@@ -158,7 +158,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       const payload = orderPayload;
       console.log("Payload real enviado:", payload);
 
-      // 1. Envio para FIQON (Webhook Externo)
+      // 1. Envio para FIQON (Webhook Externo) - USANDO FUNÇÃO COMPARTILHADA
       if (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp")) {
         if (!externalWebhookUrl) {
           if (flowMode === "fiqon") {
@@ -168,22 +168,26 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           }
           console.warn("⚠️ Nenhum Webhook Externo configurado para esta pizzaria");
         } else {
-          console.log("📤 [WEBHOOK] Enviando para FIQON (Aguardando resposta HTTP real)...");
+          console.log("📤 [WEBHOOK] Enviando para FIQON via função unificada...");
           try {
-            const result = await sendOrderToExternalWebhook(externalWebhookUrl, payload);
+            // Logs técnicos obrigatórios no checkout público
+            console.log("CHECKOUT_PUBLICO_INICIADO");
+            console.log("Modo de fluxo ativo:", flowMode);
+            console.log("URL FIQON usada:", externalWebhookUrl);
+            console.log("Payload enviado para FIQON:", payload);
+
+            const result = await sendUnifiedOrderToFiqon(payload, restaurant as any, "public_checkout");
             
-            const status = result.status;
-            const response = result.response;
-            console.log("Status resposta FIQON:", status);
-            console.log("Resposta FIQON:", response);
+            console.log("Status resposta FIQON:", result.status);
+            console.log("Body resposta FIQON:", result.response);
 
             if (result.success) {
               console.log("✅ [WEBHOOK] Pedido confirmado pela FIQON");
               success = true;
             } else {
-              console.error("❌ [WEBHOOK] FIQON retornou erro. Status:", status);
+              console.error("❌ [WEBHOOK] FIQON retornou erro. Status:", result.status);
               if (flowMode === "fiqon") {
-                toast.error(`Erro no FIQON (${status}): ${result.error || 'Verifique a URL do webhook'}`);
+                toast.error(`Erro no FIQON (${result.status}): ${result.error || 'Verifique a URL do webhook'}`);
                 setSending(false);
                 return; // Bloqueia o fluxo se for o modo principal e falhar
               }
