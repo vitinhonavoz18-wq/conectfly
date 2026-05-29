@@ -1113,3 +1113,102 @@ function Field({
     </label>
   );
 }
+
+function OrderSubmissionLogsTable({ restaurantId }: { restaurantId: string }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("order_submission_logs")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      
+      if (!error) setLogs(data);
+    } catch (err) {
+      console.error("Erro ao buscar logs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (restaurantId) fetchLogs();
+  }, [restaurantId]);
+
+  if (loading && logs.length === 0) return null;
+
+  return (
+    <div className="card-premium p-6 space-y-4 border-white/10 bg-white/5 mt-8 relative z-10">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+          Logs de Envio Recentes (FIQON)
+        </h3>
+        <button 
+          type="button"
+          onClick={fetchLogs}
+          className="p-2 hover:bg-white/5 rounded-lg transition"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-[10px] text-left border-collapse">
+          <thead>
+            <tr className="border-b border-white/10 text-muted-foreground uppercase tracking-widest">
+              <th className="py-2 pr-4 font-black">Data/Hora</th>
+              <th className="py-2 pr-4 font-black">Origem</th>
+              <th className="py-2 pr-4 font-black">Status</th>
+              <th className="py-2 pr-4 font-black">Pedido</th>
+              <th className="py-2 font-black">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logs.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="py-8 text-center text-muted-foreground italic">Nenhum log encontrado.</td>
+              </tr>
+            ) : logs.map((log) => (
+              <tr key={log.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                <td className="py-3 pr-4 opacity-70">
+                  {new Date(log.created_at).toLocaleString('pt-BR')}
+                </td>
+                <td className="py-3 pr-4">
+                  <span className={`px-2 py-0.5 rounded-full font-bold uppercase tracking-tighter ${
+                    log.source === 'admin_test' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'
+                  }`}>
+                    {log.source === 'admin_test' ? 'Teste' : 'Checkout'}
+                  </span>
+                </td>
+                <td className="py-3 pr-4">
+                  <span className={`font-black ${
+                    log.status >= 200 && log.status < 300 ? 'text-green-500' : 'text-destructive'
+                  }`}>
+                    {log.status || 'Erro'}
+                  </span>
+                </td>
+                <td className="py-3 pr-4 opacity-70 truncate max-w-[100px]" title={log.order_id}>
+                  {log.order_id}
+                </td>
+                <td className="py-3 opacity-70">
+                  {log.error ? (
+                    <span className="text-destructive font-medium line-clamp-1" title={log.error}>
+                      {log.error}
+                    </span>
+                  ) : (
+                    <span className="text-green-500 font-medium">Sucesso</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
