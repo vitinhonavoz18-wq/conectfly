@@ -21,9 +21,17 @@ export function AdminRouteGuard({ children }: { children: React.ReactNode }) {
       const sessionV2 = localStorage.getItem(SESSION_KEY);
       
       // 2. Verificar usuário no Supabase
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      const adminSessionValid = !!(sessionV2 === "true" && user && user.email === 'vitinhonavoz18@gmail.com');
+      let currentUser = session?.user;
+      
+      // Se a sessão expirou, tentar refresh
+      if (!session && !sessionError) {
+        const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+        currentUser = refreshedSession?.user;
+      }
+      
+      const adminSessionValid = !!(sessionV2 === "true" && currentUser && currentUser.email === 'vitinhonavoz18@gmail.com');
 
       console.log(`[AdminGuard] Rota: ${path} | isAdminRoute: ${isAdminRoute} | isPublicPizzeriaSlug: false | adminSessionValid: ${adminSessionValid}`);
 
