@@ -3,7 +3,7 @@ import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, C
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
-import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
+import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon, type FlycontrolOrderPayload } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
 
@@ -848,33 +848,45 @@ export function InfoForm({ restaurant, onChange }: Props) {
                           }
 
                           try {
-                            const testPayload = {
+                            const testPayload: FlycontrolOrderPayload = {
                               event: "order.created",
+                              source: "sitecreatorfly",
+                              pizzeria: {
+                                slug: r.slug || "test",
+                                name: r.name || "Test"
+                              },
                               customer: {
                                 name: "Cliente Teste SF",
                                 phone: "71999999999",
                                 address: "Rua Teste",
-                                neighborhood: "Bairro Teste"
+                                neighborhood: "Bairro Teste",
+                                reference: null
                               },
                               order: {
                                 id: "teste-sf-fiqon-" + Date.now(),
-                                delivery_fee: 0,
-                                total: 40,
-                                payment_method: "PIX",
+                                created_at: new Date().toISOString(),
                                 items: [
                                   {
+                                    type: "pizza",
                                     name: "Pizza Teste",
                                     size: "Família",
-                                    type: "pizza",
+                                    flavors: ["Calabresa", "Mussarela"],
                                     crust: "Sem borda",
                                     extras: [],
-                                    flavors: ["Calabresa", "Mussarela"],
                                     quantity: 1,
                                     unit_price: 40,
                                     total_price: 40,
                                     notes: "Sabores: Calabresa + Mussarela"
                                   }
-                                ]
+                                ],
+                                subtotal: 40,
+                                delivery_fee: 0,
+                                total: 40,
+                                payment_method: "PIX",
+                                change_for: null,
+                                delivery_type: "delivery",
+                                notes: "Sabores: Calabresa + Mussarela",
+                                whatsapp_message: "Pedido de teste via painel SiteCreatorFly"
                               }
                             };
 
@@ -882,12 +894,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             console.log("URL usada:", webhookUrl);
                             console.log("Payload enviado:", testPayload);
 
-                            // Chamada direta via Edge Function para evitar CORS e dependências do site público
-                            const { data: result, error: invokeError } = await safeInvoke('send-fiqon-webhook', {
-                              body: { webhookUrl, payload: testPayload }
-                            }, true);
-
-                            if (invokeError) throw invokeError;
+                            // Chamada unificada para FIQON
+                            const result = await sendUnifiedOrderToFiqon(testPayload, r, "admin_test");
 
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
@@ -897,6 +905,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                               status: result.status,
                               url: webhookUrl,
                               data: result.response,
+                              headers: result.headers,
                               payloadSent: testPayload,
                               error: result.error
                             });
@@ -1045,6 +1054,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
                         <div className="space-y-1">
                           <p className="text-primary/70 font-bold uppercase tracking-tighter">Payload Enviado:</p>
                           <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto">{JSON.stringify(testDebug.payloadSent, null, 2)}</pre>
+                        </div>
+                      )}
+
+                      {testDebug.headers && (
+                        <div className="space-y-1">
+                          <p className="text-primary/70 font-bold uppercase tracking-tighter">Headers da Resposta:</p>
+                          <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto text-[8px]">{JSON.stringify(testDebug.headers, null, 2)}</pre>
                         </div>
                       )}
 

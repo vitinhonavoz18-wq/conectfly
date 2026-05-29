@@ -359,7 +359,7 @@ export async function sendOrderToExternalWebhook(
   requireAuth: boolean = false,
   restaurantId?: string,
   source: "admin_test" | "public_checkout" = "public_checkout"
-): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
+): Promise<{ success: boolean; status: number; response?: any; error?: string; headers?: any }> {
   // Logs técnicos obrigatórios solicitados
   console.log(`--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (${source.toUpperCase()}) ---`);
   console.log("URL Webhook FIQON usada:", webhookUrl);
@@ -367,7 +367,7 @@ export async function sendOrderToExternalWebhook(
 
   try {
     const { data, error: functionError } = await safeInvoke('send-fiqon-webhook', {
-      body: { webhookUrl, payload }
+      body: { webhookUrl, payload, restaurantId }
     }, requireAuth);
 
     if (functionError) {
@@ -390,7 +390,7 @@ export async function sendOrderToExternalWebhook(
       throw functionError;
     }
 
-    const { success, status, response: responseData, error: fiqonError } = data;
+    const { success, status, response: responseData, error: fiqonError, headers: responseHeaders } = data;
 
     console.log("Status HTTP recebido:", status);
     console.log("Resposta FIQON:", JSON.stringify(responseData, null, 2));
@@ -420,6 +420,7 @@ export async function sendOrderToExternalWebhook(
       success: !!success,
       status: status || 0,
       response: responseData,
+      headers: responseHeaders,
       error: fiqonError
     };
   } catch (err: any) {
