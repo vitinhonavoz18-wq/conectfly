@@ -171,16 +171,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         } else {
           console.log("📤 [WEBHOOK] Enviando para FIQON via função unificada...");
           try {
-            // Logs técnicos obrigatórios no checkout público
-            console.log("CHECKOUT_PUBLICO_INICIADO");
-            console.log("Modo de fluxo ativo:", flowMode);
-            console.log("URL FIQON usada:", externalWebhookUrl);
-            console.log("Payload enviado para FIQON:", payload);
+            // Logs técnicos obrigatórios no checkout público conforme solicitado
+            console.log("PAYLOAD_ENVIADO_FIQON:", payload);
 
             const result = await sendUnifiedOrderToFiqon(payload, restaurant as any, "public_checkout");
             
-            console.log("Status resposta FIQON:", result.status);
-            console.log("Body resposta FIQON:", result.response);
+            console.log("STATUS_RESPOSTA_FIQON:", result.status);
+            console.log("RESPOSTA_FIQON:", result.response);
 
             if (result.success) {
               console.log("✅ [WEBHOOK] Pedido confirmado pela FIQON");
