@@ -868,10 +868,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             };
 
                             console.log("--- TESTE WEBHOOK FIQON ---");
-                            console.log("URL FIQON usada:", r.site_settings.external_webhook_url);
+                            console.log("URL FIQON usada:", webhookUrl);
                             console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
-                            const result = await sendOrderToExternalWebhook(r.site_settings.external_webhook_url, payload as any);
+                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any);
                             
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
@@ -879,7 +879,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             setTestDebug({
                               success: result.success,
                               status: result.status,
-                              url: r.site_settings.external_webhook_url,
+                              url: webhookUrl,
                               data: result.response,
                               payloadSent: payload,
                               error: result.error
