@@ -75,6 +75,7 @@ serve(async (req) => {
           success: response.ok,
           status: responseStatus,
           response: parsedBody,
+          headers: Object.fromEntries(response.headers.entries()),
           url: webhookUrl
         }),
         { 
