@@ -390,7 +390,7 @@ export async function sendOrderToExternalWebhook(
       throw functionError;
     }
 
-    const { success, status, response: responseData, error: fiqonError } = data;
+    const { success, status, response: responseData, error: fiqonError, headers: responseHeaders } = data;
 
     console.log("Status HTTP recebido:", status);
     console.log("Resposta FIQON:", JSON.stringify(responseData, null, 2));
