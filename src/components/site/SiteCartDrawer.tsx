@@ -121,14 +121,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     setSending(true);
     let painelRegistrado = false;
+    const flowMode = restaurant?.site_settings?.order_flow_mode || (restaurant?.site_settings?.external_webhook_url ? "fiqon" : "direct");
+    const allowDoubleSend = !!restaurant?.site_settings?.allow_double_send;
+    const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
 
     try {
       console.log("🚀 [CHECKOUT] Iniciando finalização do pedido");
-
-      const flowMode = restaurant?.site_settings?.order_flow_mode || (restaurant?.site_settings?.external_webhook_url ? "fiqon" : "direct");
-      const allowDoubleSend = !!restaurant?.site_settings?.allow_double_send;
-      const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
-      
       console.log(`[CHECKOUT] Modo: ${flowMode} | Double: ${allowDoubleSend} | Webhook: ${externalWebhookUrl ? "Configurado" : "Ausente"}`);
 
       const orderPayload = buildOrderPayload({
