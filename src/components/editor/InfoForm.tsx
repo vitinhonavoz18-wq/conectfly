@@ -834,57 +834,69 @@ export function InfoForm({ restaurant, onChange }: Props) {
                       <button
                         type="button"
                         onClick={async () => {
+                          setTesting(true);
+                          setRegMsg("");
+                          setTestDebug(null);
+
                           const webhookUrl = r.fiqon_webhook_url || r.site_settings?.external_webhook_url;
+
                           if (!webhookUrl) {
-                            alert("Configure a URL do Webhook primeiro.");
+                            setRegMsg("Por favor, configure a URL do Webhook primeiro.");
+                            setTesting(false);
                             return;
                           }
-                          setTesting(true);
-                          setRegMsg("Enviando pedido de teste para FIQON...");
-                          setTestDebug(null);
-                          
-                          try {
-                            const { buildOrderPayload } = await import("@/lib/site/flycontrol");
-                            
-                            // Payload de teste real solicitado pelo usuário
-                            const orderPayload = buildOrderPayload({
-                              name: "Cliente Teste SF",
-                              phone: "71999999999",
-                              address: "Rua Teste",
-                              neighborhood: "Bairro Teste",
-                              reference: null,
-                              deliveryFee: 0,
-                              items: [
-                                {
-                                  itemId: "test-1",
-                                  name: "Pizza Teste",
-                                  description: "Sabores: Calabresa + Mussarela",
-                                  unitPrice: 40,
-                                  quantity: 1,
-                                  sizeLabel: "Família",
-                                  flavors: ["Calabresa", "Mussarela"]
-                                }
-                              ],
-                              subtotal: 40,
-                              total: 40,
-                              notes: "Pedido de teste do painel admin",
-                              pizzeria_slug: r.slug || "",
-                              pizzeria_name: r.name || "",
-                              whatsapp_message: "Pedido de teste via FIQON",
-                              delivery_type: "delivery"
-                            });
 
-                            const result = await sendUnifiedOrderToFiqon(orderPayload, r as any, "admin_test");
-                            
+                          try {
+                            const testPayload = {
+                              event: "order.created",
+                              customer: {
+                                name: "Cliente Teste SF",
+                                phone: "71999999999",
+                                address: "Rua Teste",
+                                neighborhood: "Bairro Teste"
+                              },
+                              order: {
+                                id: "teste-sf-fiqon-" + Date.now(),
+                                delivery_fee: 0,
+                                total: 40,
+                                payment_method: "PIX",
+                                items: [
+                                  {
+                                    name: "Pizza Teste",
+                                    size: "Família",
+                                    type: "pizza",
+                                    crust: "Sem borda",
+                                    extras: [],
+                                    flavors: ["Calabresa", "Mussarela"],
+                                    quantity: 1,
+                                    unit_price: 40,
+                                    total_price: 40,
+                                    notes: "Sabores: Calabresa + Mussarela"
+                                  }
+                                ]
+                              }
+                            };
+
+                            console.log("Iniciando teste real para FIQON...");
+                            console.log("URL usada:", webhookUrl);
+                            console.log("Payload enviado:", testPayload);
+
+                            // Chamada direta via Edge Function para evitar CORS e dependências do site público
+                            const { data: result, error: invokeError } = await safeInvoke('send-fiqon-webhook', {
+                              body: { webhookUrl, payload: testPayload }
+                            }, true);
+
+                            if (invokeError) throw invokeError;
+
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
 
                             setTestDebug({
-                              success: result.success,
+                              success: result.success && (result.status === 200 || result.status === 201 || result.status === 202),
                               status: result.status,
                               url: webhookUrl,
                               data: result.response,
-                              payloadSent: orderPayload,
+                              payloadSent: testPayload,
                               error: result.error
                             });
 
@@ -896,6 +908,12 @@ export function InfoForm({ restaurant, onChange }: Props) {
                           } catch (err: any) {
                             console.error("Erro no teste:", err);
                             setRegMsg("Erro: " + err.message);
+                            setTestDebug({
+                              success: false,
+                              status: 0,
+                              url: webhookUrl,
+                              error: err.message
+                            });
                           } finally {
                             setTesting(false);
                           }
