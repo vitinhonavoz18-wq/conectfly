@@ -367,7 +367,7 @@ export async function sendOrderToExternalWebhook(
 
   try {
     const { data, error: functionError } = await safeInvoke('send-fiqon-webhook', {
-      body: { webhookUrl, payload }
+      body: { webhookUrl, payload, restaurantId }
     }, requireAuth);
 
     if (functionError) {
