@@ -366,7 +366,7 @@ export async function sendOrderToExternalWebhook(
   try {
     const { data, error: functionError } = await safeInvoke('send-fiqon-webhook', {
       body: { webhookUrl, payload }
-    });
+    }, requireAuth);
 
     if (functionError) {
       console.error("❌ [WEBHOOK] Erro na Edge Function:", functionError);
