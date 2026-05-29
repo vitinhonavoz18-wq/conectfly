@@ -101,17 +101,7 @@ serve(async (req) => {
       }
     }
 
-    const url = new URL(req.url)
-    const id = body?.id || url.searchParams.get('id')
-    const action = body?.action || url.searchParams.get('action') || 'get'
     const includeFullData = body?.full === true || url.searchParams.get('full') === 'true'
-
-    if (!id) {
-      return new Response(JSON.stringify({ error: 'ID is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
 
     // Corrigido regex de UUID (8-4-4-4-12)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
