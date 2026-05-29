@@ -187,7 +187,7 @@ export async function listRestaurants(): Promise<RestaurantRow[]> {
   console.log("[listRestaurants] Chamando backend seguro (admin-list-restaurants)...");
   
   try {
-    const { data, error } = await supabase.functions.invoke("admin-list-restaurants");
+    const { data, error } = await safeInvoke("admin-list-restaurants");
     
     if (error) {
       console.error("[listRestaurants] Erro na chamada da Edge Function:", error);
@@ -201,7 +201,7 @@ export async function listRestaurants(): Promise<RestaurantRow[]> {
     
     console.log(`[listRestaurants] Sucesso: ${data.data?.length || 0} pizzarias retornadas`);
     return (data.data ?? []) as RestaurantRow[];
-  } catch (err) {
+  } catch (err: any) {
     console.error("[listRestaurants] Erro completo:", err);
     throw err;
   }
