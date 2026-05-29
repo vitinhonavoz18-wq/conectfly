@@ -241,7 +241,7 @@ export async function updateRestaurant(id: string, updates: Partial<RestaurantRo
   console.log(`[updateRestaurant] Atualizando restaurante: ${id}`);
   
   try {
-    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+    const { data, error } = await safeInvoke("admin-get-restaurant", {
       body: { id, action: "update", updates }
     });
     
@@ -257,7 +257,7 @@ export async function updateRestaurant(id: string, updates: Partial<RestaurantRo
     
     console.log(`[updateRestaurant] Sucesso: Restaurante "${data.data.name}" atualizado`);
     return data.data as RestaurantRow;
-  } catch (err) {
+  } catch (err: any) {
     console.error("[updateRestaurant] Erro completo:", err);
     throw err;
   }
