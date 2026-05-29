@@ -129,11 +129,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
     const whatsappEnabled = restaurant?.continue_opening_whatsapp ?? (restaurant?.whatsapp_enabled !== false);
 
-    console.log("CHECKOUT REAL INICIADO");
-    console.log("Modo de fluxo ativo:", flowMode);
-    console.log("URL FIQON usada:", externalWebhookUrl || "Nenhuma");
+    // LOGS OBRIGATÓRIOS DO CHECKOUT PÚBLICO
+    console.log("CHECKOUT_PUBLICO_INICIADO");
+    console.log("MODO_FLUXO_ATIVO:", flowMode);
+    console.log("URL_FIQON_USADA:", externalWebhookUrl || "Nenhuma");
     console.log("Permitir envio duplo:", allowDoubleSend);
-    console.log("Abrindo WhatsApp após webhook:", whatsappEnabled ? "sim" : "não");
+    console.log("WHATSAPP_LIBERADO_APOS_WEBHOOK:", whatsappEnabled ? "SIM" : "NÃO");
 
     try {
       const orderPayload = buildOrderPayload({
