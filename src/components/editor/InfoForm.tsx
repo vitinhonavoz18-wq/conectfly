@@ -1005,7 +1005,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
                )}
              </div>
 
-             {(regMsg || testDebug) && (
+              <OrderSubmissionLogsTable restaurantId={r.id} />
+
+              {(regMsg || testDebug) && (
                <div className="space-y-3 relative z-10">
                  {regMsg && (
                    <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-widest">
