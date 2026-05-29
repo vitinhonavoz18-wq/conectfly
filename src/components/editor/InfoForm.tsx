@@ -848,33 +848,45 @@ export function InfoForm({ restaurant, onChange }: Props) {
                           }
 
                           try {
-                            const testPayload = {
+                            const testPayload: FlycontrolOrderPayload = {
                               event: "order.created",
+                              source: "sitecreatorfly",
+                              pizzeria: {
+                                slug: r.slug || "test",
+                                name: r.name || "Test"
+                              },
                               customer: {
                                 name: "Cliente Teste SF",
                                 phone: "71999999999",
                                 address: "Rua Teste",
-                                neighborhood: "Bairro Teste"
+                                neighborhood: "Bairro Teste",
+                                reference: null
                               },
                               order: {
                                 id: "teste-sf-fiqon-" + Date.now(),
-                                delivery_fee: 0,
-                                total: 40,
-                                payment_method: "PIX",
+                                created_at: new Date().toISOString(),
                                 items: [
                                   {
+                                    type: "pizza",
                                     name: "Pizza Teste",
                                     size: "Família",
-                                    type: "pizza",
+                                    flavors: ["Calabresa", "Mussarela"],
                                     crust: "Sem borda",
                                     extras: [],
-                                    flavors: ["Calabresa", "Mussarela"],
                                     quantity: 1,
                                     unit_price: 40,
                                     total_price: 40,
                                     notes: "Sabores: Calabresa + Mussarela"
                                   }
-                                ]
+                                ],
+                                subtotal: 40,
+                                delivery_fee: 0,
+                                total: 40,
+                                payment_method: "PIX",
+                                change_for: null,
+                                delivery_type: "delivery",
+                                notes: "Sabores: Calabresa + Mussarela",
+                                whatsapp_message: "Pedido de teste via painel SiteCreatorFly"
                               }
                             };
 
