@@ -118,10 +118,19 @@ export interface RestaurantRow {
     beverages_position?: "after_products" | "after_combos" | "end";
     primaryButtonText?: string;
     show_cart_button?: boolean;
+    // Legado - movido para o topo
     external_webhook_url?: string;
-    order_flow_mode?: "fiqon" | "direct";
+    order_flow_mode?: "fiqon" | "direct" | "whatsapp";
     allow_double_send?: boolean;
   };
+  // Novos campos para fluxo de pedidos
+  order_flow_mode?: "fiqon" | "direct" | "whatsapp";
+  fiqon_webhook_url?: string | null;
+  continue_opening_whatsapp?: boolean;
+  allow_dual_send?: boolean;
+  flycontrol_direct_url?: string | null;
+  menu_sync_endpoint?: string | null;
+
   customization?: {
     primaryButtonText?: string;
   };
