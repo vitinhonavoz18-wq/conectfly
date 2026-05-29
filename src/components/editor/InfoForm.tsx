@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import { generateApiKey, registerPizzeriaInFlycontrol } from "@/lib/site/flycontrol";
-import { updateRestaurant } from "@/lib/site/queries";
+import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 
 interface Props {
   restaurant: RestaurantRow;
@@ -136,25 +136,31 @@ export function InfoForm({ restaurant, onChange }: Props) {
     try {
       console.log("[InfoForm] Enviando updates:", updates);
       await updateRestaurant(r.id, updates);
-      setMsg("Informações salvas!");
-      onChange({ ...r, ...updates, slug });
-      setTimeout(() => setMsg(""), 2500);
+      
+      // Recarregar os dados do banco para confirmar persistência real
+      console.log("[InfoForm] Recarregando dados para confirmar persistência...");
+      const refreshedRestaurant = await getRestaurantById(r.id);
+      
+      setR(refreshedRestaurant);
+      setMsg("Informações salvas e confirmadas no banco!");
+      onChange(refreshedRestaurant);
+      
+      setTimeout(() => setMsg(""), 3500);
     } catch (err: any) {
       console.error("[InfoForm] Erro ao salvar:", err);
-      // Extrai detalhes do erro para exibição
-      const errorDetail = err.details || err.message || String(err);
-      const statusCode = err.status || "N/A";
-      const functionName = "admin-get-restaurant";
       
-      setMsg(`Erro ao salvar (${functionName}): HTTP ${statusCode} - ${errorDetail}`);
+      // Extrai detalhes do erro real retornado pela função
+      const errorMsg = err.message || "Erro desconhecido";
+      const statusCode = err.status || (err.message?.includes("401") ? 401 : "Erro");
+      
+      setMsg(`FALHA AO SALVAR: ${errorMsg}`);
       
       // Log extra para depuração conforme solicitado
-      console.log("DEBUG SALVAMENTO:", {
-        functionName,
-        status: statusCode,
-        message: errorDetail,
-        payload: updates
-      });
+      console.log("--- LOG DE ERRO DE SALVAMENTO ---");
+      console.log("Status:", statusCode);
+      console.log("Erro:", errorMsg);
+      console.log("Payload que tentou salvar:", updates);
+      console.log("---------------------------------");
     } finally {
       setSaving(false);
     }
@@ -871,7 +877,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             console.log("URL FIQON usada:", webhookUrl);
                             console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
-                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any);
+                            const result = await sendOrderToExternalWebhook(webhookUrl, payload as any, true);
                             
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));

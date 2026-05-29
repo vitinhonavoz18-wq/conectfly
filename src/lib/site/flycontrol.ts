@@ -1,4 +1,5 @@
 import type { CartLine, RestaurantRow } from "./types";
+import { safeInvoke } from "./api-utils";
 import { formatBRL } from "./format";
 
 export interface FlycontrolOrderPayload {
@@ -354,7 +355,8 @@ export async function sendOrderToFlycontrol(
  */
 export async function sendOrderToExternalWebhook(
   webhookUrl: string,
-  payload: FlycontrolOrderPayload
+  payload: FlycontrolOrderPayload,
+  requireAuth: boolean = false
 ): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
   // Logs técnicos obrigatórios solicitados
   console.log("--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (VIA PROXY) ---");
@@ -362,11 +364,9 @@ export async function sendOrderToExternalWebhook(
   console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
   try {
-    const supabaseClient = (await import("@/integrations/supabase/client")).supabase;
-    
-    const { data, error: functionError } = await supabaseClient.functions.invoke('send-fiqon-webhook', {
+    const { data, error: functionError } = await safeInvoke('send-fiqon-webhook', {
       body: { webhookUrl, payload }
-    });
+    }, requireAuth);
 
     if (functionError) {
       console.error("❌ [WEBHOOK] Erro na Edge Function:", functionError);

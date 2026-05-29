@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { safeInvoke } from "./api-utils";
 import type {
   ComboGroupRow,
   ComboRow,
@@ -186,7 +187,7 @@ export async function listRestaurants(): Promise<RestaurantRow[]> {
   console.log("[listRestaurants] Chamando backend seguro (admin-list-restaurants)...");
   
   try {
-    const { data, error } = await supabase.functions.invoke("admin-list-restaurants");
+    const { data, error } = await safeInvoke("admin-list-restaurants");
     
     if (error) {
       console.error("[listRestaurants] Erro na chamada da Edge Function:", error);
@@ -200,7 +201,7 @@ export async function listRestaurants(): Promise<RestaurantRow[]> {
     
     console.log(`[listRestaurants] Sucesso: ${data.data?.length || 0} pizzarias retornadas`);
     return (data.data ?? []) as RestaurantRow[];
-  } catch (err) {
+  } catch (err: any) {
     console.error("[listRestaurants] Erro completo:", err);
     throw err;
   }
@@ -214,7 +215,7 @@ export async function getRestaurantById(id: string): Promise<RestaurantRow> {
   console.log(`[getRestaurantById] Tipo detectado: ${isUuid ? "UUID" : "Slug"}`);
 
   try {
-    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+    const { data, error } = await safeInvoke("admin-get-restaurant", {
       body: { id }
     });
     
@@ -230,7 +231,7 @@ export async function getRestaurantById(id: string): Promise<RestaurantRow> {
     
     console.log(`[getRestaurantById] Sucesso: Restaurante "${data.data.name}" encontrado`);
     return data.data as RestaurantRow;
-  } catch (err) {
+  } catch (err: any) {
     console.error("[getRestaurantById] Erro completo:", err);
     throw err;
   }
@@ -240,7 +241,7 @@ export async function updateRestaurant(id: string, updates: Partial<RestaurantRo
   console.log(`[updateRestaurant] Atualizando restaurante: ${id}`);
   
   try {
-    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+    const { data, error } = await safeInvoke("admin-get-restaurant", {
       body: { id, action: "update", updates }
     });
     
@@ -256,7 +257,7 @@ export async function updateRestaurant(id: string, updates: Partial<RestaurantRo
     
     console.log(`[updateRestaurant] Sucesso: Restaurante "${data.data.name}" atualizado`);
     return data.data as RestaurantRow;
-  } catch (err) {
+  } catch (err: any) {
     console.error("[updateRestaurant] Erro completo:", err);
     throw err;
   }
@@ -266,12 +267,19 @@ export async function adminFetchSiteData(id: string): Promise<SiteData> {
   console.log(`[adminFetchSiteData] Carregando dados completos via backend seguro: ${id}`);
   
   try {
-    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+    const { data, error } = await safeInvoke("admin-get-restaurant", {
       body: { id, action: "get", full: true }
     });
     
-    if (error) throw error;
-    if (!data?.success) throw new Error(data?.error || "Falha ao carregar dados do restaurante");
+    if (error) {
+      console.error("[adminFetchSiteData] Erro na chamada:", error);
+      throw error;
+    }
+    
+    if (!data?.success) {
+      console.error("[adminFetchSiteData] Backend retornou erro:", data?.error);
+      throw new Error(data?.error || "Falha ao carregar dados do restaurante");
+    }
 
     const { restaurant, categories, items, comboGroups, combos, deliveryZones, beverages, pizzaSizes } = data.data;
 
@@ -307,7 +315,7 @@ export async function adminFetchSiteData(id: string): Promise<SiteData> {
       beverages: beverages as BeverageRow[],
       pizzaSizes: pizzaSizesFromTable,
     };
-  } catch (err) {
+  } catch (err: any) {
     console.error("[adminFetchSiteData] Erro completo:", err);
     throw err;
   }
