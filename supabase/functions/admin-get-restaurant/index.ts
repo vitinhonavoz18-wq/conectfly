@@ -44,12 +44,21 @@ serve(async (req) => {
     }
 
     const ADMIN_EMAIL = 'vitinhonavoz18@gmail.com'
-    if (user.email !== ADMIN_EMAIL) {
-      console.warn(`[${requestId}] Acesso negado para o email: ${user.email}`)
-      return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
+    const isAdmin = user.email === ADMIN_EMAIL
+
+    if (!isAdmin) {
+      console.log(`[${requestId}] Validando propriedade do restaurante para usuário: ${user.email}`)
+      // Se não for admin, verificamos se o usuário é o dono do restaurante ou se tem acesso
+      // No momento, como owner_id está nulo, permitiremos acesso se o usuário estiver autenticado 
+      // via o fluxo admin-auth (que define o email como vitinhonavoz18@gmail.com).
+      // Se houver outros usuários, precisaremos de uma lógica de permissão mais robusta.
+      if (user.email !== ADMIN_EMAIL) {
+        console.warn(`[${requestId}] Acesso negado para o email: ${user.email}`)
+        return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
     }
 
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''

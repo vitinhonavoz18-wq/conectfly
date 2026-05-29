@@ -356,8 +356,10 @@ export async function sendOrderToExternalWebhook(
   webhookUrl: string,
   payload: FlycontrolOrderPayload
 ): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
-  console.log("webhookExternalUrlUsed:", webhookUrl);
-  console.log("webhookPayload:", JSON.stringify(payload, null, 2));
+  // Logs técnicos obrigatórios solicitados
+  console.log("--- INICIANDO CHAMADA DE WEBHOOK EXTERNO ---");
+  console.log("URL chamada:", webhookUrl);
+  console.log("payload enviado:", JSON.stringify(payload, null, 2));
 
   try {
     const response = await fetch(webhookUrl, {
@@ -377,8 +379,9 @@ export async function sendOrderToExternalWebhook(
       responseData = { text: responseText };
     }
 
-    console.log("webhookResponseStatus:", status);
-    console.log("webhookResponseBody:", responseData);
+    console.log("status da resposta:", status);
+    console.log("body da resposta:", responseData);
+    console.log("------------------------------------------");
 
     return {
       success: response.ok,
@@ -386,7 +389,8 @@ export async function sendOrderToExternalWebhook(
       response: responseData,
     };
   } catch (err: any) {
-    console.error("webhookError:", err.message);
+    console.error("erro retornado:", err.message);
+    console.log("------------------------------------------");
     return {
       success: false,
       status: 0,
