@@ -123,12 +123,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     let painelRegistrado = false;
 
     try {
-      console.log("🚀 Iniciando finalização do pedido");
+      console.log("🚀 [CHECKOUT] Iniciando finalização do pedido");
 
       const flowMode = restaurant?.site_settings?.order_flow_mode || (restaurant?.site_settings?.external_webhook_url ? "fiqon" : "direct");
       const allowDoubleSend = !!restaurant?.site_settings?.allow_double_send;
+      const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
       
-      console.log(`[CHECKOUT] Modo de fluxo detectado: ${flowMode} (Double Send: ${allowDoubleSend})`);
+      console.log(`[CHECKOUT] Modo: ${flowMode} | Double: ${allowDoubleSend} | Webhook: ${externalWebhookUrl ? "Configurado" : "Ausente"}`);
 
       const orderPayload = buildOrderPayload({
         name,
@@ -149,25 +150,41 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         delivery_type: hasZones ? "delivery" : "retirada",
       });
 
-      // 1. Envio para FIQON (Webhook Externo) se estiver no modo fiqon ou double send
-      const externalWebhookUrl = restaurant?.site_settings?.external_webhook_url;
-      if (externalWebhookUrl && (flowMode === "fiqon" || allowDoubleSend)) {
-        console.log("📤 [WEBHOOK] Enviando para FIQON:", externalWebhookUrl);
-        try {
-          const result = await sendOrderToExternalWebhook(externalWebhookUrl, orderPayload);
-          if (result.success) {
-            console.log("✅ [WEBHOOK] Pedido enviado com sucesso para FIQON");
-            if (flowMode === "fiqon") painelRegistrado = true;
-          } else {
-            console.error("❌ [WEBHOOK] Falha ao enviar para FIQON. Status:", result.status);
+      // 1. Envio para FIQON (Webhook Externo)
+      if (flowMode === "fiqon" || allowDoubleSend) {
+        if (externalWebhookUrl) {
+          console.log("📤 [WEBHOOK] Enviando para FIQON (Aguardando resposta antes do WhatsApp)...");
+          try {
+            const result = await sendOrderToExternalWebhook(externalWebhookUrl, orderPayload);
+            
+            // Logs técnicos obrigatórios solicitados
+            console.log("--- LOG WEBHOOK FIQON ---");
+            console.log("webhookExternalUrlUsed:", externalWebhookUrl);
+            console.log("webhookPayload:", orderPayload);
+            console.log("webhookResponseStatus:", result.status);
+            console.log("webhookResponseBody:", result.response);
+            console.log("--------------------------");
+
+            if (result.success) {
+              console.log("✅ [WEBHOOK] Pedido enviado com sucesso para FIQON");
+              if (flowMode === "fiqon") painelRegistrado = true;
+            } else {
+              console.error("❌ [WEBHOOK] Falha ao enviar para FIQON. Status:", result.status);
+              if (flowMode === "fiqon") {
+                toast.error("Problema no painel FIQON, mas você pode continuar via WhatsApp.");
+              }
+            }
+          } catch (webhookErr: any) {
+            console.error("❌ [WEBHOOK] Erro fatal no envio para FIQON:", webhookErr.message);
+            console.log("webhookError:", webhookErr.message);
           }
-        } catch (webhookErr: any) {
-          console.error("❌ [WEBHOOK] Erro fatal no envio para FIQON:", webhookErr.message);
+        } else {
+          console.log("⚠️ Nenhum Webhook Externo configurado para esta pizzaria");
         }
       }
 
       // 2. Envio Direto para FlyControl se estiver no modo direct ou double send
-      if (flycontrolOn && restaurant && (flowMode === "direct" || allowDoubleSend)) {
+      if (flycontrolOn && restaurant && (flowMode === "direct" || (allowDoubleSend && !painelRegistrado))) {
         console.log("📤 [CHECKOUT] Enviando DIRETAMENTE para FlyControl");
         
         const controller = new AbortController();
@@ -183,7 +200,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           if (result.success) {
             if (flowMode === "direct") painelRegistrado = true;
             console.log("✅ [CHECKOUT] Pedido confirmado no FlyControl");
-            if (flowMode === "direct") toast.success("Pedido registrado no FlyControl!");
           }
         } catch (err: any) {
           clearTimeout(timeoutId);
@@ -196,21 +212,21 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         toast.success("Pedido confirmado com sucesso!");
       }
 
+      // Redirecionar para WhatsApp APÓS o envio (Requirement 4 & 5)
+      if (whatsappOn) {
+        console.log("📲 [CHECKOUT] Abrindo WhatsApp após conclusão do envio");
+        openWhatsAppOrder(messageWhatsApp);
+      }
+
     } catch (err) {
-      console.error("❌ Erro geral ao finalizar pedido:", err);
+      console.error("❌ [CHECKOUT] Erro geral ao finalizar pedido:", err);
       setError("Ocorreu um erro ao processar seu pedido.");
     } finally {
       setSending(false);
-      console.log("🏁 Fluxo de finalização encerrado");
+      console.log("🏁 [CHECKOUT] Fluxo de finalização encerrado");
     }
 
-    // Redirecionar para WhatsApp SEMPRE, mesmo se o FlyControl falhar
-    if (whatsappOn) {
-      console.log("📲 Redirecionando para WhatsApp");
-      openWhatsAppOrder(messageWhatsApp);
-    }
-
-    if (flycontrolOn && !painelRegistrado) {
+    if (flycontrolOn && !painelRegistrado && flowMode !== "fiqon") {
       console.warn("⚠️ Pedido não foi registrado no painel, mas o fluxo continuou.");
     }
 
