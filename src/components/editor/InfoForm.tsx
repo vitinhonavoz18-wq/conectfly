@@ -5,6 +5,7 @@ import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
+import { safeInvoke } from "@/lib/site/api-utils";
 
 interface Props {
   restaurant: RestaurantRow;
