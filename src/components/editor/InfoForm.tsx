@@ -828,7 +828,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
                       <button
                         type="button"
                         onClick={async () => {
-                          if (!r.site_settings?.external_webhook_url) {
+                          const webhookUrl = r.fiqon_webhook_url || r.site_settings?.external_webhook_url;
+                          if (!webhookUrl) {
                             alert("Configure a URL do Webhook primeiro.");
                             return;
                           }
