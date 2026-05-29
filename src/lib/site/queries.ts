@@ -1,7 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "./api-utils";
 import type {
-  ComboGroupGroup,
   ComboGroupRow,
   ComboRow,
   DeliveryZoneRow,
