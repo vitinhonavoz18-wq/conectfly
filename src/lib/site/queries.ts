@@ -215,7 +215,7 @@ export async function getRestaurantById(id: string): Promise<RestaurantRow> {
   console.log(`[getRestaurantById] Tipo detectado: ${isUuid ? "UUID" : "Slug"}`);
 
   try {
-    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+    const { data, error } = await safeInvoke("admin-get-restaurant", {
       body: { id }
     });
     
@@ -231,7 +231,7 @@ export async function getRestaurantById(id: string): Promise<RestaurantRow> {
     
     console.log(`[getRestaurantById] Sucesso: Restaurante "${data.data.name}" encontrado`);
     return data.data as RestaurantRow;
-  } catch (err) {
+  } catch (err: any) {
     console.error("[getRestaurantById] Erro completo:", err);
     throw err;
   }
