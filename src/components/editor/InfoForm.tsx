@@ -732,47 +732,47 @@ export function InfoForm({ restaurant, onChange }: Props) {
              <div className="space-y-4 relative z-10">
                <label className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground">Escolha o Modo de Operação</label>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 <button
-                   onClick={() => set("site_settings", { ...r.site_settings, order_flow_mode: "fiqon" })}
-                   className={`p-6 rounded-2xl border-2 transition-all text-left group ${
-                     (r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "fiqon"
-                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                       : "border-white/5 bg-white/5 hover:border-white/20"
-                   }`}
-                 >
-                   <div className="flex justify-between items-start mb-2">
-                     <h4 className="font-black text-sm uppercase tracking-tight">Opção A: Usar FIQON</h4>
-                     {(r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "fiqon" && (
-                       <Zap className="h-4 w-4 text-primary fill-primary animate-pulse" />
-                     )}
-                   </div>
-                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                     Intermediador recomendado. Ideal para automações, logs, WhatsApp e controle avançado.
-                   </p>
-                   <div className="mt-4 inline-flex px-2 py-1 rounded bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest">Recomendado</div>
-                 </button>
+                  <button
+                    onClick={() => set("order_flow_mode", "fiqon")}
+                    className={`p-6 rounded-2xl border-2 transition-all text-left group ${
+                      (r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon"
+                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                        : "border-white/5 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-black text-sm uppercase tracking-tight">Opção A: Usar FIQON</h4>
+                      {(r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon" && (
+                        <Zap className="h-4 w-4 text-primary fill-primary animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Intermediador recomendado. Ideal para automações, logs, WhatsApp e controle avançado.
+                    </p>
+                    <div className="mt-4 inline-flex px-2 py-1 rounded bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest">Recomendado</div>
+                  </button>
 
-                 <button
-                   onClick={() => {
-                     if (r.site_settings?.order_flow_mode === "fiqon" || r.site_settings?.external_webhook_url) {
-                       if (!confirm("Você já está usando FIQON como intermediador. Ativar envio direto pode duplicar pedidos se não for configurado corretamente. Deseja continuar?")) return;
-                     }
-                     set("site_settings", { ...r.site_settings, order_flow_mode: "direct" });
-                   }}
-                   className={`p-6 rounded-2xl border-2 transition-all text-left group ${
-                     (r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "direct"
-                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                       : "border-white/5 bg-white/5 hover:border-white/20"
-                   }`}
-                 >
-                   <div className="flex justify-between items-start mb-2">
-                     <h4 className="font-black text-sm uppercase tracking-tight">Opção B: Direto FlyControl</h4>
-                   </div>
-                   <p className="text-[10px] text-muted-foreground leading-relaxed">
-                     Envio direto sem intermediários. Use apenas se não for utilizar FIQON ou automações externas.
-                   </p>
-                   <div className="mt-4 inline-flex px-2 py-1 rounded bg-white/10 text-muted-foreground text-[8px] font-black uppercase tracking-widest">Legado / Avançado</div>
-                 </button>
+                  <button
+                    onClick={() => {
+                      if (r.order_flow_mode === "fiqon" || r.fiqon_webhook_url || r.site_settings?.external_webhook_url) {
+                        if (!confirm("Você já está usando FIQON como intermediador. Ativar envio direto pode duplicar pedidos se não for configurado corretamente. Deseja continuar?")) return;
+                      }
+                      set("order_flow_mode", "direct");
+                    }}
+                    className={`p-6 rounded-2xl border-2 transition-all text-left group ${
+                      (r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "direct"
+                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                        : "border-white/5 bg-white/5 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-black text-sm uppercase tracking-tight">Opção B: Direto FlyControl</h4>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      Envio direto sem intermediários. Use apenas se não for utilizar FIQON ou automações externas.
+                    </p>
+                    <div className="mt-4 inline-flex px-2 py-1 rounded bg-white/10 text-muted-foreground text-[8px] font-black uppercase tracking-widest">Legado / Avançado</div>
+                  </button>
                </div>
              </div>
 
