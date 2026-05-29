@@ -813,29 +813,63 @@ export function InfoForm({ restaurant, onChange }: Props) {
                           }
                           setTesting(true);
                           setRegMsg("Enviando pedido de teste para FIQON...");
+                          setTestDebug(null);
+                          
                           try {
-                            const { buildOrderPayload, sendOrderToExternalWebhook } = await import("@/lib/site/flycontrol");
-                            const payload = buildOrderPayload({
-                              name: "CLIENTE TESTE FIQON",
-                              phone: "5571999999999",
-                              address: "ENDEREÇO DE TESTE",
-                              items: [],
-                              subtotal: 0,
-                              total: 0,
-                              pizzeria_slug: r.slug,
-                              pizzeria_name: r.name,
-                              whatsapp_message: "TESTE",
-                            });
-                            const result = await sendOrderToExternalWebhook(r.site_settings.external_webhook_url, payload);
+                            const { sendOrderToExternalWebhook } = await import("@/lib/site/flycontrol");
+                            
+                            // Payload de teste real solicitado pelo usuário
+                            const payload = {
+                              event: "order.created",
+                              customer: {
+                                name: "Cliente Teste SF",
+                                phone: "71999999999",
+                                address: "Rua Teste",
+                                neighborhood: "Bairro Teste"
+                              },
+                              order: {
+                                id: "teste-sf-fiqon-" + Date.now(),
+                                delivery_fee: 0,
+                                total: 40,
+                                items: [
+                                  {
+                                    name: "Pizza Teste",
+                                    size: "Família",
+                                    type: "pizza",
+                                    crust: "Sem borda",
+                                    extras: [],
+                                    flavors: ["Calabresa", "Mussarela"],
+                                    notes: "Sabores: Calabresa + Mussarela"
+                                  }
+                                ]
+                              }
+                            };
+
+                            console.log("--- TESTE WEBHOOK FIQON ---");
+                            console.log("URL FIQON usada:", r.site_settings.external_webhook_url);
+                            console.log("Payload enviado:", JSON.stringify(payload, null, 2));
+
+                            const result = await sendOrderToExternalWebhook(r.site_settings.external_webhook_url, payload as any);
+                            
+                            console.log("Status HTTP recebido:", result.status);
+                            console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
+
                             setTestDebug({
                               success: result.success,
                               status: result.status,
                               url: r.site_settings.external_webhook_url,
                               data: result.response,
-                              slugUsed: r.slug
+                              payloadSent: payload,
+                              error: result.error
                             });
-                            setRegMsg(result.success ? "Teste enviado com sucesso!" : "Falha ao enviar teste.");
+
+                            if (result.success && (result.status === 200 || result.status === 201 || result.status === 202)) {
+                              setRegMsg("Teste enviado com sucesso!");
+                            } else {
+                              setRegMsg(`FALHA: Status ${result.status || 'Erro'}. Verifique os detalhes abaixo.`);
+                            }
                           } catch (err: any) {
+                            console.error("Erro no teste:", err);
                             setRegMsg("Erro: " + err.message);
                           } finally {
                             setTesting(false);
