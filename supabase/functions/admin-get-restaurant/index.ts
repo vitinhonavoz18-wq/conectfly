@@ -189,10 +189,15 @@ serve(async (req) => {
     })
 
   } catch (error: any) {
-    console.error(`[${requestId}] Erro Fatal:`, error.message)
+    const errorRequestId = crypto.randomUUID().split('-')[0]
+    console.error(`[${errorRequestId}] Erro Fatal:`, error.message)
+    console.error(`[${errorRequestId}] Detalhes:`, error)
+
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: error.message,
+      details: error.details || error.hint || null,
+      requestId: errorRequestId
     }), {
       status: error.status || 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
