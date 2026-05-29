@@ -882,12 +882,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             console.log("URL usada:", webhookUrl);
                             console.log("Payload enviado:", testPayload);
 
-                            // Chamada direta via Edge Function para evitar CORS e dependências do site público
-                            const { data: result, error: invokeError } = await safeInvoke('send-fiqon-webhook', {
-                              body: { webhookUrl, payload: testPayload }
-                            }, true);
-
-                            if (invokeError) throw invokeError;
+                            // Chamada unificada para FIQON
+                            const result = await sendUnifiedOrderToFiqon(testPayload, r, "admin_test");
 
                             console.log("Status HTTP recebido:", result.status);
                             console.log("Resposta FIQON:", JSON.stringify(result.response, null, 2));
