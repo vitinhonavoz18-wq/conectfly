@@ -124,16 +124,37 @@ export function InfoForm({ restaurant, onChange }: Props) {
       checkout_settings: r.checkout_settings || {},
       delivery_settings: r.delivery_settings || {},
       seo_settings: r.seo_settings || {},
+      // Novos campos para fluxo de pedidos
+      order_flow_mode: r.order_flow_mode || "whatsapp",
+      fiqon_webhook_url: r.fiqon_webhook_url || null,
+      continue_opening_whatsapp: r.continue_opening_whatsapp ?? true,
+      allow_dual_send: r.allow_dual_send ?? false,
+      flycontrol_direct_url: r.flycontrol_direct_url || null,
+      menu_sync_endpoint: r.menu_sync_endpoint || null,
     };
 
     try {
+      console.log("[InfoForm] Enviando updates:", updates);
       await updateRestaurant(r.id, updates);
       setMsg("Informações salvas!");
-      onChange({ ...r, slug });
+      onChange({ ...r, ...updates, slug });
       setTimeout(() => setMsg(""), 2500);
     } catch (err: any) {
       console.error("[InfoForm] Erro ao salvar:", err);
-      setMsg("Erro ao salvar: " + (err.message || String(err)));
+      // Extrai detalhes do erro para exibição
+      const errorDetail = err.details || err.message || String(err);
+      const statusCode = err.status || "N/A";
+      const functionName = "admin-get-restaurant";
+      
+      setMsg(`Erro ao salvar (${functionName}): HTTP ${statusCode} - ${errorDetail}`);
+      
+      // Log extra para depuração conforme solicitado
+      console.log("DEBUG SALVAMENTO:", {
+        functionName,
+        status: statusCode,
+        message: errorDetail,
+        payload: updates
+      });
     } finally {
       setSaving(false);
     }
