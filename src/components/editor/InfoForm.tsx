@@ -905,6 +905,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                               status: result.status,
                               url: webhookUrl,
                               data: result.response,
+                              headers: result.headers,
                               payloadSent: testPayload,
                               error: result.error
                             });
