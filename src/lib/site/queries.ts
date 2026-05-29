@@ -267,12 +267,19 @@ export async function adminFetchSiteData(id: string): Promise<SiteData> {
   console.log(`[adminFetchSiteData] Carregando dados completos via backend seguro: ${id}`);
   
   try {
-    const { data, error } = await supabase.functions.invoke("admin-get-restaurant", {
+    const { data, error } = await safeInvoke("admin-get-restaurant", {
       body: { id, action: "get", full: true }
     });
     
-    if (error) throw error;
-    if (!data?.success) throw new Error(data?.error || "Falha ao carregar dados do restaurante");
+    if (error) {
+      console.error("[adminFetchSiteData] Erro na chamada:", error);
+      throw error;
+    }
+    
+    if (!data?.success) {
+      console.error("[adminFetchSiteData] Backend retornou erro:", data?.error);
+      throw new Error(data?.error || "Falha ao carregar dados do restaurante");
+    }
 
     const { restaurant, categories, items, comboGroups, combos, deliveryZones, beverages, pizzaSizes } = data.data;
 
@@ -308,7 +315,7 @@ export async function adminFetchSiteData(id: string): Promise<SiteData> {
       beverages: beverages as BeverageRow[],
       pizzaSizes: pizzaSizesFromTable,
     };
-  } catch (err) {
+  } catch (err: any) {
     console.error("[adminFetchSiteData] Erro completo:", err);
     throw err;
   }
