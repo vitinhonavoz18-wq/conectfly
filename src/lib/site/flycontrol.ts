@@ -356,10 +356,12 @@ export async function sendOrderToFlycontrol(
 export async function sendOrderToExternalWebhook(
   webhookUrl: string,
   payload: FlycontrolOrderPayload,
-  requireAuth: boolean = false
+  requireAuth: boolean = false,
+  restaurantId?: string,
+  source: "admin_test" | "public_checkout" = "public_checkout"
 ): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
   // Logs técnicos obrigatórios solicitados
-  console.log("--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (VIA PROXY) ---");
+  console.log(`--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (${source.toUpperCase()}) ---`);
   console.log("URL Webhook FIQON usada:", webhookUrl);
   console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
@@ -370,6 +372,21 @@ export async function sendOrderToExternalWebhook(
 
     if (functionError) {
       console.error("❌ [WEBHOOK] Erro na Edge Function:", functionError);
+      
+      // Log no banco se tivermos o ID do restaurante
+      if (restaurantId) {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.from("order_submission_logs").insert({
+          source,
+          restaurant_id: restaurantId,
+          order_id: payload.order.id,
+          webhook_url: webhookUrl,
+          payload,
+          status: 0,
+          error: `Edge Function error: ${functionError.message}`
+        });
+      }
+      
       throw functionError;
     }
 
@@ -380,6 +397,21 @@ export async function sendOrderToExternalWebhook(
     
     if (fiqonError) {
       console.log("Erro FIQON:", fiqonError);
+    }
+
+    // Log no banco de dados para cada tentativa
+    if (restaurantId) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      await supabase.from("order_submission_logs").insert({
+        source,
+        restaurant_id: restaurantId,
+        order_id: payload.order.id,
+        webhook_url: webhookUrl,
+        payload,
+        status: status || 0,
+        response: responseData,
+        error: fiqonError || null
+      });
     }
     
     console.log("------------------------------------------");
@@ -392,6 +424,25 @@ export async function sendOrderToExternalWebhook(
     };
   } catch (err: any) {
     console.error("❌ [WEBHOOK] Erro fatal no envio:", err.message);
+    
+    // Log de erro no banco
+    if (restaurantId) {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        await supabase.from("order_submission_logs").insert({
+          source,
+          restaurant_id: restaurantId,
+          order_id: payload.order.id,
+          webhook_url: webhookUrl,
+          payload,
+          status: 0,
+          error: err.message
+        });
+      } catch (logErr) {
+        console.error("Erro ao salvar log de erro:", logErr);
+      }
+    }
+
     console.log("------------------------------------------");
     return {
       success: false,
@@ -399,6 +450,29 @@ export async function sendOrderToExternalWebhook(
       error: err.message,
     };
   }
+}
+
+/**
+ * Shared function to send an order to FIQON with unified logging and database persistence.
+ */
+export async function sendUnifiedOrderToFiqon(
+  orderPayload: FlycontrolOrderPayload,
+  restaurant: RestaurantRow,
+  source: "admin_test" | "public_checkout" = "public_checkout"
+) {
+  const webhookUrl = restaurant.fiqon_webhook_url || (restaurant.site_settings as any)?.external_webhook_url;
+  
+  if (!webhookUrl) {
+    throw new Error("Webhook FIQON não configurado.");
+  }
+
+  return await sendOrderToExternalWebhook(
+    webhookUrl,
+    orderPayload,
+    source === "admin_test", // requireAuth only for admin tests
+    restaurant.id,
+    source
+  );
 }
 
 export function generateApiKey(): string {
