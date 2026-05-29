@@ -970,13 +970,36 @@ export function InfoForm({ restaurant, onChange }: Props) {
                      {regMsg}
                    </div>
                  )}
-                 {testDebug && (
-                   <div className="p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-[10px] space-y-2 max-h-40 overflow-auto">
-                     <p className="font-bold text-primary">{testDebug.success ? "✅ SUCESSO" : "❌ ERRO"}</p>
-                     <p>Status: {testDebug.status}</p>
-                     {testDebug.data && <pre className="opacity-70">{JSON.stringify(testDebug.data, null, 2)}</pre>}
-                   </div>
-                 )}
+                  {testDebug && (
+                    <div className="p-4 rounded-xl bg-black/40 border border-white/10 font-mono text-[10px] space-y-4 max-h-60 overflow-auto">
+                      <div>
+                        <p className="font-bold text-primary mb-1">{testDebug.success ? "✅ ENVIO CONCLUÍDO" : "❌ FALHA NO ENVIO"}</p>
+                        <p className="opacity-70"><span className="text-primary/70">URL:</span> {testDebug.url}</p>
+                        <p className="opacity-70"><span className="text-primary/70">Status:</span> {testDebug.status}</p>
+                      </div>
+                      
+                      {testDebug.payloadSent && (
+                        <div className="space-y-1">
+                          <p className="text-primary/70 font-bold uppercase tracking-tighter">Payload Enviado:</p>
+                          <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto">{JSON.stringify(testDebug.payloadSent, null, 2)}</pre>
+                        </div>
+                      )}
+
+                      {testDebug.data && (
+                        <div className="space-y-1">
+                          <p className="text-primary/70 font-bold uppercase tracking-tighter">Resposta FIQON:</p>
+                          <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto">{JSON.stringify(testDebug.data, null, 2)}</pre>
+                        </div>
+                      )}
+
+                      {testDebug.error && (
+                        <div className="space-y-1">
+                          <p className="text-destructive font-bold uppercase tracking-tighter">Erro:</p>
+                          <p className="text-destructive opacity-80">{testDebug.error}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                </div>
              )}
            </div>
