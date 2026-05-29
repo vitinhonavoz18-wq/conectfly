@@ -359,7 +359,7 @@ export async function sendOrderToExternalWebhook(
   requireAuth: boolean = false,
   restaurantId?: string,
   source: "admin_test" | "public_checkout" = "public_checkout"
-): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
+): Promise<{ success: boolean; status: number; response?: any; error?: string; headers?: any }> {
   // Logs técnicos obrigatórios solicitados
   console.log(`--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (${source.toUpperCase()}) ---`);
   console.log("URL Webhook FIQON usada:", webhookUrl);
