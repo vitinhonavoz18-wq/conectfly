@@ -777,52 +777,52 @@ export function InfoForm({ restaurant, onChange }: Props) {
              </div>
 
              <div className="space-y-6 pt-4 border-t border-white/5 relative z-10">
-               {((r.site_settings?.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "direct")) === "fiqon") ? (
-                 <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                      <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Status: FIQON Ativo</p>
-                      <p className="text-[10px] text-muted-foreground italic">Neste modo, o FlyControl recebe os pedidos através da FIQON.</p>
-                    </div>
+                {((r.order_flow_mode || (r.fiqon_webhook_url || r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon") ? (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                     <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                       <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Status: FIQON Ativo</p>
+                       <p className="text-[10px] text-muted-foreground italic">Neste modo, o FlyControl recebe os pedidos através da FIQON.</p>
+                     </div>
 
-                    <Field 
-                      label="URL do Webhook FIQON / Automação Externa" 
-                      hint="URL que recebe os pedidos finalizados do site e inicia automações externas."
-                    >
-                      <input
-                        value={r.site_settings?.external_webhook_url ?? ""}
-                        onChange={(e) => set("site_settings", { ...r.site_settings, external_webhook_url: e.target.value })}
-                        placeholder="https://webhook.fiqon.app/..."
-                        className="input"
-                      />
-                    </Field>
+                     <Field 
+                       label="URL do Webhook FIQON / Automação Externa" 
+                       hint="URL que recebe os pedidos finalizados do site e inicia automações externas."
+                     >
+                       <input
+                         value={r.fiqon_webhook_url || r.site_settings?.external_webhook_url || ""}
+                         onChange={(e) => set("fiqon_webhook_url", e.target.value)}
+                         placeholder="https://webhook.fiqon.app/..."
+                         className="input"
+                       />
+                     </Field>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
-                        <input
-                          type="checkbox"
-                          checked={r.whatsapp_enabled !== false}
-                          onChange={(e) => set("whatsapp_enabled", e.target.checked)}
-                          className="h-5 w-5 accent-primary"
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold">Continuar abrindo WhatsApp</span>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Abre o WhatsApp ao finalizar pedido</span>
-                        </div>
-                      </label>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                         <input
+                           type="checkbox"
+                           checked={r.continue_opening_whatsapp !== false}
+                           onChange={(e) => set("continue_opening_whatsapp", e.target.checked)}
+                           className="h-5 w-5 accent-primary"
+                         />
+                         <div className="flex flex-col">
+                           <span className="text-sm font-bold">Continuar abrindo WhatsApp</span>
+                           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Abre o WhatsApp ao finalizar pedido</span>
+                         </div>
+                       </label>
 
-                      <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
-                        <input
-                          type="checkbox"
-                          checked={r.site_settings?.allow_double_send ?? false}
-                          onChange={(e) => set("site_settings", { ...r.site_settings, allow_double_send: e.target.checked })}
-                          className="h-5 w-5 accent-primary"
-                        />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold">Permitir envio duplo</span>
-                          <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Envia para FIQON e FlyControl (Debug)</span>
-                        </div>
-                      </label>
-                    </div>
+                       <label className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-all">
+                         <input
+                           type="checkbox"
+                           checked={r.allow_dual_send ?? false}
+                           onChange={(e) => set("allow_dual_send", e.target.checked)}
+                           className="h-5 w-5 accent-primary"
+                         />
+                         <div className="flex flex-col">
+                           <span className="text-sm font-bold">Permitir envio duplo</span>
+                           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Envia para FIQON e FlyControl (Debug)</span>
+                         </div>
+                       </label>
+                     </div>
 
                     <div className="flex items-center gap-3">
                       <button
