@@ -1057,6 +1057,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
                         </div>
                       )}
 
+                      {testDebug.headers && (
+                        <div className="space-y-1">
+                          <p className="text-primary/70 font-bold uppercase tracking-tighter">Headers da Resposta:</p>
+                          <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto text-[8px]">{JSON.stringify(testDebug.headers, null, 2)}</pre>
+                        </div>
+                      )}
+
                       {testDebug.data && (
                         <div className="space-y-1">
                           <p className="text-primary/70 font-bold uppercase tracking-tighter">Resposta FIQON:</p>
