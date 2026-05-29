@@ -929,6 +929,23 @@ export function InfoForm({ restaurant, onChange }: Props) {
                       </Field>
                     </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <Field label="URL Direta Legado (Opcional)" hint="Apenas para compatibilidade retroativa">
+                        <input
+                          value={r.flycontrol_direct_url ?? ""}
+                          onChange={(e) => set("flycontrol_direct_url", e.target.value)}
+                          className="input"
+                        />
+                      </Field>
+                      <Field label="URL de Sincronização de Cardápio" hint="Endpoint para webhooks de estoque/preços">
+                        <input
+                          value={r.menu_sync_endpoint ?? ""}
+                          onChange={(e) => set("menu_sync_endpoint", e.target.value)}
+                          className="input"
+                        />
+                      </Field>
+                    </div>
+
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-widest">Autenticação Direta</span>
