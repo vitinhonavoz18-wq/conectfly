@@ -43,23 +43,8 @@ serve(async (req) => {
       })
     }
 
-    const ADMIN_EMAIL = 'vitinhonavoz18@gmail.com'
-    const isAdmin = user.email === ADMIN_EMAIL
-
-    if (!isAdmin) {
-      console.log(`[${requestId}] Validando propriedade do restaurante para usuário: ${user.email}`)
-      // Se não for admin, verificamos se o usuário é o dono do restaurante ou se tem acesso
-      // No momento, como owner_id está nulo, permitiremos acesso se o usuário estiver autenticado 
-      // via o fluxo admin-auth (que define o email como vitinhonavoz18@gmail.com).
-      // Se houver outros usuários, precisaremos de uma lógica de permissão mais robusta.
-      if (user.email !== ADMIN_EMAIL) {
-        console.warn(`[${requestId}] Acesso negado para o email: ${user.email}`)
-        return new Response(JSON.stringify({ error: 'Forbidden: Admin access only' }), {
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        })
-      }
-    }
+    const ADMIN_EMAILS = ['vitinhonavoz18@gmail.com']
+    const isAdmin = ADMIN_EMAILS.includes(user.email || '')
 
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     if (!supabaseServiceKey) {
@@ -68,30 +53,55 @@ serve(async (req) => {
     }
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Parse body for POST/PUT requests
+    // Buscamos o restaurante para verificar propriedade se não for admin
+    const url = new URL(req.url)
+    const text = (method === 'POST' || method === 'PUT') ? await req.text() : ''
     let body: any = {}
-    if (method === 'POST' || method === 'PUT') {
-      try {
-        const text = await req.text()
-        if (text) {
-          body = JSON.parse(text)
-        }
-      } catch (e) {
-        console.warn(`[${requestId}] Falha ao parsear JSON do body:`, e.message)
-      }
+    try {
+      if (text) body = JSON.parse(text)
+    } catch (e) {
+      console.warn(`[${requestId}] Falha ao parsear JSON do body:`, e.message)
     }
 
-    const url = new URL(req.url)
     const id = body?.id || url.searchParams.get('id')
     const action = body?.action || url.searchParams.get('action') || 'get'
-    const includeFullData = body?.full === true || url.searchParams.get('full') === 'true'
-
+    
     if (!id) {
       return new Response(JSON.stringify({ error: 'ID is required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    if (!isAdmin) {
+      console.log(`[${requestId}] Validando propriedade do restaurante para usuário: ${user.email}`)
+      
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      const query = supabaseAdmin.from('restaurants').select('owner_id')
+      if (isUuid) query.eq('id', id)
+      else query.eq('slug', id)
+      
+      const { data: restaurant, error: fetchError } = await query.maybeSingle()
+      
+      if (fetchError || !restaurant) {
+        return new Response(JSON.stringify({ error: 'Restaurante não encontrado ou erro de permissão' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Se owner_id for nulo, permitimos o acesso se o usuário for o admin
+      // Se tiver owner_id, verificamos se bate com o id do usuário logado
+      if (restaurant.owner_id && restaurant.owner_id !== user.id) {
+        console.warn(`[${requestId}] Acesso negado: Usuário ${user.id} não é dono de ${id}`)
+        return new Response(JSON.stringify({ error: 'Forbidden: You do not own this restaurant' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    const includeFullData = body?.full === true || url.searchParams.get('full') === 'true'
 
     // Corrigido regex de UUID (8-4-4-4-12)
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
@@ -189,10 +199,15 @@ serve(async (req) => {
     })
 
   } catch (error: any) {
-    console.error(`[${requestId}] Erro Fatal:`, error.message)
+    const errorRequestId = crypto.randomUUID().split('-')[0]
+    console.error(`[${errorRequestId}] Erro Fatal:`, error.message)
+    console.error(`[${errorRequestId}] Detalhes:`, error)
+
     return new Response(JSON.stringify({ 
       success: false,
-      error: error.message 
+      error: error.message,
+      details: error.details || error.hint || null,
+      requestId: errorRequestId
     }), {
       status: error.status || 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -505,16 +505,20 @@ export type Database = {
       restaurants: {
         Row: {
           address: string | null
+          allow_dual_send: boolean | null
           business_type: string | null
           checkout_settings: Json | null
           city: string | null
+          continue_opening_whatsapp: boolean | null
           created_at: string
           custom_subdomain: string | null
           delivery_settings: Json | null
           description: string | null
+          fiqon_webhook_url: string | null
           flycontrol_api_key: string | null
           flycontrol_api_url: string | null
           flycontrol_base_url: string | null
+          flycontrol_direct_url: string | null
           flycontrol_enabled: boolean
           flycontrol_register_url: string | null
           flycontrol_tenant_id: string | null
@@ -524,7 +528,9 @@ export type Database = {
           hours: string | null
           id: string
           logo_url: string | null
+          menu_sync_endpoint: string | null
           name: string
+          order_flow_mode: string | null
           owner_id: string | null
           primary_color: string
           published: boolean
@@ -543,16 +549,20 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          allow_dual_send?: boolean | null
           business_type?: string | null
           checkout_settings?: Json | null
           city?: string | null
+          continue_opening_whatsapp?: boolean | null
           created_at?: string
           custom_subdomain?: string | null
           delivery_settings?: Json | null
           description?: string | null
+          fiqon_webhook_url?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
+          flycontrol_direct_url?: string | null
           flycontrol_enabled?: boolean
           flycontrol_register_url?: string | null
           flycontrol_tenant_id?: string | null
@@ -562,7 +572,9 @@ export type Database = {
           hours?: string | null
           id?: string
           logo_url?: string | null
+          menu_sync_endpoint?: string | null
           name: string
+          order_flow_mode?: string | null
           owner_id?: string | null
           primary_color?: string
           published?: boolean
@@ -581,16 +593,20 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          allow_dual_send?: boolean | null
           business_type?: string | null
           checkout_settings?: Json | null
           city?: string | null
+          continue_opening_whatsapp?: boolean | null
           created_at?: string
           custom_subdomain?: string | null
           delivery_settings?: Json | null
           description?: string | null
+          fiqon_webhook_url?: string | null
           flycontrol_api_key?: string | null
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
+          flycontrol_direct_url?: string | null
           flycontrol_enabled?: boolean
           flycontrol_register_url?: string | null
           flycontrol_tenant_id?: string | null
@@ -600,7 +616,9 @@ export type Database = {
           hours?: string | null
           id?: string
           logo_url?: string | null
+          menu_sync_endpoint?: string | null
           name?: string
+          order_flow_mode?: string | null
           owner_id?: string | null
           primary_color?: string
           published?: boolean
@@ -645,22 +663,31 @@ export type Database = {
       pizzerias_public: {
         Row: {
           address: string | null
+          allow_dual_send: boolean | null
           business_type: string | null
           checkout_settings: Json | null
           city: string | null
+          continue_opening_whatsapp: boolean | null
           custom_subdomain: string | null
           delivery_settings: Json | null
           description: string | null
+          fiqon_webhook_url: string | null
           flycontrol_api_url: string | null
           flycontrol_base_url: string | null
+          flycontrol_direct_url: string | null
           flycontrol_enabled: boolean | null
+          flycontrol_register_url: string | null
+          flycontrol_tenant_id: string | null
           hero_image_url: string | null
           hero_media_type: string | null
           hero_video_url: string | null
           hours: string | null
           id: string | null
           logo_url: string | null
+          menu_sync_endpoint: string | null
           name: string | null
+          order_flow_mode: string | null
+          owner_id: string | null
           primary_color: string | null
           published: boolean | null
           secondary_color: string | null
@@ -677,22 +704,31 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          allow_dual_send?: boolean | null
           business_type?: string | null
           checkout_settings?: Json | null
           city?: string | null
+          continue_opening_whatsapp?: boolean | null
           custom_subdomain?: string | null
           delivery_settings?: Json | null
           description?: string | null
+          fiqon_webhook_url?: string | null
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
+          flycontrol_direct_url?: string | null
           flycontrol_enabled?: boolean | null
+          flycontrol_register_url?: string | null
+          flycontrol_tenant_id?: string | null
           hero_image_url?: string | null
           hero_media_type?: string | null
           hero_video_url?: string | null
           hours?: string | null
           id?: string | null
           logo_url?: string | null
+          menu_sync_endpoint?: string | null
           name?: string | null
+          order_flow_mode?: string | null
+          owner_id?: string | null
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
@@ -709,22 +745,31 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          allow_dual_send?: boolean | null
           business_type?: string | null
           checkout_settings?: Json | null
           city?: string | null
+          continue_opening_whatsapp?: boolean | null
           custom_subdomain?: string | null
           delivery_settings?: Json | null
           description?: string | null
+          fiqon_webhook_url?: string | null
           flycontrol_api_url?: string | null
           flycontrol_base_url?: string | null
+          flycontrol_direct_url?: string | null
           flycontrol_enabled?: boolean | null
+          flycontrol_register_url?: string | null
+          flycontrol_tenant_id?: string | null
           hero_image_url?: string | null
           hero_media_type?: string | null
           hero_video_url?: string | null
           hours?: string | null
           id?: string | null
           logo_url?: string | null
+          menu_sync_endpoint?: string | null
           name?: string | null
+          order_flow_mode?: string | null
+          owner_id?: string | null
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
