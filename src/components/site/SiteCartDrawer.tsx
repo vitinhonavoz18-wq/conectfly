@@ -155,7 +155,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         delivery_type: hasZones ? "delivery" : "retirada",
       });
 
-      console.log("Payload real enviado:", orderPayload);
+      const payload = orderPayload;
+      console.log("Payload real enviado:", payload);
 
       // 1. Envio para FIQON (Webhook Externo)
       if (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp")) {
@@ -169,18 +170,20 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         } else {
           console.log("📤 [WEBHOOK] Enviando para FIQON (Aguardando resposta HTTP real)...");
           try {
-            const result = await sendOrderToExternalWebhook(externalWebhookUrl, orderPayload);
+            const result = await sendOrderToExternalWebhook(externalWebhookUrl, payload);
             
-            console.log("Status resposta FIQON:", result.status);
-            console.log("Resposta FIQON:", result.response);
+            const status = result.status;
+            const response = result.response;
+            console.log("Status resposta FIQON:", status);
+            console.log("Resposta FIQON:", response);
 
             if (result.success) {
               console.log("✅ [WEBHOOK] Pedido confirmado pela FIQON");
               success = true;
             } else {
-              console.error("❌ [WEBHOOK] FIQON retornou erro. Status:", result.status);
+              console.error("❌ [WEBHOOK] FIQON retornou erro. Status:", status);
               if (flowMode === "fiqon") {
-                toast.error(`Erro no FIQON (${result.status}): ${result.error || 'Verifique a URL do webhook'}`);
+                toast.error(`Erro no FIQON (${status}): ${result.error || 'Verifique a URL do webhook'}`);
                 setSending(false);
                 return; // Bloqueia o fluxo se for o modo principal e falhar
               }
@@ -195,6 +198,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           }
         }
       }
+
 
       // 2. Envio Direto para FlyControl se estiver no modo direct ou double send e não foi sucesso no fiqon
       if (flycontrolOn && restaurant && (flowMode === "direct" || (allowDoubleSend && !success))) {
