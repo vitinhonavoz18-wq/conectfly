@@ -420,6 +420,7 @@ export async function sendOrderToExternalWebhook(
       success: !!success,
       status: status || 0,
       response: responseData,
+      headers: responseHeaders,
       error: fiqonError
     };
   } catch (err: any) {
