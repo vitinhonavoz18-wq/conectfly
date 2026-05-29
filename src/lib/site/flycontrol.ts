@@ -350,46 +350,48 @@ export async function sendOrderToFlycontrol(
 }
 
 /**
- * Sends an order to an external webhook URL.
+ * Sends an order to an external webhook URL via a secure edge function proxy.
  */
 export async function sendOrderToExternalWebhook(
   webhookUrl: string,
   payload: FlycontrolOrderPayload
 ): Promise<{ success: boolean; status: number; response?: any; error?: string }> {
   // Logs técnicos obrigatórios solicitados
-  console.log("--- INICIANDO CHAMADA DE WEBHOOK EXTERNO ---");
-  console.log("URL chamada:", webhookUrl);
-  console.log("payload enviado:", JSON.stringify(payload, null, 2));
+  console.log("--- INICIANDO CHAMADA DE WEBHOOK EXTERNO (VIA PROXY) ---");
+  console.log("URL Webhook FIQON usada:", webhookUrl);
+  console.log("Payload enviado:", JSON.stringify(payload, null, 2));
 
   try {
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+    const supabaseClient = (await import("@/integrations/supabase/client")).supabase;
+    
+    const { data, error: functionError } = await supabaseClient.functions.invoke('send-fiqon-webhook', {
+      body: { webhookUrl, payload }
     });
 
-    const status = response.status;
-    const responseText = await response.text();
-    let responseData = {};
-    try {
-      responseData = JSON.parse(responseText);
-    } catch {
-      responseData = { text: responseText };
+    if (functionError) {
+      console.error("❌ [WEBHOOK] Erro na Edge Function:", functionError);
+      throw functionError;
     }
 
-    console.log("status da resposta:", status);
-    console.log("body da resposta:", responseData);
+    const { success, status, response: responseData, error: fiqonError } = data;
+
+    console.log("Status HTTP recebido:", status);
+    console.log("Resposta FIQON:", JSON.stringify(responseData, null, 2));
+    
+    if (fiqonError) {
+      console.log("Erro FIQON:", fiqonError);
+    }
+    
     console.log("------------------------------------------");
 
     return {
-      success: response.ok,
-      status,
+      success: !!success,
+      status: status || 0,
       response: responseData,
+      error: fiqonError
     };
   } catch (err: any) {
-    console.error("erro retornado:", err.message);
+    console.error("❌ [WEBHOOK] Erro fatal no envio:", err.message);
     console.log("------------------------------------------");
     return {
       success: false,
