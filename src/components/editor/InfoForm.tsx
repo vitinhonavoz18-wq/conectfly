@@ -924,7 +924,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             setRegMsg("Erro: " + err.message);
                             setTestDebug({
                               success: false,
-                              status: 0,
+                              status: err.status || 0,
                               url: webhookUrl,
                               error: err.message
                             });
