@@ -915,6 +915,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
                             } else {
                               setRegMsg(`FALHA: Status ${result.status || 'Erro'}. Verifique os detalhes abaixo.`);
                             }
+                            
+                            // Atualizar logs após o teste
+                            const tableElement = document.getElementById("logs-refresh-btn");
+                            if (tableElement) tableElement.click();
                           } catch (err: any) {
                             console.error("Erro no teste:", err);
                             setRegMsg("Erro: " + err.message);
