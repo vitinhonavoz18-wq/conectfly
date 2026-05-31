@@ -29,14 +29,17 @@ serve(async (req) => {
     }
 
     // MANDATORY LOGS
+    console.log("RESTAURANT ID:", restaurantId)
     console.log("URL FIQON FINAL:", webhookUrl)
     console.log("PAYLOAD ENVIADO:", JSON.stringify(payload))
 
     let responseStatus = 0
     let responseBody = ""
     let errorMsg = null
+    let responseHeaders = {}
 
     try {
+      // POST REAL com await fetch para a URL da FIQON
       const response = await fetch(webhookUrl, {
         method: "POST",
         headers: {
@@ -47,6 +50,7 @@ serve(async (req) => {
 
       responseStatus = response.status
       responseBody = await response.text()
+      responseHeaders = Object.fromEntries(response.headers.entries())
       
       console.log("STATUS REAL FIQON:", responseStatus)
       console.log("BODY REAL FIQON:", responseBody)
@@ -58,28 +62,38 @@ serve(async (req) => {
         parsedBody = { raw: responseBody }
       }
 
-      // Log to database
-      await supabase.from("order_submission_logs").insert({
-        restaurant_id: restaurantId,
-        order_id: payload.order?.id || "test",
-        source: restaurantId ? "admin_test" : "unknown",
-        webhook_url: webhookUrl,
-        payload: payload,
-        status: responseStatus,
-        response: parsedBody,
-        error: response.ok ? null : `Status ${responseStatus}`
-      })
+      // Log to database (persiste na tabela de logs)
+      if (restaurantId) {
+        await supabase.from("order_submission_logs").insert({
+          restaurant_id: restaurantId,
+          order_id: payload.order?.id || "test-" + Date.now(),
+          source: "admin_test",
+          webhook_url: webhookUrl,
+          payload: payload,
+          status: responseStatus,
+          response: parsedBody,
+          error: response.ok ? null : `Status ${responseStatus}`
+        })
+      }
 
+      // RETORNAR STATUS REAL DA FIQON
+      // Nota: Para que a Edge Function não falhe o Invoke do Supabase, 
+      // ainda retornamos status 200 no HTTP da Edge Function, mas 
+      // o corpo contém o status REAL e a UI usará este status.
+      // Entretanto, o usuário pediu: "Não transformar erro em sucesso".
+      // Se retornarmos o status real (ex: 500), o Supabase Invoke retornará erro.
+      // Vamos retornar o status real da FIQON para a Edge Function.
+      
       return new Response(
         JSON.stringify({
           success: response.ok,
           status: responseStatus,
           response: parsedBody,
-          headers: Object.fromEntries(response.headers.entries()),
+          headers: responseHeaders,
           url: webhookUrl
         }),
         { 
-          status: 200, 
+          status: responseStatus, // STATUS REAL
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
@@ -89,15 +103,17 @@ serve(async (req) => {
       console.error("ERRO AO CHAMAR FIQON:", errorMsg)
 
       // Log error to database
-      await supabase.from("order_submission_logs").insert({
-        restaurant_id: restaurantId,
-        order_id: payload.order?.id || "test",
-        source: restaurantId ? "admin_test" : "unknown",
-        webhook_url: webhookUrl,
-        payload: payload,
-        status: 0,
-        error: errorMsg
-      })
+      if (restaurantId) {
+        await supabase.from("order_submission_logs").insert({
+          restaurant_id: restaurantId,
+          order_id: payload.order?.id || "test-" + Date.now(),
+          source: "admin_test",
+          webhook_url: webhookUrl,
+          payload: payload,
+          status: 0,
+          error: errorMsg
+        })
+      }
 
       return new Response(
         JSON.stringify({
@@ -107,7 +123,7 @@ serve(async (req) => {
           url: webhookUrl
         }),
         { 
-          status: 200, 
+          status: 500, // ERRO REAL DE CONEXÃO
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )

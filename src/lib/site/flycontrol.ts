@@ -373,6 +373,11 @@ export async function sendOrderToExternalWebhook(
     if (functionError) {
       console.error("❌ [WEBHOOK] Erro na Edge Function:", functionError);
       
+      // Se houver erro de status (>= 400), o safeInvoke coloca no object 'error'
+      // Precisamos tentar recuperar o máximo de info possível
+      const status = functionError.status || 0;
+      const errorMsg = functionError.message || `Erro HTTP ${status}`;
+
       // Log no banco se tivermos o ID do restaurante
       if (restaurantId) {
         const { supabase } = await import("@/integrations/supabase/client");
@@ -382,25 +387,28 @@ export async function sendOrderToExternalWebhook(
           order_id: payload.order.id,
           webhook_url: webhookUrl,
           payload: payload as any,
-          status: 0,
-          error: `Edge Function error: ${functionError.message}`
+          status: status,
+          error: `Edge Function error: ${errorMsg}`
         });
       }
       
-      throw functionError;
+      return {
+        success: false,
+        status: status,
+        error: errorMsg,
+        url: webhookUrl
+      };
     }
 
+    // Se chegou aqui, safeInvoke considerou sucesso (status 2xx)
     const { success, status, response: responseData, error: fiqonError, headers: responseHeaders } = data;
 
     console.log("Status HTTP recebido:", status);
     console.log("Resposta FIQON:", JSON.stringify(responseData, null, 2));
     
-    if (fiqonError) {
-      console.log("Erro FIQON:", fiqonError);
-    }
-
-    // Log no banco de dados para cada tentativa
-    if (restaurantId) {
+    // Log no banco de dados para cada tentativa (se não foi logado pela Edge Function)
+    // A Edge Function já loga em admin_test, mas no checkout público é o frontend que loga.
+    if (restaurantId && source === "public_checkout") {
       const { supabase } = await import("@/integrations/supabase/client");
       await supabase.from("order_submission_logs").insert({
         source,

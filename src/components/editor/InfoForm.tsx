@@ -1185,6 +1185,7 @@ function OrderSubmissionLogsTable({ restaurantId }: { restaurantId: string }) {
         </h3>
         <button 
           type="button"
+          id="logs-refresh-btn"
           onClick={fetchLogs}
           className="p-2 hover:bg-white/5 rounded-lg transition"
         >
