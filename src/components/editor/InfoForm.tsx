@@ -6,6 +6,8 @@ import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/
 import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon, type FlycontrolOrderPayload } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
+import { FEATURES } from "@/lib/features";
+
 
 interface Props {
   restaurant: RestaurantRow;
