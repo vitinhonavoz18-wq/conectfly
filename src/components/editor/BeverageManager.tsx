@@ -201,7 +201,7 @@ export function BeverageManager({ restaurantId }: Props) {
           />
         ))}
 
-        <div 
+        {(uncategorized.length > 0 || isDragging) && (
           className={`space-y-6 p-6 rounded-[2.5rem] transition-all duration-300 ${isDragging ? 'bg-primary/5 border-2 border-dashed border-primary/20' : ''}`}
           onDragOver={(e) => {
             e.preventDefault();
@@ -243,7 +243,9 @@ export function BeverageManager({ restaurantId }: Props) {
             </button>
         </div>
 
-        {catalogs.length === 0 && uncategorized.length === 0 && (
+        )}
+
+        {catalogs.length === 0 && uncategorized.length === 0 && !isDragging && (
           <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/5">
              <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ShoppingBag className="h-8 w-8 text-primary opacity-50" />
@@ -485,6 +487,15 @@ function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs,
       </div>
 
       <div className="flex items-center gap-2">
+        {beverage.catalog_id && (
+          <button
+            onClick={() => onUpdate({ catalog_id: null })}
+            className="md:hidden flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase tracking-widest transition-all"
+            title="Remover do Catálogo"
+          >
+            Remover
+          </button>
+        )}
         <button
           onClick={() => onUpdate({ is_active: !beverage.is_active })}
           className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${beverage.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-white/5 text-muted-foreground'}`}
