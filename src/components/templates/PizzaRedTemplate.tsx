@@ -16,8 +16,11 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   
   const isBeverage = (c: any) => {
     const name = c.name.toLowerCase();
-    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+    const hasNewCatalogs = (data.beverageCatalogs?.length ?? 0) > 0;
+    const isBev = name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+    return isBev && !hasNewCatalogs;
   };
+
   
   const isBordas = (c: any) => {
     const name = c.name.toLowerCase();
@@ -68,7 +71,8 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
         {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_products" && (
           <div className="bg-[hsl(var(--site-muted))] py-12 px-4">
             <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
+
             </div>
           </div>
         )}
@@ -82,7 +86,8 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
         {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_combos" && (
           <div className="bg-[hsl(var(--site-bg))] py-12 px-4">
             <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
+
             </div>
           </div>
         )}
@@ -98,7 +103,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
         {r.site_settings?.beverages_visibility !== false && (r.site_settings?.beverages_position === "end" || !r.site_settings?.beverages_position) && (
           <div className="bg-[hsl(var(--site-muted))] py-12 px-4">
             <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} restaurant={r} />
+              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
             </div>
           </div>
         )}

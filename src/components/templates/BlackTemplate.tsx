@@ -16,8 +16,12 @@ export function BlackTemplate({ data }: { data: SiteData }) {
   
   const isBeverage = (c: any) => {
     const name = c.name.toLowerCase();
-    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+    const hasNewCatalogs = (data.beverageCatalogs?.length ?? 0) > 0;
+    const isBev = name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+    // Se temos novos catálogos ativos, escondemos a categoria antiga para evitar duplicidade
+    return isBev && !hasNewCatalogs;
   };
+
   
   const isBordas = (c: any) => {
     const name = c.name.toLowerCase();
@@ -39,7 +43,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
     (beveragesVisible && data.beverages && data.beverages.length > 0) && (
       <div className="py-12 px-4 border-t border-[hsl(var(--site-border))]">
         <div className="max-w-6xl mx-auto">
-          <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
         </div>
       </div>
     )

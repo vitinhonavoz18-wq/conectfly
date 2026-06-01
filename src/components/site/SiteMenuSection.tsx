@@ -16,10 +16,21 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
 
   const isBeverageCategory = (c: MenuCategoryRow) => {
-    return c.type === "BEVERAGE" || c.name.toLowerCase().includes("bebida");
+    return c.type === "BEVERAGE" || c.name.toLowerCase().includes("bebida") || c.name.toLowerCase().includes("beverage");
   };
 
-  const visibleCategories = categories.filter(c => c.show_on_public_site !== false);
+  const visibleCategories = categories.filter(c => {
+    const isBeverage = isBeverageCategory(c);
+    if (isBeverage) {
+        // Se temos novos catálogos ativos, escondemos a categoria antiga de bebidas
+        // Mas como SiteMenuSection não recebe SiteData, precisamos decidir se filtramos aqui
+        // ou se deixamos para o template filtrar.
+        // O usuário quer que se houver catálogos ativos, a categoria antiga não apareça.
+        // Vamos manter a lógica original por enquanto e filtrar no Template.
+    }
+    return c.show_on_public_site !== false;
+  });
+
   const clickableCategories = visibleCategories.filter(c => c.show_as_clickable_category !== false);
   const directCategories = visibleCategories.filter(c => c.show_directly_in_menu !== false);
 
