@@ -79,7 +79,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
 
             <div className="flex justify-between items-start gap-4 relative z-10">
               <div className="min-w-0">
-                <h3 className="font-black text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-fg))]">
+                <h3 className="font-black text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-primary))]">
                   {bev.name}
                 </h3>
                 <p className="text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-1 uppercase tracking-widest opacity-80">
@@ -92,7 +92,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
                 )}
               </div>
               <div className="text-right">
-                <span className="text-xl font-black text-[hsl(var(--site-primary))] block tracking-tighter">
+                <span className="text-xl font-black text-[hsl(var(--site-fg))] block tracking-tighter">
                   {formatBRL(Number(bev.price))}
                 </span>
               </div>
@@ -134,7 +134,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
   const uncategorizedBeverages = beverages.filter(b => !b.catalog_id || !activeCatalogs.some(c => c.id === b.catalog_id));
 
   return (
-    <div id="bebidas" className="py-20 site-stagger bg-[hsl(var(--site-muted))] rounded-[3rem] px-4">
+    <div id="bebidas" className="py-20 site-stagger bg-[hsl(var(--site-muted))] rounded-[3rem] px-4 mx-2">
       <div className="text-center mb-12">
         <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.2)] text-[hsl(var(--site-primary))] text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.3)]">
           Refresque sua experiência
