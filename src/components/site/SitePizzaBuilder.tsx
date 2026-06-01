@@ -60,7 +60,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-bold text-base leading-tight text-[hsl(var(--site-fg))]">{it.name}</p>
           {it.is_special && (
-            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-sm">
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[hsl(var(--site-primary))] text-white shadow-sm">
               <Sparkles className="h-3 w-3" /> Especial
               {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
             </span>
@@ -322,7 +322,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
               <div className="space-y-8" id="sabores-especiais">
                 <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[hsl(var(--site-primary))] to-[hsl(var(--site-primary)/0.7)] p-10 shadow-[0_20px_50px_hsl(var(--site-primary)/0.3)] border border-white/10">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Sparkles className="h-40 w-40 text-[hsl(var(--site-primary-fg))]" />
+                    <Sparkles className="h-40 w-40 text-white" />
                   </div>
                   <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
@@ -330,11 +330,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                         <span className="flex items-center justify-center h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-md">
                           <Flame className="h-6 w-6 text-[hsl(var(--site-primary-fg))]" />
                         </span>
-                        <h3 className="text-3xl sm:text-4xl font-black text-[hsl(var(--site-primary-fg))] tracking-tighter uppercase italic">
+                        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
                           Destaques Especiais
                         </h3>
                       </div>
-                      <p className="text-[hsl(var(--site-primary-fg))/90] font-medium max-w-lg text-lg">
+                      <p className="text-white/90 font-medium max-w-lg text-lg">
                         Experimente nossas opções premium e itens exclusivos da casa.
                       </p>
                     </div>

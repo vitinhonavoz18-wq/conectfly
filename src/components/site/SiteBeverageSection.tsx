@@ -154,16 +154,16 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
       <div className="space-y-16">
         {activeCatalogs.map(catalog => (
           <div key={catalog.id} className="space-y-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6 border-l-4 border-[hsl(var(--site-primary))] pl-6 py-2">
               {catalog.image_url && (
-                <div className="w-full sm:w-48 h-32 rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] shrink-0">
+                <div className="w-full sm:w-48 h-32 rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] shrink-0 shadow-lg">
                   <img src={catalog.image_url} alt={catalog.name} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="text-center sm:text-left">
-                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">{catalog.name}</h3>
+                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">{catalog.name}</h3>
                 {catalog.description && (
-                  <p className="text-[hsl(var(--site-muted-fg))] mt-1 italic">{catalog.description}</p>
+                  <p className="text-[hsl(var(--site-muted-fg))] mt-1 italic text-sm">{catalog.description}</p>
                 )}
               </div>
             </div>
@@ -174,7 +174,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
         {uncategorizedBeverages.length > 0 && (
           <div className="space-y-8">
             {activeCatalogs.length > 0 && (
-              <h3 className="text-2xl font-black uppercase tracking-tight border-b border-[hsl(var(--site-border))] pb-4">Outras Bebidas</h3>
+              <h3 className="text-2xl font-black uppercase tracking-tight border-b border-[hsl(var(--site-border))] pb-4 text-[hsl(var(--site-fg))]">Outras Bebidas</h3>
             )}
             {renderBeverageList(uncategorizedBeverages)}
           </div>
