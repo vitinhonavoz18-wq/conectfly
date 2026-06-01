@@ -7,8 +7,19 @@ export type Size = { label: string; price: number };
    max_flavors: number;
    slices?: number;
    active?: boolean;
-   sort_order?: number;
- };
+    sort_order?: number;
+  };
+
+export interface BeverageCatalogRow {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  active: boolean;
+  sort_order: number;
+}
+
 
 export interface MenuItemRow {
   id: string;
@@ -154,7 +165,9 @@ export interface BeverageRow {
   description: string | null;
   image_url: string | null;
   category: string | null;
+  catalog_id?: string | null;
   created_at?: string;
+
   updated_at?: string;
 }
 
@@ -164,8 +177,10 @@ export interface SiteData {
   comboGroups: (ComboGroupRow & { combos: ComboRow[] })[];
   deliveryZones?: DeliveryZoneRow[];
    beverages?: BeverageRow[];
+   beverageCatalogs?: BeverageCatalogRow[];
    pizzaSizes?: PizzaSize[];
 }
+
 
 export interface CartLine {
   itemId: string;
