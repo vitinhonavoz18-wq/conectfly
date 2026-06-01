@@ -592,12 +592,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
               disabled={!canAdd}
               className="site-btn-primary px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest active:scale-95 transition-all group"
             >
-              <Plus className="h-7 w-7 text-white group-hover:rotate-90 transition-transform" /> 
+              <Plus className="h-7 w-7 text-[hsl(var(--site-primary-fg))] group-hover:rotate-90 transition-transform" /> 
               <span>Adicionar ao Pedido</span>
             </button>
         </div>
         {confirm && (
-          <div className="mt-6 text-base font-bold text-[#22C55E] bg-[#F0FDF4] border-2 border-[#22C55E]/20 rounded-2xl p-4 text-center animate-in zoom-in duration-300">
+          <div className="mt-6 text-base font-bold text-[hsl(var(--site-success))] bg-[hsl(var(--site-success)/0.1)] border-2 border-[hsl(var(--site-success)/0.2)] rounded-2xl p-4 text-center animate-in zoom-in duration-300">
             ✓ {confirm}
           </div>
         )}
