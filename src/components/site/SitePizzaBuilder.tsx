@@ -221,7 +221,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       setConfirm(`Adicionado ao carrinho!`);
       setSelectedFlavors([]);
       setSelectedBorderId(null);
-      setSelectedBeverages({});
+      
       if (shouldOpenCart) setCartOpen(true);
 
 
@@ -419,19 +419,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       )}
 
       
-      {((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) && (
-        <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
-          <div className="flex items-baseline justify-between mb-3">
-            <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">4. Escolha as bebidas (opcional)</h4>
-            {scrollMessage && scrollMessage.includes("acompanhar") && (
-              <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
-                {scrollMessage}
-              </span>
-            )}
-          </div>
-          
-        </div>
-      )}
 
 
         {/* Step 5 — Summary + add */}
