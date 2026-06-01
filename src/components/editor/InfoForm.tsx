@@ -717,8 +717,15 @@ export function InfoForm({ restaurant, onChange }: Props) {
                  <Zap className="h-8 w-8 text-primary-foreground" />
                </div>
                <div>
-                 <h3 className="text-3xl font-black tracking-tighter uppercase">Fluxo de Pedidos</h3>
-                 <p className="text-muted-foreground italic">Configure como os pedidos são processados e enviados.</p>
+                  <h3 className="text-3xl font-black tracking-tighter uppercase">
+                    {FEATURES.ENABLE_FIQON_AUTOMATION ? "Fluxo de Pedidos" : "Integração FlyControl"}
+                  </h3>
+                  <p className="text-muted-foreground italic">
+                    {FEATURES.ENABLE_FIQON_AUTOMATION 
+                      ? "Configure como os pedidos são processados e enviados." 
+                      : "Configure a conexão direta com seu painel de gerenciamento."}
+                  </p>
+
                </div>
              </div>
 
