@@ -9,6 +9,8 @@ import { useCart } from "./CartContext";
     restaurant?: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
     beverages?: BeverageRow[];
+    beverageCatalogs?: BeverageCatalogRow[];
+
   }
 
 interface FlavorCardProps {
@@ -76,7 +78,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-  export function SitePizzaBuilder({ category, restaurant, bordasCategory, beverages }: Props) {
+  export function SitePizzaBuilder({ category, restaurant, bordasCategory, beverages, beverageCatalogs }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
@@ -108,10 +110,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       if (bordasCategory && bordasCategory.items.length > 0) {
         targetRef = bordasRef;
         message = "Agora escolha seu adicional ✨";
-      } else if (beverages && beverages.length > 0) {
+      } else if ((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) {
         targetRef = beveragesRef;
         message = "Que tal algo para acompanhar? 🥤";
       } else {
+
         targetRef = summaryRef;
         message = "Tudo pronto! Revise seu pedido abaixo. ✨";
       }
@@ -401,6 +404,88 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
                   selectedBorderId === null
                     ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)]"
+                }`}
+              >
+                Sem adicional
+              </button>
+              {bordasCategory.items.map((b) => (
+                 <button
+                   key={b.id}
+                   onClick={() => setSelectedBorderId(b.id)}
+                   className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                     selectedBorderId === b.id
+                       ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)]"
+                   }`}
+                 >
+                   <p className="font-bold">{b.name}</p>
+                   <p className="text-sm text-[hsl(var(--site-primary))] font-black">+{formatBRL(b.price)}</p>
+                 </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 4 — Beverages within Builder */}
+        {((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) && (
+          <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
+            <div className="flex items-baseline justify-between mb-3">
+              <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">4. Escolha as bebidas (opcional)</h4>
+              {scrollMessage && scrollMessage.includes("acompanhar") && (
+                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                  {scrollMessage}
+                </span>
+              )}
+            </div>
+            
+            <div className="space-y-8">
+              {beverageCatalogs && beverageCatalogs.map(catalog => {
+                const catBevs = beverages?.filter(b => b.catalog_id === catalog.id) || [];
+                if (catBevs.length === 0) return null;
+                return (
+                  <div key={catalog.id} className="space-y-4">
+                    <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">{catalog.name}</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {catBevs.map((bev) => (
+                        <BeverageBuilderItem
+                          key={bev.id}
+                          bev={bev}
+                          qty={selectedBeverages[bev.id] || 0}
+                          onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {(() => {
+                const activeCatIds = beverageCatalogs?.map(c => c.id) || [];
+                const uncategorized = beverages?.filter(b => !b.catalog_id || !activeCatIds.includes(b.catalog_id)) || [];
+                if (uncategorized.length === 0) return null;
+                return (
+                  <div className="space-y-4">
+                    {(beverageCatalogs?.length ?? 0) > 0 && (
+                      <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">Outras Bebidas</h5>
+                    )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {uncategorized.map((bev) => (
+                        <BeverageBuilderItem
+                          key={bev.id}
+                          bev={bev}
+                          qty={selectedBeverages[bev.id] || 0}
+                          onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
                     : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
                 }`}
               >
