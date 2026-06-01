@@ -134,7 +134,7 @@ serve(async (req) => {
 
       if (includeFullData) {
         console.log(`[${requestId}] Buscando dados completos (cardápio, combos, etc)`)
-        const [cats, items, groups, combos, zones, beverages, sizes] = await Promise.all([
+        const [cats, items, groups, combos, zones, beverages, sizes, orders] = await Promise.all([
           supabaseAdmin.from('menu_categories').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
           supabaseAdmin.from('menu_items').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
           supabaseAdmin.from('combo_groups').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
@@ -142,6 +142,7 @@ serve(async (req) => {
           supabaseAdmin.from('delivery_zones').select('*').eq('restaurant_id', restaurant.id).order('sort_order'),
           supabaseAdmin.from('pizzeria_beverages').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
           supabaseAdmin.from('pizzeria_pizza_sizes').select('*').eq('pizzeria_id', restaurant.id).order('sort_order'),
+          supabaseAdmin.from('orders').select('*, order_items(*)').eq('restaurant_id', restaurant.id).order('created_at', { ascending: false }),
         ])
 
         responseData = {
@@ -153,6 +154,7 @@ serve(async (req) => {
           deliveryZones: zones.data || [],
           beverages: beverages.data || [],
           pizzaSizes: sizes.data || [],
+          orders: orders.data || [],
         }
       }
 
