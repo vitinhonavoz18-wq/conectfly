@@ -1053,7 +1053,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                )}
              </div>
 
-              <OrderSubmissionLogsTable restaurantId={r.id} />
+              {FEATURES.ENABLE_FIQON_AUTOMATION && <OrderSubmissionLogsTable restaurantId={r.id} />}
 
               {(regMsg || testDebug) && (
                <div className="space-y-3 relative z-10">
