@@ -1086,10 +1086,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
                       {testDebug.data && (
                         <div className="space-y-1">
-                          <p className="text-primary/70 font-bold uppercase tracking-tighter">Resposta FIQON:</p>
+                          <p className="text-primary/70 font-bold uppercase tracking-tighter">
+                            {FEATURES.ENABLE_FIQON_AUTOMATION ? "Resposta FIQON:" : "Resposta do Servidor:"}
+                          </p>
                           <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto">{JSON.stringify(testDebug.data, null, 2)}</pre>
                         </div>
                       )}
+
 
                       {testDebug.error && (
                         <div className="space-y-1">
