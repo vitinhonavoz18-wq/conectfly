@@ -471,6 +471,11 @@ export async function sendUnifiedOrderToFiqon(
   restaurant: RestaurantRow,
   source: "admin_test" | "public_checkout" = "public_checkout"
 ) {
+  if (!FEATURES.ENABLE_FIQON_AUTOMATION) {
+    console.warn("[FIQON] Tentativa de envio bloqueada: Funcionalidade desativada via Feature Flag.");
+    return { success: false, status: 0, error: "Funcionalidade desativada." };
+  }
+
   const webhookUrl = restaurant.fiqon_webhook_url || (restaurant.site_settings as any)?.external_webhook_url;
   
   if (!webhookUrl) {
