@@ -74,12 +74,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
      }
    };
 
-  const handleFinish = async () => {
-    setError("");
+  const goToCheckout = () => {
     if (items.length === 0) {
       setError("Seu carrinho está vazio");
       return;
     }
+    setError("");
+    setStep("checkout");
+  };
+
+  const handleFinish = async () => {
+    setError("");
     setValidationAttempted(true);
 
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
