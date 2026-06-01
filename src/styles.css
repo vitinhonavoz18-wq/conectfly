@@ -59,6 +59,14 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-site-primary: hsl(var(--site-primary));
+  --color-site-primary-fg: hsl(var(--site-primary-fg));
+  --color-site-bg: hsl(var(--site-bg));
+  --color-site-fg: hsl(var(--site-fg));
+  --color-site-card: hsl(var(--site-card));
+  --color-site-border: hsl(var(--site-border));
+  --color-site-muted: hsl(var(--site-muted));
+  --color-site-muted-fg: hsl(var(--site-muted-fg));
 }
 
 :root {
@@ -232,7 +240,7 @@
  @utility site-btn-primary {
    @apply site-btn;
    background-color: hsl(var(--site-primary));
-   color: #ffffff;
+    color: hsl(var(--site-primary-fg));
    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
    &:hover { filter: brightness(1.1); }
  }
@@ -252,7 +260,7 @@
    color: hsl(var(--site-primary));
    &:hover {
      background-color: hsl(var(--site-primary));
-     color: #ffffff;
+      color: hsl(var(--site-primary-fg));
    }
  }
 
@@ -277,7 +285,7 @@
  @utility site-btn-success {
    @apply site-btn;
    background-color: #22C55E;
-   color: #ffffff;
+   color: hsl(var(--site-primary-fg));
    box-shadow: 0 15px 40px rgba(34,197,94,0.35);
    &:hover { background-color: #1eb054; transform: scale(1.03); }
  }
