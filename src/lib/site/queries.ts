@@ -169,7 +169,7 @@ const debugLog = (...args: any[]) => {
     categories: cats.map((c) => {
       // Use os tamanhos da tabela se existirem, senão use o JSONB da categoria (fallback para dados legados)
       const sizes = (c.is_pizza && pizzaSizesFromTable.length > 0) 
-        ? pizzaSizesFromTable 
+        ? pizzaSizesFromTable.filter(s => s.active !== false) 
         : (c.pizza_sizes || []);
       
       return {
@@ -314,7 +314,7 @@ export async function adminFetchSiteData(id: string): Promise<SiteData> {
       restaurant: restaurant as RestaurantRow,
       categories: categories.map((c: any) => {
         const sizes = (c.is_pizza && pizzaSizesFromTable.length > 0) 
-          ? pizzaSizesFromTable 
+          ? pizzaSizesFromTable.filter(s => s.active !== false) 
           : (c.pizza_sizes || []);
         
         return {

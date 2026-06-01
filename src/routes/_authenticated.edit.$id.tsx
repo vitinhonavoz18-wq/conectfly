@@ -140,7 +140,7 @@ function EditPage() {
 
   if (!restaurant) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-muted-foreground">
+      <div className="min-h-[80vh] flex flex-col items-center justify-center gap-4 text-muted-foreground">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="uppercase tracking-[0.3em] text-[10px] font-black animate-pulse">
           Sincronizando Dados...
