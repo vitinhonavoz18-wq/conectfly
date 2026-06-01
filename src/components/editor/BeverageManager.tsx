@@ -18,6 +18,7 @@ export function BeverageManager({ restaurantId }: Props) {
   const [showImport, setShowImport] = useState(false);
   const [isAddingCatalog, setIsAddingCatalog] = useState(false);
   const [newCatalogName, setNewCatalogName] = useState("");
+  const [isDragging, setIsDragging] = useState<string | null>(null);
 
   const reload = async () => {
     setLoading(true);
@@ -196,39 +197,56 @@ export function BeverageManager({ restaurantId }: Props) {
             onDeleteBeverage={deleteBeverage}
             restaurantId={restaurantId}
             catalogs={catalogs}
+            onDropBeverage={(beverageId: string) => updateBeverage(beverageId, { catalog_id: catalog.id })}
           />
-
         ))}
 
-        {uncategorized.length > 0 && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-               <div className="h-px flex-1 bg-white/10" />
-               <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Bebidas sem Catálogo</h3>
-               <div className="h-px flex-1 bg-white/10" />
-            </div>
-            <div className="grid gap-4">
-              {uncategorized.map(b => (
-                <BeverageRowItem
-                  key={b.id}
-                  beverage={b}
-                  onUpdate={(patch: Partial<BeverageRow>) => updateBeverage(b.id, patch)}
-                  onDelete={() => deleteBeverage(b.id)}
-                  restaurantId={restaurantId}
-                  catalogs={catalogs}
-                />
-              ))}
-            </div>
-            <button
-                onClick={() => addBeverage()}
-                className="w-full py-4 rounded-2xl border-2 border-dashed border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary flex items-center justify-center gap-2"
-              >
-                <Plus className="h-4 w-4" /> Adicionar Bebida Avulsa
-              </button>
+        {(uncategorized.length > 0 || isDragging) && (
+          <div 
+            className={`space-y-6 p-6 rounded-[2.5rem] transition-all duration-300 ${isDragging ? 'bg-primary/5 border-2 border-dashed border-primary/20' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              const beverageId = e.dataTransfer.getData("beverageId");
+              if (beverageId) {
+                updateBeverage(beverageId, { catalog_id: null });
+                toast.success("Bebida movida para avulsas");
+              }
+            }}
+          >
+          <div className="flex items-center gap-4">
+             <div className="h-px flex-1 bg-white/10" />
+             <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Bebidas sem Catálogo</h3>
+             <div className="h-px flex-1 bg-white/10" />
           </div>
+          
+          <div className="grid gap-4">
+            {uncategorized.map(b => (
+              <BeverageRowItem
+                key={b.id}
+                beverage={b}
+                onUpdate={(patch: Partial<BeverageRow>) => updateBeverage(b.id, patch)}
+                onDelete={() => deleteBeverage(b.id)}
+                restaurantId={restaurantId}
+                catalogs={catalogs}
+                onDragStart={() => setIsDragging(b.id)}
+                onDragEnd={() => setIsDragging(null)}
+              />
+            ))}
+          </div>
+
+          <button
+              onClick={() => addBeverage()}
+              className="w-full py-4 rounded-2xl border-2 border-dashed border-white/5 hover:border-primary/30 hover:bg-primary/5 transition-all text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Adicionar Bebida Avulsa
+            </button>
+        </div>
+
         )}
 
-        {catalogs.length === 0 && uncategorized.length === 0 && (
+        {catalogs.length === 0 && uncategorized.length === 0 && !isDragging && (
           <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/5">
              <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ShoppingBag className="h-8 w-8 text-primary opacity-50" />
@@ -250,7 +268,8 @@ export function BeverageManager({ restaurantId }: Props) {
   );
 }
 
-function CatalogSection({ catalog, beverages, onUpdateCatalog, onDeleteCatalog, onAddBeverage, onUpdateBeverage, onDeleteBeverage, restaurantId, catalogs }: any) {
+function CatalogSection({ catalog, beverages, onUpdateCatalog, onDeleteCatalog, onAddBeverage, onUpdateBeverage, onDeleteBeverage, restaurantId, catalogs, onDropBeverage }: any) {
+  const [isOver, setIsOver] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [local, setLocal] = useState({ ...catalog });
 
@@ -264,7 +283,23 @@ function CatalogSection({ catalog, beverages, onUpdateCatalog, onDeleteCatalog, 
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div 
+      className={`space-y-6 animate-in fade-in duration-500 p-4 rounded-[2.5rem] transition-all duration-300 ${isOver ? 'bg-primary/5 ring-2 ring-primary/20 ring-dashed' : ''}`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsOver(true);
+      }}
+      onDragLeave={() => setIsOver(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsOver(false);
+        const beverageId = e.dataTransfer.getData("beverageId");
+        if (beverageId) {
+          onDropBeverage(beverageId);
+          toast.success(`Bebida movida para ${catalog.name}`);
+        }
+      }}
+    >
       <div className="card-premium p-6 border-white/10 bg-white/5 relative group overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
            <button onClick={onDeleteCatalog} className="p-2 text-muted-foreground hover:text-destructive transition-colors"><Trash2 className="h-4 w-4" /></button>
@@ -335,6 +370,8 @@ function CatalogSection({ catalog, beverages, onUpdateCatalog, onDeleteCatalog, 
             onDelete={() => onDeleteBeverage(b.id)}
             restaurantId={restaurantId}
             catalogs={catalogs}
+            onDragStart={() => {}}
+            onDragEnd={() => {}}
           />
         ))}
         <button
@@ -348,12 +385,14 @@ function CatalogSection({ catalog, beverages, onUpdateCatalog, onDeleteCatalog, 
   );
 }
 
-function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs }: { 
+function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs, onDragStart, onDragEnd }: { 
   beverage: BeverageRow; 
   onUpdate: (patch: Partial<BeverageRow>) => void; 
   onDelete: () => void; 
   restaurantId: string; 
   catalogs: BeverageCatalogRow[];
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }) {
 
   const [local, setLocal] = useState({ ...beverage });
@@ -373,7 +412,19 @@ function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs 
   };
 
   return (
-    <div className={`card-premium p-4 grid grid-cols-1 md:grid-cols-[auto_1fr_auto] gap-4 items-center transition-all ${!beverage.is_active ? 'opacity-50 grayscale' : ''}`}>
+    <div 
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("beverageId", beverage.id);
+        onDragStart?.();
+      }}
+      onDragEnd={onDragEnd}
+      className={`card-premium p-4 grid grid-cols-1 md:grid-cols-[auto_auto_1fr_auto] gap-4 items-center transition-all hover:border-primary/30 cursor-grab active:cursor-grabbing ${!beverage.is_active ? 'opacity-50 grayscale' : ''}`}
+    >
+      <div className="hidden md:flex items-center text-muted-foreground/30">
+        <GripVertical className="h-5 w-5" />
+      </div>
+
       <div className="relative group shrink-0">
         {beverage.image_url ? (
           <img src={beverage.image_url} className="h-16 w-16 object-cover rounded-xl border border-white/10" />
@@ -437,6 +488,15 @@ function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs 
       </div>
 
       <div className="flex items-center gap-2">
+        {beverage.catalog_id && (
+          <button
+            onClick={() => onUpdate({ catalog_id: null })}
+            className="md:hidden flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 text-[10px] font-black uppercase tracking-widest transition-all"
+            title="Remover do Catálogo"
+          >
+            Remover
+          </button>
+        )}
         <button
           onClick={() => onUpdate({ is_active: !beverage.is_active })}
           className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${beverage.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-white/5 text-muted-foreground'}`}
