@@ -168,7 +168,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       console.log("Payload real enviado:", payload);
 
       // 1. Envio para FIQON (Webhook Externo) - USANDO FUNÇÃO COMPARTILHADA
-      if (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp")) {
+      if (FEATURES.ENABLE_FIQON_AUTOMATION && (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp"))) {
+
         if (!externalWebhookUrl) {
           if (flowMode === "fiqon") {
             toast.error("Webhook FIQON não configurado.");
