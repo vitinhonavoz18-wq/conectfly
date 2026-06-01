@@ -27,63 +27,13 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
-  const style = {
-    ["--site-bg" as string]: "210 20% 98%", // Off-white/Gray
-    ["--site-fg" as string]: "0 0% 10%", // Black
-    ["--site-card" as string]: "0 0% 100%", // White
-    ["--site-border" as string]: "45 100% 90%", // Light yellow
-    ["--site-muted" as string]: "0 0% 95%",
-    ["--site-muted-fg" as string]: "0 0% 45%",
-    ["--site-primary" as string]: "35 100% 43%", // #D99000 Burger Yellow/Orange
-  };
-
   const combosVisibility = r.site_settings?.combos_visibility || "auto";
   const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
 
   return (
-    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
-      <style dangerouslySetInnerHTML={{ __html: `
-        header {
-          background: #111111 !important;
-          color: white !important;
-        }
-        header * {
-          color: white !important;
-        }
-        .card-premium {
-          background: white !important;
-          border-radius: 1rem !important;
-          border: 1px solid #e5e7eb !important;
-          box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
-        }
-        .btn-premium {
-          background: #D99000 !important;
-          color: white !important;
-          border-radius: 0.75rem !important;
-          font-weight: 800 !important;
-          transition: all 0.3s ease !important;
-        }
-        .btn-premium:hover {
-          transform: scale(1.05) !important;
-          brightness: 1.1;
-        }
-        .site-hero-section {
-          background: #111111;
-          color: white;
-        }
-        .site-hero-section h1 {
-          color: #D99000 !important;
-        }
-        .site-hero-section p {
-          color: #9ca3af !important;
-        }
-        footer {
-          background: #111111 !important;
-          color: white !important;
-        }
-      `}} />
+    <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
       <SiteHeader 
         name={r.name} 
         logoUrl={r.logo_url} 

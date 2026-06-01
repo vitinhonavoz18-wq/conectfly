@@ -309,7 +309,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                    <div className="flex-1 relative z-10">
                      <p className="font-black text-lg tracking-tight uppercase text-[hsl(var(--site-fg))] group-hover:text-[hsl(var(--site-primary))] transition-colors">
                        {l.name}
-                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.05)] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
+                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.1)] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
                      </p>
                     {l.flavors && l.flavors.length > 0 ? (
                       <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed font-medium">
@@ -356,8 +356,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
           <div className="p-6 space-y-8 bg-[hsl(var(--site-card))]" ref={fieldsContainerRef}>
             {validationAttempted && error && (
-              <div className="bg-destructive/10 border-2 border-destructive/20 rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-base font-extrabold text-destructive text-center leading-tight">
+              <div className="bg-[hsl(var(--site-danger)/0.1)] border-2 border-[hsl(var(--site-danger)/0.2)] rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-base font-extrabold text-[hsl(var(--site-danger))] text-center leading-tight">
                   Quase lá! Preencha seus dados para finalizar o pedido. 🍕
                 </p>
               </div>
@@ -377,7 +377,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     placeholder="Seu nome completo"
                     className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                       validationAttempted && !name.trim() 
-                        ? "border-destructive/40 bg-destructive/5" 
+                        ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
                         : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
@@ -389,7 +389,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     inputMode="numeric"
                     className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                       validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10)
-                        ? "border-destructive/40 bg-destructive/5" 
+                        ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
                         : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
@@ -411,8 +411,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                         onChange={(e) => setZoneId(e.target.value)}
                         className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
                           validationAttempted && !selectedZone
-                            ? "border-destructive/40 bg-destructive/5" 
-                            : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
+                            ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
+                        : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                         }`}
                       >
                         <option value="">Local de Entrega *</option>
@@ -434,7 +434,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                       rows={3}
                       className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
                         validationAttempted && !address.trim()
-                          ? "border-destructive/40 bg-destructive/5" 
+                          ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
                           : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                       }`}
                     />
@@ -449,15 +449,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 </h3>
                 <div className="grid gap-3">
                   <div className="relative group">
-                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#9CA3AF]" />
+                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
                     <select
                       ref={paymentRef}
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[#111] ${
+                      className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
                         validationAttempted && !paymentMethod
-                          ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
-                          : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                          ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
+                          : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                       }`}
                     >
                       <option value="PIX">PIX</option>
@@ -469,30 +469,30 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
                   {paymentMethod === "Dinheiro" && (
                     <div className="relative">
-                      <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#9CA3AF]" />
+                      <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
                       <input
                         ref={changeRef}
                         value={changeFor}
                         onChange={(e) => setChangeFor(e.target.value)}
                         placeholder="Troco para quanto?"
                         inputMode="numeric"
-                        className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 transition-all font-bold focus:outline-none text-[#111] placeholder:text-[#9CA3AF] ${
+                        className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                           validationAttempted && !changeFor.trim()
-                            ? "border-[#DC2626]/40 bg-[#FEF2F2]" 
-                            : "border-[#EFE7E2] focus:border-[hsl(var(--site-primary))/0.4]"
+                            ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
+                            : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                         }`}
                       />
                     </div>
                   )}
 
                   <div className="relative">
-                    <MessageSquare className="absolute left-4 top-5 h-5 w-5 text-[#9CA3AF]" />
+                    <MessageSquare className="absolute left-4 top-5 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
                     <textarea
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Alguma observação importante?"
                       rows={2}
-                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-[#FFF9F6] border-2 border-[#EFE7E2] transition-all font-bold focus:outline-none focus:border-[hsl(var(--site-primary))/0.4] text-[#111] placeholder:text-[#9CA3AF] resize-none"
+                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none focus:border-[hsl(var(--site-primary))/0.4] text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none"
                     />
                   </div>
                 </div>
@@ -500,27 +500,27 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </div>
 
             {error && (
-              <p className="text-sm font-bold text-[#DC2626] bg-[#FEF2F2] border-2 border-[#DC2626]/20 rounded-2xl p-4 text-center">
+              <p className="text-sm font-bold text-[hsl(var(--site-danger))] bg-[hsl(var(--site-danger)/0.1)] border-2 border-[hsl(var(--site-danger)/0.2)] rounded-2xl p-4 text-center">
                 {error}
               </p>
             )}
           </div>
         </div>
 
-        <div className="p-8 border-t border-[#F3F4F6] space-y-5 bg-white shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(2rem+env(safe-area-inset-bottom))]">
+        <div className="p-8 border-t border-[hsl(var(--site-border))] space-y-5 bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(2rem+env(safe-area-inset-bottom))]">
           <div className="space-y-3">
-            <div className="flex justify-between items-center text-xs font-bold text-[#555] uppercase tracking-widest">
+            <div className="flex justify-between items-center text-xs font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
               <span>Subtotal</span>
-              <span className="text-[#111]">{formatBRL(totalPrice)}</span>
+              <span className="text-[hsl(var(--site-fg))]">{formatBRL(totalPrice)}</span>
             </div>
             {hasZones && (
-              <div className="flex justify-between items-center text-xs font-bold text-[#555] uppercase tracking-widest">
+              <div className="flex justify-between items-center text-xs font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
                 <span>Logística {selectedZone ? <span className="text-[hsl(var(--site-primary))] italic ml-1">({selectedZone.neighborhood})</span> : ""}</span>
-                <span className="text-[#111]">{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
+                <span className="text-[hsl(var(--site-fg))]">{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
               </div>
             )}
-            <div className="flex justify-between items-end pt-3 border-t border-dashed border-[#EFE7E2]">
-              <span className="font-black text-sm uppercase tracking-tighter text-[#111]">Total a Pagar</span>
+            <div className="flex justify-between items-end pt-3 border-t border-dashed border-[hsl(var(--site-border))]">
+              <span className="font-black text-sm uppercase tracking-tighter text-[hsl(var(--site-fg))]">Total a Pagar</span>
               <span className="text-4xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
                 {formatBRL(grandTotal)}
               </span>
@@ -542,7 +542,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             )}
           </button>
           
-          <p className="text-[11px] text-center text-[#9CA3AF] leading-tight font-medium">
+          <p className="text-[11px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium">
             {flycontrolOn && whatsappOn
               ? `Pedido enviado para o painel e WhatsApp do ${restaurantName}`
               : flycontrolOn

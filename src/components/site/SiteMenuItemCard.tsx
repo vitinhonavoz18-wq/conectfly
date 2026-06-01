@@ -23,10 +23,10 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
   };
 
   return (
-     <div className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-4 hover:border-primary/40 transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
-       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+     <div className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-4 hover:border-[hsl(var(--site-primary)/0.4)] transition-all duration-500 overflow-hidden shadow-2xl group relative backdrop-blur-sm">
+       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.05)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
        {(restaurant?.show_item_images ?? true) && item.image_url && (
-         <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+         <div className="relative aspect-[16/10] overflow-hidden bg-[hsl(var(--site-muted))]">
            <img
              src={item.image_url}
              alt={item.name}
@@ -43,15 +43,15 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
        )}
        <div className="p-6 pt-2 flex flex-col gap-4 flex-1 relative z-10">
          <div className="flex items-start justify-between gap-4">
-           <h3 className="font-black text-xl tracking-tighter uppercase group-hover:text-primary transition-colors leading-tight">{item.name}</h3>
+            <h3 className="font-black text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight">{item.name}</h3>
            <div className="flex flex-col items-end">
-             <span className="text-primary font-black text-lg tracking-tighter">
+             <span className="text-[hsl(var(--site-primary))] font-black text-lg tracking-tighter">
                {showConsult ? "CONSULTAR" : formatBRL(price)}
              </span>
            </div>
          </div>
          {item.description && (
-           <p className="text-sm text-muted-foreground italic line-clamp-2">{item.description}</p>
+           <p className="text-sm text-[hsl(var(--site-muted-fg))] italic line-clamp-2">{item.description}</p>
          )}
           {sizes.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -61,8 +61,8 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
                   onClick={() => setSelected(s)}
                   className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border transition-all ${
                     selected?.label === s.label
-                      ? "site-btn-primary border-primary/50 text-white shadow-lg"
-                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] hover:border-primary/30 text-[hsl(var(--site-muted-fg))]"
+                      ? "site-btn-primary border-[hsl(var(--site-primary)/0.5)] text-[hsl(var(--site-primary-fg))] shadow-lg"
+                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] hover:border-[hsl(var(--site-primary)/0.3)] text-[hsl(var(--site-muted-fg))]"
                   }`}
                 >
                   {s.label}
@@ -75,7 +75,7 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
             disabled={showConsult}
             className="mt-auto site-btn-primary py-3 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95"
           >
-            <Plus className="h-4 w-4 text-white" />
+            <Plus className="h-4 w-4 text-[hsl(var(--site-primary-fg))]" />
             <span className="text-[10px] uppercase tracking-[0.2em]">Adicionar à Experiência</span>
           </button>
        </div>

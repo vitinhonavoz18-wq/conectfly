@@ -89,12 +89,12 @@ export function SiteHero({
               />
            </div>
          ) : (
-           <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-primary via-orange-400 to-amber-300 bg-clip-text text-transparent drop-shadow-sm">
+          <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-sm">
              {name}
            </h1>
          )}
          {tagline && (
-           <p className="text-2xl sm:text-3xl font-black text-primary mb-4 uppercase tracking-[0.15em] glow-orange">
+           <p className="text-2xl sm:text-3xl font-black text-[hsl(var(--site-primary))] mb-4 uppercase tracking-[0.15em]">
              {tagline}
            </p>
          )}
@@ -109,7 +109,7 @@ export function SiteHero({
                 <a
                   href="#combos"
                   onClick={(e) => scrollTo(e, "combos")}
-                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_rgba(217,164,65,0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
+                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_hsl(var(--site-primary)/0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-[hsl(var(--site-border))]"
                 >
                   Combos Premium
                 </a>
@@ -118,7 +118,7 @@ export function SiteHero({
                 <a
                   href="#pizzas"
                   onClick={(e) => scrollTo(e, "pizzas")}
-                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_rgba(229,9,20,0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-white/20"
+                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_hsl(var(--site-primary)/0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-[hsl(var(--site-border))]"
                 >
                   {buttonText}
                 </a>
