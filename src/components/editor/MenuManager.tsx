@@ -22,7 +22,7 @@ export function MenuManager({ restaurantId }: Props) {
   const reload = async () => {
     try {
       const data = await adminFetchSiteData(restaurantId);
-      const categories = (data.categories as unknown as MenuCategoryRow[]).filter(c => {
+      const categories = (data.categories as any[]).filter(c => {
         const name = c.name.toLowerCase();
         const isBev = name.includes("bebida") || 
                       name.includes("beverage") || 
