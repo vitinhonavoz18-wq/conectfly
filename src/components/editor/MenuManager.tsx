@@ -179,9 +179,16 @@ export function MenuManager({ restaurantId }: Props) {
         </div>
       )}
 
-      {cats.map((c) => {
+      {cats.filter(c => {
+        const hasNewCatalogs = true; // No painel, queremos que o usuário veja a categoria antiga se ele quiser deletar/limpar, 
+                                     // mas talvez seja melhor esconder se houver catálogos novos para incentivar o uso dos novos.
+        // O usuário pediu: "Se o sistema tiver uma categoria “Bebidas” antiga e os novos catálogos de bebidas, unificar a exibição para evitar repetição."
+        // Vamos esconder no cardápio público, mas no painel vamos deixar visível por enquanto.
+        return true;
+      }).map((c) => {
         const isOpen = openCat === c.id;
         const its = items.filter((i) => i.category_id === c.id);
+
         return (
            <div key={c.id} className="card-premium overflow-hidden group/cat">
              <div className="flex items-center justify-between gap-4 p-4">
