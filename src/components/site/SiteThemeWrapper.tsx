@@ -18,19 +18,19 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
 
   // Base tokens for different templates
   let themeTokens = {
-    bg: "0 0% 2%", // #050505
-    fg: "0 0% 97%", // Soft white
-    card: "0 0% 6%", // #111111
-    border: "0 0% 10%",
-    muted: "0 0% 8%",
-    mutedFg: "0 0% 70%",
-    primary: primaryColor || "30 100% 50%",
-    primaryFg: "0 0% 100%",
-    secondary: secondaryColor || "145 60% 45%",
+    bg: "0 0% 1%", // Quase preto puro para máximo contraste
+    fg: "0 0% 98%", // Branco gelo
+    card: "0 0% 4%", // Um pouco mais claro que o bg
+    border: "0 0% 12%",
+    muted: "0 0% 6%",
+    mutedFg: "0 0% 65%", // Texto secundário com boa leitura
+    primary: primaryColor || "38 92% 50%", // Amarelo/Ouro premium
+    primaryFg: "0 0% 0%", // Texto preto sobre primário (contraste total)
+    secondary: secondaryColor || "142 71% 45%",
     success: "142 70% 45%",
     danger: "0 84% 60%",
-    headerBg: "0 0% 2% / 80%",
-    headerFg: "0 0% 97%",
+    headerBg: "0 0% 2% / 95%", // Mais opaco para legibilidade
+    headerFg: "0 0% 98%",
   };
 
   if (isWhite) {

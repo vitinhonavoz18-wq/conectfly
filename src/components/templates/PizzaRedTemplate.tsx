@@ -16,13 +16,14 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   
   const isBeverage = (c: any) => {
     const name = c.name.toLowerCase();
-    const hasNewBeverages = (data.beverages?.length ?? 0) > 0;
     const isBev = name.includes("bebida") || 
                   name.includes("beverage") || 
                   name.includes("drink") || 
+                  name.includes("refrigerante") ||
                   name.includes("catálogo") ||
-                  c.type === 'beverage';
-    return isBev && hasNewBeverages;
+                  c.type === 'beverage' ||
+                  c.type === 'BEVERAGE';
+    return isBev;
   };
 
   

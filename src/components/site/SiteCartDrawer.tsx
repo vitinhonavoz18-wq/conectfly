@@ -400,10 +400,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 )}
               </div>
             ) : (
-              <div className="p-4 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
+              <div className="p-4 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
                 {/* Bloco 1 — Dados do cliente */}
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
                     <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
                     Seus Dados
                   </h3>

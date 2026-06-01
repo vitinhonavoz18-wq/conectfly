@@ -134,19 +134,19 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
   const uncategorizedBeverages = beverages.filter(b => !b.catalog_id || !activeCatalogs.some(c => c.id === b.catalog_id));
 
   return (
-    <div id="bebidas" className="py-16 site-stagger">
+    <div id="bebidas" className="py-20 site-stagger bg-[hsl(var(--site-muted))] rounded-[3rem] px-4">
       <div className="text-center mb-12">
         <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.2)] text-[hsl(var(--site-primary))] text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.3)]">
           Refresque sua experiência
         </span>
         <div className="flex items-center justify-center gap-4 mb-4">
           <div className="h-1px w-12 bg-[hsl(var(--site-primary)/0.3)] hidden sm:block" />
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase">
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase text-[hsl(var(--site-fg))]">
             Bebidas
           </h2>
           <div className="h-1px w-12 bg-[hsl(var(--site-primary)/0.3)] hidden sm:block" />
         </div>
-        <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic">
+        <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic text-sm">
           Acompanhamento perfeito para a sua pizza artesanal.
         </p>
       </div>
