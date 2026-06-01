@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from "react";
  import { Check, Plus, Minus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
- import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow } from "@/lib/site/types";
+ import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
@@ -466,7 +466,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                         key={bev.id}
                         bev={bev}
                         qty={selectedBeverages[bev.id] || 0}
-                        onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+                          onUpdate={(q: number) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+
                       />
                     ))}
                   </div>
@@ -489,7 +490,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                         key={bev.id}
                         bev={bev}
                         qty={selectedBeverages[bev.id] || 0}
-                        onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+                        onUpdate={(q: number) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
                       />
                     ))}
                   </div>
