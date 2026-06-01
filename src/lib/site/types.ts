@@ -171,14 +171,45 @@ export interface BeverageRow {
   updated_at?: string;
 }
 
+export interface OrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  name: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  options: any;
+  created_at: string;
+}
+
+export interface Order {
+  id: string;
+  restaurant_id: string;
+  customer_name: string;
+  customer_phone: string | null;
+  customer_address: string | null;
+  delivery_fee: number;
+  total_amount: number;
+  payment_method: string;
+  payment_status: string;
+  status: string;
+  is_test_order: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  order_items?: OrderItem[];
+}
+
 export interface SiteData {
   restaurant: RestaurantRow;
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   comboGroups: (ComboGroupRow & { combos: ComboRow[] })[];
   deliveryZones?: DeliveryZoneRow[];
-   beverages?: BeverageRow[];
-   beverageCatalogs?: BeverageCatalogRow[];
-   pizzaSizes?: PizzaSize[];
+  beverages?: BeverageRow[];
+  beverageCatalogs?: BeverageCatalogRow[];
+  pizzaSizes?: PizzaSize[];
+  orders?: Order[];
 }
 
 
