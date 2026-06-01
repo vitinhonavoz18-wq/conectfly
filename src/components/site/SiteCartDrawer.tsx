@@ -309,7 +309,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                    <div className="flex-1 relative z-10">
                      <p className="font-black text-lg tracking-tight uppercase text-[hsl(var(--site-fg))] group-hover:text-[hsl(var(--site-primary))] transition-colors">
                        {l.name}
-                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.05)] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
+                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.1)] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
                      </p>
                     {l.flavors && l.flavors.length > 0 ? (
                       <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed font-medium">
@@ -356,8 +356,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
           <div className="p-6 space-y-8 bg-[hsl(var(--site-card))]" ref={fieldsContainerRef}>
             {validationAttempted && error && (
-              <div className="bg-destructive/10 border-2 border-destructive/20 rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-base font-extrabold text-destructive text-center leading-tight">
+              <div className="bg-[hsl(var(--site-danger)/0.1)] border-2 border-[hsl(var(--site-danger)/0.2)] rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                <p className="text-base font-extrabold text-[hsl(var(--site-danger))] text-center leading-tight">
                   Quase lá! Preencha seus dados para finalizar o pedido. 🍕
                 </p>
               </div>
@@ -377,7 +377,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     placeholder="Seu nome completo"
                     className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                       validationAttempted && !name.trim() 
-                        ? "border-destructive/40 bg-destructive/5" 
+                        ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
                         : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
@@ -389,7 +389,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     inputMode="numeric"
                     className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
                       validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10)
-                        ? "border-destructive/40 bg-destructive/5" 
+                        ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
                         : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
                     }`}
                   />
