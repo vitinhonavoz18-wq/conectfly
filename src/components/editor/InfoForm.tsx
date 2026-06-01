@@ -6,6 +6,8 @@ import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/
 import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon, type FlycontrolOrderPayload } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
+import { FEATURES } from "@/lib/features";
+
 
 interface Props {
   restaurant: RestaurantRow;
@@ -21,6 +23,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [testing, setTesting] = useState(false);
   const [testDebug, setTestDebug] = useState<any>(null);
   const [showApiKey, setShowApiKey] = useState(false);
+
+  const isFiqonMode = FEATURES.ENABLE_FIQON_AUTOMATION && 
+    ((r.order_flow_mode || (r.fiqon_webhook_url || r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon");
+
 
     useEffect(() => {
       if (r.id) {
@@ -711,85 +717,99 @@ export function InfoForm({ restaurant, onChange }: Props) {
                  <Zap className="h-8 w-8 text-primary-foreground" />
                </div>
                <div>
-                 <h3 className="text-3xl font-black tracking-tighter uppercase">Fluxo de Pedidos</h3>
-                 <p className="text-muted-foreground italic">Configure como os pedidos são processados e enviados.</p>
+                  <h3 className="text-3xl font-black tracking-tighter uppercase">
+                    {FEATURES.ENABLE_FIQON_AUTOMATION ? "Fluxo de Pedidos" : "Integração FlyControl"}
+                  </h3>
+                  <p className="text-muted-foreground italic">
+                    {FEATURES.ENABLE_FIQON_AUTOMATION 
+                      ? "Configure como os pedidos são processados e enviados." 
+                      : "Configure a conexão direta com seu painel de gerenciamento."}
+                  </p>
+
                </div>
              </div>
 
-             <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3 relative z-10">
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2 text-center">Fluxo Recomendado para Produção</p>
-               <div className="flex items-center justify-center gap-4 sm:gap-8">
-                 <div className="flex flex-col items-center gap-1">
-                   <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">SiteCreatorFly</div>
-                 </div>
-                 <div className="text-primary animate-pulse">→</div>
-                 <div className="flex flex-col items-center gap-1">
-                   <div className="h-10 px-4 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-xs uppercase tracking-tighter text-primary">FIQON</div>
-                 </div>
-                 <div className="text-primary animate-pulse">→</div>
-                 <div className="flex flex-col items-center gap-1">
-                   <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">FlyControl</div>
-                 </div>
-               </div>
-               <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest mt-2">
-                 A FIQON recebe o pedido, executa automações e envia para o FlyControl.
-               </p>
-             </div>
-
-             <div className="space-y-4 relative z-10">
-               <label className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground">Escolha o Modo de Operação</label>
-               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    onClick={() => set("order_flow_mode", "fiqon")}
-                    className={`p-6 rounded-2xl border-2 transition-all text-left group ${
-                      (r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon"
-                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                        : "border-white/5 bg-white/5 hover:border-white/20"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-black text-sm uppercase tracking-tight">Opção A: Usar FIQON</h4>
-                      {(r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon" && (
-                        <Zap className="h-4 w-4 text-primary fill-primary animate-pulse" />
-                      )}
+              {FEATURES.ENABLE_FIQON_AUTOMATION && (
+                <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3 relative z-10">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2 text-center">Fluxo Recomendado para Produção</p>
+                  <div className="flex items-center justify-center gap-4 sm:gap-8">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">SiteCreatorFly</div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      Intermediador recomendado. Ideal para automações, logs, WhatsApp e controle avançado.
-                    </p>
-                    <div className="mt-4 inline-flex px-2 py-1 rounded bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest">Recomendado</div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      if (r.order_flow_mode === "fiqon" || r.fiqon_webhook_url || r.site_settings?.external_webhook_url) {
-                        if (!confirm("Você já está usando FIQON como intermediador. Ativar envio direto pode duplicar pedidos se não for configurado corretamente. Deseja continuar?")) return;
-                      }
-                      set("order_flow_mode", "direct");
-                    }}
-                    className={`p-6 rounded-2xl border-2 transition-all text-left group ${
-                      (r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "direct"
-                        ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
-                        : "border-white/5 bg-white/5 hover:border-white/20"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-black text-sm uppercase tracking-tight">Opção B: Direto FlyControl</h4>
+                    <div className="text-primary animate-pulse">→</div>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 px-4 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-xs uppercase tracking-tighter text-primary">FIQON</div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      Envio direto sem intermediários. Use apenas se não for utilizar FIQON ou automações externas.
-                    </p>
-                    <div className="mt-4 inline-flex px-2 py-1 rounded bg-white/10 text-muted-foreground text-[8px] font-black uppercase tracking-widest">Legado / Avançado</div>
-                  </button>
-               </div>
-             </div>
+                    <div className="text-primary animate-pulse">→</div>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">FlyControl</div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest mt-2">
+                    A FIQON recebe o pedido, executa automações e envia para o FlyControl.
+                  </p>
+                </div>
+              )}
+
+
+              {FEATURES.ENABLE_FIQON_AUTOMATION && (
+                <div className="space-y-4 relative z-10">
+                  <label className="text-[10px] uppercase tracking-[0.2em] font-black text-muted-foreground">Escolha o Modo de Operação</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      onClick={() => set("order_flow_mode", "fiqon")}
+                      className={`p-6 rounded-2xl border-2 transition-all text-left group ${
+                        (r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon"
+                          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                          : "border-white/5 bg-white/5 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-black text-sm uppercase tracking-tight">Opção A: Usar FIQON</h4>
+                        {(r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon" && (
+                          <Zap className="h-4 w-4 text-primary fill-primary animate-pulse" />
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        Intermediador recomendado. Ideal para automações, logs, WhatsApp e controle avançado.
+                      </p>
+                      <div className="mt-4 inline-flex px-2 py-1 rounded bg-primary/20 text-primary text-[8px] font-black uppercase tracking-widest">Recomendado</div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (r.order_flow_mode === "fiqon" || r.fiqon_webhook_url || r.site_settings?.external_webhook_url) {
+                          if (!confirm("Você já está usando FIQON como intermediador. Ativar envio direto pode duplicar pedidos se não for configurado corretamente. Deseja continuar?")) return;
+                        }
+                        set("order_flow_mode", "direct");
+                      }}
+                      className={`p-6 rounded-2xl border-2 transition-all text-left group ${
+                        (r.order_flow_mode || (r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "direct"
+                          ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
+                          : "border-white/5 bg-white/5 hover:border-white/20"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-black text-sm uppercase tracking-tight">Opção B: Direto FlyControl</h4>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        Envio direto sem intermediários. Use apenas se não for utilizar FIQON ou automações externas.
+                      </p>
+                      <div className="mt-4 inline-flex px-2 py-1 rounded bg-white/10 text-muted-foreground text-[8px] font-black uppercase tracking-widest">Legado / Avançado</div>
+                    </button>
+                  </div>
+                </div>
+              )}
+
 
              <div className="space-y-6 pt-4 border-t border-white/5 relative z-10">
-                {((r.order_flow_mode || (r.fiqon_webhook_url || r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon") ? (
+                {isFiqonMode ? (
                   <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                        <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Status: FIQON Ativo</p>
                        <p className="text-[10px] text-muted-foreground italic">Neste modo, o FlyControl recebe os pedidos através da FIQON.</p>
                      </div>
+
 
                      <Field 
                        label="URL do Webhook FIQON / Automação Externa" 
@@ -942,10 +962,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
                  </div>
                ) : (
                  <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                      <p className="text-[10px] font-black uppercase text-yellow-500 tracking-widest mb-1">Aviso: Modo Direto Ativo</p>
-                      <p className="text-[10px] text-muted-foreground italic">Não use este modo junto com FIQON para evitar pedidos duplicados.</p>
-                    </div>
+                    {FEATURES.ENABLE_FIQON_AUTOMATION && (
+                      <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-[10px] font-black uppercase text-yellow-500 tracking-widest mb-1">Aviso: Modo Direto Ativo</p>
+                        <p className="text-[10px] text-muted-foreground italic">Não use este modo junto com FIQON para evitar pedidos duplicados.</p>
+                      </div>
+                    )}
+
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Field label="URL do Painel FlyControl" hint="Ex: https://pizzaria.flycontrol.com.br">
@@ -1037,7 +1060,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                )}
              </div>
 
-              <OrderSubmissionLogsTable restaurantId={r.id} />
+              {FEATURES.ENABLE_FIQON_AUTOMATION && <OrderSubmissionLogsTable restaurantId={r.id} />}
 
               {(regMsg || testDebug) && (
                <div className="space-y-3 relative z-10">
@@ -1070,10 +1093,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
                       {testDebug.data && (
                         <div className="space-y-1">
-                          <p className="text-primary/70 font-bold uppercase tracking-tighter">Resposta FIQON:</p>
+                          <p className="text-primary/70 font-bold uppercase tracking-tighter">
+                            {FEATURES.ENABLE_FIQON_AUTOMATION ? "Resposta FIQON:" : "Resposta do Servidor:"}
+                          </p>
                           <pre className="p-2 rounded bg-white/5 opacity-70 overflow-x-auto">{JSON.stringify(testDebug.data, null, 2)}</pre>
                         </div>
                       )}
+
 
                       {testDebug.error && (
                         <div className="space-y-1">
