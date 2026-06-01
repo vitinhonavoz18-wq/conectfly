@@ -3,7 +3,7 @@ import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, S
 import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
-import { BeverageManager } from "./BeverageManager";
+
 import { MenuImport } from "./MenuImport";
 import { adminFetchSiteData, updateRestaurant } from "@/lib/site/queries";
 import { formatBRL } from "@/lib/site/format";
@@ -22,9 +22,18 @@ export function MenuManager({ restaurantId }: Props) {
   const reload = async () => {
     try {
       const data = await adminFetchSiteData(restaurantId);
-      setCats(data.categories as unknown as MenuCategoryRow[]);
+      const categories = (data.categories as unknown as MenuCategoryRow[]).filter(c => {
+        const name = c.name.toLowerCase();
+        const isBev = name.includes("bebida") || 
+                      name.includes("beverage") || 
+                      name.includes("drink") || 
+                      c.type === 'beverage';
+        return !isBev;
+      });
+      
+      setCats(categories);
       const allItems: MenuItemRow[] = [];
-      data.categories.forEach(cat => {
+      categories.forEach(cat => {
         if (cat.items) allItems.push(...(cat.items as MenuItemRow[]));
       });
       setItems(allItems);
@@ -83,9 +92,6 @@ export function MenuManager({ restaurantId }: Props) {
 
   return (
     <div className="space-y-12">
-      <BeverageManager restaurantId={restaurantId} />
-      
-      <div className="h-px w-full bg-white/5" />
       
       <div className="space-y-6">
         <div className="flex items-center justify-between">
