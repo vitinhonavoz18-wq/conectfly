@@ -1,6 +1,8 @@
 import type { CartLine, RestaurantRow } from "./types";
 import { safeInvoke } from "./api-utils";
 import { formatBRL } from "./format";
+import { FEATURES } from "../features";
+
 
 export interface FlycontrolOrderPayload {
   event: "order.created";
