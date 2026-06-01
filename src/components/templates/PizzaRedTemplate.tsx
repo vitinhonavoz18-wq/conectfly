@@ -27,6 +27,13 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
+  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
+  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+
+  return (
+    <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans">
       <SiteHeader 
         name={r.name} 
         logoUrl={r.logo_url} 
