@@ -20,6 +20,7 @@ interface Props {
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
   const { items, updateQty, removeLine, totalPrice, clear } = useCart();
+  const [step, setStep] = useState<"cart" | "checkout">("cart");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -38,6 +39,21 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const paymentRef = useRef<HTMLSelectElement>(null);
   const changeRef = useRef<HTMLInputElement>(null);
   const fieldsContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Reset step when closed
+  useEffect(() => {
+    if (!open) {
+      setTimeout(() => setStep("cart"), 500);
+    }
+  }, [open]);
+
+  // Scroll to top when changing steps
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
+  }, [step]);
 
   const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
   const deliveryFee = Number(selectedZone?.fee ?? 0);
