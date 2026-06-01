@@ -8,8 +8,6 @@ import { useCart } from "./CartContext";
     category: MenuCategoryRow & { items: MenuItemRow[] };
     restaurant?: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
-    beverages?: BeverageRow[];
-    beverageCatalogs?: BeverageCatalogRow[];
 
   }
 
@@ -110,9 +108,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       if (bordasCategory && bordasCategory.items.length > 0) {
         targetRef = bordasRef;
         message = "Agora escolha seu adicional ✨";
-      } else if ((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) {
-        targetRef = beveragesRef;
-        message = "Que tal algo para acompanhar? 🥤";
       } else {
 
         targetRef = summaryRef;
@@ -171,12 +166,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
      : null;
     const borderPrice = selectedBorder?.price ?? 0;
 
-    const beveragesPrice = Object.entries(selectedBeverages).reduce((sum, [id, qty]) => {
-      const bev = beverages?.find(b => b.id === id);
-      return sum + (Number(bev?.price ?? 0) * qty);
-    }, 0);
   
-    const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice + beveragesPrice;
+    const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice;
   const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
 
   const toggleFlavor = (id: string) => {
@@ -226,20 +217,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
        extras: specialExtras,
      }, 1);
 
-     // 2. Add Beverages
-     Object.entries(selectedBeverages).forEach(([id, qty]) => {
-       if (qty > 0) {
-         const bev = beverages?.find(b => b.id === id);
-         if (bev) {
-           addLine({
-             itemId: `bev-${bev.id}`,
-             name: bev.name,
-             description: bev.brand && bev.size ? `${bev.brand} - ${bev.size}` : bev.brand || bev.size || "",
-             unitPrice: Number(bev.price),
-           }, qty);
-         }
-       }
-     });
  
       setConfirm(`Adicionado ao carrinho!`);
       setSelectedFlavors([]);
@@ -453,51 +430,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             )}
           </div>
           
-          <div className="space-y-8">
-            {beverageCatalogs && beverageCatalogs.map(catalog => {
-              const catBevs = beverages?.filter(b => b.catalog_id === catalog.id) || [];
-              if (catBevs.length === 0) return null;
-              return (
-                <div key={catalog.id} className="space-y-4">
-                  <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">{catalog.name}</h5>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {catBevs.map((bev) => (
-                      <BeverageBuilderItem
-                        key={bev.id}
-                        bev={bev}
-                        qty={selectedBeverages[bev.id] || 0}
-                          onUpdate={(q: number) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
-
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-
-            {(() => {
-              const activeCatIds = beverageCatalogs?.map(c => c.id) || [];
-              const uncategorized = beverages?.filter(b => !b.catalog_id || !activeCatIds.includes(b.catalog_id)) || [];
-              if (uncategorized.length === 0) return null;
-              return (
-                <div className="space-y-4">
-                  {(beverageCatalogs?.length ?? 0) > 0 && (
-                    <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">Outras Bebidas</h5>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {uncategorized.map((bev) => (
-                      <BeverageBuilderItem
-                        key={bev.id}
-                        bev={bev}
-                        qty={selectedBeverages[bev.id] || 0}
-                        onUpdate={(q: number) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
         </div>
       )}
 
@@ -549,24 +481,6 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
                   </li>
                 )}
-                {Object.keys(selectedBeverages).some(id => selectedBeverages[id] > 0) && (
-                  <div className="pt-2">
-                    <span className="font-medium text-[hsl(var(--site-fg))] block mb-2">Bebidas adicionais:</span>
-                    <ul className="space-y-1">
-                      {Object.entries(selectedBeverages).map(([id, qty]) => {
-                        if (qty === 0) return null;
-                        const bev = beverages?.find(b => b.id === id);
-                        if (!bev) return null;
-                        return (
-                          <li key={id} className="flex justify-between text-sm italic">
-                            <span>{qty}x {bev.name}</span>
-                            <span className="font-bold">{formatBRL(Number(bev.price) * qty)}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </div>
-                )}
             </ul>
           </div>
         ) : (
@@ -602,19 +516,4 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-function BeverageBuilderItem({ bev, qty, onUpdate }: { bev: BeverageRow; qty: number; onUpdate: (q: number) => void }) {
-  return (
-    <div className={`p-4 rounded-3xl border transition-all flex items-center justify-between gap-4 ${qty > 0 ? 'border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)]' : 'border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))]'}`}>
-      <div className="min-w-0">
-        <p className="font-bold text-sm truncate">{bev.name}</p>
-        <p className="text-xs text-[hsl(var(--site-muted-fg))]">{formatBRL(bev.price)}</p>
-      </div>
-      <div className="flex items-center gap-2">
-        <button onClick={() => onUpdate(Math.max(0, qty - 1))} className="h-8 w-8 rounded-full border border-[hsl(var(--site-border))] flex items-center justify-center hover:bg-[hsl(var(--site-muted))]"><Minus className="h-3 w-3" /></button>
-        <span className="w-4 text-center text-sm font-bold">{qty}</span>
-        <button onClick={() => onUpdate(qty + 1)} className="h-8 w-8 rounded-full bg-[hsl(var(--site-primary))] text-white flex items-center justify-center hover:opacity-90"><Plus className="h-3 w-3" /></button>
-      </div>
-    </div>
-  );
-}
 
