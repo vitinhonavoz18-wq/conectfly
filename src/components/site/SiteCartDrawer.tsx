@@ -126,7 +126,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const siteSettings = restaurant?.site_settings as any;
     
     // Prioriza os campos de topo solicitados pelo usuário, mas mantém fallback para site_settings
-    const flowMode = restaurant?.order_flow_mode || siteSettings?.order_flow_mode || (restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url ? "fiqon" : "direct");
+    let flowMode = restaurant?.order_flow_mode || siteSettings?.order_flow_mode || (restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url ? "fiqon" : "direct");
+    
+    // Fallback se Fiqon estiver desativado nas features
+    if (!FEATURES.ENABLE_FIQON_AUTOMATION && flowMode === "fiqon") {
+      flowMode = "direct";
+    }
+
     const allowDoubleSend = restaurant?.allow_dual_send ?? !!siteSettings?.allow_double_send;
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
     const whatsappEnabled = restaurant?.continue_opening_whatsapp ?? (restaurant?.whatsapp_enabled !== false);
