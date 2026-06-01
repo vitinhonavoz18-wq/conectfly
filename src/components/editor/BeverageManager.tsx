@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Edit2, ImageIcon, Upload, FolderPlus, Save, X, Loader2, GripVertical, FileJson } from "lucide-react";
+import { Plus, Trash2, Edit2, ImageIcon, Upload, FolderPlus, Save, X, Loader2, GripVertical, FileJson, ShoppingBag } from "lucide-react";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
@@ -88,6 +89,7 @@ export function BeverageManager({ restaurantId }: Props) {
   };
 
   const updateCatalog = async (id: string, patch: Partial<BeverageCatalogRow>) => {
+
     try {
       const { error } = await supabase.from("beverage_catalogs").update(patch as any).eq("id", id);
       if (error) throw error;
@@ -115,6 +117,7 @@ export function BeverageManager({ restaurantId }: Props) {
   };
 
   const updateBeverage = async (id: string, patch: Partial<BeverageRow>) => {
+
     try {
       const { error } = await supabase.from("pizzeria_beverages").update(patch as any).eq("id", id);
       if (error) throw error;
@@ -186,13 +189,15 @@ export function BeverageManager({ restaurantId }: Props) {
             key={catalog.id}
             catalog={catalog}
             beverages={beverages.filter(b => b.catalog_id === catalog.id)}
-            onUpdateCatalog={(patch) => updateCatalog(catalog.id, patch)}
+            onUpdateCatalog={(patch: Partial<BeverageCatalogRow>) => updateCatalog(catalog.id, patch)}
             onDeleteCatalog={() => deleteCatalog(catalog.id)}
             onAddBeverage={() => addBeverage(catalog.id)}
             onUpdateBeverage={updateBeverage}
             onDeleteBeverage={deleteBeverage}
             restaurantId={restaurantId}
+            catalogs={catalogs}
           />
+
         ))}
 
         {uncategorized.length > 0 && (
@@ -207,7 +212,7 @@ export function BeverageManager({ restaurantId }: Props) {
                 <BeverageRowItem
                   key={b.id}
                   beverage={b}
-                  onUpdate={(patch) => updateBeverage(b.id, patch)}
+                  onUpdate={(patch: Partial<BeverageRow>) => updateBeverage(b.id, patch)}
                   onDelete={() => deleteBeverage(b.id)}
                   restaurantId={restaurantId}
                   catalogs={catalogs}
@@ -343,7 +348,14 @@ function CatalogSection({ catalog, beverages, onUpdateCatalog, onDeleteCatalog, 
   );
 }
 
-function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs }: any) {
+function BeverageRowItem({ beverage, onUpdate, onDelete, restaurantId, catalogs }: { 
+  beverage: BeverageRow; 
+  onUpdate: (patch: Partial<BeverageRow>) => void; 
+  onDelete: () => void; 
+  restaurantId: string; 
+  catalogs: BeverageCatalogRow[];
+}) {
+
   const [local, setLocal] = useState({ ...beverage });
 
   const handleImageUpload = async (file: File) => {
