@@ -305,281 +305,295 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between p-6 border-b border-[hsl(var(--site-border))]">
-            <div className="flex flex-col">
-              <h2 className="font-black text-2xl tracking-tighter uppercase text-[hsl(var(--site-fg))]">Minha Seleção</h2>
-              <span className="text-[10px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">Cozinha Gourmet</span>
+          <div className="flex items-center justify-between p-5 border-b border-[hsl(var(--site-border))]">
+            <div className="flex items-center gap-3">
+              {step === "checkout" && (
+                <button
+                  onClick={() => setStep("cart")}
+                  className="p-2 -ml-2 rounded-xl hover:bg-[hsl(var(--site-bg))] text-[hsl(var(--site-muted-fg))] transition-colors"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              )}
+              <div className="flex flex-col">
+                <h2 className="font-black text-xl tracking-tighter uppercase text-[hsl(var(--site-fg))]">
+                  {step === "cart" ? "Minha Seleção" : "Finalizar Pedido"}
+                </h2>
+                <span className="text-[9px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">
+                  {step === "cart" ? "Revise seus itens" : "Dados de Entrega"}
+                </span>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="p-3 rounded-2xl site-btn-secondary active:scale-90"
+              className="p-2.5 rounded-xl site-btn-secondary active:scale-90"
               aria-label="Fechar"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto overscroll-contain bg-[hsl(var(--site-bg))]">
-            <div className="p-5 space-y-4">
-           {items.length === 0 ? (
-             <div className="text-center py-16 flex flex-col items-center gap-4">
-                <ShoppingBag className="h-16 w-16 text-[hsl(var(--site-border))]" />
-                <p className="text-[hsl(var(--site-muted-fg))] font-medium">
-                  Seu carrinho está vazio.<br/>Adicione itens do cardápio.
-                </p>
-             </div>
-          ) : (
-            items.map((l) => (
-               <div
-                 key={`${l.itemId}-${l.sizeLabel ?? ""}`}
-                 className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-6 relative overflow-hidden group shadow-sm hover:shadow-md transition-shadow"
-               >
-                 <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.03)] to-transparent" />
-                <div className="flex justify-between gap-3">
-                   <div className="flex-1 relative z-10">
-                     <p className="font-black text-lg tracking-tight uppercase text-[hsl(var(--site-fg))] group-hover:text-[hsl(var(--site-primary))] transition-colors">
-                       {l.name}
-                       {l.sizeLabel ? <span className="text-xs text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.1)] px-2 py-0.5 rounded-md">({l.sizeLabel})</span> : ""}
-                     </p>
-                    {l.flavors && l.flavors.length > 0 ? (
-                      <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed font-medium">
-                        <strong className="text-[hsl(var(--site-fg))]">Sabores:</strong> {l.flavors.join(" + ")}
-                      </p>
-                    ) : l.description ? (
-                      <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed">
-                        {l.description}
-                      </p>
-                    ) : null}
+          <div 
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto overscroll-contain bg-[hsl(var(--site-bg))] scroll-smooth"
+          >
+            {step === "cart" ? (
+              <div className="p-4 space-y-3 animate-in fade-in slide-in-from-left-4 duration-300">
+                {items.length === 0 ? (
+                  <div className="text-center py-16 flex flex-col items-center gap-4">
+                    <ShoppingBag className="h-14 w-14 text-[hsl(var(--site-border))]" />
+                    <p className="text-[hsl(var(--site-muted-fg))] font-medium text-sm">
+                      Seu carrinho está vazio.<br/>Adicione itens do cardápio.
+                    </p>
                   </div>
-                   <button
-                     onClick={() => removeLine(l.itemId, l.sizeLabel)}
-                     className="p-2.5 text-[hsl(var(--site-muted-fg))] hover:text-destructive hover:bg-destructive/10 rounded-2xl transition-all relative z-10"
-                     aria-label="Remover"
-                   >
-                     <Trash2 className="h-5 w-5" />
-                   </button>
-                </div>
-                <div className="flex justify-between items-center mt-5">
-                   <div className="flex items-center gap-3 bg-[hsl(var(--site-bg))] p-1.5 rounded-2xl border border-[hsl(var(--site-border))]">
-                      <button
-                        onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
-                        className="h-9 w-9 site-btn-secondary !rounded-xl active:scale-90"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="w-8 text-center font-black text-lg text-[hsl(var(--site-fg))]">{l.quantity}</span>
-                      <button
-                        onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
-                        className="h-9 w-9 site-btn-primary !rounded-xl active:scale-90"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
+                ) : (
+                  items.map((l) => (
+                    <div
+                      key={`${l.itemId}-${l.sizeLabel ?? ""}`}
+                      className="rounded-[1.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-4 relative overflow-hidden group shadow-sm transition-all"
+                    >
+                      <div className="flex justify-between gap-3">
+                        <div className="flex-1 relative z-10">
+                          <p className="font-black text-base tracking-tight uppercase text-[hsl(var(--site-fg))]">
+                            {l.name}
+                            {l.sizeLabel ? <span className="text-[10px] text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.1)] px-1.5 py-0.5 rounded">({l.sizeLabel})</span> : ""}
+                          </p>
+                          {l.flavors && l.flavors.length > 0 ? (
+                            <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1 leading-relaxed font-medium">
+                              Sabores: {l.flavors.join(" + ")}
+                            </p>
+                          ) : l.description ? (
+                            <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1 leading-relaxed line-clamp-2">
+                              {l.description}
+                            </p>
+                          ) : null}
+                        </div>
+                        <button
+                          onClick={() => removeLine(l.itemId, l.sizeLabel)}
+                          className="p-2 text-[hsl(var(--site-muted-fg))] hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="flex justify-between items-center mt-3">
+                        <div className="flex items-center gap-2 bg-[hsl(var(--site-bg))] p-1 rounded-xl border border-[hsl(var(--site-border))]">
+                          <button
+                            onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity - 1)}
+                            className="h-7 w-7 site-btn-secondary !rounded-lg active:scale-90 flex items-center justify-center"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="w-6 text-center font-black text-base text-[hsl(var(--site-fg))]">{l.quantity}</span>
+                          <button
+                            onClick={() => updateQty(l.itemId, l.sizeLabel, l.quantity + 1)}
+                            className="h-7 w-7 site-btn-primary !rounded-lg active:scale-90 flex items-center justify-center"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <span className="font-black text-xl text-[hsl(var(--site-fg))] tracking-tighter">
+                          {formatBRL(l.unitPrice * l.quantity)}
+                        </span>
+                      </div>
                     </div>
-                   <span className="font-black text-2xl text-[hsl(var(--site-fg))] tracking-tighter">
-                     {formatBRL(l.unitPrice * l.quantity)}
-                   </span>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="p-4 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
+                {/* Bloco 1 — Dados do cliente */}
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                    Seus Dados
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      ref={nameRef}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Nome completo"
+                      className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
+                        validationAttempted && !name.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                      }`}
+                    />
+                    <input
+                      ref={phoneRef}
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
+                      placeholder="WhatsApp"
+                      inputMode="numeric"
+                      className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
+                        validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10) ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                      }`}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-          </div>
 
-          <div className="p-6 space-y-8 bg-[hsl(var(--site-card))]" ref={fieldsContainerRef}>
-            {validationAttempted && error && (
-              <div className="bg-[hsl(var(--site-danger)/0.1)] border-2 border-[hsl(var(--site-danger)/0.2)] rounded-3xl p-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <p className="text-base font-extrabold text-[hsl(var(--site-danger))] text-center leading-tight">
-                  Quase lá! Preencha seus dados para finalizar o pedido. 🍕
-                </p>
-              </div>
-            )}
- 
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
-                  <span className="h-1 w-8 bg-[hsl(var(--site-secondary))] rounded-full"></span>
-                  Seus Dados
-                </h3>
-                <div className="grid gap-3">
-                  <input
-                    ref={nameRef}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Seu nome completo"
-                    className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
-                      validationAttempted && !name.trim() 
-                        ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
-                        : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
-                    }`}
-                  />
-                  <input
-                    ref={phoneRef}
-                    value={phone}
-                    onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
-                    placeholder="(00) 00000-0000"
-                    inputMode="numeric"
-                    className={`w-full px-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
-                      validationAttempted && (!phone.trim() || phone.replace(/\D/g, "").length < 10)
-                        ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
-                        : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
-                  <span className="h-1 w-8 bg-[hsl(var(--site-secondary))] rounded-full"></span>
-                  Entrega
-                </h3>
-                <div className="grid gap-3">
-                  {hasZones && (
-                    <div className="relative group">
-                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--site-primary))]" />
-                      <select
-                        ref={zoneRef}
-                        value={zoneId}
-                        onChange={(e) => setZoneId(e.target.value)}
-                        className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
-                          validationAttempted && !selectedZone
-                            ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
-                        : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
-                        }`}
-                      >
-                        <option value="">Local de Entrega *</option>
-                        {deliveryZones.map((z) => (
-                          <option key={z.id} value={z.id}>
-                            {z.neighborhood} • {formatBRL(Number(z.fee) || 0)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-5 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
+                {/* Bloco 2 — Entrega */}
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                    Entrega
+                  </h3>
+                  <div className="grid gap-2">
+                    {hasZones && (
+                      <div className="relative group">
+                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-primary))]" />
+                        <select
+                          ref={zoneRef}
+                          value={zoneId}
+                          onChange={(e) => setZoneId(e.target.value)}
+                          className={`w-full pl-10 pr-8 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold text-xs uppercase tracking-wider appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
+                            validationAttempted && !selectedZone ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                          }`}
+                        >
+                          <option value="">Selecione o Bairro *</option>
+                          {deliveryZones.map((z) => (
+                            <option key={z.id} value={z.id}>
+                              {z.neighborhood} (+{formatBRL(Number(z.fee) || 0)})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <textarea
                       ref={addressRef}
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Endereço completo (Rua, nº, complemento)"
-                      rows={3}
-                      className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
-                        validationAttempted && !address.trim()
-                          ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
-                          : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
+                      placeholder="Endereço (Rua, nº, complemento/referência)"
+                      rows={2}
+                      className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
+                        validationAttempted && !address.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
                       }`}
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <h3 className="text-sm font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
-                  <span className="h-1 w-8 bg-[hsl(var(--site-secondary))] rounded-full"></span>
-                  Pagamento e Obs.
-                </h3>
-                <div className="grid gap-3">
-                  <div className="relative group">
-                    <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
-                    <select
-                      ref={paymentRef}
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className={`w-full pl-12 pr-10 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-black text-sm uppercase tracking-widest appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
-                        validationAttempted && !paymentMethod
-                          ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
-                          : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
-                      }`}
-                    >
-                      <option value="PIX">PIX</option>
-                      <option value="Cartão de Crédito">Cartão de Crédito</option>
-                      <option value="Cartão de Débito">Cartão de Débito</option>
-                      <option value="Dinheiro">Dinheiro</option>
-                    </select>
-                  </div>
-
-                  {paymentMethod === "Dinheiro" && (
-                    <div className="relative">
-                      <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
-                      <input
-                        ref={changeRef}
-                        value={changeFor}
-                        onChange={(e) => setChangeFor(e.target.value)}
-                        placeholder="Troco para quanto?"
-                        inputMode="numeric"
-                        className={`w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 transition-all font-bold focus:outline-none text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
-                          validationAttempted && !changeFor.trim()
-                            ? "border-[hsl(var(--site-danger)/0.4)] bg-[hsl(var(--site-danger)/0.05)]" 
-                            : "border-[hsl(var(--site-border))] focus:border-[hsl(var(--site-primary))/0.4]"
+                {/* Bloco 3 — Pagamento */}
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                    Pagamento
+                  </h3>
+                  <div className="grid gap-2">
+                    <div className="relative group">
+                      <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                      <select
+                        ref={paymentRef}
+                        value={paymentMethod}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className={`w-full pl-10 pr-8 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold text-xs uppercase tracking-wider appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
+                          validationAttempted && !paymentMethod ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
                         }`}
+                      >
+                        <option value="PIX">PIX (Mais rápido)</option>
+                        <option value="Cartão de Crédito">Cartão de Crédito</option>
+                        <option value="Cartão de Débito">Cartão de Débito</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                      </select>
+                    </div>
+
+                    {paymentMethod === "Dinheiro" && (
+                      <div className="relative animate-in zoom-in-95 duration-200">
+                        <Banknote className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                        <input
+                          ref={changeRef}
+                          value={changeFor}
+                          onChange={(e) => setChangeFor(e.target.value)}
+                          placeholder="Troco para quanto?"
+                          inputMode="numeric"
+                          className={`w-full pl-10 pr-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] ${
+                            validationAttempted && !changeFor.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                          }`}
+                        />
+                      </div>
+                    )}
+
+                    <div className="relative">
+                      <MessageSquare className="absolute left-3.5 top-4 h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Observações (opcional)"
+                        rows={1}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none focus:border-[hsl(var(--site-primary)/0.5)] text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none"
                       />
                     </div>
-                  )}
-
-                  <div className="relative">
-                    <MessageSquare className="absolute left-4 top-5 h-5 w-5 text-[hsl(var(--site-muted-fg))]" />
-                    <textarea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Alguma observação importante?"
-                      rows={2}
-                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-[hsl(var(--site-bg))] border-2 border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none focus:border-[hsl(var(--site-primary))/0.4] text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none"
-                    />
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {error && (
-              <p className="text-sm font-bold text-[hsl(var(--site-danger))] bg-[hsl(var(--site-danger)/0.1)] border-2 border-[hsl(var(--site-danger)/0.2)] rounded-2xl p-4 text-center">
-                {error}
+                {error && (
+                  <div className="p-3 bg-[hsl(var(--site-danger)/0.1)] border border-[hsl(var(--site-danger)/0.2)] rounded-xl animate-in shake duration-300">
+                    <p className="text-[11px] font-black text-[hsl(var(--site-danger))] text-center uppercase tracking-wider">
+                      {error}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-end px-1">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
+                    {step === "cart" ? "Subtotal" : "Total a Pagar"}
+                  </span>
+                  <span className="text-3xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
+                    {formatBRL(step === "cart" ? totalPrice : grandTotal)}
+                  </span>
+                </div>
+                {step === "cart" && hasZones && (
+                  <div className="text-right flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Logística</span>
+                    <span className="text-sm font-black text-[hsl(var(--site-fg))]">sob consulta</span>
+                  </div>
+                )}
+                {step === "checkout" && hasZones && selectedZone && (
+                  <div className="text-right flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Frete ({selectedZone.neighborhood})</span>
+                    <span className="text-sm font-black text-[hsl(var(--site-fg))]">{formatBRL(deliveryFee)}</span>
+                  </div>
+                )}
+              </div>
+              
+              <button
+                onClick={step === "cart" ? goToCheckout : handleFinish}
+                disabled={sending || (step === "cart" && items.length === 0)}
+                className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 group uppercase tracking-widest font-black text-sm transition-all active:scale-95 ${
+                  step === "cart" 
+                    ? "site-btn-primary" 
+                    : "site-btn-success"
+                } ${sending || (step === "cart" && items.length === 0) ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {sending ? (
+                  <span className="animate-pulse">PROCESSANDO...</span>
+                ) : (
+                  <>
+                    <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
+                    {step === "cart" ? (
+                      <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    ) : (
+                      <ShoppingBag className="h-5 w-5" />
+                    )}
+                  </>
+                )}
+              </button>
+              
+              <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium px-4">
+                {step === "cart" 
+                  ? "Itens selecionados serão revisados no próximo passo."
+                  : (flycontrolOn && whatsappOn
+                    ? `Enviando para o painel e WhatsApp do ${restaurantName}`
+                    : flycontrolOn
+                      ? `Enviando para o painel do ${restaurantName}`
+                      : `Enviando para o WhatsApp do ${restaurantName}`)}
               </p>
-            )}
-          </div>
-        </div>
-
-        <div className="p-8 border-t border-[hsl(var(--site-border))] space-y-5 bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(2rem+env(safe-area-inset-bottom))]">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center text-xs font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
-              <span>Subtotal</span>
-              <span className="text-[hsl(var(--site-fg))]">{formatBRL(totalPrice)}</span>
-            </div>
-            {hasZones && (
-              <div className="flex justify-between items-center text-xs font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
-                <span>Logística {selectedZone ? <span className="text-[hsl(var(--site-primary))] italic ml-1">({selectedZone.neighborhood})</span> : ""}</span>
-                <span className="text-[hsl(var(--site-fg))]">{selectedZone ? formatBRL(deliveryFee) : "—"}</span>
-              </div>
-            )}
-            <div className="flex justify-between items-end pt-3 border-t border-dashed border-[hsl(var(--site-border))]">
-              <span className="font-black text-sm uppercase tracking-tighter text-[hsl(var(--site-fg))]">Total a Pagar</span>
-              <span className="text-4xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
-                {formatBRL(grandTotal)}
-              </span>
             </div>
           </div>
-          
-          <button
-            onClick={handleFinish}
-            disabled={sending}
-            className="w-full py-6 site-btn-success text-xl flex items-center justify-center gap-4 group uppercase tracking-widest"
-          >
-            {sending ? (
-              <span className="animate-pulse">PROCESSANDO...</span>
-            ) : (
-              <>
-                <span>Finalizar Pedido</span>
-                <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform" />
-              </>
-            )}
-          </button>
-          
-          <p className="text-[11px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium">
-            {flycontrolOn && whatsappOn
-              ? `Pedido enviado para o painel e WhatsApp do ${restaurantName}`
-              : flycontrolOn
-                ? `Pedido enviado direto para o painel do ${restaurantName}`
-                : `O pedido será enviado para o WhatsApp do ${restaurantName}`}
-          </p>
-        </div>
+        </aside>
       </aside>
     </>
   );
