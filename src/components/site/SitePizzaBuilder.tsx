@@ -28,12 +28,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       disabled={!size || disabled}
       className={`relative text-left rounded-3xl border p-5 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
         checked
-          ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+          ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
           : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
       } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.02]"}`}
     >
       {(restaurant?.show_item_images ?? true) && it.image_url && (
-        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-2xl border border-[#EFE7E2] bg-[#FDF8F5]">
+        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-2xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
           <img
             src={it.image_url}
             alt={it.name}
@@ -50,24 +50,24 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       <div
         className={`mt-1 h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
           checked
-            ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-white shadow-[0_4px_12px_rgba(229,9,20,0.3)] scale-110"
-            : "border-[#EFE7E2] bg-white group-hover:border-[hsl(var(--site-primary)/0.5)]"
+            ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-[0_4px_12px_hsl(var(--site-primary)/0.3)] scale-110"
+            : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] group-hover:border-[hsl(var(--site-primary)/0.5)]"
         }`}
       >
         {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-bold text-base leading-tight text-[#111]">{it.name}</p>
+          <p className="font-bold text-base leading-tight text-[hsl(var(--site-fg))]">{it.name}</p>
           {it.is_special && (
-            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[#E50914] text-white shadow-sm">
+            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-sm">
               <Sparkles className="h-3 w-3" /> Especial
               {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
             </span>
           )}
         </div>
         {it.description && (
-          <p className="text-sm text-[#555] mt-1.5 leading-relaxed">
+          <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed">
             {it.description}
           </p>
         )}
@@ -275,20 +275,20 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                  onClick={() => handleSelectSize(i)}
                  className={`relative rounded-3xl border-2 p-5 text-left transition-all duration-300 transform ${
                    active
-                     ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_12px_30px_rgba(229,9,20,0.12)] scale-[1.05] z-10"
+                     ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_12px_30px_hsl(var(--site-primary)/0.12)] scale-[1.05] z-10"
                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[hsl(var(--site-muted))]"
                  }`}
                >
                 {active && (
-                  <span className="absolute top-3 right-3 h-6 w-6 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center shadow-lg">
+                  <span className="absolute top-3 right-3 h-6 w-6 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center shadow-lg">
                     <Check className="h-3.5 w-3.5 stroke-[3]" />
                   </span>
                 )}
-                <p className={`font-extrabold text-lg leading-tight ${active ? "text-[hsl(var(--site-primary))]" : "text-[#111]"}`}>{s.label}</p>
+                <p className={`font-extrabold text-lg leading-tight ${active ? "text-[hsl(var(--site-primary))]" : "text-[hsl(var(--site-fg))]"}`}>{s.label}</p>
                 <p className="text-[hsl(var(--site-secondary))] font-black text-xl mt-1.5">
                   {formatBRL(s.price)}
                 </p>
-                <p className="text-xs font-medium text-[#555] mt-1">
+                <p className="text-xs font-medium text-[hsl(var(--site-muted-fg))] mt-1">
                   {s.slices ? `${s.slices} fatias · ` : ""}
                   até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}
                 </p>
@@ -296,8 +296,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             );
           })}
         </div>
-        <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[#D9A441/30] bg-[#FFF9F6] text-[#D9A441] p-4 font-medium shadow-sm">
-          <Info className="h-5 w-5 shrink-0 text-[#D9A441]" />
+        <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[hsl(var(--site-primary)/0.3)] bg-[hsl(var(--site-primary)/0.05)] text-[hsl(var(--site-primary))] p-4 font-medium shadow-sm">
+          <Info className="h-5 w-5 shrink-0 text-[hsl(var(--site-primary))]" />
           <span>
             Ao selecionar <strong className="font-extrabold">itens especiais</strong>, o valor final poderá ser
             alterado proporcionalmente.
@@ -308,16 +308,16 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       {/* Step 2 — Flavors */}
       <div>
         <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <h4 className="text-xl font-extrabold text-[#111]">2. Escolha os itens</h4>
+          <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">2. Escolha os itens</h4>
           {size && (
-            <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-white border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
+            <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-[hsl(var(--site-card))] border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
               {selectedFlavors.length}/{maxFlavors} selecionados
               {remaining > 0 && ` · ${remaining} restante${remaining > 1 ? "s" : ""}`}
             </span>
           )}
         </div>
         {category.items.length === 0 ? (
-          <p className="text-sm text-[#555]">
+          <p className="text-sm text-[hsl(var(--site-muted-fg))]">
             Nenhum sabor cadastrado ainda.
           </p>
         ) : (
@@ -340,25 +340,25 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             {/* Special Flavors Section */}
             {specialFlavors.length > 0 && (
               <div className="space-y-8" id="sabores-especiais">
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-red p-10 shadow-[0_20px_50px_rgba(229,9,20,0.3)] border border-white/10">
+                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[hsl(var(--site-primary))] to-[hsl(var(--site-primary)/0.7)] p-10 shadow-[0_20px_50px_hsl(var(--site-primary)/0.3)] border border-white/10">
                   <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Sparkles className="h-40 w-40 text-white" />
+                    <Sparkles className="h-40 w-40 text-[hsl(var(--site-primary-fg))]" />
                   </div>
                   <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <span className="flex items-center justify-center h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-md">
-                          <Flame className="h-6 w-6 text-white" />
+                          <Flame className="h-6 w-6 text-[hsl(var(--site-primary-fg))]" />
                         </span>
-                        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
+                        <h3 className="text-3xl sm:text-4xl font-black text-[hsl(var(--site-primary-fg))] tracking-tighter uppercase italic">
                           Destaques Especiais
                         </h3>
                       </div>
-                      <p className="text-white/90 font-medium max-w-lg text-lg">
+                      <p className="text-[hsl(var(--site-primary-fg))/90] font-medium max-w-lg text-lg">
                         Experimente nossas opções premium e itens exclusivos da casa.
                       </p>
                     </div>
-                    <span className="px-6 py-3 rounded-2xl bg-white text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
+                    <span className="px-6 py-3 rounded-2xl bg-[hsl(var(--site-card))] text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
                       Seleção Gourmet
                     </span>
                   </div>
@@ -405,11 +405,11 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 }`}
               >
                 {selectedBorderId === null && (
-                  <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-white inline-flex items-center justify-center">
+                  <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
                     <Check className="h-3 w-3" />
                   </span>
                 )}
-                <p className="font-extrabold text-[#111] leading-tight">Sem Borda</p>
+                <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">Sem Borda</p>
                 <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
                   Grátis
                 </p>
