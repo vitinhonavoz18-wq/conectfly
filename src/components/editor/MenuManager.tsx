@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 import { BeverageManager } from "./BeverageManager";
-import { CatalogSettings } from "./CatalogSettings";
+import { adminFetchSiteData } from "@/lib/site/queries";
+
 
 import { MenuImport } from "./MenuImport";
 import { adminFetchSiteData, updateRestaurant } from "@/lib/site/queries";
@@ -261,8 +262,9 @@ export function MenuManager({ restaurantId }: Props) {
               </div>
             )}
             <div className="px-4 pb-4">
-              <CatalogSettings category={c} onUpdate={(p: Partial<MenuCategoryRow>) => updateCategory(c.id, p)} />
+              <CatalogSettingsLocal category={c} onUpdate={(p: Partial<MenuCategoryRow>) => updateCategory(c.id, p)} />
             </div>
+
 
             {isOpen && (
               <div className="border-t border-border p-3 space-y-3">
