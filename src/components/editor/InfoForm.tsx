@@ -24,6 +24,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [testDebug, setTestDebug] = useState<any>(null);
   const [showApiKey, setShowApiKey] = useState(false);
 
+  const isFiqonMode = FEATURES.ENABLE_FIQON_AUTOMATION && 
+    ((r.order_flow_mode || (r.fiqon_webhook_url || r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon");
+
+
     useEffect(() => {
       if (r.id) {
         supabase
