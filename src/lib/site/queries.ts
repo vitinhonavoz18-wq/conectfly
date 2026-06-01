@@ -61,7 +61,7 @@ const debugLog = (...args: any[]) => {
  ): Promise<SiteData> {
   debugLog(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
    
-   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, sizesRes] = await Promise.all([
+   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, catalogsRes, sizesRes] = await Promise.all([
      supabase
        .from("menu_categories")
        .select("*")
@@ -98,6 +98,13 @@ const debugLog = (...args: any[]) => {
       .eq("is_active", true)
        .order("sort_order"),
      supabase
+       .from("beverage_catalogs")
+       .select("*")
+       .eq("restaurant_id", restaurant.id)
+       .eq("active", true)
+       .order("sort_order"),
+     supabase
+
        .from("pizzeria_pizza_sizes")
        .select("*")
        .eq("pizzeria_id", restaurant.id)
@@ -124,14 +131,17 @@ const debugLog = (...args: any[]) => {
   const catsData = catsRes.data ?? [];
   const itemsData = itemsRes.data ?? [];
   const beveragesData = beveragesRes.data ?? [];
+  const catalogsData = catalogsRes.data ?? [];
 
   debugLog(`[fetchSiteByRestaurant] 📊 RESUMO PARA "${restaurant.slug}":`, {
     restaurant_id: restaurant.id,
     categorias: (catsRes.data ?? []).length,
     itens_sabores: (itemsRes.data ?? []).length,
     bebidas: (beveragesRes.data ?? []).length,
+    catalogos_bebidas: catalogsData.length,
     tamanhos_pizza: sizesRes.data?.length || 0,
   });
+
 
   const cats = catsData as unknown as MenuCategoryRow[];
   const items = itemsData as unknown as MenuItemRow[];
@@ -139,6 +149,8 @@ const debugLog = (...args: any[]) => {
   const combos = (combosRes.data ?? []) as unknown as ComboRow[];
   const zones = (zonesRes.data ?? []) as unknown as DeliveryZoneRow[];
   const beverages = beveragesData as unknown as BeverageRow[];
+  const beverageCatalogs = catalogsData as unknown as BeverageCatalogRow[];
+
   
   const pizzaSizesFromTable = (sizesRes?.data ?? []).map(s => ({
     id: s.id,
@@ -170,8 +182,10 @@ const debugLog = (...args: any[]) => {
     })),
     deliveryZones: zones,
     beverages,
+    beverageCatalogs,
     pizzaSizes: pizzaSizesFromTable,
   };
+
 }
 
 export async function listRestaurants(): Promise<RestaurantRow[]> {
