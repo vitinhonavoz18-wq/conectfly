@@ -9,7 +9,9 @@ import type {
   RestaurantRow,
   SiteData,
   BeverageRow,
+  BeverageCatalogRow,
   PizzaSize,
+
 } from "./types";
 
 // Função para gerar logs apenas em desenvolvimento
