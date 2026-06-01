@@ -16,8 +16,11 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   
   const isBeverage = (c: any) => {
     const name = c.name.toLowerCase();
-    return name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+    const hasNewCatalogs = (data.beverageCatalogs?.length ?? 0) > 0;
+    const isBev = name === "bebidas" || name === "bebida" || name === "beverages" || name === "drinks" || name === "bebibas";
+    return isBev && !hasNewCatalogs;
   };
+
   
   const isBordas = (c: any) => {
     const name = c.name.toLowerCase();
