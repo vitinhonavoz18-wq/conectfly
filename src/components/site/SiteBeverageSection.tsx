@@ -1,14 +1,16 @@
 import { Minus, Plus, ShoppingBag, Info } from "lucide-react";
-import type { BeverageRow, RestaurantRow } from "@/lib/site/types";
+import type { BeverageRow, RestaurantRow, BeverageCatalogRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
 interface Props {
   beverages: BeverageRow[];
+  catalogs?: BeverageCatalogRow[];
   restaurant: RestaurantRow;
 }
 
-export function SiteBeverageSection({ beverages, restaurant }: Props) {
+export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) {
+
   const { items, updateQty, addLine } = useCart();
 
   if (!beverages || beverages.length === 0) return null;

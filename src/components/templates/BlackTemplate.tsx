@@ -39,7 +39,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
     (beveragesVisible && data.beverages && data.beverages.length > 0) && (
       <div className="py-12 px-4 border-t border-[hsl(var(--site-border))]">
         <div className="max-w-6xl mx-auto">
-          <SiteBeverageSection beverages={data.beverages} restaurant={r} />
+          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
         </div>
       </div>
     )
