@@ -5,7 +5,9 @@ import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
- import { toast } from "sonner";
+import { toast } from "sonner";
+import { FEATURES } from "@/lib/features";
+
 
 interface Props {
   open: boolean;
