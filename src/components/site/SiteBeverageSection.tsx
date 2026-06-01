@@ -50,17 +50,17 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
   return (
     <div id="bebidas" className="py-16 site-stagger">
       <div className="text-center mb-12">
-        <span className="inline-block px-4 py-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-primary/30">
+        <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.2)] text-[hsl(var(--site-primary))] text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.3)]">
           Refresque sua experiência
         </span>
         <div className="flex items-center justify-center gap-4 mb-4">
-          <div className="h-1px w-12 bg-primary/30 hidden sm:block" />
+          <div className="h-1px w-12 bg-[hsl(var(--site-primary)/0.3)] hidden sm:block" />
           <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase">
             Bebidas
           </h2>
-          <div className="h-1px w-12 bg-primary/30 hidden sm:block" />
+          <div className="h-1px w-12 bg-[hsl(var(--site-primary)/0.3)] hidden sm:block" />
         </div>
-        <p className="text-muted-foreground mt-2 max-w-xl mx-auto italic">
+        <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic">
           Acompanhamento perfeito para a sua pizza artesanal.
         </p>
       </div>
@@ -72,7 +72,7 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
             <div 
               key={bev.id} 
               className={`rounded-[2rem] border flex flex-col transition-all duration-500 backdrop-blur-md relative overflow-hidden group ${
-                qty > 0 ? 'border-primary bg-primary/5 shadow-glow' : 'border-white/5 bg-white/5 hover:border-white/20 shadow-2xl'
+                qty > 0 ? 'border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-glow' : 'border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.2)] shadow-2xl'
               }`}
             >
               {bev.image_url && (
@@ -89,32 +89,32 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
               <div className="p-6 flex flex-col flex-1 gap-4">
                 {!bev.image_url && (
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <ShoppingBag className="h-16 w-16 text-primary" />
+                    <ShoppingBag className="h-16 w-16 text-[hsl(var(--site-primary))]" />
                   </div>
                 )}
 
               <div className="flex justify-between items-start gap-4 relative z-10">
                 <div className="min-w-0">
-                  <h3 className="font-black text-xl tracking-tighter uppercase leading-tight truncate">
+                  <h3 className="font-black text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-fg))]">
                     {bev.name}
                   </h3>
-                  <p className="text-xs text-muted-foreground font-bold mt-1 uppercase tracking-widest opacity-80">
+                  <p className="text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-1 uppercase tracking-widest opacity-80">
                     {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
                   </p>
                   {bev.description && (
-                    <p className="text-[10px] text-muted-foreground mt-2 line-clamp-2 italic">
+                    <p className="text-[10px] text-[hsl(var(--site-muted-fg))] mt-2 line-clamp-2 italic">
                       {bev.description}
                     </p>
                   )}
                 </div>
                 <div className="text-right">
-                  <span className="text-xl font-black text-primary block tracking-tighter">
+                  <span className="text-xl font-black text-[hsl(var(--site-primary))] block tracking-tighter">
                     {formatBRL(Number(bev.price))}
                   </span>
                 </div>
               </div>
 
-              <div className="mt-auto flex items-center justify-between gap-4 pt-4 border-t border-white/5 relative z-10">
+              <div className="mt-auto flex items-center justify-between gap-4 pt-4 border-t border-[hsl(var(--site-border))] relative z-10">
                 <div className="flex items-center gap-3 bg-[hsl(var(--site-card))] p-1 rounded-2xl border border-[hsl(var(--site-border))]">
                    <button 
                      onClick={(e) => handleRemove(bev, e)}
@@ -134,8 +134,8 @@ export function SiteBeverageSection({ beverages, restaurant }: Props) {
                 
                 {qty > 0 && (
                   <div className="text-right animate-in fade-in slide-in-from-right-2">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Subtotal</p>
-                    <p className="font-black text-white">{formatBRL(qty * Number(bev.price))}</p>
+                    <p className="text-[10px] uppercase font-bold text-[hsl(var(--site-muted-fg))]">Subtotal</p>
+                    <p className="font-black text-[hsl(var(--site-fg))]">{formatBRL(qty * Number(bev.price))}</p>
                   </div>
                 )}
                 </div>
