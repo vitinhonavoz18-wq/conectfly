@@ -594,7 +594,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </div>
           </div>
         </aside>
-      </aside>
     </>
   );
 }
