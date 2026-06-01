@@ -89,7 +89,7 @@ export function SiteHero({
               />
            </div>
          ) : (
-          <h1 className="text-6xl sm:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-sm">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-lg">
              {name}
            </h1>
          )}

@@ -79,7 +79,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
 
             <div className="flex justify-between items-start gap-4 relative z-10">
               <div className="min-w-0">
-                <h3 className="font-black text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-fg))]">
+                <h3 className="font-black text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-primary))]">
                   {bev.name}
                 </h3>
                 <p className="text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-1 uppercase tracking-widest opacity-80">
@@ -92,7 +92,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
                 )}
               </div>
               <div className="text-right">
-                <span className="text-xl font-black text-[hsl(var(--site-primary))] block tracking-tighter">
+                <span className="text-xl font-black text-[hsl(var(--site-fg))] block tracking-tighter">
                   {formatBRL(Number(bev.price))}
                 </span>
               </div>
@@ -119,7 +119,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
               {qty > 0 && (
                 <div className="text-right animate-in fade-in slide-in-from-right-2">
                   <p className="text-[10px] uppercase font-bold text-[hsl(var(--site-muted-fg))]">Subtotal</p>
-                  <p className="font-black text-[hsl(var(--site-fg))]">{formatBRL(qty * Number(bev.price))}</p>
+                  <p className="font-black text-[hsl(var(--site-fg))] text-sm">{formatBRL(qty * Number(bev.price))}</p>
                 </div>
               )}
               </div>
@@ -134,19 +134,19 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
   const uncategorizedBeverages = beverages.filter(b => !b.catalog_id || !activeCatalogs.some(c => c.id === b.catalog_id));
 
   return (
-    <div id="bebidas" className="py-16 site-stagger">
+    <div id="bebidas" className="py-20 site-stagger bg-[hsl(var(--site-muted))] rounded-[3rem] px-4 mx-2">
       <div className="text-center mb-12">
         <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.2)] text-[hsl(var(--site-primary))] text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.3)]">
           Refresque sua experiência
         </span>
         <div className="flex items-center justify-center gap-4 mb-4">
           <div className="h-1px w-12 bg-[hsl(var(--site-primary)/0.3)] hidden sm:block" />
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase">
+          <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase text-[hsl(var(--site-fg))]">
             Bebidas
           </h2>
           <div className="h-1px w-12 bg-[hsl(var(--site-primary)/0.3)] hidden sm:block" />
         </div>
-        <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic">
+        <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic text-sm">
           Acompanhamento perfeito para a sua pizza artesanal.
         </p>
       </div>
@@ -154,16 +154,16 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
       <div className="space-y-16">
         {activeCatalogs.map(catalog => (
           <div key={catalog.id} className="space-y-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-6 border-l-4 border-[hsl(var(--site-primary))] pl-6 py-2">
               {catalog.image_url && (
-                <div className="w-full sm:w-48 h-32 rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] shrink-0">
+                <div className="w-full sm:w-48 h-32 rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] shrink-0 shadow-lg">
                   <img src={catalog.image_url} alt={catalog.name} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="text-center sm:text-left">
-                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">{catalog.name}</h3>
+                <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">{catalog.name}</h3>
                 {catalog.description && (
-                  <p className="text-[hsl(var(--site-muted-fg))] mt-1 italic">{catalog.description}</p>
+                  <p className="text-[hsl(var(--site-muted-fg))] mt-1 italic text-sm">{catalog.description}</p>
                 )}
               </div>
             </div>
@@ -174,7 +174,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
         {uncategorizedBeverages.length > 0 && (
           <div className="space-y-8">
             {activeCatalogs.length > 0 && (
-              <h3 className="text-2xl font-black uppercase tracking-tight border-b border-[hsl(var(--site-border))] pb-4">Outras Bebidas</h3>
+              <h3 className="text-2xl font-black uppercase tracking-tight border-b border-[hsl(var(--site-border))] pb-4 text-[hsl(var(--site-fg))]">Outras Bebidas</h3>
             )}
             {renderBeverageList(uncategorizedBeverages)}
           </div>

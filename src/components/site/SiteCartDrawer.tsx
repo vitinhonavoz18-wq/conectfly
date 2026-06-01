@@ -305,31 +305,31 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
-          <div className="flex items-center justify-between p-5 border-b border-[hsl(var(--site-border))]">
+          <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--site-border))]">
             <div className="flex items-center gap-3">
               {step === "checkout" && (
                 <button
                   onClick={() => setStep("cart")}
                   className="p-2 -ml-2 rounded-xl hover:bg-[hsl(var(--site-bg))] text-[hsl(var(--site-muted-fg))] transition-colors"
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  <ArrowLeft className="h-4 w-4" />
                 </button>
               )}
               <div className="flex flex-col">
-                <h2 className="font-black text-xl tracking-tighter uppercase text-[hsl(var(--site-fg))]">
+                <h2 className="font-black text-lg tracking-tighter uppercase text-[hsl(var(--site-fg))]">
                   {step === "cart" ? "Minha Seleção" : "Finalizar Pedido"}
                 </h2>
-                <span className="text-[9px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">
+                <span className="text-[8px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">
                   {step === "cart" ? "Revise seus itens" : "Dados de Entrega"}
                 </span>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2.5 rounded-xl site-btn-secondary active:scale-90"
+              className="p-2 rounded-xl site-btn-secondary active:scale-90"
               aria-label="Fechar"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
@@ -354,9 +354,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     >
                       <div className="flex justify-between gap-3">
                         <div className="flex-1 relative z-10">
-                          <p className="font-black text-base tracking-tight uppercase text-[hsl(var(--site-fg))]">
+                          <p className="font-black text-sm tracking-tight uppercase text-[hsl(var(--site-fg))]">
                             {l.name}
-                            {l.sizeLabel ? <span className="text-[10px] text-[hsl(var(--site-primary))] ml-2 font-bold bg-[hsl(var(--site-primary)/0.1)] px-1.5 py-0.5 rounded">({l.sizeLabel})</span> : ""}
+                            {l.sizeLabel ? <span className="text-[9px] text-[hsl(var(--site-primary))] ml-2 font-black bg-[hsl(var(--site-primary)/0.1)] px-1.5 py-0.5 rounded border border-[hsl(var(--site-primary)/0.2)]">({l.sizeLabel})</span> : ""}
                           </p>
                           {l.flavors && l.flavors.length > 0 ? (
                             <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1 leading-relaxed font-medium">
@@ -391,7 +391,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
-                        <span className="font-black text-xl text-[hsl(var(--site-fg))] tracking-tighter">
+                        <span className="font-black text-lg text-[hsl(var(--site-fg))] tracking-tighter">
                           {formatBRL(l.unitPrice * l.quantity)}
                         </span>
                       </div>
@@ -400,10 +400,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 )}
               </div>
             ) : (
-              <div className="p-4 space-y-6 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
+              <div className="p-4 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
                 {/* Bloco 1 — Dados do cliente */}
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                <div className="space-y-2">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
                     <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
                     Seus Dados
                   </h3>

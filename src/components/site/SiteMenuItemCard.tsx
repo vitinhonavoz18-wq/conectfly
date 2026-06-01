@@ -51,7 +51,7 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
            </div>
          </div>
          {item.description && (
-           <p className="text-sm text-[hsl(var(--site-muted-fg))] italic line-clamp-2">{item.description}</p>
+           <p className="text-xs text-[hsl(var(--site-muted-fg))] leading-relaxed italic line-clamp-2">{item.description}</p>
          )}
           {sizes.length > 0 && (
             <div className="flex flex-wrap gap-2">
