@@ -528,7 +528,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
           <div className="space-y-4">
             <ul className="text-base text-[hsl(var(--site-muted-fg))] space-y-2">
               <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2">
-                <span className="font-medium">Tamanho: <strong className="text-[hsl(var(--site-fg))] font-extrabold">{size.label}</strong></span>
+                <span className="font-medium text-[hsl(var(--site-muted-fg))]">Tamanho: <strong className="text-[hsl(var(--site-fg))] font-extrabold">{size.label}</strong></span>
                 <span className="font-extrabold text-[hsl(var(--site-fg))]">{formatBRL(size.price)}</span>
               </li>
               <li className="flex flex-col border-b border-[hsl(var(--site-border))] pb-2">
