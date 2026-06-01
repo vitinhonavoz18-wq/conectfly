@@ -202,18 +202,19 @@ export function BeverageManager({ restaurantId }: Props) {
         ))}
 
         {(uncategorized.length > 0 || isDragging) && (
-          className={`space-y-6 p-6 rounded-[2.5rem] transition-all duration-300 ${isDragging ? 'bg-primary/5 border-2 border-dashed border-primary/20' : ''}`}
-          onDragOver={(e) => {
-            e.preventDefault();
-          }}
-          onDrop={(e) => {
-            const beverageId = e.dataTransfer.getData("beverageId");
-            if (beverageId) {
-              updateBeverage(beverageId, { catalog_id: null });
-              toast.success("Bebida movida para avulsas");
-            }
-          }}
-        >
+          <div 
+            className={`space-y-6 p-6 rounded-[2.5rem] transition-all duration-300 ${isDragging ? 'bg-primary/5 border-2 border-dashed border-primary/20' : ''}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              const beverageId = e.dataTransfer.getData("beverageId");
+              if (beverageId) {
+                updateBeverage(beverageId, { catalog_id: null });
+                toast.success("Bebida movida para avulsas");
+              }
+            }}
+          >
           <div className="flex items-center gap-4">
              <div className="h-px flex-1 bg-white/10" />
              <h3 className="text-sm font-black uppercase tracking-[0.3em] text-muted-foreground">Bebidas sem Catálogo</h3>
