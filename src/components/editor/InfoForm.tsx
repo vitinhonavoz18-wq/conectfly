@@ -796,12 +796,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
 
 
              <div className="space-y-6 pt-4 border-t border-white/5 relative z-10">
-                {((r.order_flow_mode || (r.fiqon_webhook_url || r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon") ? (
+                {isFiqonMode ? (
                   <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
                        <p className="text-[10px] font-black uppercase text-primary tracking-widest mb-1">Status: FIQON Ativo</p>
                        <p className="text-[10px] text-muted-foreground italic">Neste modo, o FlyControl recebe os pedidos através da FIQON.</p>
                      </div>
+
 
                      <Field 
                        label="URL do Webhook FIQON / Automação Externa" 
