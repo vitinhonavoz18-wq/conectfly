@@ -78,9 +78,6 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
             category={active} 
             restaurant={restaurant} 
             bordasCategory={bordasCategory} 
-             beverages={beverages}
-             beverageCatalogs={beverageCatalogs}
-
           />
       </div>
     </section>
