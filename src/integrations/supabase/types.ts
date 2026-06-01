@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      beverage_catalogs: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          restaurant_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          restaurant_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          restaurant_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beverage_catalogs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beverage_catalogs_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       combo_groups: {
         Row: {
           created_at: string
@@ -442,6 +493,7 @@ export type Database = {
       pizzeria_beverages: {
         Row: {
           brand: string | null
+          catalog_id: string | null
           category: string | null
           created_at: string | null
           description: string | null
@@ -457,6 +509,7 @@ export type Database = {
         }
         Insert: {
           brand?: string | null
+          catalog_id?: string | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -472,6 +525,7 @@ export type Database = {
         }
         Update: {
           brand?: string | null
+          catalog_id?: string | null
           category?: string | null
           created_at?: string | null
           description?: string | null
@@ -486,6 +540,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "pizzeria_beverages_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "beverage_catalogs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pizzeria_beverages_pizzeria_id_fkey"
             columns: ["pizzeria_id"]
