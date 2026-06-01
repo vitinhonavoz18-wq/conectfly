@@ -718,25 +718,28 @@ export function InfoForm({ restaurant, onChange }: Props) {
                </div>
              </div>
 
-             <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3 relative z-10">
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2 text-center">Fluxo Recomendado para Produção</p>
-               <div className="flex items-center justify-center gap-4 sm:gap-8">
-                 <div className="flex flex-col items-center gap-1">
-                   <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">SiteCreatorFly</div>
-                 </div>
-                 <div className="text-primary animate-pulse">→</div>
-                 <div className="flex flex-col items-center gap-1">
-                   <div className="h-10 px-4 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-xs uppercase tracking-tighter text-primary">FIQON</div>
-                 </div>
-                 <div className="text-primary animate-pulse">→</div>
-                 <div className="flex flex-col items-center gap-1">
-                   <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">FlyControl</div>
-                 </div>
-               </div>
-               <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest mt-2">
-                 A FIQON recebe o pedido, executa automações e envia para o FlyControl.
-               </p>
-             </div>
+              {FEATURES.ENABLE_FIQON_AUTOMATION && (
+                <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3 relative z-10">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2 text-center">Fluxo Recomendado para Produção</p>
+                  <div className="flex items-center justify-center gap-4 sm:gap-8">
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">SiteCreatorFly</div>
+                    </div>
+                    <div className="text-primary animate-pulse">→</div>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 px-4 rounded-lg bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-xs uppercase tracking-tighter text-primary">FIQON</div>
+                    </div>
+                    <div className="text-primary animate-pulse">→</div>
+                    <div className="flex flex-col items-center gap-1">
+                      <div className="h-10 px-4 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-bold text-xs uppercase tracking-tighter">FlyControl</div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest mt-2">
+                    A FIQON recebe o pedido, executa automações e envia para o FlyControl.
+                  </p>
+                </div>
+              )}
+
 
               {FEATURES.ENABLE_FIQON_AUTOMATION && (
                 <div className="space-y-4 relative z-10">
