@@ -63,7 +63,7 @@ const debugLog = (...args: any[]) => {
  ): Promise<SiteData> {
   debugLog(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
    
-   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, catalogsRes, sizesRes, ordersRes] = await Promise.all([
+   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, catalogsRes, sizesRes] = await Promise.all([
      supabase
        .from("menu_categories")
        .select("*")
@@ -112,11 +112,6 @@ const debugLog = (...args: any[]) => {
        .eq("pizzeria_id", restaurant.id)
        .eq("is_active", true)
        .order("sort_order"),
-     supabase
-       .from("orders")
-       .select("*, order_items(*)")
-       .eq("restaurant_id", restaurant.id)
-       .order("created_at", { ascending: false }),
    ]);
    if (catsRes.error) {
      console.error("[fetchSiteByRestaurant] Erro ao carregar categorias:", catsRes.error);
@@ -191,7 +186,6 @@ const debugLog = (...args: any[]) => {
     beverages,
     beverageCatalogs,
     pizzaSizes: pizzaSizesFromTable,
-    orders: (ordersRes.data || []) as any,
   };
 
 }
@@ -336,7 +330,6 @@ export async function adminFetchSiteData(id: string): Promise<SiteData> {
       deliveryZones: deliveryZones as DeliveryZoneRow[],
       beverages: beverages as BeverageRow[],
       pizzaSizes: pizzaSizesFromTable,
-      orders: data.data.orders as any[],
     };
   } catch (err: any) {
     console.error("[adminFetchSiteData] Erro completo:", err);

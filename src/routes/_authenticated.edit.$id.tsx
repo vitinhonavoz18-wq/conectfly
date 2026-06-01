@@ -18,7 +18,6 @@ import {
   LogOut,
   Loader2,
   ShoppingBag,
-  BarChart3,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
@@ -33,13 +32,12 @@ import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
-import { FinancialManager } from "@/components/editor/FinancialManager";
 
 export const Route = createFileRoute("/_authenticated/edit/$id")({
   component: EditPage,
 });
 
-type Tab = "info" | "appearance" | "menu" | "beverages" | "combo" | "delivery" | "checkout" | "operations" | "seo" | "preview" | "financial";
+type Tab = "info" | "appearance" | "menu" | "combo" | "delivery" | "checkout" | "operations" | "seo" | "preview";
 
 function EditPage() {
    const { id } = Route.useParams();
@@ -49,7 +47,6 @@ function EditPage() {
   const [tab, setTab] = useState<Tab>("info");
   const [preview, setPreview] = useState<SiteData | null>(null);
   const [previewBust, setPreviewBust] = useState(0);
-  const [financialLoading, setFinancialLoading] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [finalizing, setFinalizing] = useState(false);
@@ -81,34 +78,14 @@ function EditPage() {
       });
   }, [id]);
 
-  const reloadFinancial = async () => {
-    if (!restaurant) return;
-    setFinancialLoading(true);
-    try {
-      const data = await adminFetchSiteData(restaurant.id);
-      setRestaurant(data.restaurant);
-      setPreview(data);
-    } catch (err) {
-      console.error("[Edit] Erro ao recarregar dados financeiros:", err);
-      toast.error("Falha ao atualizar dados financeiros.");
-    } finally {
-      setFinancialLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (!restaurant) return;
-    
-    if (tab === "preview") {
-      console.log(`[Edit] Atualizando preview via backend seguro...`);
-      adminFetchSiteData(restaurant.id).then(setPreview).catch(err => {
-        console.error("[Edit] Erro ao carregar preview:", err);
-        toast.error("Falha ao gerar preview do site.");
-      });
-    } else if (tab === "financial") {
-      reloadFinancial();
-    }
-  }, [tab, restaurant?.id, previewBust]);
+    if (tab !== "preview" || !restaurant) return;
+    console.log(`[Edit] Atualizando preview via backend seguro...`);
+    adminFetchSiteData(restaurant.id).then(setPreview).catch(err => {
+      console.error("[Edit] Erro ao carregar preview:", err);
+      toast.error("Falha ao gerar preview do site.");
+    });
+  }, [tab, restaurant, previewBust]);
 
   const handleFinalize = async () => {
     if (!restaurant) return;
@@ -182,7 +159,6 @@ function EditPage() {
     { id: "checkout", label: "Checkout", icon: <CheckCircle2 className="h-4 w-4" /> },
     { id: "operations", label: "Funcionamento", icon: <Rocket className="h-4 w-4" /> },
     { id: "seo", label: "SEO", icon: <LinkIcon className="h-4 w-4" /> },
-    { id: "financial", label: "Financeiro", icon: <BarChart3 className="h-4 w-4" /> },
     { id: "preview", label: "Preview", icon: <Eye className="h-4 w-4" /> },
   ];
 
@@ -336,14 +312,6 @@ function EditPage() {
             <h3 className="text-xl font-black uppercase tracking-widest mb-2">SEO e Marketing</h3>
             <p className="text-muted-foreground">Em breve: Configure como seu site aparece no Google e redes sociais.</p>
           </div>
-        )}
-        {tab === "financial" && (
-           <FinancialManager 
-             orders={preview?.orders} 
-             restaurantId={restaurant.id} 
-             onRefresh={reloadFinancial}
-             isLoading={financialLoading}
-           />
         )}
          {tab === "preview" && (
            <div className="space-y-8 site-hero-enter">

@@ -400,50 +400,6 @@ export type Database = {
           },
         ]
       }
-      order_items: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          options: Json | null
-          order_id: string
-          product_id: string | null
-          quantity: number
-          total_price: number
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          options?: Json | null
-          order_id: string
-          product_id?: string | null
-          quantity?: number
-          total_price: number
-          unit_price: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          options?: Json | null
-          order_id?: string
-          product_id?: string | null
-          quantity?: number
-          total_price?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       order_logs: {
         Row: {
           created_at: string | null
@@ -527,72 +483,6 @@ export type Database = {
           },
           {
             foreignKeyName: "order_submission_logs_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          created_at: string
-          customer_address: string | null
-          customer_name: string
-          customer_phone: string | null
-          delivery_fee: number | null
-          id: string
-          is_test_order: boolean | null
-          notes: string | null
-          payment_method: string
-          payment_status: string | null
-          restaurant_id: string
-          status: string | null
-          total_amount: number
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          customer_address?: string | null
-          customer_name: string
-          customer_phone?: string | null
-          delivery_fee?: number | null
-          id?: string
-          is_test_order?: boolean | null
-          notes?: string | null
-          payment_method: string
-          payment_status?: string | null
-          restaurant_id: string
-          status?: string | null
-          total_amount: number
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          customer_address?: string | null
-          customer_name?: string
-          customer_phone?: string | null
-          delivery_fee?: number | null
-          id?: string
-          is_test_order?: boolean | null
-          notes?: string | null
-          payment_method?: string
-          payment_status?: string | null
-          restaurant_id?: string
-          status?: string | null
-          total_amount?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "pizzerias_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
