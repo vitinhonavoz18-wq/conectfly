@@ -17,7 +17,8 @@ import {
   Clock,
   LayoutDashboard,
   CalendarDays,
-  Receipt
+  Receipt,
+  Sparkles
 } from "lucide-react";
 import { Order, OrderItem } from "@/lib/site/types";
 import { 
@@ -330,7 +331,7 @@ export function FinancialManager({ orders = [], restaurantId, onRefresh, isLoadi
           <CardContent className="flex flex-col items-center justify-center h-[300px]">
             {paymentChartData.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height="200">
+                <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie
                       data={paymentChartData}
