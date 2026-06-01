@@ -955,10 +955,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
                  </div>
                ) : (
                  <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                      <p className="text-[10px] font-black uppercase text-yellow-500 tracking-widest mb-1">Aviso: Modo Direto Ativo</p>
-                      <p className="text-[10px] text-muted-foreground italic">Não use este modo junto com FIQON para evitar pedidos duplicados.</p>
-                    </div>
+                    {FEATURES.ENABLE_FIQON_AUTOMATION && (
+                      <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-[10px] font-black uppercase text-yellow-500 tracking-widest mb-1">Aviso: Modo Direto Ativo</p>
+                        <p className="text-[10px] text-muted-foreground italic">Não use este modo junto com FIQON para evitar pedidos duplicados.</p>
+                      </div>
+                    )}
+
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Field label="URL do Painel FlyControl" hint="Ex: https://pizzaria.flycontrol.com.br">
