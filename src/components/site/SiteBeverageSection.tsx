@@ -119,7 +119,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
               {qty > 0 && (
                 <div className="text-right animate-in fade-in slide-in-from-right-2">
                   <p className="text-[10px] uppercase font-bold text-[hsl(var(--site-muted-fg))]">Subtotal</p>
-                  <p className="font-black text-[hsl(var(--site-fg))]">{formatBRL(qty * Number(bev.price))}</p>
+                  <p className="font-black text-[hsl(var(--site-fg))] text-sm">{formatBRL(qty * Number(bev.price))}</p>
                 </div>
               )}
               </div>

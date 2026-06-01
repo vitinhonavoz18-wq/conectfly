@@ -55,8 +55,8 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
       border: "24 25% 91%", // #EFE7E2
       muted: "24 25% 98%",
       mutedFg: "0 0% 33%", // #555555
-      primary: "358 92% 46%", // #E50914
-      primaryFg: "0 0% 100%",
+      primary: "358 92% 46%", // #E50914 (Vermelho Pizza vibrante)
+      primaryFg: "0 0% 100%", // Texto branco sobre vermelho
       headerBg: "358 92% 46% / 100%",
       headerFg: "0 0% 100%",
     };
