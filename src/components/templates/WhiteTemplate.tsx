@@ -27,14 +27,6 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
-  const style = {
-    ["--site-bg" as string]: "0 0% 98%", // #FAFAFA
-    ["--site-fg" as string]: "222 47% 11%", // #0f172a
-    ["--site-card" as string]: "0 0% 100%", // White
-    ["--site-border" as string]: "214 32% 91%", // #e2e8f0
-    ["--site-muted" as string]: "210 40% 96%", // #f1f5f9
-    ["--site-muted-fg" as string]: "215 16% 47%", // #64748b
-  };
 
   const combosVisibility = r.site_settings?.combos_visibility || "auto";
   const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
@@ -55,40 +47,7 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   );
 
   return (
-    <div style={style as any} className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
-      <style dangerouslySetInnerHTML={{ __html: `
-        .card-premium {
-          background: hsl(var(--site-card)) !important;
-          border-color: hsl(var(--site-border)) !important;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
-          color: hsl(var(--site-fg)) !important;
-        }
-        header {
-          background: rgba(255, 255, 255, 0.8) !important;
-          border-bottom: 1px solid hsl(var(--site-border)) !important;
-          backdrop-blur: 10px;
-        }
-        header * {
-          color: hsl(var(--site-fg)) !important;
-        }
-        footer {
-          background: hsl(var(--site-muted)) !important;
-          border-top: 1px solid hsl(var(--site-border)) !important;
-          color: hsl(var(--site-fg)) !important;
-        }
-        .text-muted-foreground {
-          color: hsl(var(--site-muted-fg)) !important;
-        }
-        .site-hero-section {
-          background: #ffffff;
-        }
-        .bg-black\\/40 {
-          background-color: rgba(241, 245, 249, 0.8) !important;
-        }
-        .border-white\\/10 {
-          border-color: hsl(var(--site-border)) !important;
-        }
-      `}} />
+    <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
       <SiteHeader 
         name={r.name} 
         logoUrl={r.logo_url} 
