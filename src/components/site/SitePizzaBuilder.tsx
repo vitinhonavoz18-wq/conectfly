@@ -387,210 +387,119 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         )}
       </div>
 
-        {/* Step 3 — Adicionais */}
-        {bordasCategory && bordasCategory.items.length > 0 && (
-          <div className="space-y-4" ref={bordasRef}>
-            <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-lg font-bold">3. Escolha um adicional (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("escolha") && (
-                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
-                  {scrollMessage}
+      {/* Step 3 — Adicionais */}
+      {bordasCategory && bordasCategory.items.length > 0 && (
+        <div className="space-y-4" ref={bordasRef}>
+          <div className="flex items-baseline justify-between mb-3">
+            <h4 className="text-lg font-bold">3. Escolha um adicional (opcional)</h4>
+            {scrollMessage && scrollMessage.includes("escolha") && (
+              <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                {scrollMessage}
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <button
+              onClick={() => setSelectedBorderId(null)}
+              className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                selectedBorderId === null
+                  ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                  : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
+              }`}
+            >
+              {selectedBorderId === null && (
+                <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
+                  <Check className="h-3 w-3" />
                 </span>
               )}
-            </div>
-           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-             <button
-               onClick={() => setSelectedBorderId(null)}
-                className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
-                  selectedBorderId === null
-                    ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)]"
-                }`}
-              >
-                Sem adicional
-              </button>
-              {bordasCategory.items.map((b) => (
-                 <button
-                   key={b.id}
-                   onClick={() => setSelectedBorderId(b.id)}
-                   className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
-                     selectedBorderId === b.id
-                       ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)]"
-                   }`}
-                 >
-                   <p className="font-bold">{b.name}</p>
-                   <p className="text-sm text-[hsl(var(--site-primary))] font-black">+{formatBRL(b.price)}</p>
-                 </button>
-              ))}
-            </div>
+              <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">Sem Borda</p>
+              <p className="text-[hsl(var(--site-secondary))] font-black mt-1">Grátis</p>
+            </button>
+            {bordasCategory.items.map((b) => {
+              const active = selectedBorderId === b.id;
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => setSelectedBorderId(b.id)}
+                  className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                    active
+                      ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
+                  }`}
+                >
+                  {active && (
+                    <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
+                      <Check className="h-3 w-3" />
+                    </span>
+                  )}
+                  <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">{b.name}</p>
+                  <p className="text-[hsl(var(--site-secondary))] font-black mt-1">+{formatBRL(b.price)}</p>
+                </button>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Step 4 — Beverages within Builder */}
-        {((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) && (
-          <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
-            <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">4. Escolha as bebidas (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("acompanhar") && (
-                <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
-                  {scrollMessage}
-                </span>
-              )}
-            </div>
-            
-            <div className="space-y-8">
-              {beverageCatalogs && beverageCatalogs.map(catalog => {
-                const catBevs = beverages?.filter(b => b.catalog_id === catalog.id) || [];
-                if (catBevs.length === 0) return null;
-                return (
-                  <div key={catalog.id} className="space-y-4">
-                    <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">{catalog.name}</h5>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {catBevs.map((bev) => (
-                        <BeverageBuilderItem
-                          key={bev.id}
-                          bev={bev}
-                          qty={selectedBeverages[bev.id] || 0}
-                          onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {(() => {
-                const activeCatIds = beverageCatalogs?.map(c => c.id) || [];
-                const uncategorized = beverages?.filter(b => !b.catalog_id || !activeCatIds.includes(b.catalog_id)) || [];
-                if (uncategorized.length === 0) return null;
-                return (
-                  <div className="space-y-4">
-                    {(beverageCatalogs?.length ?? 0) > 0 && (
-                      <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">Outras Bebidas</h5>
-                    )}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {uncategorized.map((bev) => (
-                        <BeverageBuilderItem
-                          key={bev.id}
-                          bev={bev}
-                          qty={selectedBeverages[bev.id] || 0}
-                          onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
+      {/* Step 4 — Beverages within Builder */}
+      {((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) && (
+        <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
+          <div className="flex items-baseline justify-between mb-3">
+            <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">4. Escolha as bebidas (opcional)</h4>
+            {scrollMessage && scrollMessage.includes("acompanhar") && (
+              <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+                {scrollMessage}
+              </span>
+            )}
           </div>
-        )}
-
-                    : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
-                }`}
-              >
-                {selectedBorderId === null && (
-                  <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
-                    <Check className="h-3 w-3" />
-                  </span>
-                )}
-                <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">Sem Borda</p>
-                <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
-                  Grátis
-                </p>
-              </button>
-              {bordasCategory.items.map((b) => {
-                const active = selectedBorderId === b.id;
-                return (
-                  <button
-                    key={b.id}
-                    onClick={() => setSelectedBorderId(b.id)}
-                    className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
-                      active
-                        ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
-                        : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
-                    }`}
-                  >
-                    {active && (
-                      <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
-                        <Check className="h-3 w-3" />
-                      </span>
-                    )}
-                    <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">{b.name}</p>
-                    <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
-                      +{formatBRL(b.price)}
-                    </p>
-                  </button>
-                );
-              })}
-             </div>
-           </div>
-         )}
-
-        {/* Step 4 — Bebidas */}
-        {beverages && beverages.length > 0 && (
-          <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
-            <div className="flex items-baseline justify-between mb-3">
-              <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">4. Escolha as bebidas (opcional)</h4>
-              {scrollMessage && scrollMessage.includes("acompanhar") && (
-                <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-bounce">
-                  {scrollMessage}
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {beverages.map((bev) => {
-                const qty = selectedBeverages[bev.id] || 0;
-                return (
-                  <div
-                    key={bev.id}
-                    className={`relative rounded-3xl border p-5 flex items-center justify-between transition-all duration-300 ${
-                      qty > 0
-                        ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] ring-1 ring-[hsl(var(--site-primary)/0.2)] shadow-md"
-                        : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] shadow-sm"
-                    }`}
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight truncate">{bev.name}</p>
-                      <p className="text-xs text-[hsl(var(--site-muted-fg))] font-medium">
-                        {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
-                      </p>
-                      <p className="text-[hsl(var(--site-secondary))] font-black mt-1">
-                        {formatBRL(bev.price)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 bg-[hsl(var(--site-card))] p-1.5 rounded-2xl border border-[hsl(var(--site-border))] shadow-sm">
-                      <button
-                        onClick={() => {
-                          setSelectedBeverages((cur) => ({
-                            ...cur,
-                            [bev.id]: Math.max(0, (cur[bev.id] || 0) - 1),
-                          }));
-                        }}
-                        disabled={qty === 0}
-                        className="h-8 w-8 site-btn-secondary !rounded-xl !p-0 disabled:opacity-30"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <span className="w-6 text-center font-black text-sm text-[hsl(var(--site-fg))]">{qty}</span>
-                      <button
-                        onClick={() => {
-                          setSelectedBeverages((cur) => ({
-                            ...cur,
-                            [bev.id]: (cur[bev.id] || 0) + 1,
-                          }));
-                        }}
-                        className="h-8 w-8 site-btn-primary !rounded-xl !p-0 hover:scale-110"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
+          
+          <div className="space-y-8">
+            {beverageCatalogs && beverageCatalogs.map(catalog => {
+              const catBevs = beverages?.filter(b => b.catalog_id === catalog.id) || [];
+              if (catBevs.length === 0) return null;
+              return (
+                <div key={catalog.id} className="space-y-4">
+                  <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">{catalog.name}</h5>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {catBevs.map((bev) => (
+                      <BeverageBuilderItem
+                        key={bev.id}
+                        bev={bev}
+                        qty={selectedBeverages[bev.id] || 0}
+                        onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+                      />
+                    ))}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
+
+            {(() => {
+              const activeCatIds = beverageCatalogs?.map(c => c.id) || [];
+              const uncategorized = beverages?.filter(b => !b.catalog_id || !activeCatIds.includes(b.catalog_id)) || [];
+              if (uncategorized.length === 0) return null;
+              return (
+                <div className="space-y-4">
+                  {(beverageCatalogs?.length ?? 0) > 0 && (
+                    <h5 className="text-sm font-black uppercase tracking-widest text-muted-foreground border-b border-[hsl(var(--site-border))] pb-2">Outras Bebidas</h5>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {uncategorized.map((bev) => (
+                      <BeverageBuilderItem
+                        key={bev.id}
+                        bev={bev}
+                        qty={selectedBeverages[bev.id] || 0}
+                        onUpdate={(q) => setSelectedBeverages(prev => ({ ...prev, [bev.id]: q }))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        )}
+        </div>
+      )}
+
 
         {/* Step 5 — Summary + add */}
         <div 
