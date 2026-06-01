@@ -82,13 +82,13 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
    const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
     const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
-    const [selectedBeverages, setSelectedBeverages] = useState<Record<string, number>>({});
+    
   const [confirm, setConfirm] = useState<string | null>(null);
   const [scrollMessage, setScrollMessage] = useState<string | null>(null);
   const [lastCompletedCount, setLastCompletedCount] = useState<number>(0);
 
   const bordasRef = useRef<HTMLDivElement>(null);
-  const beveragesRef = useRef<HTMLDivElement>(null);
+  
   const summaryRef = useRef<HTMLDivElement>(null);
 
   const size = sizeIdx !== null ? sizes[sizeIdx] : null;
@@ -134,7 +134,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       // Reset lastCompletedCount if flavors are removed
       setLastCompletedCount(0);
     }
-  }, [isSelectionComplete, selectedFlavors.length, maxFlavors, bordasCategory, beverages, lastCompletedCount]);
+  }, [isSelectionComplete, selectedFlavors.length, maxFlavors, bordasCategory, lastCompletedCount]);
 
 
   const { flavorMap, classicFlavors, specialFlavors } = useMemo(() => {
@@ -418,7 +418,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         </div>
       )}
 
-      {/* Step 4 — Beverages within Builder */}
+      
       {((beverages && beverages.length > 0) || (beverageCatalogs && beverageCatalogs.length > 0)) && (
         <div className="space-y-4" id="bebidas-step" ref={beveragesRef}>
           <div className="flex items-baseline justify-between mb-3">
