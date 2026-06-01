@@ -601,3 +601,20 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     </div>
   );
 }
+
+function BeverageBuilderItem({ bev, qty, onUpdate }: { bev: BeverageRow; qty: number; onUpdate: (q: number) => void }) {
+  return (
+    <div className={`p-4 rounded-3xl border transition-all flex items-center justify-between gap-4 ${qty > 0 ? 'border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)]' : 'border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))]'}`}>
+      <div className="min-w-0">
+        <p className="font-bold text-sm truncate">{bev.name}</p>
+        <p className="text-xs text-[hsl(var(--site-muted-fg))]">{formatBRL(bev.price)}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <button onClick={() => onUpdate(Math.max(0, qty - 1))} className="h-8 w-8 rounded-full border border-[hsl(var(--site-border))] flex items-center justify-center hover:bg-[hsl(var(--site-muted))]"><Minus className="h-3 w-3" /></button>
+        <span className="w-4 text-center text-sm font-bold">{qty}</span>
+        <button onClick={() => onUpdate(qty + 1)} className="h-8 w-8 rounded-full bg-[hsl(var(--site-primary))] text-white flex items-center justify-center hover:opacity-90"><Plus className="h-3 w-3" /></button>
+      </div>
+    </div>
+  );
+}
+
