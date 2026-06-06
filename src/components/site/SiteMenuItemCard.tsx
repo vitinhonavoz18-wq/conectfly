@@ -12,7 +12,10 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
   const price = selected ? selected.price : item.price;
   const showConsult = !selected && item.price === 0;
 
+  const [isAdding, setIsAdding] = useState(false);
+
   const handleAdd = () => {
+    setIsAdding(true);
     addLine({
       itemId: item.id,
       name: item.name,
@@ -20,6 +23,7 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
       unitPrice: price,
       sizeLabel: selected?.label,
     });
+    setTimeout(() => setIsAdding(false), 1000);
   };
 
   const nameParts = item.name.match(/^\[(.*?)\]\s*(.*)$/) || [null, null, item.name];
