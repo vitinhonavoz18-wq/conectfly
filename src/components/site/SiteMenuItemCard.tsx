@@ -91,14 +91,23 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
           )}
           <button
             onClick={handleAdd}
-            disabled={showConsult}
-            className={`mt-2 site-btn-primary py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-30 disabled:scale-100 shadow-xl active:scale-95 transition-all group/btn ${sizes.length === 0 ? 'mt-auto' : ''}`}
+            disabled={showConsult || isAdding}
+            className={`mt-2 site-btn-primary py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-70 disabled:scale-100 shadow-xl active:scale-95 transition-all group/btn ${sizes.length === 0 ? 'mt-auto' : ''} ${isAdding ? 'bg-green-600 border-green-500 shadow-green-900/20' : ''}`}
           >
-            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[hsl(var(--site-primary-fg))] group-hover/btn:rotate-90 transition-transform" />
-            <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black">
-              <span className="hidden xs:inline">Adicionar ao pedido</span>
-              <span className="xs:hidden">Adicionar</span>
-            </span>
+            {isAdding ? (
+              <>
+                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black text-white">Adicionado!</span>
+              </>
+            ) : (
+              <>
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[hsl(var(--site-primary-fg))] group-hover/btn:rotate-90 transition-transform" />
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black">
+                  <span className="hidden xs:inline">Adicionar ao pedido</span>
+                  <span className="xs:hidden">Adicionar</span>
+                </span>
+              </>
+            )}
           </button>
        </div>
      </div>
