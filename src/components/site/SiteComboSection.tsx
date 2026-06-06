@@ -17,18 +17,18 @@ export function SiteComboSection({ groups }: Props) {
   return (
      <section
        id="combos"
-       className="py-24 px-4 bg-gradient-to-b from-[hsl(var(--site-bg))] via-[hsl(var(--site-primary)/0.05)] to-[hsl(var(--site-bg))] relative overflow-hidden"
+       className="py-16 sm:py-24 px-4 bg-gradient-to-b from-[hsl(var(--site-bg))] via-[hsl(var(--site-primary)/0.03)] to-[hsl(var(--site-bg))] relative overflow-hidden"
      >
-       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[hsl(var(--site-primary)/0.3)] to-transparent" />
+       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[hsl(var(--site-primary)/0.2)] to-transparent" />
        <div className="max-w-7xl mx-auto">
-         <div className="text-center mb-12">
-           <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.2)] text-[hsl(var(--site-primary))] text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.3)]">
+         <div className="text-center mb-10 sm:mb-16">
+           <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.15)] text-[hsl(var(--site-primary))] text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.25)]">
              Seleções do Chef
            </span>
-             <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))]">
-               Combos <span className="text-[hsl(var(--site-primary))]">Especiais</span>
-            </h2>
-           <div className="h-1.5 w-24 bg-[hsl(var(--site-primary))] mx-auto rounded-full" />
+              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))] drop-shadow-sm">
+                Combos <span className="text-[hsl(var(--site-primary))]">Especiais</span>
+             </h2>
+           <div className="h-1 w-20 bg-[hsl(var(--site-primary))] mx-auto rounded-full opacity-80" />
          </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-8 justify-start sm:justify-center">
