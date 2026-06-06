@@ -11,6 +11,16 @@ interface Props {
 
 export function SiteHeader({ name, logoUrl, onOpenCart, showCartButton = true }: Props) {
   const { totalItems } = useCart();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (totalItems > 0) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [totalItems]);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
