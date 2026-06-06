@@ -22,11 +22,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   const visibleCategories = categories.filter(c => {
     const isBeverage = isBeverageCategory(c);
     if (isBeverage) {
-        // Se temos novos catálogos ativos, escondemos a categoria antiga de bebidas
-        // Mas como SiteMenuSection não recebe SiteData, precisamos decidir se filtramos aqui
-        // ou se deixamos para o template filtrar.
-        // O usuário quer que se houver catálogos ativos, a categoria antiga não apareça.
-        // Vamos manter a lógica original por enquanto e filtrar no Template.
+        // Lógica de filtragem de bebidas delegada ao Template
     }
     return c.show_on_public_site !== false;
   });
@@ -106,9 +102,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                   </h3>
                   <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 site-stagger">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 site-stagger h-full">
                   {cat.items.map((it) => (
-                    <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                    <div key={it.id} className="h-full">
+                      <SiteMenuItemCard item={it} restaurant={restaurant} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -155,9 +153,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                       </h3>
                       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
                       {cat.items.map((it) => (
-                        <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                        <div key={it.id} className="h-full">
+                          <SiteMenuItemCard item={it} restaurant={restaurant} />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -183,9 +183,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 {current && current.is_pizza ? (
                   <SitePizzaBuilder category={current} restaurant={restaurant} />
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
                     {current?.items.map((it) => (
-                      <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                      <div key={it.id} className="h-full">
+                        <SiteMenuItemCard item={it} restaurant={restaurant} />
+                      </div>
                     ))}
                   </div>
                 )}
