@@ -22,11 +22,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   const visibleCategories = categories.filter(c => {
     const isBeverage = isBeverageCategory(c);
     if (isBeverage) {
-        // Se temos novos catálogos ativos, escondemos a categoria antiga de bebidas
-        // Mas como SiteMenuSection não recebe SiteData, precisamos decidir se filtramos aqui
-        // ou se deixamos para o template filtrar.
-        // O usuário quer que se houver catálogos ativos, a categoria antiga não apareça.
-        // Vamos manter a lógica original por enquanto e filtrar no Template.
+        // Lógica de filtragem de bebidas delegada ao Template
     }
     return c.show_on_public_site !== false;
   });
@@ -77,37 +73,40 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   );
 
   return (
-    <section id="cardapio" className="py-16 px-4">
+    <section id="cardapio" className="py-12 sm:py-20 px-4">
       <div className="max-w-6xl mx-auto">
         {(restaurant.site_settings?.show_categories_section !== false) && clickableCategories.length > 0 && (
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.2)] text-[hsl(var(--site-primary))] text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.3)]">
+          <div className="text-center mb-10 sm:mb-16">
+            <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.15)] text-[hsl(var(--site-primary))] text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.25)]">
               Curadoria Gastronômica
             </span>
-            <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))]">
+            <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))] drop-shadow-sm">
               Nossa <span className="text-[hsl(var(--site-primary))]">Cozinha</span>
             </h2>
-            <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic">
-              {current ? `Explorando a seleção de ${current.name}` : "Selecione uma categoria para descobrir nossas especialidades artesanais."}
+            <div className="h-1 w-20 bg-[hsl(var(--site-primary))] mx-auto mb-6 rounded-full opacity-80" />
+            <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic text-sm sm:text-base leading-relaxed opacity-90 px-4">
+              {current ? `Explorando a seleção premium de ${current.name}` : "Selecione uma categoria para descobrir nossas especialidades artesanais de alta qualidade."}
             </p>
           </div>
         )}
 
         {(restaurant.site_settings?.show_categories_section === false || (!current && entryMode !== "direct")) ? (
-          <div className="space-y-16">
+          <div className="space-y-16 sm:space-y-24">
             {directCategories.map(cat => (
-              <div key={cat.id} className="space-y-8">
-                <div className="flex items-center gap-4">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
-                  <h3 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
+              <div key={cat.id} className="space-y-6 sm:space-y-10">
+                <div className="flex items-center gap-4 sm:gap-6 px-2">
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
+                  <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] shrink-0">
                     {cat.icon ? `${cat.icon} ` : ""}
                     {cat.name}
                   </h3>
-                  <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
+                  <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 site-stagger h-full">
                   {cat.items.map((it) => (
-                    <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                    <div key={it.id} className="h-full">
+                      <SiteMenuItemCard item={it} restaurant={restaurant} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -154,9 +153,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                       </h3>
                       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
                       {cat.items.map((it) => (
-                        <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                        <div key={it.id} className="h-full">
+                          <SiteMenuItemCard item={it} restaurant={restaurant} />
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -182,9 +183,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 {current && current.is_pizza ? (
                   <SitePizzaBuilder category={current} restaurant={restaurant} />
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
                     {current?.items.map((it) => (
-                      <SiteMenuItemCard key={it.id} item={it} restaurant={restaurant} />
+                      <div key={it.id} className="h-full">
+                        <SiteMenuItemCard item={it} restaurant={restaurant} />
+                      </div>
                     ))}
                   </div>
                 )}

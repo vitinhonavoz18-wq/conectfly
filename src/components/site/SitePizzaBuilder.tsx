@@ -26,9 +26,9 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     <button
       onClick={() => toggleFlavor(it.id)}
       disabled={!size || disabled}
-      className={`relative text-left rounded-3xl border p-5 transition-all duration-300 flex items-start gap-4 overflow-hidden group ${
+      className={`relative text-left rounded-2xl sm:rounded-3xl border p-4 sm:p-5 transition-all duration-300 flex items-start gap-3 sm:gap-4 overflow-hidden group h-full ${
         checked
-          ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+          ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.08)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.12)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
           : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
       } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.02]"}`}
     >

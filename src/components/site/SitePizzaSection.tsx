@@ -31,16 +31,16 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
       className="py-14 px-4 border-b border-[hsl(var(--site-border))]"
     >
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <span className="inline-block text-xs uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] font-bold mb-2">
-            ✨ Monte seu pedido
+        <div className="text-center mb-10 sm:mb-14">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-secondary)/0.15)] text-[hsl(var(--site-secondary))] text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-secondary)/0.25)]">
+            Monte seu pedido
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-            Escolha o tamanho e os sabores
+          <h2 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))] drop-shadow-sm">
+            Personalize sua <span className="text-[hsl(var(--site-primary))]">Artesanal</span>
           </h2>
-          <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto">
-            Comece pelo tamanho — o preço base é definido por ele. Depois selecione seus sabores
-            preferidos.
+          <div className="h-1 w-20 bg-[hsl(var(--site-secondary))] mx-auto mb-6 rounded-full opacity-60" />
+          <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic text-sm sm:text-base leading-relaxed opacity-90 px-4">
+            Escolha o tamanho ideal e combine seus sabores favoritos em uma única experiência.
           </p>
         </div>
 
