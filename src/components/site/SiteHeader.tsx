@@ -61,7 +61,7 @@ export function SiteHeader({ name, logoUrl, onOpenCart, showCartButton = true }:
              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 group-hover:animate-bounce" />
              <span className="hidden xs:inline">Meu Pedido</span>
              {totalItems > 0 && (
-               <span className="absolute -top-1.5 -right-1.5 min-w-6 h-6 sm:min-w-7 sm:h-7 px-1 rounded-full bg-[hsl(var(--site-primary-fg))] text-[hsl(var(--site-primary))] text-[10px] sm:text-xs font-black flex items-center justify-center shadow-xl border-2 border-[hsl(var(--site-primary))] animate-in zoom-in duration-300">
+               <span className={`absolute -top-1.5 -right-1.5 min-w-6 h-6 sm:min-w-7 sm:h-7 px-1 rounded-full bg-[hsl(var(--site-primary-fg))] text-[hsl(var(--site-primary))] text-[10px] sm:text-xs font-black flex items-center justify-center shadow-xl border-2 border-[hsl(var(--site-primary))] transition-transform duration-300 ${isAnimating ? 'scale-125 bg-white' : 'scale-100'}`}>
                  {totalItems}
                </span>
              )}
