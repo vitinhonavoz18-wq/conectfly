@@ -54,7 +54,7 @@ export function SiteHero({
   };
 
   return (
-    <div className="relative min-h-[90vh] flex items-center justify-center overflow-hidden pt-16">
+    <div className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden pt-12 sm:pt-16">
       <div className="absolute inset-0 site-scroll-parallax-bg">
         {showVideo ? (
           <video
@@ -72,34 +72,34 @@ export function SiteHero({
           />
         ) : null}
       </div>
-       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.5)] via-[hsl(var(--site-bg)/0.8)] to-[hsl(var(--site-bg))]" />
-       <div className="absolute inset-0 bg-radial-at-c from-primary/10 to-transparent opacity-50" />
-       <div className="relative z-10 text-center px-4 py-20 site-hero-enter max-w-5xl mx-auto">
+       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.4)] via-[hsl(var(--site-bg)/0.7)] to-[hsl(var(--site-bg))]" />
+       <div className="absolute inset-0 bg-radial-at-c from-primary/5 to-transparent opacity-40" />
+       <div className="relative z-10 text-center px-4 py-12 sm:py-20 site-hero-enter max-w-5xl mx-auto">
          {logoUrl ? (
            <div className="relative group inline-block">
-             <div className="absolute inset-0 bg-primary/20 blur-[100px] group-hover:bg-primary/40 transition-all rounded-full" />
+             <div className="absolute inset-0 bg-primary/10 blur-[80px] group-hover:bg-primary/30 transition-all rounded-full" />
               <img
                 src={logoUrl}
                 alt={name}
                 loading="eager"
-                className="relative mx-auto mb-8 h-48 sm:h-64 md:h-80 w-auto object-contain drop-shadow-[0_0_35px_rgba(255,122,0,0.3)] group-hover:scale-105 transition-transform duration-700"
+                className="relative mx-auto mb-6 sm:mb-8 h-32 sm:h-56 md:h-72 w-auto object-contain drop-shadow-[0_0_25px_rgba(255,122,0,0.2)] group-hover:scale-105 transition-transform duration-700"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
               />
            </div>
          ) : (
-          <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-lg">
+          <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-lg">
              {name}
            </h1>
          )}
          {tagline && (
-           <p className="text-2xl sm:text-3xl font-black text-[hsl(var(--site-primary))] mb-4 uppercase tracking-[0.15em]">
+           <p className="text-xl sm:text-3xl font-black text-[hsl(var(--site-primary))] mb-3 sm:mb-4 uppercase tracking-[0.1em] sm:tracking-[0.15em] leading-tight">
              {tagline}
            </p>
          )}
          {description && (
-           <p className="max-w-2xl mx-auto text-lg sm:text-xl text-[hsl(var(--site-muted-fg))] leading-relaxed font-medium">
+           <p className="max-w-xl mx-auto text-base sm:text-xl text-[hsl(var(--site-muted-fg))] leading-relaxed font-medium px-2">
              {description}
            </p>
          )}
