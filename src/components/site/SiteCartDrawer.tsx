@@ -1014,7 +1014,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   } ${sending || (step === "cart" && items.length === 0) ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {sending ? (
-                    <span className="animate-pulse">PROCESSANDO...</span>
+                    <span className="animate-pulse">
+                      {orderType === "delivery" ? "ENVIANDO AO WHATSAPP..." : 
+                       orderType === "table" ? `ENVIANDO MESA ${tableNumber}...` : 
+                       "ENVIANDO PEDIDO..."}
+                    </span>
                   ) : (
                     <>
                       <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
