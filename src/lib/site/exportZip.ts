@@ -329,7 +329,7 @@ body {
       hero_video_url: r.hero_video_url,
       flycontrol_enabled: !!r.flycontrol_enabled,
       flycontrol_api_url: r.flycontrol_api_url ?? "",
-      flycontrol_api_key: "", // Removido por segurança. Use variáveis de ambiente no servidor.
+      flycontrol_api_key: "", // Removido por segurança. Use segredos no servidor (Edge Functions).
       flycontrol_base_url: r.flycontrol_base_url ?? "",
       flycontrol_tenant_id: r.flycontrol_tenant_id ?? "",
       whatsapp_enabled: r.whatsapp_enabled !== false,
