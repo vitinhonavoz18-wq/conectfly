@@ -223,6 +223,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if (!targetSlug) return false;
 
     console.log("QR_TABLE_IDENTIFIED", { table_number: numberFromQr, table_token: token, restaurant_slug: targetSlug });
+    console.log("OPEN_TABLE_SESSION_ONLY", { table_number: numberFromQr, table_token: token });
 
     setIsValidatingQr(true);
     setIsOpeningTableSession(true);
@@ -234,7 +235,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         restaurant_slug: targetSlug,
         order_type: "table",
         service_mode: "mesa",
-        table_number: numberFromQr || "N/A", // Se não tiver número no QR, o FlyControl resolve pelo token
+        table_number: numberFromQr || "N/A", 
         table_token: token,
         customer_name: name || undefined,
         customer_phone: phone || undefined,
@@ -242,8 +243,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         opened_at: new Date().toISOString()
       };
 
-      console.log("OPEN_TABLE_SESSION_REQUEST", sessionPayload);
+      console.log("NO_ORDER_CREATED_ON_SCAN");
       const sessionResult = await openTableSession(restaurant, sessionPayload);
+
       console.log("OPEN_TABLE_SESSION_RESPONSE", sessionResult);
 
       if (sessionResult.success) {
@@ -427,8 +429,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   };
 
   const handleFinish = async () => {
+    console.log("FINAL_ORDER_SENT_ONLY_ON_BUTTON_CLICK");
     setError("");
     setValidationAttempted(true);
+
 
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
