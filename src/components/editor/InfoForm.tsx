@@ -194,16 +194,24 @@ export function InfoForm({ restaurant, onChange }: Props) {
    };
 
     const copySyncUrl = () => {
-      // Ensure we have a token before copying
       const token = r.menu_sync_token;
       if (!token) {
         toast.error("Gere um token de sincronização primeiro.");
         return;
       }
+      // O link correto agora é via /api/public/menu-sync/:slug/:token
       const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${token}`;
       navigator.clipboard.writeText(url);
-      setMsg("URL de Sincronização copiada!");
+      setMsg("Link de sincronização copiado!");
       toast.success("Link de sincronização copiado com sucesso.");
+      
+      console.log("MENU_SYNC_LINK_GENERATION:", {
+        restaurant_id: r.id,
+        slug: r.slug,
+        token_from_database_preview: token?.substring(0, 8) + "...",
+        final_sync_url: url
+      });
+
       setTimeout(() => setMsg(""), 2000);
     };
 
@@ -214,10 +222,50 @@ export function InfoForm({ restaurant, onChange }: Props) {
         .map(b => b.toString(16).padStart(2, '0'))
         .join('');
         
-      set("menu_sync_token", newToken);
-      setMsg("Token regenerado! Lembre-se de SALVAR.");
-      toast.success("Novo token gerado. Clique em Salvar para aplicar.");
+      try {
+        setSaving(true);
+        await updateRestaurant(r.id, { menu_sync_token: newToken });
+        const refreshed = await getRestaurantById(r.id);
+        setR(refreshed);
+        onChange(refreshed);
+        
+        toast.success("Token regenerado e salvo com sucesso!");
+        setMsg("Token regenerado e salvo!");
+      } catch (err: any) {
+        toast.error("Erro ao regenerar token: " + err.message);
+      } finally {
+        setSaving(false);
+      }
     };
+
+    // Garantir que o restaurante tenha um token se não houver
+    useEffect(() => {
+      const ensureToken = async () => {
+        if (r.id && !r.menu_sync_token) {
+          console.log("MENU_SYNC: Gerando token inicial para o restaurante", r.id);
+          const newToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+          
+          try {
+            await updateRestaurant(r.id, { menu_sync_token: newToken });
+            const refreshed = await getRestaurantById(r.id);
+            setR(refreshed);
+            onChange(refreshed);
+            console.log("MENU_SYNC_LINK_GENERATION:", {
+              restaurant_id: r.id,
+              slug: r.slug,
+              token_was_created_now: true,
+              token_from_database_preview: newToken.substring(0, 8) + "..."
+            });
+          } catch (err) {
+            console.error("Erro ao gerar token inicial:", err);
+          }
+        }
+      };
+      
+      ensureToken();
+    }, [r.id, r.menu_sync_token]);
 
     const handleTestConnection = async () => {
       setRegMsg("");

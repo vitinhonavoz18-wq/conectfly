@@ -80,11 +80,13 @@ serve(async (req) => {
     let syncToken = url.searchParams.get("sync_token") || url.searchParams.get("token");
 
     // Handle /menu-sync/:slug/:token
-    if (pathParts.length >= 3 && pathParts[0] === "menu-sync") {
-      slug = pathParts[1];
-      syncToken = pathParts[2];
-    } else if (pathParts.length === 2 && pathParts[0] === "menu-sync") {
-      slug = pathParts[1];
+    // If called via proxy /api/public/menu-sync/slug/token, pathParts will be ["api", "public", "menu-sync", "slug", "token"]
+    const menuSyncIndex = pathParts.findIndex(p => p === "menu-sync");
+    if (menuSyncIndex !== -1 && pathParts.length > menuSyncIndex + 2) {
+      slug = pathParts[menuSyncIndex + 1];
+      syncToken = pathParts[menuSyncIndex + 2];
+    } else if (menuSyncIndex !== -1 && pathParts.length > menuSyncIndex + 1) {
+      slug = pathParts[menuSyncIndex + 1];
     }
 
     const apiKeyHeader = req.headers.get("x-api-key") || req.headers.get("apikey") || req.headers.get("Authorization")?.replace("Bearer ", "");
@@ -96,27 +98,41 @@ serve(async (req) => {
       syncToken = syncToken || body.sync_token || body.token;
     }
 
-    console.log(`MENU_SYNC_AUTH: slug=${slug} token=${!!syncToken} apiKey=${!!apiKeyHeader}`);
+    console.log(`MENU_SYNC_DEBUG: slug_received=${slug} token_received_preview=${syncToken?.substring(0, 8)}...`);
 
     let restaurant;
     let authResult = "unauthorized";
 
     // 1. Validate by sync_token (Priority)
     if (slug && syncToken) {
-      const { data: res } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
+      const { data: res, error: resError } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
+      
+      console.log(`MENU_SYNC_DEBUG: restaurant_found=${!!res} restaurant_id=${res?.id} error=${resError?.message}`);
+      
       if (res) {
         restaurant = res;
-        if (restaurant.menu_sync_token === syncToken) {
+        const storedToken = restaurant.menu_sync_token;
+        const tokenMatch = storedToken === syncToken;
+        
+        console.log(`MENU_SYNC_DEBUG: stored_token_exists=${!!storedToken} stored_token_preview=${storedToken?.substring(0, 8)}... token_match=${tokenMatch}`);
+        
+        if (tokenMatch) {
           authResult = "success";
-          console.log(`MENU_SYNC: Authorized by token for ${slug}`);
+          console.log(`MENU_SYNC_DEBUG: final_result=success Authorized by token for ${slug}`);
         } else {
+          console.log(`MENU_SYNC_DEBUG: final_result=invalid_sync_token`);
           return new Response(JSON.stringify({ 
             success: false, 
             error: "invalid_sync_token", 
-            message: "Token de sincronização inválido." 
+            message: "Token de sincronização inválido.",
+            debug: {
+              slug_received: slug,
+              token_received_preview: syncToken?.substring(0, 8) + "..."
+            }
           }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       } else {
+        console.log(`MENU_SYNC_DEBUG: final_result=restaurant_not_found`);
         return new Response(JSON.stringify({ 
           success: false, 
           error: "restaurant_not_found", 
