@@ -644,8 +644,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                             <span className="font-black text-2xl tracking-tighter">{tableNumber}</span>
                           </div>
                           <div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-primary))] mb-0.5">Mesa Identificada</p>
-                            <h4 className="text-xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Mesa {tableNumber}</h4>
+                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-primary))] mb-0.5">Mesa {tableNumber} identificada</p>
+                             <h4 className="text-xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Mesa {tableNumber}</h4>
                           </div>
                         </div>
                         <button 
