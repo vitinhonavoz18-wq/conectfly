@@ -117,7 +117,7 @@ export function TableManager({ restaurant }: Props) {
            <button
             onClick={loadData}
             className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/20 transition-all text-muted-foreground"
-            title="Atualizar Mesas"
+            title="Atualizar"
           >
             <RefreshCw className="h-4 w-4" />
           </button>
