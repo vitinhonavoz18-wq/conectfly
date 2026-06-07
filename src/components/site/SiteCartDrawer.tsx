@@ -525,44 +525,46 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 </div>
 
                 {/* Bloco 2 — Entrega */}
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
-                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
-                    Entrega
-                  </h3>
-                  <div className="grid gap-2">
-                    {hasZones && (
-                      <div className="relative group">
-                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-primary))]" />
-                        <select
-                          ref={zoneRef}
-                          value={zoneId}
-                          onChange={(e) => setZoneId(e.target.value)}
-                          className={`w-full pl-10 pr-8 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold text-xs uppercase tracking-wider appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
-                            validationAttempted && !selectedZone ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
-                          }`}
-                        >
-                          <option value="">Selecione o Bairro *</option>
-                          {deliveryZones.map((z) => (
-                            <option key={z.id} value={z.id}>
-                              {z.neighborhood} (+{formatBRL(Number(z.fee) || 0)})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    <textarea
-                      ref={addressRef}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Endereço (Rua, nº, complemento/referência)"
-                      rows={2}
-                      className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
-                        validationAttempted && !address.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
-                      }`}
-                    />
+                {orderType === "delivery" && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                      <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                      Entrega
+                    </h3>
+                    <div className="grid gap-2">
+                      {hasZones && (
+                        <div className="relative group">
+                          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-primary))]" />
+                          <select
+                            ref={zoneRef}
+                            value={zoneId}
+                            onChange={(e) => setZoneId(e.target.value)}
+                            className={`w-full pl-10 pr-8 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold text-xs uppercase tracking-wider appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
+                              validationAttempted && !selectedZone ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                            }`}
+                          >
+                            <option value="">Selecione o Bairro *</option>
+                            {deliveryZones.map((z) => (
+                              <option key={z.id} value={z.id}>
+                                {z.neighborhood} (+{formatBRL(Number(z.fee) || 0)})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <textarea
+                        ref={addressRef}
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Endereço (Rua, nº, complemento/referência)"
+                        rows={2}
+                        className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
+                          validationAttempted && !address.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                        }`}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Bloco 3 — Pagamento */}
                 <div className="space-y-3">
