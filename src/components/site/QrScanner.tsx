@@ -20,7 +20,7 @@ export function QrScanner({ onScan, onClose }: Props) {
         scannerRef.current = html5QrCode;
 
         const config = {
-          fps: 10,
+          fps: 5,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
         };
@@ -29,8 +29,8 @@ export function QrScanner({ onScan, onClose }: Props) {
           { facingMode: "environment" },
           config,
           (decodedText) => {
-            console.log("QR Decoded:", decodedText);
-            onScan(decodedText);
+             // Apenas log de baixo nível, o componente pai gerencia o debounce/validacao
+             onScan(decodedText);
           },
           () => {} // Uncaught error handler (ignoring noise)
         );
