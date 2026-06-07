@@ -8,7 +8,8 @@ import { useCart } from "./CartContext";
     category: MenuCategoryRow & { items: MenuItemRow[] };
     restaurant?: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
-
+    beverages?: BeverageRow[];
+    beverageCatalogs?: BeverageCatalogRow[];
   }
 
 interface FlavorCardProps {
