@@ -783,6 +783,25 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                           {isValidatingQr ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
                           <span className="uppercase text-xs font-black tracking-widest">Ler QR Code</span>
                         </button>
+                        {/* Testar token manualmente (Debug/Admin) */}
+                        <div className="w-full pt-4 border-t border-[hsl(var(--site-border))/0.5] mt-2">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-[hsl(var(--site-muted-fg))] mb-2">Testar token manualmente (Debug)</p>
+                          <div className="flex gap-2">
+                            <input 
+                              value={manualTableToken}
+                              onChange={(e) => setManualTableToken(e.target.value)}
+                              placeholder="URL ou Token"
+                              className="flex-1 px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] text-[10px] font-bold focus:outline-none focus:border-[hsl(var(--site-primary))]"
+                            />
+                            <button 
+                              onClick={handleManualTest}
+                              disabled={isValidatingQr}
+                              className="px-4 py-2 bg-[hsl(var(--site-primary)/0.1)] text-[hsl(var(--site-primary))] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[hsl(var(--site-primary)/0.2)] transition-all"
+                            >
+                              {isValidatingQr ? <Loader2 className="h-3 w-3 animate-spin" /> : "Validar"}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="p-5 rounded-[2rem] border-2 border-[hsl(var(--site-primary)/0.3)] bg-[hsl(var(--site-primary)/0.05)] flex items-center justify-between">
