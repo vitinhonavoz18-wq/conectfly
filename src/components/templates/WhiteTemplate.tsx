@@ -4,7 +4,6 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
-import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
@@ -41,19 +40,6 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
 
-  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
-  const beveragesPosition = r.site_settings?.beverages_position || "end";
-
-  const renderBeverages = () => (
-    (beveragesVisible && data.beverages && data.beverages.length > 0 && !hasPizzas) && (
-      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))]">
-        <div className="max-w-6xl mx-auto">
-          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
-        </div>
-      </div>
-    )
-  );
-
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra">
       <SiteHeader 
@@ -89,15 +75,11 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {beveragesPosition === "after_products" && renderBeverages()}
-
         {showCombos && (
           <div>
             <SiteComboSection groups={data.comboGroups} />
           </div>
         )}
-
-        {beveragesPosition === "after_combos" && renderBeverages()}
 
         <div>
           <SiteMenuSection 
@@ -108,8 +90,6 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             beverageCatalogs={data.beverageCatalogs}
           />
         </div>
-
-        {beveragesPosition === "end" && renderBeverages()}
       </main>
       <SiteFooter
         name={r.name}
