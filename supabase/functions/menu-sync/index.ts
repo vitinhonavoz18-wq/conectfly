@@ -180,16 +180,18 @@
       console.log(`MENU_SYNC_AUTH_DEBUG: Final Auth Result = success. Method used: ${authMethodUsed}`);
 
  
-     if (!pizzeria) {
-       return new Response(JSON.stringify({ 
-         success: false, 
-         error: "Pizzaria não encontrada", 
-         slug: slug || "não fornecido" 
-       }), {
-         status: 404,
-         headers: { ...corsHeaders, "Content-Type": "application/json" }
-       });
-     }
+      if (!pizzeria) {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: "restaurant_not_found", 
+          message: "Restaurante não encontrado.",
+          slug: slug || "não fornecido" 
+        }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
  
      const restaurantId = pizzeria.id;
  
