@@ -648,65 +648,68 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             </div>
 
 
-          <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-end px-1">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
-                    {step === "cart" ? "Subtotal" : "Total a Pagar"}
-                  </span>
-                  <span className="text-3xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
-                    {formatBRL(step === "cart" ? totalPrice : grandTotal)}
-                  </span>
+          {step !== "confirmation" && (
+            <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-end px-1">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
+                      {step === "cart" ? "Subtotal" : "Total a Pagar"}
+                    </span>
+                    <span className="text-3xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
+                      {formatBRL(step === "cart" ? totalPrice : grandTotal)}
+                    </span>
+                  </div>
+                  {step === "cart" && hasZones && (
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Logística</span>
+                      <span className="text-sm font-black text-[hsl(var(--site-fg))]">sob consulta</span>
+                    </div>
+                  )}
+                  {step === "checkout" && orderType === "delivery" && hasZones && selectedZone && (
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Frete ({selectedZone.neighborhood})</span>
+                      <span className="text-sm font-black text-[hsl(var(--site-fg))]">{formatBRL(deliveryFee)}</span>
+                    </div>
+                  )}
                 </div>
-                {step === "cart" && hasZones && (
-                  <div className="text-right flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Logística</span>
-                    <span className="text-sm font-black text-[hsl(var(--site-fg))]">sob consulta</span>
-                  </div>
-                )}
-                {step === "checkout" && hasZones && selectedZone && (
-                  <div className="text-right flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Frete ({selectedZone.neighborhood})</span>
-                    <span className="text-sm font-black text-[hsl(var(--site-fg))]">{formatBRL(deliveryFee)}</span>
-                  </div>
-                )}
+                
+                <button
+                  onClick={step === "cart" ? goToCheckout : handleFinish}
+                  disabled={sending || (step === "cart" && items.length === 0)}
+                  className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 group uppercase tracking-widest font-black text-sm transition-all active:scale-95 ${
+                    step === "cart" 
+                      ? "site-btn-primary" 
+                      : "site-btn-success"
+                  } ${sending || (step === "cart" && items.length === 0) ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {sending ? (
+                    <span className="animate-pulse">PROCESSANDO...</span>
+                  ) : (
+                    <>
+                      <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
+                      {step === "cart" ? (
+                        <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      ) : (
+                        <ShoppingBag className="h-5 w-5" />
+                      )}
+                    </>
+                  )}
+                </button>
+                
+                <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium px-4">
+                  {step === "cart" 
+                    ? "Itens selecionados serão revisados no próximo passo."
+                    : (flycontrolOn && whatsappOn
+                      ? `Enviando para o painel e WhatsApp do ${restaurantName}`
+                      : flycontrolOn
+                        ? `Enviando para o painel do ${restaurantName}`
+                        : `Enviando para o WhatsApp do ${restaurantName}`)}
+                </p>
               </div>
-              
-              <button
-                onClick={step === "cart" ? goToCheckout : handleFinish}
-                disabled={sending || (step === "cart" && items.length === 0)}
-                className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 group uppercase tracking-widest font-black text-sm transition-all active:scale-95 ${
-                  step === "cart" 
-                    ? "site-btn-primary" 
-                    : "site-btn-success"
-                } ${sending || (step === "cart" && items.length === 0) ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {sending ? (
-                  <span className="animate-pulse">PROCESSANDO...</span>
-                ) : (
-                  <>
-                    <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
-                    {step === "cart" ? (
-                      <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    ) : (
-                      <ShoppingBag className="h-5 w-5" />
-                    )}
-                  </>
-                )}
-              </button>
-              
-              <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium px-4">
-                {step === "cart" 
-                  ? "Itens selecionados serão revisados no próximo passo."
-                  : (flycontrolOn && whatsappOn
-                    ? `Enviando para o painel e WhatsApp do ${restaurantName}`
-                    : flycontrolOn
-                      ? `Enviando para o painel do ${restaurantName}`
-                      : `Enviando para o WhatsApp do ${restaurantName}`)}
-              </p>
             </div>
-          </div>
+          )}
+
         </aside>
     </>
   );
