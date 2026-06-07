@@ -288,9 +288,11 @@
           }
         };
  
-       return new Response(JSON.stringify(response), {
-         headers: { ...corsHeaders, "Content-Type": "application/json" }
-       });
+        console.log(`PUBLIC_MENU_SYNC_RESPONSE: success=true categories_count=${categories.length} products_count=${productsRaw.length} drinks_count=${beverages.length}`);
+
+        return new Response(JSON.stringify(response), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
      }
  
     // Write operations (POST only for actions)
