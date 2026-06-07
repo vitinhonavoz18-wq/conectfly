@@ -306,7 +306,7 @@ function EditPage() {
                 </p>
               </div>
             </div>
-            <TableManager restaurantId={restaurant.id} restaurantSlug={restaurant.slug} />
+            <TableManager restaurant={restaurant} />
           </div>
         )}
         {tab === "checkout" && (
