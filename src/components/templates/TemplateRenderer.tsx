@@ -3,6 +3,7 @@ import { BlackTemplate } from "./BlackTemplate";
 import { WhiteTemplate } from "./WhiteTemplate";
 import { PizzaRedTemplate } from "./PizzaRedTemplate";
 import { BurgerTemplate } from "./BurgerTemplate";
+import { BarPrimeTemplate } from "./BarPrimeTemplate";
 
 interface TemplateRendererProps {
   data: SiteData;
@@ -18,6 +19,8 @@ export function TemplateRenderer({ data }: TemplateRendererProps) {
       return <PizzaRedTemplate data={data} />;
     case "burger_style":
       return <BurgerTemplate data={data} />;
+    case "bar_prime":
+      return <BarPrimeTemplate data={data} />;
     case "black":
     default:
       return <BlackTemplate data={data} />;

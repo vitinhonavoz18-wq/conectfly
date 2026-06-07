@@ -409,6 +409,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
               desc: "Moderno, foco em hamburguerias.",
               colors: ["#F3F4F6", "#D99000"],
               mood: "Comercial"
+            },
+            { 
+              id: "bar_prime", 
+              name: "Bar Prime", 
+              desc: "Visual moderno para bares, drinks e eventos.",
+              colors: ["#0a0a0a", "#f59e0b"],
+              mood: "Premium"
             }
           ].map((t) => (
             <button

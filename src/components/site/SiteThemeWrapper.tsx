@@ -15,6 +15,7 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
   const isWhite = template === "white";
   const isPizzaRed = template === "pizza_hut_style";
   const isBurger = template === "burger_style";
+  const isBarPrime = template === "bar_prime";
 
   // Base tokens for different templates
   let themeTokens = {
@@ -73,6 +74,20 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
       primaryFg: "0 0% 100%",
       headerBg: "0 0% 7% / 100%",
       headerFg: "0 0% 100%",
+    };
+  } else if (isBarPrime) {
+    themeTokens = {
+      ...themeTokens,
+      bg: "0 0% 4%", // Background profundo para bares/eventos
+      fg: "0 0% 98%",
+      card: "0 0% 7%",
+      border: "0 0% 15%",
+      muted: "0 0% 10%",
+      mutedFg: "0 0% 60%",
+      primary: primaryColor || "38 92% 50%", // Ouro ou cor do restaurante
+      primaryFg: "0 0% 0%",
+      headerBg: "0 0% 5% / 95%",
+      headerFg: "0 0% 98%",
     };
   }
 
