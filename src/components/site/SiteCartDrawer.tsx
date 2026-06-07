@@ -185,66 +185,56 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     
     setIsValidatingQr(true);
     const targetSlug = (slugFromQr || restaurant.slug)?.trim();
+    const endpointBase = resolveTablesUrl(restaurant);
     
-    console.log("QR_VALIDATE_START:", `restaurant_slug=${targetSlug}, table_token=${token}`);
+    if (!endpointBase) {
+      console.log("QR_RESULT: restaurant_not_found (URL FlyControl não configurada)");
+      setIsValidatingQr(false);
+      return false;
+    }
+
+    const validateUrl = `${endpointBase}/validate-table?restaurant_slug=${targetSlug}&table_token=${token}`;
+    console.log("QR_VALIDATE_START:", validateUrl);
     
     try {
-      // 1. Verificar se o restaurante existe (opcional, mas bom para debug detalhado)
-      const { data: restaurantData, error: restaurantError } = await supabase
-        .from("restaurants")
-        .select("id")
-        .eq("slug", targetSlug)
-        .maybeSingle();
+      const response = await fetch(validateUrl);
+      const data = await response.json();
 
-      if (restaurantError || !restaurantData) {
-        console.log("QR_RESULT: restaurant_not_found");
-        toast.error("Restaurante não identificado. Verifique o QR Code.", { id: "qr-error" });
-        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "restaurant_not_found" } : null);
-        return false;
-      }
+      console.log("QR_VALIDATE_RESPONSE:", data);
 
-      // 2. Verificar se a mesa existe para esse restaurante e token
-      const { data: tableData, error: tableError } = await supabase
-        .from("restaurant_tables")
-        .select("id, table_number, table_name, is_active")
-        .eq("public_token", token)
-        .eq("restaurant_id", restaurantData.id)
-        .maybeSingle();
+      if (!data.valid) {
+        const reason = data.reason || "table_not_found";
+        console.log(`QR_RESULT: ${reason}`);
+        
+        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: reason } : null);
 
-      if (tableError) throw tableError;
-
-      if (!tableData) {
-        console.log("QR_RESULT: table_not_found");
-        toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
-        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "table_not_found" } : null);
-        return false;
-      }
-
-      // 3. Verificar se a mesa está ativa
-      if (!tableData.is_active) {
-        console.log("QR_RESULT: inactive_table");
-        toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
-        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "inactive_table" } : null);
+        if (reason === "restaurant_not_found") {
+          toast.error("Restaurante não identificado. Verifique o QR Code.", { id: "qr-error" });
+        } else if (reason === "inactive_table") {
+          toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
+        } else {
+          toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
+        }
         return false;
       }
 
       console.log("QR_RESULT: valid true");
-      console.log("Mesa identificada:", tableData);
+      console.log("Mesa identificada:", data.table);
       
-      const validatedData = {
-        id: tableData.id,
-        number: tableData.table_number,
-        name: tableData.table_name,
+      const tableData = {
+        id: data.table.id,
+        number: data.table.table_number,
+        name: data.table.table_name,
         token: token,
       };
 
-      setValidatedTable(validatedData);
-      setTableId(tableData.id);
-      setTableNumber(tableData.table_number);
+      setValidatedTable(tableData);
+      setTableId(data.table.id);
+      setTableNumber(data.table.table_number);
       setTableToken(token);
       setOrderType("table");
       
-      toast.success(`Mesa ${tableData.table_number} identificada!`, { id: "qr-error" });
+      toast.success(`Mesa ${data.table.table_number} identificada!`, { id: "qr-error" });
       setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "valid true" } : null);
       setIsScanning(false);
       return true;
