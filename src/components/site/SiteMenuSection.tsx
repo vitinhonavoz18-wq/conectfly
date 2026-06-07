@@ -17,7 +17,10 @@ interface Props {
  
 export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", beverages, beverageCatalogs }: Props) {
   const [active, setActive] = useState<string | null>(null);
-  if (categories.length === 0) return null;
+  
+  const hasBeverages = beverages && beverages.length > 0;
+  if (categories.length === 0 && !hasBeverages) return null;
+
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
 
   const isBeverageCategory = (c: MenuCategoryRow) => {
