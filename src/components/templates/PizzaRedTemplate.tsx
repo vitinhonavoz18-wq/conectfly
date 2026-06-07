@@ -99,7 +99,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {beveragesPosition === "end" && renderBeverages()}
+        
       </main>
       <SiteFooter
         name={r.name}
