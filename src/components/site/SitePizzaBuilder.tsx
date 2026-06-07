@@ -1,8 +1,9 @@
 import { useMemo, useState, useEffect, useRef } from "react";
- import { Check, Plus, Minus, Sparkles, Info, ImageIcon, ShoppingBag, Flame } from "lucide-react";
- import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
+import { Check, Plus, Minus, Sparkles, Info, ImageIcon, ShoppingBag, Flame, GlassWater } from "lucide-react";
+import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
+import { SiteBeverageSection } from "./SiteBeverageSection";
 
   interface Props {
     category: MenuCategoryRow & { items: MenuItemRow[] };
