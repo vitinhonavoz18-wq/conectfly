@@ -329,7 +329,7 @@ body {
       hero_video_url: r.hero_video_url,
       flycontrol_enabled: !!r.flycontrol_enabled,
       flycontrol_api_url: r.flycontrol_api_url ?? "",
-      flycontrol_api_key: "", // Removido por segurança. Use variáveis de ambiente no servidor.
+      flycontrol_api_key: "", // Removido por segurança. Use segredos no servidor (Edge Functions).
       flycontrol_base_url: r.flycontrol_base_url ?? "",
       flycontrol_tenant_id: r.flycontrol_tenant_id ?? "",
       whatsapp_enabled: r.whatsapp_enabled !== false,
@@ -1031,9 +1031,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       const base = (restaurant.flycontrol_base_url || "").replace(/\\/+$/, "");
       const url = base ? base + "/api/orders" : restaurant.flycontrol_api_url;
       if (!restaurant.flycontrol_enabled || !url) return;
-      // IMPORTANTE: A API Key deve ser injetada via servidor/proxy para não ficar exposta.
-      const apiKey = "INFORME_SUA_CHAVE_AQUI"; 
-      if (!apiKey || apiKey === "INFORME_SUA_CHAVE_AQUI") return;
+      // A API Key deve ser injetada via servidor para segurança.
+      const apiKey = "DASHBOARD_SECRET"; 
+      if (!apiKey || apiKey === "DASHBOARD_SECRET") {
+        console.warn("API Key não configurada.");
+        return;
+      }
 
       const payload = {
         order_id: (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : "ord_" + Date.now(),
