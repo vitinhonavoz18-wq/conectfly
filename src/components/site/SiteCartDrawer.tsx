@@ -1115,7 +1115,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     </span>
                   ) : (
                     <>
-                      <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
+                      <span>
+                        {step === "cart" 
+                          ? "Próximo Passo" 
+                          : (orderType === "table" && restaurant?.selected_template === 'bar_prime' 
+                             ? `Pedir na Mesa ${tableNumber}` 
+                             : "Finalizar Pedido")}
+                      </span>
                       {step === "cart" ? (
                         <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                       ) : (
