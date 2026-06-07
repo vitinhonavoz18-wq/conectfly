@@ -404,6 +404,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   </div>
                 ) : (
                   items.map((l) => (
+                    // ... item rendering remains same
                     <div
                       key={`${l.itemId}-${l.sizeLabel ?? ""}`}
                       className="rounded-[1.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-4 relative overflow-hidden group shadow-sm transition-all"
@@ -455,8 +456,45 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   ))
                 )}
               </div>
-            ) : (
+            ) : step === "checkout" ? (
               <div className="p-4 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
+                {/* Seleção de Modo de Atendimento */}
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
+                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                    Como prefere seu pedido?
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {restaurant?.delivery_enabled !== false && (
+                      <button
+                        onClick={() => setOrderType("delivery")}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'delivery' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
+                      >
+                        <MapPin className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tight">Delivery</span>
+                      </button>
+                    )}
+                    {restaurant?.pickup_enabled && (
+                      <button
+                        onClick={() => setOrderType("pickup")}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'pickup' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
+                      >
+                        <Store className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tight">Retirada</span>
+                      </button>
+                    )}
+                    {(restaurant?.table_enabled || tableNumber) && (
+                      <button
+                        onClick={() => setOrderType("table")}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
+                      >
+                        <Utensils className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tight">{tableNumber ? `Mesa ${tableNumber}` : 'Mesa'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Bloco 1 — Dados do cliente */}
                 <div className="space-y-2">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
