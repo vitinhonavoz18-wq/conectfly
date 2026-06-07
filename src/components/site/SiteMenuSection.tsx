@@ -56,12 +56,12 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-left">
-            <h3 className="text-white font-black text-base sm:text-lg leading-tight drop-shadow">
+          <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-4 text-left">
+            <h3 className="text-white font-black text-sm sm:text-lg leading-tight drop-shadow">
               {c.icon ? `${c.icon} ` : ""}
               {c.name}
             </h3>
-            <p className="text-white/80 text-xs mt-0.5">
+            <p className="text-white/80 text-[10px] sm:text-xs mt-0.5">
               {c.is_pizza
                 ? `${c.items.length} ${c.items.length === 1 ? "sabor" : "sabores"}`
                 : `${c.items.length} ${c.items.length === 1 ? "item" : "itens"}`}
