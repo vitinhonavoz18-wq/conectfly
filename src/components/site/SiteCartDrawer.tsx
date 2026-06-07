@@ -20,7 +20,12 @@ interface Props {
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
   const { items, updateQty, removeLine, totalPrice, clear } = useCart();
-  const [step, setStep] = useState<"cart" | "checkout">("cart");
+  const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
+  const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
+  const [tableNumber, setTableNumber] = useState<string | null>(null);
+  const [ticketNumber, setTicketNumber] = useState<string | null>(null);
+  const [finishedOrder, setFinishedOrder] = useState<any>(null);
+  
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
