@@ -76,11 +76,13 @@ export function buildOrderPayload(args: {
   table_number?: string | null;
   table_id?: string | null;
   table_token?: string | null;
+  table_session_id?: string | null;
   ticket_number?: string | null;
   order_type?: "delivery" | "pickup" | "table";
   service_mode?: "delivery" | "retirada" | "mesa";
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => {
+
      const isBeverage = l.itemId.startsWith('bev-');
      const isCombo = l.itemId.startsWith('combo-');
      const isPizza = !isBeverage && !isCombo && ((l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza"));
@@ -167,7 +169,9 @@ export function buildOrderPayload(args: {
       table_number: args.table_number || null,
       table_id: args.table_id || null,
       table_token: args.table_token || null,
+      table_session_id: args.table_session_id || null,
       ticket_number: args.ticket_number || null,
+
       notes: (args.notes ?? "").trim(),
       whatsapp_message: args.whatsapp_message
     }
