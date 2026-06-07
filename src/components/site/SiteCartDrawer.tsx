@@ -376,8 +376,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         firstEmptyField = addressRef;
         errorMessage = "Informe o seu endereço completo";
       }
-    } else if (orderType === "table" && !tableId) {
-      errorMessage = "Identifique sua mesa lendo o QR Code";
+    } else if (orderType === "table") {
+      if (!tableNumber) {
+        errorMessage = "O número da mesa não foi identificado.";
+      } else if (!tableToken) {
+        errorMessage = "O token de validação da mesa está ausente. Escaneie o QR Code novamente.";
+      }
     } else if (!paymentMethod) {
       firstEmptyField = paymentRef;
       errorMessage = "Selecione uma forma de pagamento";
