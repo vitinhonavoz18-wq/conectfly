@@ -10,7 +10,10 @@ interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
   entryMode?: "navigation" | "direct";
+  beverages?: BeverageRow[];
+  beverageCatalogs?: BeverageCatalogRow[];
 }
+
  
 export function SiteMenuSection({ categories, restaurant, entryMode = "navigation" }: Props) {
   const [active, setActive] = useState<string | null>(null);
