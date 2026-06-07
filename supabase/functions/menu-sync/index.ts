@@ -277,12 +277,13 @@
  
     // Write operations (POST only for actions)
     if (method === "POST") {
-      if (!apiKey) {
+      if (method === "POST" && authMethodUsed !== "api_key") {
         return new Response(JSON.stringify({ success: false, error: "API Key é obrigatória para escrita" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
+
 
       const action = body.action;
       const type = body.type;
