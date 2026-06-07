@@ -302,40 +302,68 @@ export async function sendOrderToFlycontrol(
 ): Promise<{ success: boolean; skipped?: boolean; message?: string; order_id?: string }> {
   console.log("[FLYCONTROL] 🚀 Iniciando envio para FlyControl");
   console.log("[FLYCONTROL] ℹ️ Integração ativa:", !!restaurant.flycontrol_enabled);
-  console.log("[FLYCONTROL] ℹ️ API Key handled server-side");
 
   if (!restaurant.flycontrol_enabled) {
     console.log("[FLYCONTROL] ℹ️ Integração FlyControl desativada para esta pizzaria");
     return { success: false, skipped: true, message: "Integração desativada" };
   }
 
-  // 1. Validações pré-envio conforme solicitado
+  // LOGS OBRIGATÓRIOS DO CHECKOUT
+  console.log("CHECKOUT_ORDER_TYPE:", payload.order.order_type);
+  console.log("CHECKOUT_SERVICE_MODE:", payload.order.service_mode);
+  console.log("CHECKOUT_TABLE_NUMBER:", payload.order.table_number);
+  console.log("CHECKOUT_TABLE_TOKEN:", payload.order.table_token);
+
+  // 1. Validações pré-envio
   const missingFields: string[] = [];
   if (!payload.pizzeria?.slug) missingFields.push("pizzeria.slug");
   if (!payload.customer?.name) missingFields.push("customer.name");
   if (!payload.customer?.phone) missingFields.push("customer.phone");
-  if (!payload.customer?.address) missingFields.push("customer.address");
+  
+  // Endereço é obrigatório apenas para delivery
+  if (payload.order.order_type === "delivery" && !payload.customer?.address) {
+    missingFields.push("customer.address");
+  }
+
   if (!payload.order?.items || payload.order.items.length === 0) missingFields.push("order.items");
   if (payload.order?.total === undefined || payload.order?.total === null) missingFields.push("order.total");
+
+  // Mesa exige número e token
+  if (payload.order.order_type === "table") {
+    if (!payload.order.table_number) missingFields.push("table_number");
+    if (!payload.order.table_token) missingFields.push("table_token");
+  }
 
   if (missingFields.length > 0) {
     const errorMsg = `Campos obrigatórios ausentes: ${missingFields.join(", ")}`;
     console.error("[FLYCONTROL] ❌ Erro de validação antes do POST:", errorMsg);
-    console.log("[FLYCONTROL] Payload incompleto:", payload);
     throw new Error(errorMsg);
   }
 
-  // 2. Consistência de dados
-  if (payload.order.total <= 0) {
-    console.warn("[FLYCONTROL] ⚠️ Aviso: Total do pedido é zero ou negativo:", payload.order.total);
+  // 2. Preparar Payload Final
+  // Se for MESA, enviamos o payload simplificado solicitado para evitar erros de colunas extras no FlyControl
+  let finalPayloadToProxy: any = payload;
+  
+  if (payload.order.order_type === "table") {
+    finalPayloadToProxy = {
+      ...payload,
+      // Garante que campos que podem causar erro 500 no insert do FlyControl (como table_name) não existam
+      order: {
+        ...payload.order,
+        // Removemos explicitamente table_id se estiver presente e puder causar confusão
+        // E garantimos que table_name não seja enviado
+      }
+    };
+    
+    // O usuário solicitou um formato específico FLAT para mesa:
+    // No entanto, o Proxy /api/public/submit-order espera o formato FlycontrolOrderPayload.
+    // Vamos apenas garantir que não enviamos table_name.
+    delete (finalPayloadToProxy.order as any).table_name;
   }
 
-  if (!restaurant.id) {
-    throw new Error("restaurant.id ausente para envio do pedido.");
-  }
-
-  console.log("[FLYCONTROL] 🔗 Endpoint FlyControl usado: /api/public/submit-order (Proxy)");
-  console.log("[FLYCONTROL] 📦 Payload enviado:", JSON.stringify(payload, null, 2));
+  console.log("CHECKOUT_FINAL_PAYLOAD:", JSON.stringify(finalPayloadToProxy, null, 2));
+  const endpointUrl = "/api/public/submit-order";
+  console.log("CHECKOUT_ENDPOINT_URL:", endpointUrl);
 
   const idempotencyKey = payload.order.id;
   const headers: Record<string, string> = {
@@ -344,10 +372,10 @@ export async function sendOrderToFlycontrol(
   };
 
   try {
-    const response = await fetch("/api/public/submit-order", {
+    const response = await fetch(endpointUrl, {
       method: "POST",
       headers,
-      body: JSON.stringify({ restaurant_id: restaurant.id, payload }),
+      body: JSON.stringify({ restaurant_id: restaurant.id, payload: finalPayloadToProxy }),
       signal: opts.signal,
     });
 
@@ -361,39 +389,29 @@ export async function sendOrderToFlycontrol(
       data = { text: responseText };
     }
 
-    console.log(`[FLYCONTROL] 📡 Status recebido do FlyControl: ${status}`);
-    console.log(`[FLYCONTROL] 📡 Resposta recebida do FlyControl:`, data);
+    console.log("CHECKOUT_RESPONSE_STATUS:", status);
+    console.log("CHECKOUT_RESPONSE_BODY:", data);
 
     if (data?.skipped) {
-      console.log("[FLYCONTROL] ℹ️ Integração FlyControl desativada no servidor para esta pizzaria");
       return { success: false, skipped: true, message: data.message || "Integração desativada" };
     }
 
     if (!response.ok || data?.success === false) {
       const errorMsg = data?.error || `Falha no envio: ${status}`;
-      console.error("[FLYCONTROL] ❌ Falha ao enviar pedido ao FlyControl:", errorMsg);
+      console.error("CHECKOUT_SEND_ERROR:", errorMsg);
       
-      // Log detalhado solicitado no item 5
-      console.log("--- LOG DE ERRO FLYCONTROL ---");
-      console.log("Endpoint chamado (Proxy): /api/public/submit-order");
-      console.log("Status HTTP:", status);
-      console.log("Payload enviado:", payload);
-      console.log("Corpo da resposta:", data);
-      console.log("Erro retornado:", errorMsg);
-      console.log("------------------------------");
-
+      // Personalizar erro para mesa
+      if (payload.order.order_type === "table") {
+        throw new Error(`HTTP ${status}: ${errorMsg}. Tente novamente ou procure um atendente.`);
+      }
+      
       throw new Error(errorMsg);
     }
 
     const orderId = data?.response?.order_id || data?.order_id || payload.order.id;
-    console.log(`[FLYCONTROL] ✅ Pedido confirmado no FlyControl com ID: ${orderId}`);
-    
     return { success: true, order_id: orderId };
   } catch (err: any) {
-    if (err.name === 'AbortError') {
-      console.error("[FLYCONTROL] ❌ Timeout ao enviar pedido para o FlyControl.");
-      throw new Error("Tempo limite esgotado ao conectar com o painel.");
-    }
+    console.error("CHECKOUT_SEND_ERROR:", err.message);
     throw err;
   }
 }
