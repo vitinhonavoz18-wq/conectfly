@@ -1064,10 +1064,31 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         </aside>
 
         {isScanning && (
-          <QrScanner 
-            onScan={onQrScan} 
-            onClose={() => setIsScanning(false)} 
-          />
+          <div className="relative">
+            <QrScanner 
+              onScan={onQrScan} 
+              onClose={() => {
+                setIsScanning(false);
+                setDebugQr(null);
+              }} 
+            />
+            
+            {/* Visual Debug Area (Overlay) */}
+            {debugQr && (
+              <div className="fixed bottom-0 left-0 right-0 z-[101] bg-black/90 text-white p-4 font-mono text-[10px] space-y-1 animate-in slide-in-from-bottom-full duration-300">
+                <div className="flex justify-between items-center mb-2 pb-2 border-b border-white/10">
+                  <span className="font-black uppercase tracking-widest text-[8px] text-primary">Debug QR Scanner</span>
+                  <span className={`px-2 py-0.5 rounded-full font-black ${debugQr.status === 'Válido!' ? 'bg-emerald-500' : (debugQr.status === 'Validando...' ? 'bg-amber-500' : 'bg-red-500')}`}>
+                    {debugQr.status}
+                  </span>
+                </div>
+                <p><span className="text-white/40 uppercase tracking-tighter mr-2">Raw:</span> {debugQr.rawValue}</p>
+                <p><span className="text-white/40 uppercase tracking-tighter mr-2">Slug:</span> {debugQr.slug || "n/a"}</p>
+                <p><span className="text-white/40 uppercase tracking-tighter mr-2">Token:</span> {debugQr.token || "n/a"}</p>
+                {debugQr.reason && <p className="text-red-400 mt-2"><span className="text-white/40 uppercase tracking-tighter mr-2">Erro:</span> {debugQr.reason}</p>}
+              </div>
+            )}
+          </div>
         )}
       </>
   );
