@@ -215,8 +215,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       const orderPayload = buildOrderPayload({
         name,
         phone,
-        address,
-        neighborhood: selectedZone?.neighborhood ?? null,
+        address: orderData.customer.address,
+        neighborhood: orderData.customer.neighborhood,
         reference: null,
         deliveryFee,
         items,
@@ -228,7 +228,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         pizzeria_slug: restaurant?.slug || "",
         pizzeria_name: restaurant?.name || "",
         whatsapp_message: messageWhatsApp,
-        delivery_type: hasZones ? "delivery" : "retirada",
+        delivery_type: orderType === "delivery" ? "delivery" : (orderType === "table" ? "mesa" : "retirada"),
+        order_type: orderType,
+        table_number: orderData.table_number,
+        ticket_number: orderData.ticket_number,
       });
 
       const payload = orderPayload;
