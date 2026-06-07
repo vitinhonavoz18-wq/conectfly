@@ -570,7 +570,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
       });
 
-      console.log("CHECKOUT_FINAL_PAYLOAD:", orderPayload);
+      console.log("FINAL_ORDER_PAYLOAD:", JSON.stringify(orderPayload, null, 2));
       console.log("CHECKOUT_ENDPOINT_URL:", "/api/public/submit-order (Proxy)");
 
       // 1. Envio para FIQON (Webhook Externo)
