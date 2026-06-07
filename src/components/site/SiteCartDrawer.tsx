@@ -158,12 +158,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
+    // Generate ticket number for pickup if not exists
+    let generatedTicket = ticketNumber;
+    if (orderType === "pickup" && !generatedTicket) {
+      generatedTicket = Math.floor(1000 + Math.random() * 9000).toString();
+      setTicketNumber(generatedTicket);
+    }
+
     const orderData = {
       customer: {
         name,
         phone,
-        address,
-        neighborhood: selectedZone?.neighborhood || null,
+        address: orderType === "delivery" ? address : (orderType === "table" ? `Mesa ${tableNumber}` : "Retirada no Balcão"),
+        neighborhood: orderType === "delivery" ? (selectedZone?.neighborhood || null) : null,
       },
       items,
       subtotal: totalPrice,
@@ -173,6 +180,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       changeFor: changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
       notes,
       createdAt: new Date().toISOString(),
+      order_type: orderType,
+      table_number: orderType === "table" ? tableNumber : null,
+      ticket_number: generatedTicket,
     };
 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
