@@ -1026,8 +1026,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 >
                   {sending ? (
                     <span className="animate-pulse">
-                      {orderType === "delivery" ? "ENVIANDO AO WHATSAPP..." : 
-                       orderType === "table" ? `ENVIANDO MESA ${tableNumber}...` : 
+                      {orderType === "table" ? `ENVIANDO MESA ${tableNumber}...` : 
+                       orderType === "delivery" ? "ENVIANDO AO WHATSAPP..." : 
                        "ENVIANDO PEDIDO..."}
                     </span>
                   ) : (
