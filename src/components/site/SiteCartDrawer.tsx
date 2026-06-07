@@ -90,7 +90,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   const extractTableQrData = (qrValue: string) => {
     console.log("QR_RAW_VALUE:", qrValue);
-    if (!qrValue) return { restaurant_slug: null, table_token: null };
+    if (!qrValue) return { restaurant_slug: null, table_number: null, table_token: null };
 
     // Limpeza inicial: espaços, quebras de linha, aspas extras, caracteres invisíveis
     let cleanedValue = qrValue.trim()
@@ -101,6 +101,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     let slug = restaurant?.slug || null;
     let token = null;
+    let number = null;
 
     // 1. JSON
     try {
@@ -108,6 +109,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (parsed.table_token || parsed.token || parsed.public_token) {
         const result = {
           restaurant_slug: parsed.restaurant_slug || parsed.slug || slug,
+          table_number: parsed.table_number || parsed.number || parsed.mesa || parsed.table || null,
           table_token: parsed.table_token || parsed.token || parsed.public_token
         };
         console.log("QR_EXTRACTED_DATA (JSON):", result);
@@ -117,7 +119,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       // Not a JSON
     }
 
-    // 2. URL completa ou URL com rota
+    // 2. URL parsing
     try {
       // Tenta tratar como URL se contiver http ou se parecer um path
       const isUrl = cleanedValue.startsWith('http') || cleanedValue.includes('?');
@@ -129,18 +131,23 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       // Extrair slug da URL se for conectfly.com.br/SLUG
       if (url.hostname.includes("conectfly.com.br") || url.hostname === "localhost") {
         const pathParts = url.pathname.split("/").filter(Boolean);
-        // Se o primeiro path não for 'mesa' ou 'table', provavelmente é o slug
         if (pathParts.length > 0 && !["mesa", "table", "m"].includes(pathParts[0].toLowerCase())) {
           slug = pathParts[0];
         }
       }
 
-      // Caso A: ?mode=table&table_token=TOKEN ou ?token=TOKEN ou ?table_token=...
+      // Extrair token
       token = url.searchParams.get("table_token") || 
               url.searchParams.get("token") || 
               url.searchParams.get("public_token");
       
-      // Caso B: /mesa/TOKEN ou /table/TOKEN ou /SLUG/mesa/TOKEN
+      // Extrair número da mesa
+      number = url.searchParams.get("table_number") || 
+               url.searchParams.get("mesa") || 
+               url.searchParams.get("table") ||
+               url.searchParams.get("m");
+
+      // Caso B: /mesa/TOKEN ou /table/TOKEN ou /SLUG/mesa/TOKEN (se token não veio via query)
       if (!token) {
         const paths = url.pathname.split("/").filter(Boolean);
         const mesaIdx = paths.findIndex(p => ["mesa", "table", "m"].includes(p.toLowerCase()));
@@ -153,125 +160,80 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
 
     // 3. Token puro (se ainda não achou nada)
-    if (!token) {
-      // Se não é URL e não é JSON, o próprio valor limpo pode ser o token
-      if (!cleanedValue.includes("?") && !cleanedValue.includes("/")) {
-        token = cleanedValue;
-      }
+    if (!token && !cleanedValue.includes("?") && !cleanedValue.includes("/")) {
+      token = cleanedValue;
     }
 
     const result = { 
       restaurant_slug: slug, 
+      table_number: number,
       table_token: token?.trim() || null 
     };
     
     console.log("QR_EXTRACTED_DATA:", result);
-    console.log("QR_RESTAURANT_SLUG_USED:", result.restaurant_slug);
-    console.log("QR_TABLE_TOKEN_USED:", result.table_token);
-    
     return result;
   };
 
-  const handleValidateTable = async (token: string, slugFromQr?: string | null) => {
-    if (!restaurant) {
-      console.log("QR_VALIDATE_ERROR_REASON: restaurant_not_found (Contexto ausente)");
-      return false;
+  const handleValidateTable = async (token: string, slugFromQr?: string | null, numberFromQr?: string | null) => {
+    // Nova estratégia: Se tivermos token e número, validamos no checkout final via FlyControl
+    if (token && numberFromQr) {
+      console.log("QR_VALIDATE_FRONTEND_AUTO:", { token, numberFromQr });
+      
+      const tableData = {
+        id: "offline-table", // ID temporário, será validado no backend
+        number: numberFromQr,
+        token: token,
+      };
+
+      setValidatedTable(tableData);
+      setTableId("offline-table");
+      setTableNumber(numberFromQr);
+      setTableToken(token);
+      setOrderType("table");
+      
+      toast.success(`Mesa ${numberFromQr} identificada!`, { id: "qr-error" });
+      setIsScanning(false);
+      return true;
     }
-    
-    if (isValidatingQr) {
-      console.log("QR_DUPLICATE_SCAN_IGNORED: Já existe uma validação em curso");
-      return false;
-    }
+
+    // Se não tiver número, tentamos validar via endpoint antigo (opcional, para compatibilidade)
+    if (!restaurant) return false;
     
     setIsValidatingQr(true);
     const targetSlug = (slugFromQr || restaurant.slug)?.trim();
     const endpointBase = resolveTablesUrl(restaurant);
     
     if (!endpointBase) {
-      console.log("QR_RESULT: restaurant_not_found (URL FlyControl não configurada)");
       setIsValidatingQr(false);
       return false;
     }
 
     const validateUrl = `${endpointBase}/validate-table?restaurant_slug=${targetSlug}&table_token=${token}`;
-    console.log("QR_VALIDATE_ENDPOINT_URL:", validateUrl);
     
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-      const response = await fetch(validateUrl, {
-        method: "GET",
-        signal: controller.signal,
-        headers: {
-          "Accept": "application/json"
-        }
-      });
-      
-      clearTimeout(timeoutId);
-
-      console.log("QR_VALIDATE_HTTP_STATUS:", response.status);
-      
-      const rawText = await response.text();
-      console.log("QR_VALIDATE_RAW_RESPONSE:", rawText);
-
-      let data: any = null;
-      try {
-        data = JSON.parse(rawText);
-      } catch (parseError) {
-        console.error("QR_VALIDATE_JSON_PARSE_ERROR", parseError);
-        console.log("QR_VALIDATE_ERROR: Response not JSON");
-        throw new Error("Resposta da validação não é um JSON válido");
-      }
-
-      console.log("QR_VALIDATE_JSON_RESPONSE:", data);
+      const response = await fetch(validateUrl);
+      const data = await response.json();
 
       if (response.ok && data.valid) {
-        console.log("QR_VALIDATE_SUCCESS");
-        console.log("Mesa identificada:", data.table);
-        
-        const tableData = {
+        setValidatedTable({
           id: data.table.id,
           number: data.table.table_number,
-          name: data.table.table_name,
           token: token,
-        };
-
-        setValidatedTable(tableData);
+        });
         setTableId(data.table.id);
         setTableNumber(data.table.table_number);
         setTableToken(token);
         setOrderType("table");
         
         toast.success(`Mesa ${data.table.table_number} identificada!`, { id: "qr-error" });
-        setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "valid true" } : null);
         setIsScanning(false);
         return true;
       } else {
-        const reason = data?.reason || "table_not_found";
-        console.log(`QR_VALIDATE_ERROR: ${reason}`);
-        
-        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: reason } : null);
-
-        if (reason === "restaurant_not_found") {
-          toast.error("Restaurante não encontrado. Procure um atendente.", { id: "qr-error" });
-        } else if (reason === "inactive_table") {
-          toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
-        } else if (reason === "table_not_found") {
-          toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
-        } else {
-          toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
-        }
+        toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         return false;
       }
-    } catch (err: any) {
-      const isTimeout = err.name === 'AbortError';
-      const isCors = err.message?.includes("Failed to fetch") || err.message?.includes("CORS");
-      
-      if (isTimeout) console.log("QR_VALIDATE_ERROR: VALIDATION_TIMEOUT");
-      if (isCors) console.log("QR_VALIDATE_ERROR: CORS_ERROR");
-      
-      console.error("QR_VALIDATE_ERROR:", err.message || err);
+    } catch (err) {
+      console.error("QR_VALIDATE_ERROR:", err);
       toast.error("Falha na validação da mesa. Tente novamente.", { id: "qr-error" });
       return false;
     } finally {
@@ -280,20 +242,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   };
 
   const onQrScan = async (text: string) => {
-    // 1. Trava se já estiver validando ou se já foi validado (para evitar loop)
     if (!text || isValidatingQr || !isScanning) return;
     
     const now = Date.now();
-    
-    // 2. Regra de Anti-Spam / Cooldown para erros
-    // Se for o mesmo valor e tiver passado pouco tempo, ignoramos para não poluir console/toasts
     if (text === lastInvalidQrRef.current?.value && (now - lastInvalidQrRef.current.at < qrErrorCooldownMs)) {
       return;
     }
 
-    const { restaurant_slug, table_token } = extractTableQrData(text);
+    const { restaurant_slug, table_token, table_number } = extractTableQrData(text);
 
-    // Atualiza o estado de debug visual inicial
     setDebugQr({
       rawValue: text,
       slug: restaurant_slug,
@@ -303,10 +260,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     });
 
     if (!table_token) {
-      console.log("QR_RESULT: invalid_format (Token não extraído)");
-      setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "invalid_format" } : null);
-      
-      // Cooldown para erro de formato também
       if (text !== lastInvalidQrRef.current?.value || (now - lastInvalidQrRef.current.at > qrErrorCooldownMs)) {
         toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         lastInvalidQrRef.current = { value: text, at: now };
@@ -314,12 +267,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
-    const success = await handleValidateTable(table_token, restaurant_slug);
+    const success = await handleValidateTable(table_token, restaurant_slug, table_number);
     
     if (!success) {
       lastInvalidQrRef.current = { value: text, at: now };
     } else {
-      // Sucesso: Limpa referências e o handleValidateTable já fechou o scanner
       lastInvalidQrRef.current = null;
     }
   };

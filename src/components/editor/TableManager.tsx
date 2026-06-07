@@ -17,50 +17,8 @@ export function TableManager({ restaurant }: Props) {
   const [activeTab, setActiveTab] = useState<"tables" | "sessions">("tables");
 
   const loadData = async () => {
-    setLoading(true);
-    try {
-      const endpointBase = resolveTablesUrl(restaurant);
-      
-      if (!endpointBase) {
-        console.warn("[TableManager] URL FlyControl não configurada para carregar mesas.");
-        setTables([]);
-        setSessions([]);
-        return;
-      }
-
-      const tablesUrl = `${endpointBase}/restaurant-tables?restaurant_slug=${restaurant.slug}`;
-      console.log("SF_TABLES_SYNC_START");
-      console.log("SF_TABLES_SYNC_ENDPOINT:", tablesUrl);
-      
-      const response = await fetch(tablesUrl);
-      console.log("SF_TABLES_SYNC_STATUS:", response.status);
-      
-      const rawText = await response.text();
-      console.log("SF_TABLES_SYNC_RAW_RESPONSE:", rawText);
-
-      if (!response.ok) throw new Error("Erro ao buscar mesas no FlyControl");
-      
-      const tablesData = JSON.parse(rawText);
-      console.log("SF_TABLES_SYNC_JSON_RESPONSE:", tablesData);
-      console.log("SF_TABLES_SYNC_COUNT:", (tablesData || []).length);
-      
-      // Mapear dados para o formato esperado pelo componente
-      const mappedTables = (tablesData || []).map((t: any, idx: number) => ({
-        id: t.id || `table-${idx}`,
-        table_number: t.table_number,
-        table_name: t.table_name,
-        public_token: t.public_token,
-        is_active: t.is_active !== false,
-      }));
-
-      setTables(mappedTables);
-      setSessions([]); // No SF as sessões são apenas para consulta, mas no momento FlyControl gerencia isso
-    } catch (err: any) {
-      console.error("SF_TABLES_SYNC_ERROR:", err);
-      toast.error("Falha ao sincronizar mesas com FlyControl", { id: "sync-error" });
-    } finally {
-      setLoading(false);
-    }
+    setLoading(false); // Não bloqueia mais o carregamento
+    setTables([]); // Limpa para mostrar a mensagem informativa
   };
 
   useEffect(() => {
@@ -190,11 +148,10 @@ export function TableManager({ restaurant }: Props) {
 
       {activeTab === "tables" ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tables.length === 0 ? (
             <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-3xl">
               <QrCode className="h-12 w-12 text-white/10 mx-auto mb-4" />
-              <p className="text-muted-foreground font-medium">Nenhuma mesa encontrada no FlyControl.</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-2">Certifique-se de ter mesas cadastradas no FlyControl.</p>
+              <p className="text-muted-foreground font-medium">As mesas e QR Codes são gerenciados diretamente no FlyControl.</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-2">O SiteCreatorFly não precisa mais sincronizar mesas localmente.</p>
             </div>
           ) : (
             tables.map((table) => (
