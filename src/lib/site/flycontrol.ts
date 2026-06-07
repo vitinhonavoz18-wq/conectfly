@@ -465,10 +465,12 @@ export async function openTableSession(
         restaurant_id: restaurant.id, 
         payload: {
           ...payload,
-          event: "session.open", // Sinaliza que é uma abertura de sessão
+          // Mantemos o padrão que o FlyControl espera receber do proxy
+          event: "order.created", // O proxy ou o backend podem usar isso para roteamento
           source: "sitecreatorfly"
         }
       }),
+
     });
 
     const data = await response.json();
