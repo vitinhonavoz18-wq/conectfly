@@ -1,13 +1,11 @@
 import { useCart } from "../site/CartContext";
 import { SiteHeader } from "../site/SiteHeader";
-import { SiteHero } from "../site/SiteHero";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
-import { getPrimaryButtonText } from "@/lib/site/format";
-import { Utensils, Beer, Wine, Coffee, Star, ArrowRight } from "lucide-react";
+import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
