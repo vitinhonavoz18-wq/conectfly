@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 interface Props {
   name: string;
@@ -27,9 +27,33 @@ export function SiteHero({
   hasCombos = false,
   combosVisibility = "auto",
 }: Props) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const showHeroButton = showButton;
   const showVideo = heroMediaType === "video" && heroVideoUrl;
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Ensure video is muted and plays inline for mobile autoplay support
+    video.muted = true;
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+
+    const attemptPlay = async () => {
+      try {
+        await video.play();
+        console.log("Hero video started playing successfully");
+      } catch (error) {
+        console.log("Hero video autoplay blocked or failed, using poster fallback:", error);
+      }
+    };
+
+    if (showVideo) {
+      attemptPlay();
+    }
+  }, [showVideo, heroVideoUrl]);
 
   const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -58,12 +82,17 @@ export function SiteHero({
       <div className="absolute inset-0 site-scroll-parallax-bg">
         {showVideo ? (
           <video
+            ref={videoRef}
             src={heroVideoUrl ?? undefined}
             autoPlay
             muted
             loop
             playsInline
+            preload="auto"
+            controls={false}
+            poster={heroImageUrl ?? undefined}
             className="absolute inset-0 w-full h-full object-cover"
+            style={{ pointerEvents: 'none' }}
           />
         ) : heroImageUrl ? (
           <div
