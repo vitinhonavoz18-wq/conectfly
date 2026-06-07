@@ -495,7 +495,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         table_number: orderData.table_number,
         table_id: orderData.table_id,
         table_token: orderData.table_token,
+        table_session_id: orderData.table_session_id,
         ticket_number: orderData.ticket_number,
+
       });
 
       console.log("CHECKOUT_FINAL_PAYLOAD:", orderPayload);
