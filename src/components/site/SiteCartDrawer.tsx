@@ -865,8 +865,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               </div>
             </div>
           )}
-
         </aside>
-    </>
+
+        {isScanning && (
+          <QrScanner 
+            onScan={onQrScan} 
+            onClose={() => setIsScanning(false)} 
+          />
+        )}
+      </>
   );
 }
