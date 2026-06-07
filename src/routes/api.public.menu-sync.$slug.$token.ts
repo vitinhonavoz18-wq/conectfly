@@ -14,6 +14,8 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
       GET: async ({ params }) => {
         const { slug, token } = params;
 
+        console.log(`MENU_SYNC_DEBUG (Route): slug_received=${slug} token_received_preview=${token?.substring(0, 8)}...`);
+
         if (!slug || !token) {
           return new Response(JSON.stringify({ 
             success: false, 
@@ -32,6 +34,8 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
           .eq("slug", slug)
           .maybeSingle();
 
+        console.log(`MENU_SYNC_DEBUG (Route): restaurant_found=${!!restaurant} restaurant_id=${restaurant?.id} error=${rErr?.message}`);
+
         if (rErr || !restaurant) {
           return new Response(JSON.stringify({ 
             success: false, 
@@ -43,16 +47,28 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
           });
         }
 
-        if (restaurant.menu_sync_token !== token) {
+        const storedToken = restaurant.menu_sync_token;
+        const tokenMatch = storedToken === token;
+
+        console.log(`MENU_SYNC_DEBUG (Route): stored_token_exists=${!!storedToken} stored_token_preview=${storedToken?.substring(0, 8)}... token_match=${tokenMatch}`);
+
+        if (!tokenMatch) {
+          console.log(`MENU_SYNC_DEBUG (Route): final_result=invalid_sync_token`);
           return new Response(JSON.stringify({ 
             success: false, 
             error: "invalid_sync_token", 
-            message: "Token de sincronização inválido." 
+            message: "Token de sincronização inválido.",
+            debug: {
+              slug_received: slug,
+              token_received_preview: token?.substring(0, 8) + "..."
+            }
           }), {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
+
+        console.log(`MENU_SYNC_DEBUG (Route): final_result=success`);
 
         // Fetch menu data
         const [catsRes, itemsRes, bevsRes, sizesRes] = await Promise.all([
