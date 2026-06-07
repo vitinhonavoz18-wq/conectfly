@@ -179,71 +179,70 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   };
 
   const handleValidateTable = async (token: string, slugFromQr?: string | null, numberFromQr?: string | null) => {
-    // Nova estratégia: Se tivermos token e número, validamos no checkout final via FlyControl
-    if (token && numberFromQr) {
-      console.log("QR_VALIDATE_FRONTEND_AUTO:", { token, numberFromQr });
-      
-      const tableData = {
-        id: "offline-table", // ID temporário, será validado no backend
-        number: numberFromQr,
-        token: token,
-      };
-
-      setValidatedTable(tableData);
-      setTableId("offline-table");
-      setTableNumber(numberFromQr);
-      setTableToken(token);
-      setOrderType("table");
-      
-      toast.success(`Mesa ${numberFromQr} identificada!`, { id: "qr-error" });
-      setIsScanning(false);
-      return true;
-    }
-
-    // Se não tiver número, tentamos validar via endpoint antigo (opcional, para compatibilidade)
     if (!restaurant) return false;
     
-    setIsValidatingQr(true);
     const targetSlug = (slugFromQr || restaurant.slug)?.trim();
-    const endpointBase = resolveTablesUrl(restaurant);
-    
-    if (!endpointBase) {
-      setIsValidatingQr(false);
-      return false;
-    }
+    if (!targetSlug) return false;
 
-    const validateUrl = `${endpointBase}/validate-table?restaurant_slug=${targetSlug}&table_token=${token}`;
-    
+    console.log("QR_TABLE_IDENTIFIED", { table_number: numberFromQr, table_token: token, restaurant_slug: targetSlug });
+
+    setIsValidatingQr(true);
+
     try {
-      const response = await fetch(validateUrl);
-      const data = await response.json();
+      // 1. Tentar abrir a sessão imediatamente
+      const sessionPayload: OpenTableSessionPayload = {
+        type: "open_table_session",
+        restaurant_slug: targetSlug,
+        order_type: "table",
+        service_mode: "mesa",
+        table_number: numberFromQr || "N/A", // Se não tiver número no QR, o FlyControl resolve pelo token
+        table_token: token,
+        customer_name: name || undefined,
+        customer_phone: phone || undefined,
+        opened_from: "qrcode_scan",
+        opened_at: new Date().toISOString()
+      };
 
-      if (response.ok && data.valid) {
-        setValidatedTable({
-          id: data.table.id,
-          number: data.table.table_number,
+      const sessionResult = await openTableSession(restaurant, sessionPayload);
+
+      if (sessionResult.success) {
+        const tableData = {
+          id: "flycontrol-table",
+          number: numberFromQr || "Mesa", // O FlyControl pode retornar o número real se não tivermos
           token: token,
-        });
-        setTableId(data.table.id);
-        setTableNumber(data.table.table_number);
+          sessionId: sessionResult.session_id
+        };
+
+        setValidatedTable(tableData);
+        setTableId("flycontrol-table");
+        setTableNumber(tableData.number);
         setTableToken(token);
+        setTableSessionId(sessionResult.session_id || null);
         setOrderType("table");
+
+        if (sessionResult.already_open) {
+          toast.success(`Mesa ${tableData.number} já está aberta.`, { id: "qr-success" });
+        } else {
+          toast.success(`Mesa ${tableData.number} aberta com sucesso!`, { id: "qr-success" });
+        }
         
-        toast.success(`Mesa ${data.table.table_number} identificada!`, { id: "qr-error" });
         setIsScanning(false);
         return true;
       } else {
-        toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
+        // Se falhar a abertura de sessão, pode ser token inválido ou mesa inativa
+        const errorMsg = sessionResult.message || "QR Code de mesa inválido ou mesa inativa. Procure um atendente.";
+        toast.error(errorMsg, { id: "qr-error" });
         return false;
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("QR_VALIDATE_ERROR:", err);
-      toast.error("Falha na validação da mesa. Tente novamente.", { id: "qr-error" });
+      toast.error("Falha ao sincronizar mesa. Procure um atendente.", { id: "qr-error" });
       return false;
     } finally {
       setIsValidatingQr(false);
     }
   };
+
 
   const onQrScan = async (text: string) => {
     if (!text || isValidatingQr || !isScanning) return;
