@@ -107,6 +107,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         console.log("TABLE_SESSION_ID_SAVED:", validatedTable.sessionId);
       }
       setOrderType("table");
+    } else {
+      // Clear if context is cleared
+      setTableId(null);
+      setTableNumber(null);
+      setTableToken(null);
+      setTableSessionId(null);
+      setTableSessionOpened(false);
+      setLastOpenedTableToken(null);
+      setCurrentTableSessionId(null);
     }
   }, [validatedTable]);
 
