@@ -32,9 +32,9 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
     return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
   };
   
+  const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
-
 
   const combosVisibility = r.site_settings?.combos_visibility || "auto";
   const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
@@ -45,8 +45,8 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
   const beveragesPosition = r.site_settings?.beverages_position || "end";
 
   const renderBeverages = () => (
-    (beveragesVisible && data.beverages && data.beverages.length > 0) && (
-      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
+    (beveragesVisible && data.beverages && data.beverages.length > 0 && !hasPizzas) && (
+      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))]">
         <div className="max-w-6xl mx-auto">
           <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
         </div>
@@ -78,12 +78,14 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             combosVisibility={combosVisibility}
           />
         </div>
+        
         <div id="pizzas-container">
           <SitePizzaSection 
             categories={data.categories} 
             restaurant={r} 
             bordasCategory={bordasCategory}
             beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
 
