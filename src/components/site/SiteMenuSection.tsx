@@ -167,6 +167,18 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                     </div>
                   </div>
                 ))}
+                {beverages && beverages.length > 0 && (
+                  <div className="space-y-3 mt-16 pt-12 border-t border-[hsl(var(--site-border))]">
+                    <div className="flex items-center gap-4 mb-8">
+                       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
+                       <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-center">Acompanhamentos</h3>
+                       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
+                    </div>
+                    <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                      <SiteBeverageSection beverages={beverages} catalogs={beverageCatalogs} restaurant={restaurant} />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <>
