@@ -143,6 +143,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
       allow_dual_send: r.allow_dual_send ?? false,
       flycontrol_direct_url: r.flycontrol_direct_url || null,
       menu_sync_endpoint: r.menu_sync_endpoint || null,
+      menu_sync_token: r.menu_sync_token || null,
     };
 
     try {
@@ -193,11 +194,23 @@ export function InfoForm({ restaurant, onChange }: Props) {
    };
 
     const copySyncUrl = () => {
-      const url = `${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync`;
+      const url = `${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync?sync_token=${r.menu_sync_token || ''}`;
       navigator.clipboard.writeText(url);
       setMsg("URL de Sincronização copiada!");
       toast.success("Link de sincronização copiado com sucesso.");
       setTimeout(() => setMsg(""), 2000);
+    };
+
+    const regenerateSyncToken = async () => {
+      if (!confirm("Isso invalidará o link de sincronização atual usado no FLYCONTROL. Deseja continuar?")) return;
+      
+      const newToken = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+        
+      set("menu_sync_token", newToken);
+      setMsg("Token regenerado! Lembre-se de SALVAR.");
+      toast.success("Novo token gerado. Clique em Salvar para aplicar.");
     };
 
     const handleTestConnection = async () => {
@@ -1193,7 +1206,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                <div className="flex gap-2">
                  <input
                    readOnly
-                   value={`${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync`}
+                   value={`${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync?sync_token=${r.menu_sync_token || ''}`}
                    className="input text-xs flex-1 bg-black/20"
                  />
                  <button
@@ -1201,8 +1214,16 @@ export function InfoForm({ restaurant, onChange }: Props) {
                    onClick={copySyncUrl}
                    className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
                  >
-                   <Copy className="h-5 w-5" />
-                 </button>
+                    <Copy className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={regenerateSyncToken}
+                    title="Regenerar Token"
+                    className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-yellow-500"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                  </button>
                </div>
              </Field>
 

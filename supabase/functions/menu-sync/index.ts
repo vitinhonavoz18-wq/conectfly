@@ -107,8 +107,9 @@
 
       const slug = url.searchParams.get("slug") || body.slug;
       const apiKey = req.headers.get("x-api-key") || req.headers.get("apikey") || req.headers.get("Authorization")?.replace("Bearer ", "");
+      const syncToken = url.searchParams.get("sync_token") || body.sync_token;
       
-      console.log(`[menu-sync] Request: ${method} slug=${slug} action=${body.action} type=${body.type}`);
+      console.log(`[menu-sync] Request: ${method} slug=${slug} action=${body.action} type=${body.type} hasToken=${!!syncToken}`);
 
       // Identify pizzeria
       let pizzeria;
@@ -120,6 +121,17 @@
         const { data } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
         pizzeria = data;
         console.log(`[menu-sync] Pizzeria found by Slug: ${pizzeria?.slug}`);
+
+        // If using slug, MUST provide valid syncToken for GET operations
+        if (method === "GET" && (!syncToken || syncToken !== pizzeria?.menu_sync_token)) {
+          return new Response(JSON.stringify({ 
+            success: false, 
+            error: "Token de sincronização inválido." 
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
       }
  
      if (!pizzeria) {
