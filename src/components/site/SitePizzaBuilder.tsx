@@ -421,36 +421,47 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         </div>
       )}
 
-      
+      {/* Step 4 — Beverages */}
+      {beverages && beverages.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-baseline justify-between">
+            <h4 className="text-base sm:text-lg font-bold flex items-center gap-2">
+              4. Acompanhamentos <GlassWater className="h-4 w-4 text-[hsl(var(--site-primary))]" />
+            </h4>
+          </div>
+          <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+            <SiteBeverageSection beverages={beverages} catalogs={beverageCatalogs} restaurant={restaurant!} />
+          </div>
+        </div>
+      )}
 
-
-        {/* Step 5 — Summary + add */}
-        <div 
-          id={`summary-${category.id}`}
-          ref={summaryRef}
-         className="rounded-[2.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-8 sm:p-10 shadow-[0_20px_60px_hsl(var(--site-bg)/0.3)] relative overflow-hidden"
-       >
-         {scrollMessage && scrollMessage.includes("pronto") && (
-           <div className="absolute top-4 right-8 z-10">
-             <span className="text-sm font-bold text-[hsl(var(--site-primary))] animate-pulse">
-               {scrollMessage}
-             </span>
-           </div>
-         )}
-         <div className="absolute top-0 right-0 p-10 opacity-5">
-           <ShoppingBag className="h-32 w-32 text-[hsl(var(--site-primary))]" />
-         </div>
-          <h4 className="text-2xl font-black mb-6 tracking-tight text-[hsl(var(--site-fg))]">Resumo da sua Pizza</h4>
+      {/* Step 5 — Summary + add */}
+      <div 
+        id={`summary-${category.id}`}
+        ref={summaryRef}
+        className="rounded-[1.5rem] sm:rounded-[2.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-5 sm:p-10 shadow-[0_20px_60px_hsl(var(--site-bg)/0.3)] relative overflow-hidden"
+      >
+        {scrollMessage && scrollMessage.includes("pronto") && (
+          <div className="absolute top-3 right-6 z-10">
+            <span className="text-xs sm:text-sm font-bold text-[hsl(var(--site-primary))] animate-pulse">
+              {scrollMessage}
+            </span>
+          </div>
+        )}
+        <div className="absolute top-0 right-0 p-6 sm:p-10 opacity-5">
+          <ShoppingBag className="h-20 w-20 sm:h-32 sm:w-32 text-[hsl(var(--site-primary))]" />
+        </div>
+        <h4 className="text-xl sm:text-2xl font-black mb-4 sm:mb-6 tracking-tight text-[hsl(var(--site-fg))]">Resumo da sua Pizza</h4>
         {size ? (
-          <div className="space-y-4">
-            <ul className="text-base text-[hsl(var(--site-muted-fg))] space-y-2">
-              <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2">
+          <div className="space-y-3 sm:space-y-4">
+            <ul className="text-sm sm:text-base text-[hsl(var(--site-muted-fg))] space-y-1.5 sm:space-y-2">
+              <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-1.5 sm:pb-2">
                 <span className="font-medium text-[hsl(var(--site-muted-fg))]">Tamanho: <strong className="text-[hsl(var(--site-fg))] font-extrabold">{size.label}</strong></span>
                 <span className="font-extrabold text-[hsl(var(--site-fg))]">{formatBRL(size.price)}</span>
               </li>
-              <li className="flex flex-col border-b border-[hsl(var(--site-border))] pb-2">
+              <li className="flex flex-col border-b border-[hsl(var(--site-border))] pb-1.5 sm:pb-2">
                 <span className="font-medium">Sabores:</span>
-                <span className="text-[hsl(var(--site-fg))] font-extrabold leading-relaxed">
+                <span className="text-[hsl(var(--site-fg))] font-extrabold leading-tight sm:leading-relaxed">
                   {selectedFlavors.length === 0
                     ? "Nenhum selecionado"
                     : selectedFlavors
@@ -460,13 +471,13 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 </span>
               </li>
                {specialExtras > 0 && (
-                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2 text-[hsl(var(--site-primary))]">
+                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-1.5 sm:pb-2 text-[hsl(var(--site-primary))]">
                     <span className="font-medium italic">Adicional especial {specialNames.length > 0 && `(${specialNames.join(", ")})`}:</span>
                     <span className="font-extrabold">+{formatBRL(specialExtras)}</span>
                   </li>
                 )}
                 {selectedBorder && (
-                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-2 text-[hsl(var(--site-secondary))]">
+                  <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-1.5 sm:pb-2 text-[hsl(var(--site-secondary))]">
                     <span className="font-medium">Adicional: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
                   </li>
@@ -474,34 +485,35 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             </ul>
           </div>
         ) : (
-          <p className="text-base text-[hsl(var(--site-muted-fg))] font-medium">Selecione um tamanho para ver o resumo.</p>
+          <p className="text-sm sm:text-base text-[hsl(var(--site-muted-fg))] font-medium">Selecione um tamanho para ver o resumo.</p>
         )}
         
-        <div className="flex items-center justify-between gap-6 mt-10 pt-8 border-t-2 border-dashed border-[hsl(var(--site-border))] flex-wrap">
+        <div className="flex items-center justify-between gap-4 sm:gap-6 mt-6 sm:mt-10 pt-6 sm:pt-8 border-t-2 border-dashed border-[hsl(var(--site-border))] flex-wrap">
           <div className="flex flex-col">
-            <span className="text-xs uppercase tracking-widest text-[hsl(var(--site-muted-fg))] font-bold mb-1">
+            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-[hsl(var(--site-muted-fg))] font-bold mb-0.5 sm:mb-1">
               Total do Pedido
             </span>
-            <span className="text-4xl font-black text-[hsl(var(--site-secondary))]">
+            <span className="text-2xl sm:text-4xl font-black text-[hsl(var(--site-secondary))]">
               {size ? formatBRL(finalPrice) : "—"}
             </span>
           </div>
             <button
               onClick={(e) => handleAddToCart(false, e)}
               disabled={!canAdd}
-              className="site-btn-primary px-10 py-6 rounded-full text-xl flex items-center gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest active:scale-95 transition-all group"
+              className="site-btn-primary px-6 py-4 sm:px-10 sm:py-6 rounded-full text-base sm:text-xl flex items-center gap-3 sm:gap-4 disabled:opacity-30 disabled:scale-100 disabled:shadow-none uppercase tracking-widest active:scale-95 transition-all group shadow-xl"
             >
-              <Plus className="h-7 w-7 text-[hsl(var(--site-primary-fg))] group-hover:rotate-90 transition-transform" /> 
+              <Plus className="h-5 w-5 sm:h-7 sm:w-7 text-[hsl(var(--site-primary-fg))] group-hover:rotate-90 transition-transform" /> 
               <span>Adicionar ao Pedido</span>
             </button>
         </div>
         {confirm && (
-          <div className="mt-6 text-base font-bold text-[hsl(var(--site-success))] bg-[hsl(var(--site-success)/0.1)] border-2 border-[hsl(var(--site-success)/0.2)] rounded-2xl p-4 text-center animate-in zoom-in duration-300">
+          <div className="mt-4 sm:mt-6 text-sm sm:text-base font-bold text-[hsl(var(--site-success))] bg-[hsl(var(--site-success)/0.1)] border-2 border-[hsl(var(--site-success)/0.2)] rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center animate-in zoom-in duration-300">
             ✓ {confirm}
           </div>
         )}
       </div>
 
+      <div className="h-8 sm:h-12" /> {/* Bottom spacer for safe area and flow */}
     </div>
   );
 }
