@@ -915,6 +915,7 @@ export type Database = {
           city: string | null
           continue_opening_whatsapp: boolean | null
           custom_subdomain: string | null
+          delivery_enabled: boolean | null
           delivery_settings: Json | null
           description: string | null
           fiqon_webhook_url: string | null
@@ -934,6 +935,7 @@ export type Database = {
           name: string | null
           order_flow_mode: string | null
           owner_id: string | null
+          pickup_enabled: boolean | null
           primary_color: string | null
           published: boolean | null
           secondary_color: string | null
@@ -942,6 +944,7 @@ export type Database = {
           show_item_images: boolean | null
           site_settings: Json | null
           slug: string | null
+          table_enabled: boolean | null
           tagline: string | null
           theme_settings: Json | null
           whatsapp_display: string | null
@@ -956,6 +959,7 @@ export type Database = {
           city?: string | null
           continue_opening_whatsapp?: boolean | null
           custom_subdomain?: string | null
+          delivery_enabled?: boolean | null
           delivery_settings?: Json | null
           description?: string | null
           fiqon_webhook_url?: string | null
@@ -975,6 +979,7 @@ export type Database = {
           name?: string | null
           order_flow_mode?: string | null
           owner_id?: string | null
+          pickup_enabled?: boolean | null
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
@@ -983,6 +988,7 @@ export type Database = {
           show_item_images?: boolean | null
           site_settings?: Json | null
           slug?: string | null
+          table_enabled?: boolean | null
           tagline?: string | null
           theme_settings?: Json | null
           whatsapp_display?: string | null
@@ -997,6 +1003,7 @@ export type Database = {
           city?: string | null
           continue_opening_whatsapp?: boolean | null
           custom_subdomain?: string | null
+          delivery_enabled?: boolean | null
           delivery_settings?: Json | null
           description?: string | null
           fiqon_webhook_url?: string | null
@@ -1016,6 +1023,7 @@ export type Database = {
           name?: string | null
           order_flow_mode?: string | null
           owner_id?: string | null
+          pickup_enabled?: boolean | null
           primary_color?: string | null
           published?: boolean | null
           secondary_color?: string | null
@@ -1024,6 +1032,7 @@ export type Database = {
           show_item_images?: boolean | null
           site_settings?: Json | null
           slug?: string | null
+          table_enabled?: boolean | null
           tagline?: string | null
           theme_settings?: Json | null
           whatsapp_display?: string | null

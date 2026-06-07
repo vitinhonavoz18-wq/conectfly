@@ -60,12 +60,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   useEffect(() => {
     if (restaurant && step === "checkout") {
       const activeModes = [];
+      // Use delivery_enabled from restaurant object
       if (restaurant.delivery_enabled !== false) activeModes.push("delivery");
       if (restaurant.pickup_enabled) activeModes.push("pickup");
       if (restaurant.table_enabled) activeModes.push("table");
 
+      console.log("CHECKOUT_SERVICE_MODES_RENDERED:", activeModes);
+
       // Auto select if only one mode and not already forced by mesa param
       if (activeModes.length === 1 && !tableNumber) {
+        console.log("CHECKOUT_SERVICE_MODE_AUTO_SELECTED:", activeModes[0]);
         setOrderType(activeModes[0] as any);
       }
     }
@@ -164,6 +168,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       generatedTicket = Math.floor(1000 + Math.random() * 9000).toString();
       setTicketNumber(generatedTicket);
     }
+
+    console.log("CHECKOUT_SERVICE_MODE_SELECTED:", orderType);
 
     const orderData = {
       customer: {
