@@ -27,7 +27,11 @@ export interface FlycontrolOrderPayload {
     total: number;
     payment_method: string;
     change_for: number | null;
-    delivery_type: "delivery" | "retirada";
+    delivery_type: "delivery" | "retirada" | "mesa";
+    order_type?: "delivery" | "pickup" | "table";
+    service_mode?: "delivery" | "retirada" | "mesa";
+    table_number?: string | null;
+    ticket_number?: string | null;
     notes: string;
     whatsapp_message: string;
   };
