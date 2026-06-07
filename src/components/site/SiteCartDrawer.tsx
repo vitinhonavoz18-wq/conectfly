@@ -373,10 +373,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               )}
               <div className="flex flex-col">
                 <h2 className="font-black text-lg tracking-tighter uppercase text-[hsl(var(--site-fg))]">
-                  {step === "cart" ? "Minha Seleção" : "Finalizar Pedido"}
+                  {step === "cart" ? "Minha Seleção" : (step === "checkout" ? "Finalizar Pedido" : "Pedido Confirmado")}
                 </h2>
                 <span className="text-[8px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">
-                  {step === "cart" ? "Revise seus itens" : "Dados de Entrega"}
+                  {step === "cart" ? "Revise seus itens" : (step === "checkout" ? "Dados de Entrega" : "Sucesso")}
                 </span>
               </div>
             </div>
