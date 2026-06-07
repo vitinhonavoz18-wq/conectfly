@@ -239,38 +239,38 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   }
 
   return (
-    <div className="space-y-6 relative" id={`pizza-builder-${category.id}`}>
+    <div className="space-y-4 sm:space-y-6 relative" id={`pizza-builder-${category.id}`}>
       {/* Step 1 — Sizes */}
-      <div>
-        <div className="flex items-baseline justify-between mb-3">
-          <h4 className="text-lg font-bold">1. Escolha o tamanho</h4>
-          <span className="text-xs text-[hsl(var(--site-muted-fg))]">
-            preço definido pelo tamanho
+      <div className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h4 className="text-base sm:text-lg font-bold">1. Escolha o tamanho</h4>
+          <span className="text-[10px] sm:text-xs text-[hsl(var(--site-muted-fg))] uppercase tracking-wider">
+            preço por tamanho
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
           {sizes.map((s, i) => {
             const active = sizeIdx === i;
             return (
                <button
                  key={`${s.label}-${i}`}
                  onClick={() => handleSelectSize(i)}
-                 className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                 className={`relative rounded-2xl sm:rounded-3xl border p-3 sm:p-5 text-left transition-all duration-300 transform ${
                    active
                      ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_12px_30px_hsl(var(--site-primary)/0.12)] scale-[1.05] z-10 border-2"
                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)] hover:bg-[hsl(var(--site-muted))]"
                  }`}
                >
                 {active && (
-                  <span className="absolute top-3 right-3 h-6 w-6 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center shadow-lg">
-                    <Check className="h-3.5 w-3.5 stroke-[3]" />
+                  <span className="absolute top-2 right-2 sm:top-3 sm:right-3 h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center shadow-lg">
+                    <Check className="h-3 sm:h-3.5 w-3 sm:w-3.5 stroke-[3]" />
                   </span>
                 )}
-                <p className={`font-extrabold text-lg leading-tight ${active ? "text-[hsl(var(--site-primary))]" : "text-[hsl(var(--site-fg))]"}`}>{s.label}</p>
-                <p className="text-[hsl(var(--site-secondary))] font-black text-xl mt-1.5">
+                <p className={`font-extrabold text-sm sm:text-lg leading-tight ${active ? "text-[hsl(var(--site-primary))]" : "text-[hsl(var(--site-fg))]"}`}>{s.label}</p>
+                <p className="text-[hsl(var(--site-secondary))] font-black text-lg sm:text-xl mt-1">
                   {formatBRL(s.price)}
                 </p>
-                <p className="text-xs font-medium text-[hsl(var(--site-muted-fg))] mt-1">
+                <p className="text-[10px] sm:text-xs font-medium text-[hsl(var(--site-muted-fg))] mt-0.5">
                   {s.slices ? `${s.slices} fatias · ` : ""}
                   até {s.max_flavors} {s.max_flavors === 1 ? "sabor" : "sabores"}
                 </p>
@@ -278,8 +278,8 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
             );
           })}
         </div>
-        <div className="mt-4 flex items-start gap-3 text-sm rounded-2xl border border-[hsl(var(--site-primary)/0.3)] bg-[hsl(var(--site-primary)/0.05)] text-[hsl(var(--site-primary))] p-4 font-medium shadow-sm">
-          <Info className="h-5 w-5 shrink-0 text-[hsl(var(--site-primary))]" />
+        <div className="flex items-start gap-2 text-xs rounded-xl border border-[hsl(var(--site-primary)/0.3)] bg-[hsl(var(--site-primary)/0.05)] text-[hsl(var(--site-primary))] p-3 sm:p-4 font-medium shadow-sm">
+          <Info className="h-4 w-4 shrink-0 text-[hsl(var(--site-primary))]" />
           <span>
             Ao selecionar <strong className="font-extrabold">itens especiais</strong>, o valor final poderá ser
             alterado proporcionalmente.
@@ -288,22 +288,23 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       </div>
 
       {/* Step 2 — Flavors */}
-      <div>
-        <div className="flex items-baseline justify-between mb-3 flex-wrap gap-2">
-          <h4 className="text-xl font-extrabold text-[hsl(var(--site-fg))]">2. Escolha os itens</h4>
+      <div className="space-y-3">
+        <div className="flex items-baseline justify-between flex-wrap gap-2">
+          <h4 className="text-base sm:text-xl font-extrabold text-[hsl(var(--site-fg))]">2. Escolha os itens</h4>
           {size && (
-            <span className="text-sm font-extrabold px-4 py-1.5 rounded-full bg-[hsl(var(--site-card))] border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
-              {selectedFlavors.length}/{maxFlavors} selecionados
-              {remaining > 0 && ` · ${remaining} restante${remaining > 1 ? "s" : ""}`}
+            <span className="text-[10px] sm:text-sm font-extrabold px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-[hsl(var(--site-card))] border-2 border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))] shadow-sm">
+              {selectedFlavors.length}/{maxFlavors}
+              <span className="hidden xs:inline"> selecionados</span>
+              {remaining > 0 && <span className="hidden sm:inline"> · {remaining} restante{remaining > 1 ? "s" : ""}</span>}
             </span>
           )}
         </div>
         {category.items.length === 0 ? (
-          <p className="text-sm text-[hsl(var(--site-muted-fg))]">
+          <p className="text-xs text-[hsl(var(--site-muted-fg))]">
             Nenhum sabor cadastrado ainda.
           </p>
         ) : (
-          <div className="space-y-16">
+          <div className="space-y-8 sm:space-y-16">
             {/* Classic Flavors */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {classicFlavors.map((it) => (
