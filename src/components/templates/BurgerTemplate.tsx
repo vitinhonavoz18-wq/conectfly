@@ -32,6 +32,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
     return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
   };
   
+  const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
@@ -39,6 +40,19 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
   const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
+
+  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
+  const beveragesPosition = r.site_settings?.beverages_position || "end";
+
+  const renderBeverages = () => (
+    (beveragesVisible && data.beverages && data.beverages.length > 0 && !hasPizzas) && (
+      <div className="py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
+        </div>
+      </div>
+    )
+  );
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra">
@@ -70,17 +84,11 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
             restaurant={r} 
             bordasCategory={bordasCategory}
             beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
 
-        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_products" && (
-          <div className="py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
-
-            </div>
-          </div>
-        )}
+        {beveragesPosition === "after_products" && renderBeverages()}
 
         {showCombos && (
           <div className="py-8">
@@ -88,14 +96,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
           </div>
         )}
 
-        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_combos" && (
-          <div className="py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
-
-            </div>
-          </div>
-        )}
+        {beveragesPosition === "after_combos" && renderBeverages()}
 
         <div className="py-8">
           <SiteMenuSection 
@@ -105,13 +106,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {r.site_settings?.beverages_visibility !== false && (r.site_settings?.beverages_position === "end" || !r.site_settings?.beverages_position) && (
-          <div className="py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
-            </div>
-          </div>
-        )}
+        {beveragesPosition === "end" && renderBeverages()}
       </main>
       <SiteFooter
         name={r.name}
