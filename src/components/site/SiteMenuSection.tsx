@@ -186,14 +186,33 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 )}
 
                 {current && current.is_pizza ? (
-                  <SitePizzaBuilder category={current} restaurant={restaurant} />
+                  <SitePizzaBuilder 
+                    category={current} 
+                    restaurant={restaurant} 
+                    beverages={beverages} 
+                    beverageCatalogs={beverageCatalogs} 
+                  />
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
-                    {current?.items.map((it) => (
-                      <div key={it.id} className="h-full">
-                        <SiteMenuItemCard item={it} restaurant={restaurant} />
+                  <div className="space-y-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
+                      {current?.items.map((it) => (
+                        <div key={it.id} className="h-full">
+                          <SiteMenuItemCard item={it} restaurant={restaurant} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Step 4 for non-pizzas: Beverages before summary/footer flow */}
+                    {beverages && beverages.length > 0 && (
+                      <div className="space-y-3 mt-12">
+                        <div className="flex items-center gap-2 mb-4">
+                          <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tight">Acompanhamentos</h4>
+                        </div>
+                        <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                          <SiteBeverageSection beverages={beverages} catalogs={beverageCatalogs} restaurant={restaurant} />
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </>
