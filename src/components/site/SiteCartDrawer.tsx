@@ -86,45 +86,54 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     // 1. URL completa ou URL com rota
     try {
-      const url = new URL(qrValue);
+      // Tenta tratar como URL absoluta ou relativa (adicionando prefixo se necessário para o parser)
+      const urlStr = qrValue.startsWith('http') ? qrValue : (qrValue.startsWith('/') ? `https://dummy.com${qrValue}` : `https://dummy.com/${qrValue}`);
+      const url = new URL(urlStr);
+      
       // Caso 1: ?mode=table&table_token=TOKEN ou ?token=TOKEN
       const token = url.searchParams.get("table_token") || url.searchParams.get("token");
       if (token) return token;
 
       // Caso 2: /mesa/TOKEN ou /table/TOKEN
       const paths = url.pathname.split("/").filter(Boolean);
-      const mesaIdx = paths.findIndex(p => p === "mesa" || p === "table");
+      const mesaIdx = paths.findIndex(p => p === "mesa" || p === "table" || p === "m");
       if (mesaIdx !== -1 && paths[mesaIdx + 1]) {
         return paths[mesaIdx + 1];
       }
-    } catch {
-      // Not a URL, continue to other checks
+    } catch (e) {
+      console.warn("QR_PARSING_URL_ERROR:", e);
     }
 
     // 2. JSON
     try {
       const parsed = JSON.parse(qrValue);
-      const token = parsed.table_token || parsed.public_token || parsed.token;
+      const token = parsed.table_token || parsed.public_token || parsed.token || parsed.id;
       if (token) return token;
     } catch {
-      // Not a JSON, continue
+      // Not a JSON
     }
 
-    // 3. Token puro (supomos que se não for nada acima e tiver formato de hex/id, é o token)
-    // Restaurant tables public_tokens are often UUIDs or 24-char hex strings
-    if (/^[0-9a-fA-F-]{24,36}$/.test(qrValue.trim())) {
-      return qrValue.trim();
+    // 3. Token puro
+    const trimmed = qrValue.trim();
+    // Aceita UUIDs ou strings hex de 24+ chars
+    if (/^[0-9a-fA-F-]{24,36}$/.test(trimmed)) {
+      return trimmed;
     }
 
     return null;
   };
 
   const handleValidateTable = async (token: string) => {
-    if (!restaurant) return;
+    if (!restaurant) return false;
+    
+    // Evita validações múltiplas simultâneas
+    if (isValidatingQr) return false;
+    
     setIsValidatingQr(true);
     console.log("QR_VALIDATION_STARTED", { token, restaurant_id: restaurant.id });
     
     try {
+      // O SiteCreatorFly usa a tabela restaurant_tables como fonte oficial sincronizada com FlyControl
       const { data, error } = await supabase
         .from("restaurant_tables")
         .select("*")
@@ -136,28 +145,30 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
       if (!data) {
         console.log("QR_VALIDATION_RESULT: invalid (not found)");
-        setValidatedTable(null);
-        setTableId(null);
-        setTableNumber(null);
-        setTableToken(null);
-        toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
+        const now = Date.now();
+        if (now - (lastInvalidQrRef.current?.at || 0) > qrErrorCooldownMs) {
+          toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
+          lastInvalidQrRef.current = { value: token, at: now };
+        }
         return false;
       }
 
       if (!data.is_active) {
         console.log("QR_VALIDATION_RESULT: invalid (inactive)");
-        setValidatedTable(null);
-        setTableId(null);
-        setTableNumber(null);
-        setTableToken(null);
-        toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
+        const now = Date.now();
+        if (now - (lastInvalidQrRef.current?.at || 0) > qrErrorCooldownMs) {
+          toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
+          lastInvalidQrRef.current = { value: token, at: now };
+        }
         return false;
       }
 
-      console.log("QR_VALIDATION_RESULT: valid true");
+      console.log("QR_VALIDATION_RESULT: valid true", data);
+      
       const tableData = {
         id: data.id,
         number: data.table_number,
+        name: data.table_name,
         token: token,
       };
 
@@ -166,7 +177,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setTableNumber(data.table_number);
       setTableToken(token);
       setOrderType("table");
-      console.log("QR_TABLE_SELECTED:", `Mesa ${data.table_number}`);
+      
       toast.success(`Mesa ${data.table_number} identificada!`, { id: "qr-error" });
       setIsScanning(false);
       return true;
@@ -175,49 +186,36 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       toast.error("Falha na validação da mesa", { id: "qr-error" });
       return false;
     } finally {
-      // Debounce validation state to avoid rapid re-triggering
+      // Pequeno atraso para liberar o estado de validação
       setTimeout(() => {
         setIsValidatingQr(false);
-      }, 1000);
+      }, 500);
     }
   };
 
   const onQrScan = async (text: string) => {
-    if (!text || isValidatingQr) return;
+    if (!text || isValidatingQr || !isScanning) return;
     
-    // Check if it's the same QR code scanned recently to avoid duplicate processing
-    if (text === lastScannedQrRef.current) return;
-    lastScannedQrRef.current = text;
-    // Reset last scanned after a while to allow re-scanning if needed
-    setTimeout(() => { lastScannedQrRef.current = null; }, 2000);
-
     const now = Date.now();
     
-    // Cooldown for invalid QRs
-    if (
-      lastInvalidQrRef.current && 
-      lastInvalidQrRef.current.value === text && 
-      (now - lastInvalidQrRef.current.at) < qrErrorCooldownMs
-    ) {
-      console.log("QR_DUPLICATE_SCAN_IGNORED (Cooldown)");
+    // Evita processar o mesmo texto repetidamente de forma frenética
+    if (text === lastScannedQrRef.current && (now - (lastInvalidQrRef.current?.at || 0) < 1000)) {
       return;
     }
+    lastScannedQrRef.current = text;
 
     const token = extractTableTokenFromQr(text);
     console.log("QR_EXTRACTED_TABLE_TOKEN:", token);
 
     if (!token) {
-      console.log("QR_ERROR_TOAST_SHOWING: invalid_format");
-      toast.error("QR Code não reconhecido como mesa", { id: "qr-error" });
-      lastInvalidQrRef.current = { value: text, at: now };
+      if (now - (lastInvalidQrRef.current?.at || 0) > qrErrorCooldownMs) {
+        toast.error("QR Code não reconhecido como mesa", { id: "qr-error" });
+        lastInvalidQrRef.current = { value: text, at: now };
+      }
       return;
     }
 
-    const isValid = await handleValidateTable(token);
-    
-    if (!isValid) {
-      lastInvalidQrRef.current = { value: text, at: now };
-    }
+    await handleValidateTable(token);
   };
 
   // Default mode selection if only one is active

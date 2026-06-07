@@ -5,6 +5,7 @@ export interface ValidatedTable {
   id: string;
   number: string;
   token: string;
+  name?: string | null;
 }
 
 interface CartCtx {
