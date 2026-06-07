@@ -518,7 +518,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
     const messageFull = buildOrderMessage(orderData, "complete");
 
-    console.log("FINAL_ORDER_PAYLOAD:", JSON.stringify(orderData, null, 2));
+    
 
     setSending(true);
     let success = false;
