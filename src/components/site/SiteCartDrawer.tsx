@@ -91,11 +91,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (error) throw error;
 
       if (!data) {
+        setValidatedTable(null);
+        setTableId(null);
+        setTableNumber(null);
+        setTableToken(null);
         toast.error("QR Code de mesa inválido. Procure um atendente.");
         return;
       }
 
       if (!data.is_active) {
+        setValidatedTable(null);
+        setTableId(null);
+        setTableNumber(null);
+        setTableToken(null);
         toast.error("Esta mesa está indisponível no momento. Procure um atendente.");
         return;
       }
