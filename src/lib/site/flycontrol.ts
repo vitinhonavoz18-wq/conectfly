@@ -31,6 +31,8 @@ export interface FlycontrolOrderPayload {
     order_type?: "delivery" | "pickup" | "table";
     service_mode?: "delivery" | "retirada" | "mesa";
     table_number?: string | null;
+    table_id?: string | null;
+    table_token?: string | null;
     ticket_number?: string | null;
     notes: string;
     whatsapp_message: string;
@@ -56,6 +58,8 @@ export function buildOrderPayload(args: {
   whatsapp_message: string;
   delivery_type?: "delivery" | "retirada" | "mesa";
   table_number?: string | null;
+  table_id?: string | null;
+  table_token?: string | null;
   ticket_number?: string | null;
   order_type?: "delivery" | "pickup" | "table";
   service_mode?: "delivery" | "retirada" | "mesa";
@@ -145,6 +149,8 @@ export function buildOrderPayload(args: {
       order_type: args.order_type || (args.delivery_type === "retirada" ? "pickup" : (args.delivery_type === "mesa" ? "table" : "delivery")),
       service_mode: args.service_mode || args.delivery_type || "delivery",
       table_number: args.table_number || null,
+      table_id: args.table_id || null,
+      table_token: args.table_token || null,
       ticket_number: args.ticket_number || null,
       notes: (args.notes ?? "").trim(),
       whatsapp_message: args.whatsapp_message
