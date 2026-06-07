@@ -44,6 +44,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [manualTableToken, setManualTableToken] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("PIX");
   const [changeFor, setChangeFor] = useState("");
