@@ -369,31 +369,31 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
       {/* Step 3 — Adicionais */}
       {bordasCategory && bordasCategory.items.length > 0 && (
-        <div className="space-y-4" ref={bordasRef}>
-          <div className="flex items-baseline justify-between mb-3">
-            <h4 className="text-lg font-bold">3. Escolha um adicional (opcional)</h4>
+        <div className="space-y-3" ref={bordasRef}>
+          <div className="flex items-baseline justify-between">
+            <h4 className="text-base sm:text-lg font-bold">3. Escolha um adicional (opcional)</h4>
             {scrollMessage && scrollMessage.includes("escolha") && (
-              <span className="text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
+              <span className="text-[10px] sm:text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
                 {scrollMessage}
               </span>
             )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <button
               onClick={() => setSelectedBorderId(null)}
-              className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+              className={`relative rounded-2xl sm:rounded-3xl border p-3 sm:p-5 text-left transition-all duration-300 transform ${
                 selectedBorderId === null
                   ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_rgba(229,9,20,0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
                   : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
               }`}
             >
               {selectedBorderId === null && (
-                <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
-                  <Check className="h-3 w-3" />
+                <span className="absolute top-2 right-2 sm:top-3 sm:right-3 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
+                  <Check className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                 </span>
               )}
-              <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">Sem Borda</p>
-              <p className="text-[hsl(var(--site-secondary))] font-black mt-1">Grátis</p>
+              <p className="font-extrabold text-sm sm:text-base text-[hsl(var(--site-fg))] leading-tight">Sem Borda</p>
+              <p className="text-[hsl(var(--site-secondary))] font-black text-sm sm:text-base mt-0.5">Grátis</p>
             </button>
             {bordasCategory.items.map((b) => {
               const active = selectedBorderId === b.id;
@@ -401,19 +401,19 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 <button
                   key={b.id}
                   onClick={() => setSelectedBorderId(b.id)}
-                  className={`relative rounded-3xl border p-5 text-left transition-all duration-300 transform ${
+                  className={`relative rounded-2xl sm:rounded-3xl border p-3 sm:p-5 text-left transition-all duration-300 transform ${
                     active
                       ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
                   }`}
                 >
                   {active && (
-                    <span className="absolute top-3 right-3 h-5 w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
-                      <Check className="h-3 w-3" />
+                    <span className="absolute top-2 right-2 sm:top-3 sm:right-3 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
+                      <Check className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
                     </span>
                   )}
-                  <p className="font-extrabold text-[hsl(var(--site-fg))] leading-tight">{b.name}</p>
-                  <p className="text-[hsl(var(--site-secondary))] font-black mt-1">+{formatBRL(b.price)}</p>
+                  <p className="font-extrabold text-sm sm:text-base text-[hsl(var(--site-fg))] leading-tight">{b.name}</p>
+                  <p className="text-[hsl(var(--site-secondary))] font-black text-sm sm:text-base mt-0.5">+{formatBRL(b.price)}</p>
                 </button>
               );
             })}
