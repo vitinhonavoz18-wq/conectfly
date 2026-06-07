@@ -18,6 +18,7 @@ import {
   LogOut,
   Loader2,
   ShoppingBag,
+  QrCode,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
