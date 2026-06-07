@@ -194,12 +194,23 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const handleValidateTable = async (token: string, slugFromQr?: string | null, numberFromQr?: string | null) => {
     if (!restaurant) return false;
     
+    // TRAVAS DE SEGURANÇA (Conforme solicitado)
+    if (isOpeningTableSession) {
+      console.log("OPEN_TABLE_SESSION_SKIPPED_ALREADY_OPENING");
+      return false;
+    }
+    if (tableSessionOpened && lastOpenedTableToken === token) {
+      console.log("OPEN_TABLE_SESSION_SKIPPED_ALREADY_OPENED");
+      return false;
+    }
+
     const targetSlug = (slugFromQr || restaurant.slug)?.trim();
     if (!targetSlug) return false;
 
     console.log("QR_TABLE_IDENTIFIED", { table_number: numberFromQr, table_token: token, restaurant_slug: targetSlug });
 
     setIsValidatingQr(true);
+    setIsOpeningTableSession(true);
 
     try {
       // 1. Tentar abrir a sessão imediatamente
@@ -216,12 +227,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         opened_at: new Date().toISOString()
       };
 
+      console.log("OPEN_TABLE_SESSION_REQUEST", sessionPayload);
       const sessionResult = await openTableSession(restaurant, sessionPayload);
+      console.log("OPEN_TABLE_SESSION_RESPONSE", sessionResult);
 
       if (sessionResult.success) {
         const tableData = {
           id: "flycontrol-table",
-          number: numberFromQr || "Mesa", // O FlyControl pode retornar o número real se não tivermos
+          number: numberFromQr || "Mesa", 
           token: token,
           sessionId: sessionResult.session_id
         };
@@ -231,6 +244,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         setTableNumber(tableData.number);
         setTableToken(token);
         setTableSessionId(sessionResult.session_id || null);
+        
+        // Atualizar travas e IDs
+        setTableSessionOpened(true);
+        setLastOpenedTableToken(token);
+        setCurrentTableSessionId(sessionResult.session_id || null);
+        
+        if (sessionResult.session_id) {
+          console.log("TABLE_SESSION_ID_SAVED:", sessionResult.session_id);
+        }
+
         setOrderType("table");
 
         if (sessionResult.already_open) {
@@ -253,12 +276,25 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return false;
     } finally {
       setIsValidatingQr(false);
+      setIsOpeningTableSession(false);
     }
   };
 
 
   const onQrScan = async (text: string) => {
-    if (!text || isValidatingQr || !isScanning) return;
+    // 1. Verificações iniciais e bloqueio de múltiplas leituras
+    if (!text || isValidatingQr || isOpeningTableSession || !isScanning) return;
+    
+    // Se já estiver aberta a mesma mesa, não faz nada
+    const { table_token: extractedToken } = extractTableQrData(text);
+    if (tableSessionOpened && lastOpenedTableToken === extractedToken) {
+      console.log("QR_TABLE_SCANNED: Already opened this table, skipping.");
+      return;
+    }
+
+    // 2. Pausar scanner imediatamente ao detectar um QR
+    console.log("QR_TABLE_SCANNED", text);
+    setIsScanning(false); // Fecha o modal do scanner
     
     const now = Date.now();
     if (text === lastInvalidQrRef.current?.value && (now - lastInvalidQrRef.current.at < qrErrorCooldownMs)) {
@@ -280,6 +316,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         lastInvalidQrRef.current = { value: text, at: now };
       }
+      // Reabre o scanner se for inválido? Geralmente sim, mas o usuário quer "pausar imediatamente"
+      // Vamos manter pausado e deixar o usuário clicar em escanear novamente se quiser
       return;
     }
 
@@ -287,6 +325,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     
     if (!success) {
       lastInvalidQrRef.current = { value: text, at: now };
+      // Opcional: Reabrir scanner em caso de erro não crítico? 
+      // O usuário disse "bloquear novas leituras", então mantemos fechado.
     } else {
       lastInvalidQrRef.current = null;
     }
