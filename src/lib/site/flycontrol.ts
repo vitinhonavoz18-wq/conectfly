@@ -188,6 +188,32 @@ function joinUrl(base: string, path: string): string {
   return joinUrl(base, "api/orders");
 }
 
+export function resolveTablesUrl(
+  restaurant: Pick<RestaurantRow, "flycontrol_base_url" | "flycontrol_api_url">,
+): string {
+  console.log("[FLYCONTROL] Resolvendo endpoint de mesas...");
+  let base = (restaurant.flycontrol_base_url ?? "").trim();
+  
+  if (!base) return "";
+  
+  // Normalizar URL base
+  if (!base.startsWith("http")) base = "https://" + base;
+  base = base.replace(/\/+$/, "");
+
+  // Se for uma URL do Supabase, usa o caminho padrão de functions
+  if (base.includes(".supabase.co")) {
+    return joinUrl(base, "functions/v1/public-tables");
+  }
+
+  // Se for o domínio do FlyControl Lovable, as functions ficam em /functions/v1/
+  if (base.includes("flycontrol-dash.lovable.app") || base.includes("lovable.app")) {
+     return joinUrl(base, "functions/v1/public-tables");
+  }
+
+  // Fallback genérico
+  return joinUrl(base, "functions/v1/public-tables");
+}
+
 /** 
  * Test connection directly to the orders endpoint without proxy
  * This is used for debugging and direct verification.
