@@ -321,14 +321,21 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
         // Limpar carrinho e fechar SOMENTE EM CASO DE SUCESSO
         clear();
-        setName("");
-        setPhone("");
-        setAddress("");
-        setPaymentMethod("PIX");
-        setChangeFor("");
-        setNotes("");
-        setZoneId("");
-        onClose();
+        
+        if (orderType === "pickup" || orderType === "table") {
+          setFinishedOrder(orderData);
+          setStep("confirmation");
+        } else {
+          // Delivery normal fecha o drawer
+          setName("");
+          setPhone("");
+          setAddress("");
+          setPaymentMethod("PIX");
+          setChangeFor("");
+          setNotes("");
+          setZoneId("");
+          onClose();
+        }
       }
 
     } catch (err) {
