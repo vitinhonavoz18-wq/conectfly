@@ -47,7 +47,9 @@ export interface FlycontrolOrderPayload {
     table_number?: string | null;
     table_id?: string | null;
     table_token?: string | null;
+    table_session_id?: string | null;
     ticket_number?: string | null;
+
     notes: string;
     whatsapp_message: string;
   };
