@@ -439,7 +439,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       <div 
         id={`summary-${category.id}`}
         ref={summaryRef}
-        className="rounded-[1.5rem] sm:rounded-[2.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-5 sm:p-10 shadow-[0_20px_60px_hsl(var(--site-bg)/0.3)] relative overflow-hidden"
+        className="rounded-[1.5rem] sm:rounded-[2.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-5 sm:p-10 shadow-[0_20px_60px_hsl(var(--site-bg)/0.3)] relative"
       >
         {scrollMessage && scrollMessage.includes("pronto") && (
           <div className="absolute top-3 right-6 z-10">
