@@ -209,82 +209,81 @@ function BarPrimeItemCard({ item, restaurant }: { item: any, restaurant: any }) 
     updateQty(item.id, undefined, newQty);
   };
 
+  const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price);
+
   return (
-    <div className="bg-[hsl(var(--site-card))] rounded-3xl border border-[hsl(var(--site-border))] overflow-hidden flex flex-col group hover:border-[hsl(var(--site-primary)/0.6)] transition-all duration-500 shadow-xl relative h-full">
+    <div className="bg-[hsl(var(--site-card))] rounded-2xl sm:rounded-3xl border border-[hsl(var(--site-border))] overflow-hidden flex flex-row sm:flex-col group hover:border-[hsl(var(--site-primary)/0.6)] transition-all duration-500 shadow-xl relative h-full min-h-[140px] sm:min-h-0">
       {/* Premium Dark Overlay on Hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.05)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       
       {/* Product Image */}
-      {(restaurant?.show_item_images ?? true) && item.image_url && (
-        <div className="aspect-[4/3] sm:aspect-video overflow-hidden relative shrink-0">
+      {(restaurant?.show_item_images ?? true) && item.image_url ? (
+        <div className="w-[110px] xs:w-[130px] sm:w-full aspect-square sm:aspect-video overflow-hidden relative shrink-0">
           <img
             src={item.image_url}
             alt={item.name}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-          
-          {/* Price Tag Overlay on Image */}
-          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-            <span className="text-[hsl(var(--site-primary))] font-black text-sm">
-              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price)}
-            </span>
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none sm:block hidden" />
+        </div>
+      ) : (
+        <div className="w-[110px] xs:w-[130px] sm:hidden bg-[hsl(var(--site-muted))] flex items-center justify-center shrink-0">
+          <Utensils className="h-8 w-8 opacity-20" />
         </div>
       )}
 
-      <div className="p-5 sm:p-6 flex flex-col flex-1 gap-3">
-        <div className="flex justify-between items-start gap-2">
-          <h3 className="font-black text-lg sm:text-xl uppercase tracking-tighter leading-tight group-hover:text-[hsl(var(--site-primary))] transition-colors">
+      <div className="p-3 sm:p-6 flex flex-col flex-1 gap-2 sm:gap-3 min-w-0 justify-between">
+        <div>
+          <h3 className="font-black text-sm sm:text-xl uppercase tracking-tighter leading-tight group-hover:text-[hsl(var(--site-primary))] transition-colors line-clamp-2">
             {item.name}
           </h3>
-          {!(restaurant?.show_item_images ?? true) || !item.image_url ? (
-             <span className="text-[hsl(var(--site-primary))] font-black text-lg shrink-0">
-               {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price)}
-             </span>
-          ) : null}
+          {item.description && (
+            <p className="text-[10px] sm:text-sm text-[hsl(var(--site-muted-fg))] leading-relaxed italic opacity-80 line-clamp-2 mt-1">
+              {item.description}
+            </p>
+          )}
         </div>
 
-        {item.description && (
-          <p className="text-xs sm:text-sm text-[hsl(var(--site-muted-fg))] leading-relaxed italic opacity-80 line-clamp-2 min-h-[2.5rem]">
-            {item.description}
-          </p>
-        )}
-
-        <div className="mt-auto pt-4 flex items-center justify-between gap-4">
+        <div className="mt-2 sm:mt-4 flex items-center justify-between gap-2">
           {qtyInCart > 0 ? (
-            <div className="flex items-center gap-3 bg-[hsl(var(--site-muted))] p-1 rounded-2xl border border-[hsl(var(--site-border))] flex-1 justify-between shadow-inner">
+            <div className="flex items-center gap-2 sm:gap-3 bg-[hsl(var(--site-muted))] p-0.5 sm:p-1 rounded-xl sm:rounded-2xl border border-[hsl(var(--site-border))] shadow-inner">
               <button 
                 onClick={() => handleUpdateQty(qtyInCart - 1)}
-                className="h-10 w-10 flex items-center justify-center bg-[hsl(var(--site-card))] rounded-xl text-[hsl(var(--site-fg))] hover:bg-[hsl(var(--site-primary)/0.1)] active:scale-90 transition-all border border-[hsl(var(--site-border))]"
+                className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center bg-[hsl(var(--site-card))] rounded-lg sm:rounded-xl text-[hsl(var(--site-fg))] hover:bg-[hsl(var(--site-primary)/0.1)] active:scale-90 transition-all border border-[hsl(var(--site-border))]"
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
-              <span className="font-black text-lg min-w-[20px] text-center">{qtyInCart}</span>
+              <span className="font-black text-sm sm:text-lg min-w-[16px] text-center">{qtyInCart}</span>
               <button 
                 onClick={() => handleUpdateQty(qtyInCart + 1)}
-                className="h-10 w-10 flex items-center justify-center bg-[hsl(var(--site-primary))] rounded-xl text-[hsl(var(--site-primary-fg))] active:scale-90 transition-all shadow-lg"
+                className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center bg-[hsl(var(--site-primary))] rounded-lg sm:rounded-xl text-[hsl(var(--site-primary-fg))] active:scale-90 transition-all shadow-lg"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
             </div>
           ) : (
             <button
               onClick={handleAdd}
               disabled={isAdding}
-              className="flex-1 site-btn-primary py-3.5 rounded-2xl flex items-center justify-center gap-3 font-black uppercase text-[10px] tracking-widest shadow-xl active:scale-95 transition-all group/btn"
+              className="h-8 sm:h-auto px-4 sm:px-0 sm:flex-1 site-btn-primary py-1 sm:py-3.5 rounded-lg sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 font-black uppercase text-[8px] sm:text-[10px] tracking-widest shadow-xl active:scale-95 transition-all group/btn"
             >
               {isAdding ? (
-                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="h-3 w-3 sm:h-4 sm:w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  <ShoppingBag className="h-4 w-4 transition-transform group-hover/btn:scale-110" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 transition-transform group-hover/btn:rotate-90" />
                   <span>Adicionar</span>
                 </>
               )}
             </button>
           )}
+
+          <div className="shrink-0">
+             <span className="text-[hsl(var(--site-primary))] font-black text-sm sm:text-xl tracking-tighter">
+                {formattedPrice}
+             </span>
+          </div>
         </div>
       </div>
     </div>
