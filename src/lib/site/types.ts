@@ -144,6 +144,7 @@ export interface RestaurantRow {
   allow_dual_send?: boolean;
   flycontrol_direct_url?: string | null;
   menu_sync_endpoint?: string | null;
+  menu_sync_token?: string | null;
 
   customization?: {
     primaryButtonText?: string;

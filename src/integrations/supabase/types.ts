@@ -828,6 +828,7 @@ export type Database = {
           id: string
           logo_url: string | null
           menu_sync_endpoint: string | null
+          menu_sync_token: string | null
           name: string
           order_flow_mode: string | null
           owner_id: string | null
@@ -875,6 +876,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           menu_sync_endpoint?: string | null
+          menu_sync_token?: string | null
           name: string
           order_flow_mode?: string | null
           owner_id?: string | null
@@ -922,6 +924,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           menu_sync_endpoint?: string | null
+          menu_sync_token?: string | null
           name?: string
           order_flow_mode?: string | null
           owner_id?: string | null
