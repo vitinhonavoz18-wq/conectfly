@@ -97,7 +97,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           </div>
         )}
 
-        {beveragesPosition === "after_combos" && renderBeverages()}
+        
 
         <div>
           <SiteMenuSection 
