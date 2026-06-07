@@ -968,7 +968,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   <p className="text-sm text-[hsl(var(--site-muted-fg))] mb-6">Seu pedido foi enviado e você será redirecionado para o WhatsApp.</p>
                 )}
                 
-                {orderType !== "pickup" && orderType !== "table" && (
+                {orderType === "table" && (
+                  <p className="text-sm text-[hsl(var(--site-muted-fg))] mb-6 font-bold text-[hsl(var(--site-primary))]">
+                    Pedido enviado com sucesso para a Mesa {tableNumber}.
+                  </p>
+                )}
+
+                {orderType !== "pickup" && orderType !== "table" && orderType !== "delivery" && (
                    <p className="text-sm text-[hsl(var(--site-muted-fg))]">Aguarde seu pedido ser preparado.</p>
                 )}
                 
