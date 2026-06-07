@@ -608,7 +608,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         // TUDO CERTO!
         toast.success("Pedido confirmado com sucesso!");
         
-        // Redirecionar para WhatsApp APÓS o envio se habilitado (SOMENTE PARA DELIVERY)
+        // Redirecionar para WhatsApp APÓS o envio se habilitado (SOMENTE PARA DELIVERY E SE NÃO FOR MESA)
+        // Pedido de mesa não redireciona para WhatsApp conforme critério 6
         if (whatsappEnabled && orderType === "delivery") {
           console.log("📲 [CHECKOUT] Abrindo WhatsApp para pedido Delivery");
           openWhatsAppOrder(messageWhatsApp);
