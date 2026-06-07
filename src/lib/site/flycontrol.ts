@@ -3,6 +3,20 @@ import { safeInvoke } from "./api-utils";
 import { formatBRL } from "./format";
 import { FEATURES } from "../features";
 
+export interface OpenTableSessionPayload {
+  type: "open_table_session";
+  restaurant_slug: string;
+  order_type: "table";
+  service_mode: "mesa";
+  table_number: string;
+  table_token: string;
+  customer_name?: string;
+  customer_phone?: string;
+  opened_from: "qrcode_scan";
+  opened_at: string;
+}
+
+
 
 export interface FlycontrolOrderPayload {
   event: "order.created";
@@ -33,7 +47,9 @@ export interface FlycontrolOrderPayload {
     table_number?: string | null;
     table_id?: string | null;
     table_token?: string | null;
+    table_session_id?: string | null;
     ticket_number?: string | null;
+
     notes: string;
     whatsapp_message: string;
   };
@@ -60,11 +76,13 @@ export function buildOrderPayload(args: {
   table_number?: string | null;
   table_id?: string | null;
   table_token?: string | null;
+  table_session_id?: string | null;
   ticket_number?: string | null;
   order_type?: "delivery" | "pickup" | "table";
   service_mode?: "delivery" | "retirada" | "mesa";
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => {
+
      const isBeverage = l.itemId.startsWith('bev-');
      const isCombo = l.itemId.startsWith('combo-');
      const isPizza = !isBeverage && !isCombo && ((l.flavors && l.flavors.length > 0) || l.name.toLowerCase().includes("pizza"));
@@ -151,7 +169,9 @@ export function buildOrderPayload(args: {
       table_number: args.table_number || null,
       table_id: args.table_id || null,
       table_token: args.table_token || null,
+      table_session_id: args.table_session_id || null,
       ticket_number: args.ticket_number || null,
+
       notes: (args.notes ?? "").trim(),
       whatsapp_message: args.whatsapp_message
     }
@@ -313,6 +333,8 @@ export async function sendOrderToFlycontrol(
   console.log("CHECKOUT_SERVICE_MODE:", payload.order.service_mode);
   console.log("CHECKOUT_TABLE_NUMBER:", payload.order.table_number);
   console.log("CHECKOUT_TABLE_TOKEN:", payload.order.table_token);
+  console.log("CHECKOUT_TABLE_SESSION_ID:", payload.order.table_session_id);
+
 
   // 1. Validações pré-envio
   const missingFields: string[] = [];
@@ -424,8 +446,61 @@ export async function sendOrderToFlycontrol(
 }
 
 /**
+ * Opens a table session in FlyControl.
+ */
+export async function openTableSession(
+  restaurant: Pick<RestaurantRow, "id" | "slug">,
+  payload: OpenTableSessionPayload
+): Promise<{ success: boolean; session_id?: string; message?: string; already_open?: boolean }> {
+  console.log("OPEN_TABLE_SESSION_REQUEST");
+  console.log("OPEN_TABLE_SESSION_PAYLOAD:", JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await fetch("/api/public/submit-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 
+        restaurant_id: restaurant.id, 
+        payload: {
+          ...payload,
+          // Mantemos o padrão que o FlyControl espera receber do proxy
+          event: "order.created", // O proxy ou o backend podem usar isso para roteamento
+          source: "sitecreatorfly"
+        }
+      }),
+
+    });
+
+    const data = await response.json();
+    console.log("OPEN_TABLE_SESSION_RESPONSE:", data);
+
+    if (!response.ok || data.success === false) {
+      console.error("OPEN_TABLE_SESSION_ERROR:", data.error || data.message || `HTTP ${response.status}`);
+      return { success: false, message: data.error || data.message };
+    }
+
+    const sessionId = data.response?.session_id || data.session_id;
+    if (sessionId) {
+      console.log("TABLE_SESSION_ID_SAVED:", sessionId);
+    }
+
+    return { 
+      success: true, 
+      session_id: sessionId,
+      already_open: data.response?.already_open || data.already_open
+    };
+  } catch (err: any) {
+    console.error("OPEN_TABLE_SESSION_ERROR:", err.message);
+    return { success: false, message: err.message };
+  }
+}
+
+/**
  * Sends an order to an external webhook URL via a secure edge function proxy.
  */
+
 export async function sendOrderToExternalWebhook(
   webhookUrl: string,
   payload: FlycontrolOrderPayload,
