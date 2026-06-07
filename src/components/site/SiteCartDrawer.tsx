@@ -174,7 +174,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   const handleValidateTable = async (token: string, slugFromQr?: string | null) => {
     if (!restaurant) {
-      console.log("QR_VALIDATE_ERROR_REASON: Restaurante não carregado no componente");
+      console.log("QR_VALIDATE_ERROR_REASON: restaurant_not_found (Contexto ausente)");
       return false;
     }
     
@@ -186,57 +186,71 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     setIsValidatingQr(true);
     const targetSlug = (slugFromQr || restaurant.slug)?.trim();
     
-    console.log("QR_VALIDATE_ENDPOINT_CALLED:", `RPC/TableQuery: restaurant_slug=${targetSlug}, table_token=${token}`);
+    console.log("QR_VALIDATE_START:", `restaurant_slug=${targetSlug}, table_token=${token}`);
     
     try {
-      // Consulta oficial via Supabase na tabela restaurant_tables
-      const { data, error } = await supabase
-        .from("restaurant_tables")
-        .select("id, table_number, table_name, is_active, public_token, restaurant_id, restaurants!inner(slug)")
-        .eq("public_token", token)
-        .eq("restaurants.slug", targetSlug)
+      // 1. Verificar se o restaurante existe (opcional, mas bom para debug detalhado)
+      const { data: restaurantData, error: restaurantError } = await supabase
+        .from("restaurants")
+        .select("id")
+        .eq("slug", targetSlug)
         .maybeSingle();
 
-      console.log("QR_VALIDATE_RESPONSE:", data);
-
-      if (error) {
-        console.log("QR_VALIDATE_ERROR_REASON:", error.message);
-        throw error;
+      if (restaurantError || !restaurantData) {
+        console.log("QR_RESULT: restaurant_not_found");
+        toast.error("Restaurante não identificado. Verifique o QR Code.", { id: "qr-error" });
+        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "restaurant_not_found" } : null);
+        return false;
       }
 
-      if (!data) {
-        console.log("QR_VALIDATE_ERROR_REASON: Mesa não encontrada para este restaurante e token");
+      // 2. Verificar se a mesa existe para esse restaurante e token
+      const { data: tableData, error: tableError } = await supabase
+        .from("restaurant_tables")
+        .select("id, table_number, table_name, is_active")
+        .eq("public_token", token)
+        .eq("restaurant_id", restaurantData.id)
+        .maybeSingle();
+
+      if (tableError) throw tableError;
+
+      if (!tableData) {
+        console.log("QR_RESULT: table_not_found");
         toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
+        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "table_not_found" } : null);
         return false;
       }
 
-      if (!data.is_active) {
-        console.log("QR_VALIDATE_ERROR_REASON: Mesa encontrada mas está inativa (is_active=false)");
+      // 3. Verificar se a mesa está ativa
+      if (!tableData.is_active) {
+        console.log("QR_RESULT: inactive_table");
         toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
+        setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "inactive_table" } : null);
         return false;
       }
 
-      console.log("QR_VALIDATE_SUCCESS: Mesa identificada com sucesso", data);
+      console.log("QR_RESULT: valid true");
+      console.log("Mesa identificada:", tableData);
       
-      const tableData = {
-        id: data.id,
-        number: data.table_number,
-        name: data.table_name,
+      const validatedData = {
+        id: tableData.id,
+        number: tableData.table_number,
+        name: tableData.table_name,
         token: token,
       };
 
-      setValidatedTable(tableData);
-      setTableId(data.id);
-      setTableNumber(data.table_number);
+      setValidatedTable(validatedData);
+      setTableId(tableData.id);
+      setTableNumber(tableData.table_number);
       setTableToken(token);
       setOrderType("table");
       
-      toast.success(`Mesa ${data.table_number} identificada!`, { id: "qr-error" });
+      toast.success(`Mesa ${tableData.table_number} identificada!`, { id: "qr-error" });
+      setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "valid true" } : null);
       setIsScanning(false);
       return true;
     } catch (err: any) {
-      console.log("QR_VALIDATE_ERROR_REASON: Erro de exceção na chamada", err.message || err);
-      toast.error("Falha na validação da mesa", { id: "qr-error" });
+      console.error("QR_VALIDATE_ERROR:", err.message || err);
+      toast.error("Falha na validação da mesa. Tente novamente.", { id: "qr-error" });
       return false;
     } finally {
       setIsValidatingQr(false);
