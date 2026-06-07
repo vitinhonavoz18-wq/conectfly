@@ -32,6 +32,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
     return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
   };
   
+  const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
@@ -43,15 +44,6 @@ export function BlackTemplate({ data }: { data: SiteData }) {
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const beveragesPosition = r.site_settings?.beverages_position || "end";
 
-  const renderBeverages = () => (
-    (beveragesVisible && data.beverages && data.beverages.length > 0) && (
-      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))]">
-        <div className="max-w-6xl mx-auto">
-          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
-        </div>
-      </div>
-    )
-  );
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra">
@@ -84,10 +76,11 @@ export function BlackTemplate({ data }: { data: SiteData }) {
             restaurant={r} 
             bordasCategory={bordasCategory}
             beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
 
-        {beveragesPosition === "after_products" && renderBeverages()}
+        
 
         {showCombos && (
           <div>
@@ -95,17 +88,19 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           </div>
         )}
 
-        {beveragesPosition === "after_combos" && renderBeverages()}
+        
 
         <div>
           <SiteMenuSection 
             categories={nonPizzaCategories} 
             restaurant={r} 
             entryMode={entryMode}
+            beverages={!hasPizzas ? (data.beverages ?? []) : []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
 
-        {beveragesPosition === "end" && renderBeverages()}
+        
       </main>
       <SiteFooter
         name={r.name}

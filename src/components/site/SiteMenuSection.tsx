@@ -1,18 +1,26 @@
 import { useState } from "react";
 import { ImageIcon } from "lucide-react";
-import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
+import { SiteBeverageSection } from "./SiteBeverageSection";
+
  
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
   entryMode?: "navigation" | "direct";
+  beverages?: BeverageRow[];
+  beverageCatalogs?: BeverageCatalogRow[];
 }
+
  
-export function SiteMenuSection({ categories, restaurant, entryMode = "navigation" }: Props) {
+export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", beverages, beverageCatalogs }: Props) {
   const [active, setActive] = useState<string | null>(null);
-  if (categories.length === 0) return null;
+  
+  const hasBeverages = beverages && beverages.length > 0;
+  if (categories.length === 0 && !hasBeverages) return null;
+
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
 
   const isBeverageCategory = (c: MenuCategoryRow) => {
@@ -111,6 +119,20 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 </div>
               </div>
             ))}
+            {beverages && beverages.length > 0 && (
+              <div className="space-y-6 sm:space-y-10 mt-16 pt-12 border-t border-[hsl(var(--site-border))]">
+                <div className="flex items-center gap-4 sm:gap-6 px-2">
+                  <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
+                  <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] shrink-0">
+                    Acompanhamentos
+                  </h3>
+                  <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
+                </div>
+                <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                  <SiteBeverageSection beverages={beverages} catalogs={beverageCatalogs} restaurant={restaurant} />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -162,6 +184,18 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                     </div>
                   </div>
                 ))}
+                {beverages && beverages.length > 0 && (
+                  <div className="space-y-3 mt-16 pt-12 border-t border-[hsl(var(--site-border))]">
+                    <div className="flex items-center gap-4 mb-8">
+                       <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[hsl(var(--site-border))]" />
+                       <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-center">Acompanhamentos</h3>
+                       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
+                    </div>
+                    <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                      <SiteBeverageSection beverages={beverages} catalogs={beverageCatalogs} restaurant={restaurant} />
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <>
@@ -181,14 +215,33 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 )}
 
                 {current && current.is_pizza ? (
-                  <SitePizzaBuilder category={current} restaurant={restaurant} />
+                  <SitePizzaBuilder 
+                    category={current} 
+                    restaurant={restaurant} 
+                    beverages={beverages} 
+                    beverageCatalogs={beverageCatalogs} 
+                  />
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
-                    {current?.items.map((it) => (
-                      <div key={it.id} className="h-full">
-                        <SiteMenuItemCard item={it} restaurant={restaurant} />
+                  <div className="space-y-12">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
+                      {current?.items.map((it) => (
+                        <div key={it.id} className="h-full">
+                          <SiteMenuItemCard item={it} restaurant={restaurant} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Step 4 for non-pizzas: Beverages before summary/footer flow */}
+                    {beverages && beverages.length > 0 && (
+                      <div className="space-y-3 mt-12">
+                        <div className="flex items-center gap-2 mb-4">
+                          <h4 className="text-xl sm:text-2xl font-black uppercase tracking-tight">Acompanhamentos</h4>
+                        </div>
+                        <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                          <SiteBeverageSection beverages={beverages} catalogs={beverageCatalogs} restaurant={restaurant} />
+                        </div>
                       </div>
-                    ))}
+                    )}
                   </div>
                 )}
               </>

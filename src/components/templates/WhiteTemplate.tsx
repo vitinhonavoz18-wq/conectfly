@@ -4,7 +4,6 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
-import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
@@ -32,27 +31,14 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
     return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
   };
   
+  const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
-
 
   const combosVisibility = r.site_settings?.combos_visibility || "auto";
   const hasCombos = data.comboGroups.some(g => g.combos.length > 0);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const entryMode = r.site_settings?.entry_mode || "navigation";
-
-  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
-  const beveragesPosition = r.site_settings?.beverages_position || "end";
-
-  const renderBeverages = () => (
-    (beveragesVisible && data.beverages && data.beverages.length > 0) && (
-      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
-        <div className="max-w-6xl mx-auto">
-          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
-        </div>
-      </div>
-    )
-  );
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra">
@@ -78,16 +64,16 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             combosVisibility={combosVisibility}
           />
         </div>
+        
         <div id="pizzas-container">
           <SitePizzaSection 
             categories={data.categories} 
             restaurant={r} 
             bordasCategory={bordasCategory}
             beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
-
-        {beveragesPosition === "after_products" && renderBeverages()}
 
         {showCombos && (
           <div>
@@ -95,17 +81,15 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
           </div>
         )}
 
-        {beveragesPosition === "after_combos" && renderBeverages()}
-
         <div>
           <SiteMenuSection 
             categories={nonPizzaCategories} 
             restaurant={r} 
             entryMode={entryMode}
+            beverages={!hasPizzas ? (data.beverages ?? []) : []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
-
-        {beveragesPosition === "end" && renderBeverages()}
       </main>
       <SiteFooter
         name={r.name}

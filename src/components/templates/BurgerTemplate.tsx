@@ -4,7 +4,6 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
-import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
@@ -32,6 +31,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
     return name === "bordas recheadas" || name === "borda recheada" || name === "bordas" || name === "borda";
   };
   
+  const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter((c) => !c.is_pizza && !isBeverage(c) && !isBordas(c));
   const bordasCategory = data.categories.find(isBordas);
 
@@ -70,30 +70,13 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
             restaurant={r} 
             bordasCategory={bordasCategory}
             beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
-
-        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_products" && (
-          <div className="py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
-
-            </div>
-          </div>
-        )}
 
         {showCombos && (
           <div className="py-8">
             <SiteComboSection groups={data.comboGroups} />
-          </div>
-        )}
-
-        {r.site_settings?.beverages_visibility !== false && r.site_settings?.beverages_position === "after_combos" && (
-          <div className="py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
-
-            </div>
           </div>
         )}
 
@@ -102,16 +85,10 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
             categories={nonPizzaCategories} 
             restaurant={r} 
             entryMode={entryMode}
+            beverages={!hasPizzas ? (data.beverages ?? []) : []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
-
-        {r.site_settings?.beverages_visibility !== false && (r.site_settings?.beverages_position === "end" || !r.site_settings?.beverages_position) && (
-          <div className="py-8 px-4">
-            <div className="max-w-6xl mx-auto">
-              <SiteBeverageSection beverages={data.beverages ?? []} catalogs={data.beverageCatalogs} restaurant={r} />
-            </div>
-          </div>
-        )}
       </main>
       <SiteFooter
         name={r.name}
