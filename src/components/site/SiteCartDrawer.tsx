@@ -429,8 +429,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   };
 
   const handleFinish = async () => {
+    console.log("FINAL_ORDER_SENT_ONLY_ON_BUTTON_CLICK");
     setError("");
     setValidationAttempted(true);
+
 
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
