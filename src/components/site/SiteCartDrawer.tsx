@@ -251,14 +251,25 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     
     // 2. Regra de Anti-Spam / Cooldown para erros
     if (text === lastInvalidQrRef.current?.value && (now - lastInvalidQrRef.current.at < qrErrorCooldownMs)) {
-      // Silenciosamente ignora se for o mesmo erro recente
+      console.log("QR_ERROR_TOAST_BLOCKED: Mesma leitura inválida em cooldown");
       return;
     }
 
     const { restaurant_slug, table_token } = extractTableQrData(text);
 
+    // Atualiza o estado de debug visual
+    setDebugQr({
+      rawValue: text,
+      slug: restaurant_slug,
+      token: table_token,
+      status: "Validando...",
+      reason: ""
+    });
+
     if (!table_token) {
       console.log("QR_VALIDATE_ERROR_REASON: Não foi possível extrair um token do valor lido");
+      setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "Token não extraído" } : null);
+      
       if (!lastInvalidQrRef.current || text !== lastInvalidQrRef.current.value || (now - lastInvalidQrRef.current.at > qrErrorCooldownMs)) {
         toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         lastInvalidQrRef.current = { value: text, at: now };
@@ -267,8 +278,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
 
     const success = await handleValidateTable(table_token, restaurant_slug);
+    
     if (!success) {
       lastInvalidQrRef.current = { value: text, at: now };
+      setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "Mesa não encontrada ou inativa" } : null);
+    } else {
+      setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "" } : null);
     }
   };
 
