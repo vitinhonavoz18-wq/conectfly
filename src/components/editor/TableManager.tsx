@@ -149,8 +149,11 @@ export function TableManager({ restaurantId, restaurantSlug }: Props) {
   };
 
   const getTableUrl = (token: string) => {
+    // A URL deve seguir o padrão oficial para ser reconhecida no cardápio público
     const baseUrl = window.location.origin;
-    return `${baseUrl}/${restaurantSlug}?mode=table&table_token=${token}`;
+    // Se o restaurantSlug vier como "conectfly", tentamos extrair da URL ou usar um fallback
+    const slug = restaurantSlug || "restaurante";
+    return `https://conectfly.com.br/${slug}?mode=table&table_token=${token}`;
   };
 
   const printQrCode = (table: RestaurantTableRow) => {
@@ -213,6 +216,14 @@ export function TableManager({ restaurantId, restaurantSlug }: Props) {
       </div>
     );
   }
+
+  // SF_TABLES_LOAD_DEBUG
+  console.log("SF_TABLES_LOAD_DEBUG:", {
+    restaurant_id: restaurantId,
+    restaurant_slug: restaurantSlug,
+    quantidade_mesas: tables.length,
+    fonte: "restaurant_tables (Supabase)",
+  });
 
   return (
     <div className="space-y-6">
