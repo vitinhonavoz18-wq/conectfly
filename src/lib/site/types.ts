@@ -74,7 +74,7 @@ export interface ComboGroupRow {
   sort_order: number;
 }
 
-export type SiteTemplate = "black" | "white" | "pizza_hut_style" | "burger_style";
+export type SiteTemplate = "black" | "white" | "pizza_hut_style" | "burger_style" | "bar_prime";
 
 export type BusinessType = 
   | "Pizzaria"
