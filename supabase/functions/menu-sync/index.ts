@@ -107,43 +107,91 @@
 
       const slug = url.searchParams.get("slug") || body.slug;
       const apiKey = req.headers.get("x-api-key") || req.headers.get("apikey") || req.headers.get("Authorization")?.replace("Bearer ", "");
-      const syncToken = url.searchParams.get("sync_token") || body.sync_token;
+      const syncToken = url.searchParams.get("sync_token") || url.searchParams.get("syncToken") || url.searchParams.get("token") || body.sync_token || body.syncToken || body.token;
       
-      console.log(`[menu-sync] Request: ${method} slug=${slug} action=${body.action} type=${body.type} hasToken=${!!syncToken}`);
+      console.log(`MENU_SYNC_AUTH_DEBUG: slug=${slug} has_sync_token=${!!syncToken} has_api_key=${!!apiKey}`);
 
-      // Identify pizzeria
       let pizzeria;
-      if (apiKey) {
-        const { data } = await supabase.from("restaurants").select("*").eq("flycontrol_api_key", apiKey).maybeSingle();
-        pizzeria = data;
-        console.log(`[menu-sync] Pizzeria found by API Key: ${pizzeria?.slug}`);
-      } else if (slug) {
-        const { data } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
-        pizzeria = data;
-        console.log(`[menu-sync] Pizzeria found by Slug: ${pizzeria?.slug}`);
+      let authMethodUsed = "none";
+      let authResult = "pending";
 
-        // If using slug, MUST provide valid syncToken for GET operations
-        if (method === "GET" && (!syncToken || syncToken !== pizzeria?.menu_sync_token)) {
+      // 1. Check sync_token first if slug is provided (most common for FlyControl integration)
+      if (slug && syncToken) {
+        const { data: res, error } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
+        pizzeria = res;
+        
+        const storedToken = pizzeria?.menu_sync_token;
+        const tokenMatch = storedToken && syncToken === storedToken;
+        
+        console.log(`MENU_SYNC_AUTH_DEBUG: restaurant_found=${!!pizzeria} stored_token_exists=${!!storedToken} token_match=${tokenMatch}`);
+        
+        if (tokenMatch) {
+          authMethodUsed = "sync_token";
+          authResult = "success";
+        } else if (pizzeria) {
+          authResult = "invalid_token";
           return new Response(JSON.stringify({ 
             success: false, 
-            error: "Token de sincronização inválido." 
+            error: "invalid_sync_token",
+            message: "Token de sincronização inválido." 
           }), {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
       }
+
+      // 2. Fallback to API Key if not already authorized by token
+      if (authResult !== "success" && apiKey) {
+        const { data: res } = await supabase.from("restaurants").select("*").eq("flycontrol_api_key", apiKey).maybeSingle();
+        if (res) {
+          pizzeria = res;
+          authMethodUsed = "api_key";
+          authResult = "success";
+          console.log(`MENU_SYNC_AUTH_DEBUG: Authorized by API Key for slug=${pizzeria.slug}`);
+        }
+      }
+
+      // 3. Final authorization check
+      if (authResult !== "success") {
+        console.log(`MENU_SYNC_AUTH_DEBUG: Final Auth Result = unauthorized. Method used: ${authMethodUsed}`);
+        
+        if (slug && !syncToken && !apiKey) {
+          return new Response(JSON.stringify({ 
+            success: false, 
+            error: "missing_sync_token",
+            message: "Token de sincronização ausente."
+          }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: "unauthorized",
+          message: "API Key ou Token de sincronização obrigatórios." 
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
+      console.log(`MENU_SYNC_AUTH_DEBUG: Final Auth Result = success. Method used: ${authMethodUsed}`);
+
  
-     if (!pizzeria) {
-       return new Response(JSON.stringify({ 
-         success: false, 
-         error: "Pizzaria não encontrada", 
-         slug: slug || "não fornecido" 
-       }), {
-         status: 404,
-         headers: { ...corsHeaders, "Content-Type": "application/json" }
-       });
-     }
+      if (!pizzeria) {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: "restaurant_not_found", 
+          message: "Restaurante não encontrado.",
+          slug: slug || "não fornecido" 
+        }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+
  
      const restaurantId = pizzeria.id;
  
@@ -229,12 +277,13 @@
  
     // Write operations (POST only for actions)
     if (method === "POST") {
-      if (!apiKey) {
+      if (method === "POST" && authMethodUsed !== "api_key") {
         return new Response(JSON.stringify({ success: false, error: "API Key é obrigatória para escrita" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
         });
       }
+
 
       const action = body.action;
       const type = body.type;
