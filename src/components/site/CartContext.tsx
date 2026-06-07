@@ -1,5 +1,11 @@
-import { createContext, useContext, useMemo, useState, ReactNode } from "react";
+import { createContext, useContext, useMemo, useState, ReactNode, useEffect } from "react";
 import type { CartLine } from "@/lib/site/types";
+
+export interface ValidatedTable {
+  id: string;
+  number: string;
+  token: string;
+}
 
 interface CartCtx {
   items: CartLine[];
@@ -11,6 +17,8 @@ interface CartCtx {
   totalPrice: number;
   isCartOpen: boolean;
   setCartOpen: (open: boolean) => void;
+  validatedTable: ValidatedTable | null;
+  setValidatedTable: (table: ValidatedTable | null) => void;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -22,6 +30,7 @@ function keyOf(itemId: string, sizeLabel?: string) {
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
   const [isCartOpen, setCartOpen] = useState(false);
+  const [validatedTable, setValidatedTable] = useState<ValidatedTable | null>(null);
 
   const addLine: CartCtx["addLine"] = (line, qty = 1) => {
     setItems((cur) => {
@@ -71,8 +80,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       totalPrice,
       isCartOpen,
       setCartOpen,
+      validatedTable,
+      setValidatedTable,
     };
-  }, [items, isCartOpen]);
+  }, [items, isCartOpen, validatedTable]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
