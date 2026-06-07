@@ -183,6 +183,10 @@ create table if not exists public.orders (
   delivery_fee numeric not null default 0,
   payment_method text,
   change_for numeric,
+  order_type text default 'delivery',
+  service_mode text default 'delivery',
+  table_number text,
+  ticket_number text,
   notes text default '',
   status text not null default 'novo',
   created_at timestamptz not null default now()
