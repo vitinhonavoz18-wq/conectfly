@@ -212,6 +212,7 @@ export function resolveTablesUrl(
 
   // Fallback para domínios customizados (como conectfly.com.br)
   // O usuário espera api/public/validate-table, então o base deve retornar api/public
+  // De acordo com as instruções: {{FLYCONTROL_BASE_URL}}/api/public/restaurant-tables
   return joinUrl(base, "api/public");
 }
 

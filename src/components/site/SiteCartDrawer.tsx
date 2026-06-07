@@ -268,10 +268,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       const isTimeout = err.name === 'AbortError';
       const isCors = err.message?.includes("Failed to fetch") || err.message?.includes("CORS");
       
-      if (isTimeout) console.log("QR_VALIDATE_FINAL_RESULT: VALIDATION_TIMEOUT");
-      if (isCors) console.log("QR_VALIDATE_FINAL_RESULT: CORS_ERROR");
+      if (isTimeout) console.log("QR_VALIDATE_ERROR: VALIDATION_TIMEOUT");
+      if (isCors) console.log("QR_VALIDATE_ERROR: CORS_ERROR");
       
-      console.error("QR_VALIDATE_FETCH_ERROR:", err.message || err);
+      console.error("QR_VALIDATE_ERROR:", err.message || err);
       toast.error("Falha na validação da mesa. Tente novamente.", { id: "qr-error" });
       return false;
     } finally {
