@@ -87,7 +87,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
           </div>
         )}
 
-        {beveragesPosition === "after_combos" && renderBeverages()}
+        
         
         <div className="bg-[hsl(var(--site-bg))] py-12">
           <SiteMenuSection 
