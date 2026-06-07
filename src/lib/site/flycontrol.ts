@@ -54,7 +54,11 @@ export function buildOrderPayload(args: {
   pizzeria_slug: string;
   pizzeria_name: string;
   whatsapp_message: string;
-  delivery_type?: "delivery" | "retirada";
+  delivery_type?: "delivery" | "retirada" | "mesa";
+  table_number?: string | null;
+  ticket_number?: string | null;
+  order_type?: "delivery" | "pickup" | "table";
+  service_mode?: "delivery" | "retirada" | "mesa";
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => {
      const isBeverage = l.itemId.startsWith('bev-');
