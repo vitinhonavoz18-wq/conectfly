@@ -818,7 +818,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                         className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
                       >
                         <Utensils className="h-5 w-5" />
-                        <span className="text-[10px] font-black uppercase tracking-tight">Mesa</span>
+                        <span className="text-[10px] font-black uppercase tracking-tight">
+                          {restaurant?.selected_template === 'bar_prime' ? 'Pedir na Mesa' : 'Mesa'}
+                        </span>
                       </button>
                     )}
                   </div>
