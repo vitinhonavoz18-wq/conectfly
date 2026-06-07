@@ -85,6 +85,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
             restaurant={r} 
             bordasCategory={bordasCategory}
             beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
           />
         </div>
 
