@@ -9,7 +9,7 @@ import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBa
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
-  const { isCartOpen, setCartOpen, validatedTable } = useCart();
+  const { isCartOpen, setCartOpen, validatedTable, totalItems } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
@@ -45,6 +45,22 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         onOpenCart={() => setCartOpen(true)} 
         showCartButton={r.site_settings?.show_cart_button !== false}
       />
+      
+      {/* Sticky Bottom Cart Floating Button (Mobile) */}
+      {totalItems > 0 && !isCartOpen && (
+        <div className="fixed bottom-6 left-0 right-0 z-40 px-4 sm:hidden animate-in fade-in slide-in-from-bottom-10 duration-500">
+           <button 
+             onClick={() => setCartOpen(true)}
+             className="w-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] py-5 rounded-[2rem] font-black uppercase text-sm tracking-[0.2em] shadow-[0_20px_50px_hsl(var(--site-primary)/0.4)] flex items-center justify-center gap-3 border-4 border-white/10 active:scale-95 transition-all"
+           >
+             <ShoppingBag className="h-5 w-5" />
+             {validatedTable ? `Pedir na Mesa ${validatedTable.number}` : "Ver meu pedido"}
+             <span className="bg-[hsl(var(--site-primary-fg))] text-[hsl(var(--site-primary))] px-2 py-0.5 rounded-lg text-xs">
+               {totalItems}
+             </span>
+           </button>
+        </div>
+      )}
       
       <main className="pt-16 sm:pt-20">
         {/* Compact Hero */}
