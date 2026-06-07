@@ -397,12 +397,19 @@ export async function sendOrderToFlycontrol(
     }
 
     if (!response.ok || data?.success === false) {
-      const errorMsg = data?.error || `Falha no envio: ${status}`;
+      // Tentar extrair erro detalhado do JSON de erro se disponível
+      let errorMsg = data?.error || data?.message || `Falha no envio: ${status}`;
+      
+      // Se a resposta bruta contém o erro de coluna (como mencionado pelo usuário)
+      if (responseText.includes("Could not find the 'table_name' column")) {
+        errorMsg = "Erro de configuração no painel (coluna table_name ausente).";
+      }
+
       console.error("CHECKOUT_SEND_ERROR:", errorMsg);
       
       // Personalizar erro para mesa
       if (payload.order.order_type === "table") {
-        throw new Error(`HTTP ${status}: ${errorMsg}. Tente novamente ou procure um atendente.`);
+        throw new Error(`Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.`);
       }
       
       throw new Error(errorMsg);
