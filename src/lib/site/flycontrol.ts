@@ -452,25 +452,35 @@ export async function openTableSession(
   restaurant: Pick<RestaurantRow, "id" | "slug">,
   payload: OpenTableSessionPayload
 ): Promise<{ success: boolean; session_id?: string; message?: string; already_open?: boolean }> {
-  console.log("OPEN_TABLE_SESSION_REQUEST");
-  console.log("OPEN_TABLE_SESSION_PAYLOAD:", JSON.stringify(payload, null, 2));
+  console.log("OPEN_TABLE_SESSION_ONLY", { 
+    restaurant_slug: payload.restaurant_slug,
+    table_number: payload.table_number,
+    table_token: payload.table_token
+  });
+
+  const endpointUrl = "/api/public/open-table-session";
+  console.log("OPEN_TABLE_SESSION_ENDPOINT:", endpointUrl);
 
   try {
-    const response = await fetch("/api/public/submit-order", {
+    // Reduzimos o payload para o mínimo necessário solicitado, sem o evento de criação de pedido
+    const minimalPayload = {
+      restaurant_slug: payload.restaurant_slug,
+      table_number: payload.table_number,
+      table_token: payload.table_token,
+      opened_from: payload.opened_from || "qrcode_scan"
+    };
+
+    console.log("OPEN_TABLE_SESSION_REQUEST", minimalPayload);
+
+    const response = await fetch(endpointUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ 
         restaurant_id: restaurant.id, 
-        payload: {
-          ...payload,
-          // Mantemos o padrão que o FlyControl espera receber do proxy
-          event: "order.created", // O proxy ou o backend podem usar isso para roteamento
-          source: "sitecreatorfly"
-        }
+        payload: minimalPayload
       }),
-
     });
 
     const data = await response.json();
