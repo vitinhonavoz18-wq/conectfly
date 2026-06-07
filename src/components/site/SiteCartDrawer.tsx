@@ -30,6 +30,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [tableToken, setTableToken] = useState<string | null>(null);
   const [tableSessionId, setTableSessionId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [isOpeningTableSession, setIsOpeningTableSession] = useState(false);
+  const [tableSessionOpened, setTableSessionOpened] = useState(false);
+  const [lastOpenedTableToken, setLastOpenedTableToken] = useState<string | null>(null);
+  const [currentTableSessionId, setCurrentTableSessionId] = useState<string | null>(null);
 
   const [isValidatingQr, setIsValidatingQr] = useState(false);
   const [debugQr, setDebugQr] = useState<{
