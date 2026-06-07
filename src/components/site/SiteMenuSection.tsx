@@ -127,7 +127,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                      <button
                        key={c.id}
                        onClick={() => setActive(c.id)}
-                       className={`px-6 py-2.5 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+                       className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl whitespace-nowrap font-black text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all ${
                          active === c.id
                            ? "site-btn-primary shadow-glow"
                            : "site-btn-secondary text-muted-foreground"
