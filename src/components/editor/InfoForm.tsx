@@ -1206,7 +1206,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                <div className="flex gap-2">
                  <input
                    readOnly
-                   value={`${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync?sync_token=${r.menu_sync_token || ''}`}
+                   value={`https://conectfly.com.br/api/public/menu-sync/${r.slug}/${r.menu_sync_token || ''}`}
                    className="input text-xs flex-1 bg-black/20"
                  />
                  <button
