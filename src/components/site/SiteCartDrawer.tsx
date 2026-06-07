@@ -287,6 +287,20 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
   };
 
+  const handleManualTest = async () => {
+    if (!manualTableToken.trim()) return;
+    
+    console.log("QR_MANUAL_TEST_STARTED:", manualTableToken);
+    const { restaurant_slug, table_token } = extractTableQrData(manualTableToken);
+    
+    if (!table_token) {
+      toast.error("Formato inválido. Insira a URL completa ou o token.");
+      return;
+    }
+
+    await handleValidateTable(table_token, restaurant_slug);
+  };
+
   // Default mode selection if only one is active
   useEffect(() => {
     if (restaurant && step === "checkout") {
