@@ -695,10 +695,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                         </div>
                         <button
                           onClick={() => setIsScanning(true)}
-                          disabled={validatingTable}
+                          disabled={isValidatingQr}
                           className="w-full btn-premium py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl"
                         >
-                          {validatingTable ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                          {isValidatingQr ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
                           <span className="uppercase text-xs font-black tracking-widest">Ler QR Code</span>
                         </button>
                       </div>
