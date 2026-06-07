@@ -205,13 +205,14 @@ export function resolveTablesUrl(
     return joinUrl(base, "functions/v1/public-tables");
   }
 
-  // Se for o domínio do FlyControl Lovable, as functions ficam em /functions/v1/
+  // Se for o domínio do FlyControl Lovable Dash, as functions ficam em /functions/v1/
   if (base.includes("flycontrol-dash.lovable.app") || base.includes("lovable.app")) {
      return joinUrl(base, "functions/v1/public-tables");
   }
 
-  // Fallback genérico
-  return joinUrl(base, "functions/v1/public-tables");
+  // Fallback para domínios customizados (como conectfly.com.br)
+  // O usuário espera api/public/validate-table, então o base deve retornar api/public
+  return joinUrl(base, "api/public");
 }
 
 /** 
