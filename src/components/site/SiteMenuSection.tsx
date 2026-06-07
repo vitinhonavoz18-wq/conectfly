@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ImageIcon } from "lucide-react";
-import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
+import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
+import { SiteBeverageSection } from "./SiteBeverageSection";
+
  
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
