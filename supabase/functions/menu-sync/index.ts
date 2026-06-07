@@ -156,8 +156,8 @@
         const deliveryZones = zonesRes.data || [];
         const pizzaSizes = sizesRes.data || [];
  
-       const isBorda = (c: any) => c.name.toLowerCase().includes("borda");
-       const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra");
+        const isBorda = (c: any) => c.name.toLowerCase().includes("borda") || c.name.toLowerCase().includes("fill");
+        const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra") || c.name.toLowerCase().includes("complemento");
  
        const borders = productsRaw.filter(p => {
          const cat = categories.find(c => c.id === p.category_id);

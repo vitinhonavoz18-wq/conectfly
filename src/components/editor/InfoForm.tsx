@@ -7,6 +7,8 @@ import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon, 
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
 import { FEATURES } from "@/lib/features";
+import { toast } from "sonner";
+
 
 
 interface Props {
@@ -191,9 +193,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
    };
 
     const copySyncUrl = () => {
-      const url = `https://watjejwgtieqfkpebkfz.supabase.co/functions/v1/menu-sync?slug=${r.slug}`;
+      const url = `${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync`;
       navigator.clipboard.writeText(url);
       setMsg("URL de Sincronização copiada!");
+      toast.success("Link de sincronização copiado com sucesso.");
       setTimeout(() => setMsg(""), 2000);
     };
 
@@ -1190,7 +1193,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                <div className="flex gap-2">
                  <input
                    readOnly
-                   value={`https://watjejwgtieqfkpebkfz.supabase.co/functions/v1/menu-sync?slug=${r.slug}`}
+                   value={`${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync`}
                    className="input text-xs flex-1 bg-black/20"
                  />
                  <button
