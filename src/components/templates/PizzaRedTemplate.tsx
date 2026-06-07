@@ -44,15 +44,6 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const beveragesPosition = r.site_settings?.beverages_position || "end";
 
-  const renderBeverages = () => (
-    (beveragesVisible && data.beverages && data.beverages.length > 0 && !hasPizzas) && (
-      <div className="py-12 px-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
-        <div className="max-w-6xl mx-auto">
-          <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
-        </div>
-      </div>
-    )
-  );
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans pb-safe-extra">
