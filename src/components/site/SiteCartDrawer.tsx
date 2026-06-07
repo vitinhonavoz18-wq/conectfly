@@ -417,8 +417,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     console.log("CHECKOUT_TABLE_DATA:", {
       table_number: tableNumber,
       table_token: tableToken,
-      table_id: tableId
+      table_id: tableId,
+      table_session_id: tableSessionId
     });
+
 
     const orderData = {
       customer: {
@@ -440,6 +442,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       table_number: orderType === "table" ? tableNumber : null,
       table_id: orderType === "table" ? tableId : null,
       table_token: orderType === "table" ? tableToken : null,
+      table_session_id: orderType === "table" ? tableSessionId : null,
+
       ticket_number: generatedTicket,
     };
 
