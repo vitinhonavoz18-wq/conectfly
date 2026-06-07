@@ -194,7 +194,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
    };
 
     const copySyncUrl = () => {
-      const url = `${window.location.origin}/api/public/pizzerias/${r.slug}/menu-sync?sync_token=${r.menu_sync_token || ''}`;
+      const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${r.menu_sync_token || ''}`;
       navigator.clipboard.writeText(url);
       setMsg("URL de Sincronização copiada!");
       toast.success("Link de sincronização copiado com sucesso.");
