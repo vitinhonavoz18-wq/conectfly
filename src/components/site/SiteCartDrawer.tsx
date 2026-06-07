@@ -86,9 +86,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setTableId(validatedTable.id);
       setTableNumber(validatedTable.number);
       setTableToken(validatedTable.token);
+      setTableSessionId(validatedTable.sessionId || null);
       setOrderType("table");
     }
   }, [validatedTable]);
+
 
   const extractTableQrData = (qrValue: string) => {
     console.log("QR_RAW_VALUE:", qrValue);
