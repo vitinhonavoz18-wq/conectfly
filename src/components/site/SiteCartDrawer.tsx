@@ -524,15 +524,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (flycontrolOn && restaurant && (flowMode === "direct" || (allowDoubleSend && !success))) {
         try {
           const result = await sendOrderToFlycontrol(restaurant, orderPayload);
-          console.log("CHECKOUT_RESPONSE_STATUS (FlyControl): 200");
-          console.log("CHECKOUT_RESPONSE_BODY (FlyControl):", result);
-
+          
           if (result.success) {
             success = true;
           } else {
-            console.error("CHECKOUT_SEND_ERROR (FlyControl):", result.message);
             if (orderType === "table") {
-              toast.error("Não foi possível confirmar esta mesa. Procure um atendente.");
+              toast.error("Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.");
             } else if (flowMode === "direct") {
               toast.error(`Erro ao registrar pedido no painel: ${result.message || 'Erro desconhecido'}`);
             }
@@ -540,9 +537,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             return;
           }
         } catch (err: any) {
-          console.error("CHECKOUT_SEND_ERROR (FlyControl):", err);
-          if (flowMode === "direct") {
-            toast.error(`Não foi possível enviar seu pedido para o painel. ${err.message || 'Tente novamente ou procure um atendente.'}`);
+          if (orderType === "table") {
+            toast.error("Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.");
+          } else if (flowMode === "direct") {
+            toast.error(`Não foi possível enviar seu pedido para o painel. ${err.message || 'Tente novamente.'}`);
           }
           setSending(false);
           return;
@@ -550,7 +548,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       }
 
       if (success || flowMode === "whatsapp") {
-        toast.success("Pedido confirmado com sucesso!");
+        if (orderType === "table") {
+          toast.success(`Pedido enviado com sucesso para a Mesa ${tableNumber}.`);
+        } else {
+          toast.success("Pedido confirmado com sucesso!");
+        }
         
         // Redirecionar para WhatsApp APÓS o envio (SOMENTE PARA DELIVERY E SE NÃO FOR MESA)
         if (whatsappEnabled && orderType === "delivery") {
@@ -576,7 +578,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     } catch (err: any) {
       console.error("❌ [CHECKOUT] Erro geral ao finalizar pedido:", err);
-      setError(`Ocorreu um erro ao processar seu pedido: ${err.message}`);
+      const errorMsg = orderType === "table" 
+        ? "Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente."
+        : `Ocorreu um erro ao processar seu pedido: ${err.message}`;
+      setError(errorMsg);
     } finally {
       setSending(false);
       console.log("🏁 [CHECKOUT] Fluxo de finalização encerrado");
@@ -1021,8 +1026,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 >
                   {sending ? (
                     <span className="animate-pulse">
-                      {orderType === "delivery" ? "ENVIANDO AO WHATSAPP..." : 
-                       orderType === "table" ? `ENVIANDO MESA ${tableNumber}...` : 
+                      {orderType === "table" ? `ENVIANDO MESA ${tableNumber}...` : 
+                       orderType === "delivery" ? "ENVIANDO AO WHATSAPP..." : 
                        "ENVIANDO PEDIDO..."}
                     </span>
                   ) : (
