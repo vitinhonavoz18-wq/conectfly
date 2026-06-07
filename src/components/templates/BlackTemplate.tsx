@@ -109,7 +109,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {beveragesPosition === "end" && renderBeverages()}
+        
       </main>
       <SiteFooter
         name={r.name}
