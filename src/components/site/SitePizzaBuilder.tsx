@@ -322,26 +322,26 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
             {/* Special Flavors Section */}
             {specialFlavors.length > 0 && (
-              <div className="space-y-8" id="sabores-especiais">
-                <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[hsl(var(--site-primary))] to-[hsl(var(--site-primary)/0.7)] p-10 shadow-[0_20px_50px_hsl(var(--site-primary)/0.3)] border border-white/10">
-                  <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Sparkles className="h-40 w-40 text-white" />
+              <div className="space-y-4 sm:space-y-8" id="sabores-especiais">
+                <div className="relative overflow-hidden rounded-[1.5rem] sm:rounded-[2.5rem] bg-gradient-to-br from-[hsl(var(--site-primary))] to-[hsl(var(--site-primary)/0.7)] p-6 sm:p-10 shadow-[0_20px_50px_hsl(var(--site-primary)/0.3)] border border-white/10">
+                  <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-10">
+                    <Sparkles className="h-24 w-24 sm:h-40 sm:w-40 text-white" />
                   </div>
-                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+                  <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
                     <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="flex items-center justify-center h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-md">
-                          <Flame className="h-6 w-6 text-[hsl(var(--site-primary-fg))]" />
+                      <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+                        <span className="flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-md">
+                          <Flame className="h-5 w-5 sm:h-6 sm:w-6 text-[hsl(var(--site-primary-fg))]" />
                         </span>
-                        <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
+                        <h3 className="text-xl sm:text-4xl font-black text-white tracking-tighter uppercase italic">
                           Destaques Especiais
                         </h3>
                       </div>
-                      <p className="text-white/90 font-medium max-w-lg text-lg">
-                        Experimente nossas opções premium e itens exclusivos da casa.
+                      <p className="text-white/90 font-medium max-w-lg text-sm sm:text-lg">
+                        Experimente nossas opções premium e exclusivos.
                       </p>
                     </div>
-                    <span className="px-6 py-3 rounded-2xl bg-[hsl(var(--site-card))] text-[hsl(var(--site-primary))] font-black text-sm uppercase tracking-widest shadow-xl">
+                    <span className="px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl bg-[hsl(var(--site-card))] text-[hsl(var(--site-primary))] font-black text-[10px] sm:text-sm uppercase tracking-widest shadow-xl">
                       Seleção Gourmet
                     </span>
                   </div>
