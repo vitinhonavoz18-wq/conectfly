@@ -333,6 +333,8 @@ export async function sendOrderToFlycontrol(
   console.log("CHECKOUT_SERVICE_MODE:", payload.order.service_mode);
   console.log("CHECKOUT_TABLE_NUMBER:", payload.order.table_number);
   console.log("CHECKOUT_TABLE_TOKEN:", payload.order.table_token);
+  console.log("CHECKOUT_TABLE_SESSION_ID:", payload.order.table_session_id);
+
 
   // 1. Validações pré-envio
   const missingFields: string[] = [];
