@@ -89,7 +89,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   }, [step]);
 
   const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
-  const deliveryFee = Number(selectedZone?.fee ?? 0);
+  const isDelivery = orderType === "delivery";
+  const deliveryFee = isDelivery ? Number(selectedZone?.fee ?? 0) : 0;
   const grandTotal = totalPrice + deliveryFee;
   const hasZones = deliveryZones.length > 0;
 
