@@ -1034,11 +1034,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium px-4">
                   {step === "cart" 
                     ? "Itens selecionados serão revisados no próximo passo."
-                    : (flycontrolOn && whatsappOn
-                      ? `Enviando para o painel e WhatsApp do ${restaurantName}`
-                      : flycontrolOn
-                        ? `Enviando para o painel do ${restaurantName}`
-                        : `Enviando para o WhatsApp do ${restaurantName}`)}
+                    : (orderType === "table"
+                      ? `Enviando pedido da Mesa ${tableNumber} para o painel`
+                      : (orderType === "pickup"
+                        ? `Enviando pedido para o painel`
+                        : (flycontrolOn && whatsappOn
+                          ? `Enviando para o painel e WhatsApp do ${restaurantName}`
+                          : flycontrolOn
+                            ? `Enviando para o painel do ${restaurantName}`
+                            : `Enviando para o WhatsApp do ${restaurantName}`)))}
                 </p>
               </div>
             </div>
