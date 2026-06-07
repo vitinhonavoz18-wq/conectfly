@@ -123,6 +123,6 @@ export function BlackTemplate({ data }: { data: SiteData }) {
         deliveryZones={data.deliveryZones ?? []}
         restaurant={r}
       />
-    </>
+    </div>
   );
 }
