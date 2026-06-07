@@ -11,6 +11,7 @@ interface Props {
 
 export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) {
   const { items, updateQty, addLine } = useCart();
+  const isBarPrime = restaurant.selected_template === "bar_prime";
 
   if (!beverages || beverages.length === 0) return null;
 
