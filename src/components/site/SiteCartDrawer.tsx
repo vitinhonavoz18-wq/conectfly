@@ -194,52 +194,84 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
 
     const validateUrl = `${endpointBase}/validate-table?restaurant_slug=${targetSlug}&table_token=${token}`;
-    console.log("QR_VALIDATE_START:", validateUrl);
+    console.log("QR_VALIDATE_ENDPOINT_URL:", validateUrl);
     
     try {
-      const response = await fetch(validateUrl);
-      const data = await response.json();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-      console.log("QR_VALIDATE_RESPONSE:", data);
+      const response = await fetch(validateUrl, {
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+      
+      clearTimeout(timeoutId);
 
-      if (!data.valid) {
-        const reason = data.reason || "table_not_found";
-        console.log(`QR_RESULT: ${reason}`);
+      console.log("QR_VALIDATE_HTTP_STATUS:", response.status);
+      
+      const rawText = await response.text();
+      console.log("QR_VALIDATE_RAW_RESPONSE:", rawText);
+
+      let data: any = null;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        console.error("QR_VALIDATE_JSON_PARSE_ERROR", parseError);
+        console.log("QR_VALIDATE_FINAL_RESULT: error (Response not JSON)");
+        throw new Error("Resposta da validação não é um JSON válido");
+      }
+
+      console.log("QR_VALIDATE_JSON_RESPONSE:", data);
+
+      if (response.ok && data.valid) {
+        console.log("QR_VALIDATE_FINAL_RESULT: valid true");
+        console.log("Mesa identificada:", data.table);
+        
+        const tableData = {
+          id: data.table.id,
+          number: data.table.table_number,
+          name: data.table.table_name,
+          token: token,
+        };
+
+        setValidatedTable(tableData);
+        setTableId(data.table.id);
+        setTableNumber(data.table.table_number);
+        setTableToken(token);
+        setOrderType("table");
+        
+        toast.success(`Mesa ${data.table.table_number} identificada!`, { id: "qr-error" });
+        setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "valid true" } : null);
+        setIsScanning(false);
+        return true;
+      } else {
+        const reason = data?.reason || "table_not_found";
+        console.log(`QR_VALIDATE_FINAL_RESULT: invalid (${reason})`);
         
         setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: reason } : null);
 
         if (reason === "restaurant_not_found") {
-          toast.error("Restaurante não identificado. Verifique o QR Code.", { id: "qr-error" });
+          toast.error("Restaurante não encontrado. Procure um atendente.", { id: "qr-error" });
         } else if (reason === "inactive_table") {
           toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
+        } else if (reason === "invalid_token") {
+          toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         } else {
           toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         }
         return false;
       }
-
-      console.log("QR_RESULT: valid true");
-      console.log("Mesa identificada:", data.table);
-      
-      const tableData = {
-        id: data.table.id,
-        number: data.table.table_number,
-        name: data.table.table_name,
-        token: token,
-      };
-
-      setValidatedTable(tableData);
-      setTableId(data.table.id);
-      setTableNumber(data.table.table_number);
-      setTableToken(token);
-      setOrderType("table");
-      
-      toast.success(`Mesa ${data.table.table_number} identificada!`, { id: "qr-error" });
-      setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "valid true" } : null);
-      setIsScanning(false);
-      return true;
     } catch (err: any) {
-      console.error("QR_VALIDATE_ERROR:", err.message || err);
+      const isTimeout = err.name === 'AbortError';
+      const isCors = err.message?.includes("Failed to fetch") || err.message?.includes("CORS");
+      
+      if (isTimeout) console.log("QR_VALIDATE_FINAL_RESULT: VALIDATION_TIMEOUT");
+      if (isCors) console.log("QR_VALIDATE_FINAL_RESULT: CORS_ERROR");
+      
+      console.error("QR_VALIDATE_FETCH_ERROR:", err.message || err);
       toast.error("Falha na validação da mesa. Tente novamente.", { id: "qr-error" });
       return false;
     } finally {
