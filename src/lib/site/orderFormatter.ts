@@ -24,19 +24,34 @@ export interface OrderData {
 const SEPARATOR = "━━━━━━━━━━━━━━";
 
 export function buildOrderMessage(order: OrderData, version: "compact" | "complete" = "compact"): string {
-  const { customer, items, subtotal, deliveryFee, total, paymentMethod, changeFor, notes, createdAt } = order;
+  const { customer, items, subtotal, deliveryFee, total, paymentMethod, changeFor, notes, createdAt, order_type, table_number, ticket_number } = order;
 
   const sections: string[] = [];
 
   // Header
-  sections.push(`${SEPARATOR}\n🛒 NOVO PEDIDO\n${SEPARATOR}`);
+  const typeLabels = {
+    delivery: "ENTREGA 🛵",
+    pickup: "RETIRADA 🥡",
+    table: "MESA 🍽️"
+  };
+  const typeLabel = order_type ? typeLabels[order_type] : "NOVO PEDIDO";
+  sections.push(`${SEPARATOR}\n🛒 ${typeLabel}\n${SEPARATOR}`);
+
+  // Identification based on type
+  if (order_type === "pickup" && ticket_number) {
+    sections.push(`🎫 NÚMERO DA FICHA:\n*${ticket_number}*`);
+  } else if (order_type === "table" && table_number) {
+    sections.push(`🪑 NÚMERO DA MESA:\n*${table_number}*`);
+  }
 
   // Customer info
   sections.push(`👤 CLIENTE:\n${customer.name || "Não informado"}`);
   sections.push(`📞 TELEFONE:\n${customer.phone || "Não informado"}`);
   
-  const fullAddress = [customer.address, customer.neighborhood].filter(Boolean).join(", ");
-  sections.push(`📍 ENDEREÇO:\n${fullAddress || "Não informado"}`);
+  if (order_type === "delivery") {
+    const fullAddress = [customer.address, customer.neighborhood].filter(Boolean).join(", ");
+    sections.push(`📍 ENDEREÇO:\n${fullAddress || "Não informado"}`);
+  }
 
   // Separate items into pizzas/others and beverages
   const beverageItems = items.filter(i => i.itemId.startsWith('bev-'));
