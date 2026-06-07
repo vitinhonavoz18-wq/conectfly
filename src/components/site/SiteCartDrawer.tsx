@@ -220,14 +220,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         data = JSON.parse(rawText);
       } catch (parseError) {
         console.error("QR_VALIDATE_JSON_PARSE_ERROR", parseError);
-        console.log("QR_VALIDATE_FINAL_RESULT: error (Response not JSON)");
+        console.log("QR_VALIDATE_ERROR: Response not JSON");
         throw new Error("Resposta da validação não é um JSON válido");
       }
 
       console.log("QR_VALIDATE_JSON_RESPONSE:", data);
 
       if (response.ok && data.valid) {
-        console.log("QR_VALIDATE_FINAL_RESULT: valid true");
+        console.log("QR_VALIDATE_SUCCESS");
         console.log("Mesa identificada:", data.table);
         
         const tableData = {
@@ -249,7 +249,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         return true;
       } else {
         const reason = data?.reason || "table_not_found";
-        console.log(`QR_VALIDATE_FINAL_RESULT: invalid (${reason})`);
+        console.log(`QR_VALIDATE_ERROR: ${reason}`);
         
         setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: reason } : null);
 
@@ -257,7 +257,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           toast.error("Restaurante não encontrado. Procure um atendente.", { id: "qr-error" });
         } else if (reason === "inactive_table") {
           toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
-        } else if (reason === "invalid_token") {
+        } else if (reason === "table_not_found") {
           toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         } else {
           toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
@@ -268,10 +268,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       const isTimeout = err.name === 'AbortError';
       const isCors = err.message?.includes("Failed to fetch") || err.message?.includes("CORS");
       
-      if (isTimeout) console.log("QR_VALIDATE_FINAL_RESULT: VALIDATION_TIMEOUT");
-      if (isCors) console.log("QR_VALIDATE_FINAL_RESULT: CORS_ERROR");
+      if (isTimeout) console.log("QR_VALIDATE_ERROR: VALIDATION_TIMEOUT");
+      if (isCors) console.log("QR_VALIDATE_ERROR: CORS_ERROR");
       
-      console.error("QR_VALIDATE_FETCH_ERROR:", err.message || err);
+      console.error("QR_VALIDATE_ERROR:", err.message || err);
       toast.error("Falha na validação da mesa. Tente novamente.", { id: "qr-error" });
       return false;
     } finally {
@@ -608,7 +608,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         // TUDO CERTO!
         toast.success("Pedido confirmado com sucesso!");
         
-        // Redirecionar para WhatsApp APÓS o envio se habilitado (SOMENTE PARA DELIVERY)
+        // Redirecionar para WhatsApp APÓS o envio se habilitado (SOMENTE PARA DELIVERY E SE NÃO FOR MESA)
+        // Pedido de mesa não redireciona para WhatsApp conforme critério 6
         if (whatsappEnabled && orderType === "delivery") {
           console.log("📲 [CHECKOUT] Abrindo WhatsApp para pedido Delivery");
           openWhatsAppOrder(messageWhatsApp);

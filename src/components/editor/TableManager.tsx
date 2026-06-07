@@ -29,12 +29,20 @@ export function TableManager({ restaurant }: Props) {
       }
 
       const tablesUrl = `${endpointBase}/restaurant-tables?restaurant_slug=${restaurant.slug}`;
-      console.log("[TableManager] Sincronizando mesas com FlyControl:", tablesUrl);
+      console.log("SF_TABLES_SYNC_START");
+      console.log("SF_TABLES_SYNC_ENDPOINT:", tablesUrl);
       
       const response = await fetch(tablesUrl);
+      console.log("SF_TABLES_SYNC_STATUS:", response.status);
+      
+      const rawText = await response.text();
+      console.log("SF_TABLES_SYNC_RAW_RESPONSE:", rawText);
+
       if (!response.ok) throw new Error("Erro ao buscar mesas no FlyControl");
       
-      const tablesData = await response.json();
+      const tablesData = JSON.parse(rawText);
+      console.log("SF_TABLES_SYNC_JSON_RESPONSE:", tablesData);
+      console.log("SF_TABLES_SYNC_COUNT:", (tablesData || []).length);
       
       // Mapear dados para o formato esperado pelo componente
       const mappedTables = (tablesData || []).map((t: any, idx: number) => ({
@@ -48,8 +56,8 @@ export function TableManager({ restaurant }: Props) {
       setTables(mappedTables);
       setSessions([]); // No SF as sessões são apenas para consulta, mas no momento FlyControl gerencia isso
     } catch (err: any) {
-      console.error("[TableManager] Erro ao carregar dados:", err);
-      toast.error("Falha ao sincronizar mesas com FlyControl");
+      console.error("SF_TABLES_SYNC_ERROR:", err);
+      toast.error("Falha ao sincronizar mesas com FlyControl", { id: "sync-error" });
     } finally {
       setLoading(false);
     }
