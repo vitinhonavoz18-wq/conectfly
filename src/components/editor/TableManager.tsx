@@ -47,7 +47,7 @@ export function TableManager({ restaurantId, restaurantSlug }: Props) {
       if (sessionsRes.error) throw sessionsRes.error;
 
       setTables(tablesRes.data || []);
-      setSessions(sessionsRes.data || []);
+      setSessions((sessionsRes.data || []) as unknown as TableSessionRow[]);
     } catch (err: any) {
       console.error("[TableManager] Erro ao carregar dados:", err);
       toast.error("Erro ao carregar mesas");
