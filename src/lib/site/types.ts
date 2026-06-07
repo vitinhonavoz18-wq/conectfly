@@ -204,3 +204,28 @@ export interface DeliveryZoneRow {
   fee: number;
   sort_order: number;
 }
+
+export interface RestaurantTableRow {
+  id: string;
+  restaurant_id: string;
+  table_number: string;
+  table_name: string | null;
+  public_token: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TableSessionRow {
+  id: string;
+  restaurant_id: string;
+  table_id: string;
+  table_number: string;
+  status: 'open' | 'closed';
+  total_amount: number;
+  opened_at: string;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  orders?: any[]; // For summary
+}

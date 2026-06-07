@@ -550,7 +550,9 @@ export type Database = {
           restaurant_id: string
           service_mode: string | null
           status: string | null
+          table_id: string | null
           table_number: string | null
+          table_token: string | null
           ticket_number: string | null
           total_amount: number
           updated_at: string
@@ -570,7 +572,9 @@ export type Database = {
           restaurant_id: string
           service_mode?: string | null
           status?: string | null
+          table_id?: string | null
           table_number?: string | null
+          table_token?: string | null
           ticket_number?: string | null
           total_amount: number
           updated_at?: string
@@ -590,7 +594,9 @@ export type Database = {
           restaurant_id?: string
           service_mode?: string | null
           status?: string | null
+          table_id?: string | null
           table_number?: string | null
+          table_token?: string | null
           ticket_number?: string | null
           total_amount?: number
           updated_at?: string
@@ -608,6 +614,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
             referencedColumns: ["id"]
           },
         ]
@@ -733,6 +746,54 @@ export type Database = {
           {
             foreignKeyName: "pizzeria_pizza_sizes_pizzeria_id_fkey"
             columns: ["pizzeria_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_tables: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          public_token: string
+          restaurant_id: string
+          table_name: string | null
+          table_number: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          public_token?: string
+          restaurant_id: string
+          table_name?: string | null
+          table_number: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          public_token?: string
+          restaurant_id?: string
+          table_name?: string | null
+          table_number?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tables_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_tables_restaurant_id_fkey"
+            columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
@@ -882,6 +943,103 @@ export type Database = {
           whatsapp_number?: string
         }
         Relationships: []
+      }
+      table_session_orders: {
+        Row: {
+          created_at: string
+          id: string
+          order_id: string
+          table_session_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          table_session_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          table_session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_session_orders_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_session_orders_table_session_id_fkey"
+            columns: ["table_session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      table_sessions: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          id: string
+          opened_at: string
+          restaurant_id: string
+          status: string
+          table_id: string
+          table_number: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          opened_at?: string
+          restaurant_id: string
+          status?: string
+          table_id: string
+          table_number: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          opened_at?: string
+          restaurant_id?: string
+          status?: string
+          table_id?: string
+          table_number?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_sessions_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

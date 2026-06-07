@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2, QrCode, Camera, AlertCircle, Loader2 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
@@ -7,6 +7,8 @@ import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, s
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
+import { supabase } from "@/integrations/supabase/client";
+import { QrScanner } from "./QrScanner";
 
 
 interface Props {
@@ -24,6 +26,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
+  const [tableId, setTableId] = useState<string | null>(null);
+  const [tableToken, setTableToken] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [validatingTable, setValidatingTable] = useState(false);
   const [finishedOrder, setFinishedOrder] = useState<any>(null);
   
   const [name, setName] = useState("");
@@ -50,11 +56,74 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const mesa = params.get("mesa");
-    if (mesa) {
+    const mode = params.get("mode");
+    const token = params.get("table_token");
+
+    if (mode === "table" && token) {
+      handleValidateTable(token);
+    } else if (mesa) {
       setTableNumber(mesa);
       setOrderType("table");
     }
   }, []);
+
+  const handleValidateTable = async (token: string) => {
+    if (!restaurant) return;
+    setValidatingTable(true);
+    try {
+      const { data, error } = await supabase
+        .from("restaurant_tables")
+        .select("*")
+        .eq("public_token", token)
+        .eq("restaurant_id", restaurant.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setTableId(data.id);
+        setTableNumber(data.table_number);
+        setTableToken(token);
+        setOrderType("table");
+        toast.success(`Mesa ${data.table_number} identificada!`);
+        setIsScanning(false);
+      } else {
+        toast.error("QR Code inválido ou mesa inativa");
+      }
+    } catch (err) {
+      console.error("Erro ao validar mesa:", err);
+      toast.error("Falha na validação da mesa");
+    } finally {
+      setValidatingTable(false);
+    }
+  };
+
+  const onQrScan = (text: string) => {
+    // Expected format: https://domain/slug?mode=table&table_token=TOKEN
+    // or just the token if the user is smart
+    try {
+      const url = new URL(text);
+      const token = url.searchParams.get("table_token");
+      if (token) {
+        handleValidateTable(token);
+      } else {
+        // Fallback: try raw text if it looks like a hex token
+        if (/^[0-9a-f]{24}$/.test(text)) {
+          handleValidateTable(text);
+        } else {
+          toast.error("QR Code não reconhecido como mesa");
+        }
+      }
+    } catch {
+      // Not a URL, try as raw token
+      if (/^[0-9a-f]{24}$/.test(text)) {
+        handleValidateTable(text);
+      } else {
+        toast.error("QR Code inválido");
+      }
+    }
+  };
 
   // Default mode selection if only one is active
   useEffect(() => {
@@ -142,6 +211,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         firstEmptyField = addressRef;
         errorMessage = "Informe o seu endereço completo";
       }
+    } else if (orderType === "table" && !tableId) {
+      errorMessage = "Identifique sua mesa lendo o QR Code";
     } else if (!paymentMethod) {
       firstEmptyField = paymentRef;
       errorMessage = "Selecione uma forma de pagamento";
@@ -188,6 +259,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       createdAt: new Date().toISOString(),
       order_type: orderType,
       table_number: orderType === "table" ? tableNumber : null,
+      table_id: orderType === "table" ? tableId : null,
+      table_token: orderType === "table" ? tableToken : null,
       ticket_number: generatedTicket,
     };
 
@@ -237,6 +310,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         delivery_type: orderType === "delivery" ? "delivery" : (orderType === "table" ? "mesa" : "retirada"),
         order_type: orderType,
         table_number: orderData.table_number,
+        table_id: orderData.table_id,
+        table_token: orderData.table_token,
         ticket_number: orderData.ticket_number,
       });
 
@@ -491,15 +566,72 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     )}
                     {(restaurant?.table_enabled || tableNumber) && (
                       <button
-                        onClick={() => setOrderType("table")}
+                        onClick={() => {
+                          setOrderType("table");
+                          if (!tableId && !tableNumber) {
+                            setIsScanning(true);
+                          }
+                        }}
                         className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
                       >
                         <Utensils className="h-5 w-5" />
-                        <span className="text-[10px] font-black uppercase tracking-tight">{tableNumber ? `Mesa ${tableNumber}` : 'Mesa'}</span>
+                        <span className="text-[10px] font-black uppercase tracking-tight">Mesa</span>
                       </button>
                     )}
                   </div>
                 </div>
+
+                {/* Identificação de Mesa */}
+                {orderType === "table" && (
+                  <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
+                      <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                      Sua Mesa
+                    </h3>
+                    
+                    {!tableId ? (
+                      <div className="p-6 rounded-[2rem] border-2 border-dashed border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col items-center gap-4 text-center">
+                        <div className="h-14 w-14 rounded-2xl bg-[hsl(var(--site-primary)/0.1)] flex items-center justify-center">
+                          <QrCode className="h-7 w-7 text-[hsl(var(--site-primary))]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Escaneie o QR Code da Mesa</p>
+                          <p className="text-[10px] text-[hsl(var(--site-muted-fg))] font-medium uppercase tracking-widest mt-1">Obrigatório para pedidos locais</p>
+                        </div>
+                        <button
+                          onClick={() => setIsScanning(true)}
+                          disabled={validatingTable}
+                          className="w-full btn-premium py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl"
+                        >
+                          {validatingTable ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                          <span className="uppercase text-xs font-black tracking-widest">Ler QR Code</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-5 rounded-[2rem] border-2 border-[hsl(var(--site-primary)/0.3)] bg-[hsl(var(--site-primary)/0.05)] flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="h-14 w-14 rounded-2xl bg-[hsl(var(--site-primary))] flex items-center justify-center text-white shadow-glow">
+                            <span className="font-black text-2xl tracking-tighter">{tableNumber}</span>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-primary))] mb-0.5">Mesa Identificada</p>
+                            <h4 className="text-xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Mesa {tableNumber}</h4>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setTableId(null);
+                            setTableNumber(null);
+                            setTableToken(null);
+                          }}
+                          className="p-3 rounded-xl hover:bg-[hsl(var(--site-primary)/0.1)] text-[hsl(var(--site-muted-fg))] hover:text-[hsl(var(--site-primary))] transition-all"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Bloco 1 — Dados do cliente */}
                 <div className="space-y-2">
@@ -733,8 +865,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               </div>
             </div>
           )}
-
         </aside>
-    </>
+
+        {isScanning && (
+          <QrScanner 
+            onScan={onQrScan} 
+            onClose={() => setIsScanning(false)} 
+          />
+        )}
+      </>
   );
 }

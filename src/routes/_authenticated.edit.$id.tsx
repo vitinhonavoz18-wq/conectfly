@@ -18,6 +18,7 @@ import {
   LogOut,
   Loader2,
   ShoppingBag,
+  QrCode,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow, SiteData } from "@/lib/site/types";
@@ -29,6 +30,7 @@ import { MenuManager } from "@/components/editor/MenuManager";
 import { BeverageManager } from "@/components/editor/BeverageManager";
 import { ComboManager } from "@/components/editor/ComboManager";
 import { DeliveryZonesManager } from "@/components/editor/DeliveryZonesManager";
+import { TableManager } from "@/components/editor/TableManager";
 import { DeliverySite } from "@/components/site/DeliverySite";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
@@ -37,7 +39,7 @@ export const Route = createFileRoute("/_authenticated/edit/$id")({
   component: EditPage,
 });
 
-type Tab = "info" | "appearance" | "menu" | "beverages" | "combo" | "delivery" | "checkout" | "operations" | "seo" | "preview";
+type Tab = "info" | "appearance" | "menu" | "beverages" | "combo" | "delivery" | "tables" | "checkout" | "operations" | "seo" | "preview";
 
 function EditPage() {
    const { id } = Route.useParams();
@@ -156,6 +158,7 @@ function EditPage() {
     { id: "beverages", label: "Bebidas", icon: <ShoppingBag className="h-4 w-4" /> },
     { id: "combo", label: "Combos", icon: <Tag className="h-4 w-4" /> },
     { id: "delivery", label: "Entrega", icon: <MapPin className="h-4 w-4" /> },
+    { id: "tables", label: "Mesas / QR", icon: <QrCode className="h-4 w-4" /> },
     { id: "checkout", label: "Checkout", icon: <CheckCircle2 className="h-4 w-4" /> },
     { id: "operations", label: "Funcionamento", icon: <Rocket className="h-4 w-4" /> },
     { id: "seo", label: "SEO", icon: <LinkIcon className="h-4 w-4" /> },
@@ -292,6 +295,20 @@ function EditPage() {
           </div>
         )}
         {tab === "delivery" && <DeliveryZonesManager restaurantId={restaurant.id} />}
+        {tab === "tables" && (
+          <div className="space-y-6">
+            <div className="card-premium p-6 border-primary/20 bg-primary/5 flex items-start gap-4">
+              <QrCode className="h-6 w-6 text-primary flex-shrink-0" />
+              <div>
+                <h4 className="font-black uppercase text-sm tracking-widest">Gestão de Mesas e QR Codes</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Cadastre suas mesas, gere QR Codes individuais para cada uma e acompanhe as comandas abertas em tempo real.
+                </p>
+              </div>
+            </div>
+            <TableManager restaurantId={restaurant.id} restaurantSlug={restaurant.slug} />
+          </div>
+        )}
         {tab === "checkout" && (
           <div className="card-premium p-8 border-emerald-500/20 bg-emerald-500/5 text-center">
             <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
