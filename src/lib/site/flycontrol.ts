@@ -142,6 +142,10 @@ export function buildOrderPayload(args: {
       payment_method: args.paymentMethod || "PIX",
        change_for: args.changeFor ? Number(args.changeFor) : null,
       delivery_type: args.delivery_type || "delivery",
+      order_type: args.order_type || (args.delivery_type === "retirada" ? "pickup" : (args.delivery_type === "mesa" ? "table" : "delivery")),
+      service_mode: args.service_mode || args.delivery_type || "delivery",
+      table_number: args.table_number || null,
+      ticket_number: args.ticket_number || null,
       notes: (args.notes ?? "").trim(),
       whatsapp_message: args.whatsapp_message
     }
