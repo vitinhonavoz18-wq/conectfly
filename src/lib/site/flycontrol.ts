@@ -3,6 +3,20 @@ import { safeInvoke } from "./api-utils";
 import { formatBRL } from "./format";
 import { FEATURES } from "../features";
 
+export interface OpenTableSessionPayload {
+  type: "open_table_session";
+  restaurant_slug: string;
+  order_type: "table";
+  service_mode: "mesa";
+  table_number: string;
+  table_token: string;
+  customer_name?: string;
+  customer_phone?: string;
+  opened_from: "qrcode_scan";
+  opened_at: string;
+}
+
+
 
 export interface FlycontrolOrderPayload {
   event: "order.created";
@@ -424,8 +438,59 @@ export async function sendOrderToFlycontrol(
 }
 
 /**
+ * Opens a table session in FlyControl.
+ */
+export async function openTableSession(
+  restaurant: Pick<RestaurantRow, "id" | "slug">,
+  payload: OpenTableSessionPayload
+): Promise<{ success: boolean; session_id?: string; message?: string; already_open?: boolean }> {
+  console.log("OPEN_TABLE_SESSION_REQUEST");
+  console.log("OPEN_TABLE_SESSION_PAYLOAD:", JSON.stringify(payload, null, 2));
+
+  try {
+    const response = await fetch("/api/public/submit-order", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 
+        restaurant_id: restaurant.id, 
+        payload: {
+          ...payload,
+          event: "session.open", // Sinaliza que é uma abertura de sessão
+          source: "sitecreatorfly"
+        }
+      }),
+    });
+
+    const data = await response.json();
+    console.log("OPEN_TABLE_SESSION_RESPONSE:", data);
+
+    if (!response.ok || data.success === false) {
+      console.error("OPEN_TABLE_SESSION_ERROR:", data.error || data.message || `HTTP ${response.status}`);
+      return { success: false, message: data.error || data.message };
+    }
+
+    const sessionId = data.response?.session_id || data.session_id;
+    if (sessionId) {
+      console.log("TABLE_SESSION_ID_SAVED:", sessionId);
+    }
+
+    return { 
+      success: true, 
+      session_id: sessionId,
+      already_open: data.response?.already_open || data.already_open
+    };
+  } catch (err: any) {
+    console.error("OPEN_TABLE_SESSION_ERROR:", err.message);
+    return { success: false, message: err.message };
+  }
+}
+
+/**
  * Sends an order to an external webhook URL via a secure edge function proxy.
  */
+
 export async function sendOrderToExternalWebhook(
   webhookUrl: string,
   payload: FlycontrolOrderPayload,
