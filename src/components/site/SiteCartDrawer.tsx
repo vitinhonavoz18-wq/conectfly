@@ -130,12 +130,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     } else if (!phone.trim() || phone.replace(/\D/g, "").length < 10) {
       firstEmptyField = phoneRef;
       errorMessage = "Por favor, preencha um telefone válido";
-    } else if (hasZones && !selectedZone) {
-      firstEmptyField = zoneRef;
-      errorMessage = "Selecione o bairro para entrega";
-    } else if (!address.trim()) {
-      firstEmptyField = addressRef;
-      errorMessage = "Informe o seu endereço completo";
+    } else if (orderType === "delivery") {
+      if (hasZones && !selectedZone) {
+        firstEmptyField = zoneRef;
+        errorMessage = "Selecione o bairro para entrega";
+      } else if (!address.trim()) {
+        firstEmptyField = addressRef;
+        errorMessage = "Informe o seu endereço completo";
+      }
     } else if (!paymentMethod) {
       firstEmptyField = paymentRef;
       errorMessage = "Selecione uma forma de pagamento";
