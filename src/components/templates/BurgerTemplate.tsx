@@ -41,7 +41,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
   const entryMode = r.site_settings?.entry_mode || "navigation";
 
   return (
-    <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))]">
+    <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra">
       <SiteHeader 
         name={r.name} 
         logoUrl={r.logo_url} 
