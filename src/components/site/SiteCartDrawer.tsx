@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
-  const { items, updateQty, removeLine, totalPrice, clear } = useCart();
+  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -65,7 +65,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setTableNumber(mesa);
       setOrderType("table");
     }
-  }, []);
+  }, [restaurant]); // Re-run when restaurant is loaded
+
+  // Synchronize context validatedTable with local state
+  useEffect(() => {
+    if (validatedTable) {
+      setTableId(validatedTable.id);
+      setTableNumber(validatedTable.number);
+      setTableToken(validatedTable.token);
+      setOrderType("table");
+    }
+  }, [validatedTable]);
 
   const handleValidateTable = async (token: string) => {
     if (!restaurant) return;
@@ -76,21 +86,33 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         .select("*")
         .eq("public_token", token)
         .eq("restaurant_id", restaurant.id)
-        .eq("is_active", true)
         .maybeSingle();
 
       if (error) throw error;
 
-      if (data) {
-        setTableId(data.id);
-        setTableNumber(data.table_number);
-        setTableToken(token);
-        setOrderType("table");
-        toast.success(`Mesa ${data.table_number} identificada!`);
-        setIsScanning(false);
-      } else {
-        toast.error("QR Code inválido ou mesa inativa");
+      if (!data) {
+        toast.error("QR Code de mesa inválido. Procure um atendente.");
+        return;
       }
+
+      if (!data.is_active) {
+        toast.error("Esta mesa está indisponível no momento. Procure um atendente.");
+        return;
+      }
+
+      const tableData = {
+        id: data.id,
+        number: data.table_number,
+        token: token,
+      };
+
+      setValidatedTable(tableData);
+      setTableId(data.id);
+      setTableNumber(data.table_number);
+      setTableToken(token);
+      setOrderType("table");
+      toast.success(`Mesa ${data.table_number} identificada!`);
+      setIsScanning(false);
     } catch (err) {
       console.error("Erro ao validar mesa:", err);
       toast.error("Falha na validação da mesa");
