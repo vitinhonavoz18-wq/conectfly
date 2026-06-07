@@ -114,6 +114,9 @@ export interface RestaurantRow {
   flycontrol_base_url?: string | null;
   flycontrol_register_url?: string | null;
   flycontrol_tenant_id?: string | null;
+  delivery_enabled?: boolean;
+  pickup_enabled?: boolean;
+  table_enabled?: boolean;
   whatsapp_enabled?: boolean;
   show_item_images?: boolean;
   selected_template?: SiteTemplate;
