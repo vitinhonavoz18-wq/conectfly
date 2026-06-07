@@ -28,7 +28,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
   const [tableId, setTableId] = useState<string | null>(null);
   const [tableToken, setTableToken] = useState<string | null>(null);
+  const [tableSessionId, setTableSessionId] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+
   const [isValidatingQr, setIsValidatingQr] = useState(false);
   const [debugQr, setDebugQr] = useState<{
     rawValue: string;
