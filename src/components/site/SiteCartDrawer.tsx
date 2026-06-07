@@ -130,7 +130,18 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if (isValidatingQr) return false;
     
     setIsValidatingQr(true);
-    console.log("QR_VALIDATION_STARTED", { token, restaurant_id: restaurant.id });
+    
+    // SF_TABLES_LOAD_DEBUG & SF_QR_VALIDATE_DEBUG
+    console.log("SF_TABLES_LOAD_DEBUG:", {
+      restaurant_id: restaurant.id,
+      restaurant_slug: restaurant.slug,
+      fonte: "restaurant_tables (Supabase)",
+    });
+
+    console.log("SF_QR_VALIDATE_DEBUG:", {
+      token_extraido: token,
+      restaurant_slug: restaurant.slug,
+    });
     
     try {
       // O SiteCreatorFly usa a tabela restaurant_tables como fonte oficial sincronizada com FlyControl
@@ -144,7 +155,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (error) throw error;
 
       if (!data) {
-        console.log("QR_VALIDATION_RESULT: invalid (not found)");
+        console.log("SF_QR_VALIDATE_DEBUG: RESULTADO: mesa_não_encontrada");
         const now = Date.now();
         if (now - (lastInvalidQrRef.current?.at || 0) > qrErrorCooldownMs) {
           toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
@@ -154,7 +165,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       }
 
       if (!data.is_active) {
-        console.log("QR_VALIDATION_RESULT: invalid (inactive)");
+        console.log("SF_QR_VALIDATE_DEBUG: RESULTADO: mesa_inativa", { table_number: data.table_number });
         const now = Date.now();
         if (now - (lastInvalidQrRef.current?.at || 0) > qrErrorCooldownMs) {
           toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
@@ -163,7 +174,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         return false;
       }
 
-      console.log("QR_VALIDATION_RESULT: valid true", data);
+      console.log("SF_QR_VALIDATE_DEBUG: RESULTADO: mesa_encontrada", {
+        table_number: data.table_number,
+        is_active: data.is_active
+      });
       
       const tableData = {
         id: data.id,
@@ -182,7 +196,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setIsScanning(false);
       return true;
     } catch (err) {
-      console.error("QR_VALIDATION_ERROR:", err);
+      console.error("SF_QR_VALIDATE_DEBUG: ERRO:", err);
       toast.error("Falha na validação da mesa", { id: "qr-error" });
       return false;
     } finally {
