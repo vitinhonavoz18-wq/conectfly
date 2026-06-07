@@ -31,12 +31,12 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   const directCategories = visibleCategories.filter(c => c.show_directly_in_menu !== false);
 
   const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 site-stagger">
       {cats.map((c) => (
          <button
            key={c.id}
            onClick={() => setActive(c.id)}
-           className="group relative aspect-square rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-all duration-500 shadow-2xl"
+           className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-all duration-500 shadow-xl sm:shadow-2xl"
          >
           {c.image_url && (
             <img
