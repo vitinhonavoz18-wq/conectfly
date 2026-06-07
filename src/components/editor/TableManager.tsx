@@ -1,17 +1,17 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Printer, Download, QrCode, Power, PowerOff, Loader2, ChevronRight, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Trash2, Printer, Download, QrCode, Power, PowerOff, Loader2, ChevronRight, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { RestaurantTableRow, TableSessionRow } from "@/lib/site/types";
+import type { RestaurantTableRow, TableSessionRow, RestaurantRow } from "@/lib/site/types";
 import { QRCodeSVG } from "qrcode.react";
 import { formatBRL } from "@/lib/site/format";
+import { resolveTablesUrl } from "@/lib/site/flycontrol";
 
 interface Props {
-  restaurantId: string;
-  restaurantSlug: string;
+  restaurant: RestaurantRow;
 }
 
-export function TableManager({ restaurantId, restaurantSlug }: Props) {
+export function TableManager({ restaurant }: Props) {
   const [tables, setTables] = useState<RestaurantTableRow[]>([]);
   const [sessions, setSessions] = useState<TableSessionRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,34 +23,41 @@ export function TableManager({ restaurantId, restaurantSlug }: Props) {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [tablesRes, sessionsRes] = await Promise.all([
-        supabase
-          .from("restaurant_tables")
-          .select("*")
-          .eq("restaurant_id", restaurantId)
-          .order("table_number"),
-        supabase
-          .from("table_sessions")
-          .select(`
-            *,
-            table_session_orders (
-              order_id,
-              orders (*)
-            )
-          `)
-          .eq("restaurant_id", restaurantId)
-          .eq("status", "open")
-          .order("opened_at", { ascending: false })
-      ]);
+      const endpointBase = resolveTablesUrl(restaurant);
+      
+      if (!endpointBase) {
+        console.warn("[TableManager] URL FlyControl não configurada para carregar mesas.");
+        setTables([]);
+        setSessions([]);
+        return;
+      }
 
-      if (tablesRes.error) throw tablesRes.error;
-      if (sessionsRes.error) throw sessionsRes.error;
+      const tablesUrl = `${endpointBase}/restaurant-tables?restaurant_slug=${restaurant.slug}`;
+      console.log("[TableManager] Carregando mesas via:", tablesUrl);
+      
+      const response = await fetch(tablesUrl);
+      if (!response.ok) throw new Error("Erro ao buscar mesas no FlyControl");
+      
+      const tablesData = await response.json();
+      
+      // Mapear dados para o formato esperado pelo componente
+      const mappedTables = (tablesData || []).map((t: any, idx: number) => ({
+        id: t.id || `table-${idx}`,
+        table_number: t.table_number,
+        table_name: t.table_name,
+        public_token: t.public_token,
+        is_active: t.is_active !== false,
+        qr_code_url: t.qr_code_url
+      }));
 
-      setTables(tablesRes.data || []);
-      setSessions((sessionsRes.data || []) as unknown as TableSessionRow[]);
+      setTables(mappedTables);
+      
+      // Carregar sessões localmente (se ainda forem usadas no SF) ou via endpoint se disponível
+      // Por enquanto mantemos a consulta local para sessões se necessário, ou deixamos vazio
+      setSessions([]); 
     } catch (err: any) {
       console.error("[TableManager] Erro ao carregar dados:", err);
-      toast.error("Erro ao carregar mesas");
+      toast.error("Erro ao carregar mesas do FlyControl");
     } finally {
       setLoading(false);
     }
@@ -58,7 +65,7 @@ export function TableManager({ restaurantId, restaurantSlug }: Props) {
 
   useEffect(() => {
     loadData();
-  }, [restaurantId]);
+  }, [restaurant.id]);
 
   const handleAddTable = async () => {
     if (!newTableNumber.trim()) {
