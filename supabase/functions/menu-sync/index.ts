@@ -80,68 +80,96 @@
     return normalizedData;
   };
  
- serve(async (req) => {
-   const corsHeaders = getCorsHeaders(req);
-   const method = req.method;
-   
-   if (method === "OPTIONS") {
-     return new Response(null, { headers: corsHeaders });
-   }
- 
-   try {
-     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-     const supabase = createClient(supabaseUrl, supabaseKey);
- 
+  serve(async (req) => {
+    const corsHeaders = getCorsHeaders(req);
+    const method = req.method;
+    
+    if (method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+  
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, supabaseKey);
+  
       const url = new URL(req.url);
-      const method = req.method;
-      let body: any = {};
+      const pathParts = url.pathname.split("/").filter(Boolean);
       
+      // New exclusive public route: /api/public/menu-sync/:slug/:token
+      // Depending on how it's called via Edge Function, path might be different.
+      // Usually it's /menu-sync/slug/token
+      
+      let slug = url.searchParams.get("slug");
+      let syncToken = url.searchParams.get("sync_token") || url.searchParams.get("syncToken") || url.searchParams.get("token");
+
+      // Check for the new URL pattern /menu-sync/:slug/:token
+      // pathParts might be ["menu-sync", "slug", "token"]
+      if (pathParts.length >= 3 && pathParts[0] === "menu-sync") {
+        slug = pathParts[1];
+        syncToken = pathParts[2];
+        console.log(`PUBLIC_MENU_SYNC_REQUEST: slug_received=${slug} token_received_preview=${syncToken?.substring(0, 6)}...`);
+      }
+
+      const apiKey = req.headers.get("x-api-key") || req.headers.get("apikey") || req.headers.get("Authorization")?.replace("Bearer ", "");
+      
+      let body: any = {};
       if (method === "POST") {
         try {
           body = await req.json();
+          slug = slug || body.slug;
+          syncToken = syncToken || body.sync_token || body.syncToken || body.token;
         } catch (e) {
           console.error("[menu-sync] Error parsing JSON body:", e);
         }
       }
 
-      const slug = url.searchParams.get("slug") || body.slug;
-      const apiKey = req.headers.get("x-api-key") || req.headers.get("apikey") || req.headers.get("Authorization")?.replace("Bearer ", "");
-      const syncToken = url.searchParams.get("sync_token") || url.searchParams.get("syncToken") || url.searchParams.get("token") || body.sync_token || body.syncToken || body.token;
-      
       console.log(`MENU_SYNC_AUTH_DEBUG: slug=${slug} has_sync_token=${!!syncToken} has_api_key=${!!apiKey}`);
 
       let pizzeria;
       let authMethodUsed = "none";
       let authResult = "pending";
 
-      // 1. Check sync_token first if slug is provided (most common for FlyControl integration)
+      // 1. Check sync_token first (Priority for FlyControl and Public Link)
       if (slug && syncToken) {
-        const { data: res, error } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
+        const { data: res } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
         pizzeria = res;
         
-        const storedToken = pizzeria?.menu_sync_token;
-        const tokenMatch = storedToken && syncToken === storedToken;
-        
-        console.log(`MENU_SYNC_AUTH_DEBUG: restaurant_found=${!!pizzeria} stored_token_exists=${!!storedToken} token_match=${tokenMatch}`);
-        
-        if (tokenMatch) {
-          authMethodUsed = "sync_token";
-          authResult = "success";
-        } else if (pizzeria) {
-          authResult = "invalid_token";
+        if (pizzeria) {
+          console.log(`PUBLIC_MENU_SYNC_RESTAURANT_FOUND: restaurant_id=${pizzeria.id} slug=${pizzeria.slug}`);
+          
+          const storedToken = pizzeria.menu_sync_token;
+          const tokenMatch = storedToken && syncToken === storedToken;
+          
+          console.log(`PUBLIC_MENU_SYNC_TOKEN_VALIDATION: stored_token_exists=${!!storedToken} token_match=${tokenMatch}`);
+          
+          if (tokenMatch) {
+            authMethodUsed = "sync_token";
+            authResult = "success";
+          } else {
+            authResult = "invalid_token";
+            return new Response(JSON.stringify({ 
+              success: false, 
+              error: "invalid_sync_token",
+              message: "Token de sincronização inválido." 
+            }), {
+              status: 401,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+        } else {
           return new Response(JSON.stringify({ 
             success: false, 
-            error: "invalid_sync_token",
-            message: "Token de sincronização inválido." 
+            error: "restaurant_not_found", 
+            message: "Restaurante não encontrado."
           }), {
-            status: 401,
+            status: 404,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
       }
 
-      // 2. Fallback to API Key if not already authorized by token
+      // 2. Fallback to API Key if not already authorized by token (for legacy/other clients)
       if (authResult !== "success" && apiKey) {
         const { data: res } = await supabase.from("restaurants").select("*").eq("flycontrol_api_key", apiKey).maybeSingle();
         if (res) {
@@ -156,17 +184,6 @@
       if (authResult !== "success") {
         console.log(`MENU_SYNC_AUTH_DEBUG: Final Auth Result = unauthorized. Method used: ${authMethodUsed}`);
         
-        if (slug && !syncToken && !apiKey) {
-          return new Response(JSON.stringify({ 
-            success: false, 
-            error: "missing_sync_token",
-            message: "Token de sincronização ausente."
-          }), {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
-        }
-
         return new Response(JSON.stringify({ 
           success: false, 
           error: "unauthorized",
@@ -178,6 +195,7 @@
       }
 
       console.log(`MENU_SYNC_AUTH_DEBUG: Final Auth Result = success. Method used: ${authMethodUsed}`);
+
 
  
       if (!pizzeria) {
@@ -270,9 +288,11 @@
           }
         };
  
-       return new Response(JSON.stringify(response), {
-         headers: { ...corsHeaders, "Content-Type": "application/json" }
-       });
+        console.log(`PUBLIC_MENU_SYNC_RESPONSE: success=true categories_count=${categories.length} products_count=${productsRaw.length} drinks_count=${beverages.length}`);
+
+        return new Response(JSON.stringify(response), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
      }
  
     // Write operations (POST only for actions)
