@@ -625,8 +625,28 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="p-8 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
+                <CheckCircle2 className="h-16 w-16 text-emerald-500 mb-6" />
+                <h3 className="text-xl font-black uppercase tracking-tight mb-2">Pedido Recebido!</h3>
+                {orderType === "pickup" && (
+                   <div className="bg-emerald-500/10 p-6 rounded-2xl border border-emerald-500/20 w-full mb-6">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-1">Número da Ficha</p>
+                     <p className="text-4xl font-black text-emerald-700">#{ticketNumber}</p>
+                   </div>
+                )}
+                {orderType === "table" && (
+                   <div className="bg-emerald-500/10 p-6 rounded-2xl border border-emerald-500/20 w-full mb-6">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-1">Mesa</p>
+                     <p className="text-4xl font-black text-emerald-700">{tableNumber}</p>
+                   </div>
+                )}
+                <p className="text-sm text-[hsl(var(--site-muted-fg))]">Aguarde seu pedido ser preparado.</p>
+                <button onClick={onClose} className="mt-8 site-btn-primary w-full py-3">Fechar</button>
+              </div>
             )}
-          </div>
+            </div>
+
 
           <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <div className="flex flex-col gap-3">
