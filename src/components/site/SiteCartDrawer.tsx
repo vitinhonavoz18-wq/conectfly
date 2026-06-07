@@ -58,14 +58,18 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   // Default mode selection if only one is active
   useEffect(() => {
-    if (restaurant && step === "checkout") {
+    if (restaurant && step === \"checkout\") {
       const activeModes = [];
-      if (restaurant.delivery_enabled !== false) activeModes.push("delivery");
-      if (restaurant.pickup_enabled) activeModes.push("pickup");
-      if (restaurant.table_enabled) activeModes.push("table");
+      // Use delivery_enabled from restaurant object
+      if (restaurant.delivery_enabled !== false) activeModes.push(\"delivery\");
+      if (restaurant.pickup_enabled) activeModes.push(\"pickup\");
+      if (restaurant.table_enabled) activeModes.push(\"table\");
+
+      console.log(\"CHECKOUT_SERVICE_MODES_RENDERED:\", activeModes);
 
       // Auto select if only one mode and not already forced by mesa param
       if (activeModes.length === 1 && !tableNumber) {
+        console.log(\"CHECKOUT_SERVICE_MODE_AUTO_SELECTED:\", activeModes[0]);
         setOrderType(activeModes[0] as any);
       }
     }
@@ -160,28 +164,30 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     // Generate ticket number for pickup if not exists
     let generatedTicket = ticketNumber;
-    if (orderType === "pickup" && !generatedTicket) {
+    if (orderType === \"pickup\" && !generatedTicket) {
       generatedTicket = Math.floor(1000 + Math.random() * 9000).toString();
       setTicketNumber(generatedTicket);
     }
+
+    console.log(\"CHECKOUT_SERVICE_MODE_SELECTED:\", orderType);
 
     const orderData = {
       customer: {
         name,
         phone,
-        address: orderType === "delivery" ? address : (orderType === "table" ? `Mesa ${tableNumber}` : "Retirada no Balcão"),
-        neighborhood: orderType === "delivery" ? (selectedZone?.neighborhood || null) : null,
+        address: orderType === \"delivery\" ? address : (orderType === \"table\" ? `Mesa ${tableNumber}` : \"Retirada no Balcão\"),
+        neighborhood: orderType === \"delivery\" ? (selectedZone?.neighborhood || null) : null,
       },
       items,
       subtotal: totalPrice,
       deliveryFee,
       total: grandTotal,
       paymentMethod,
-      changeFor: changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
+      changeFor: changeFor ? parseFloat(changeFor.replace(\",\", \".\")) : null,
       notes,
       createdAt: new Date().toISOString(),
       order_type: orderType,
-      table_number: orderType === "table" ? tableNumber : null,
+      table_number: orderType === \"table\" ? tableNumber : null,
       ticket_number: generatedTicket,
     };
 
