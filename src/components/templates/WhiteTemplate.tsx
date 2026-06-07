@@ -104,7 +104,7 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             categories={nonPizzaCategories} 
             restaurant={r} 
             entryMode={entryMode}
-            beverages={data.beverages ?? []}
+            beverages={!hasPizzas ? (data.beverages ?? []) : []}
             beverageCatalogs={data.beverageCatalogs}
           />
         </div>
