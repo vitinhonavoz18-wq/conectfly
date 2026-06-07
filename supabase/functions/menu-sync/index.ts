@@ -181,43 +181,46 @@
          return cat && isAdicional(cat);
        });
  
-       const response = {
-         success: true,
-         pizzeria: { id: pizzeria.id, name: pizzeria.name, slug: pizzeria.slug },
-         categories: categories.map(c => ({
-           id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order,
-           is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes, updated_at: c.updated_at
-         })),
-         products: productsRaw.map(i => ({
-           id: i.id, category_id: i.category_id, name: i.name, description: i.description,
-           price: i.price, image_url: i.image_url, active: i.is_active ?? true,
-           sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra,
-           sizes: i.sizes, updated_at: i.updated_at
-         })),
-          beverages: beverages.map(b => ({
-            id: b.id, name: b.name, description: "", brand: b.brand, size: b.size, price: b.price,
-            active: b.is_active ?? true, updated_at: b.updated_at, type: "beverage"
-          })),
-          borders: borders.map(b => ({
-            id: b.id, pizzeria_id: restaurantId, name: b.name, description: "", price: b.price,
-            active: b.is_active ?? true, updated_at: b.updated_at, type: "border"
-          })),
-          additionals: additionals.map(a => ({
-            id: a.id, pizzeria_id: restaurantId, name: a.name, description: "", price: a.price,
-            active: a.is_active ?? true, updated_at: a.updated_at, type: "additional"
-          })),
-         combos: combos.map(c => ({
-           id: c.id, name: c.name, description: c.badge, price: c.price,
-           active: c.is_active ?? true, items: c.items, updated_at: c.updated_at
-         })),
-          delivery_zones: deliveryZones.map(z => ({
-            id: z.id, neighborhood: z.neighborhood, fee: z.fee, sort_order: z.sort_order, updated_at: z.updated_at
-          })),
-          pizza_sizes: pizzaSizes.map(s => ({
-            id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, 
-            slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order, updated_at: s.updated_at
-          }))
-       };
+        const response = {
+          success: true,
+          restaurant: { name: pizzeria.name, slug: pizzeria.slug },
+          menu: {
+            categories: categories.map(c => ({
+              id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order,
+              is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes, updated_at: c.updated_at
+            })),
+            products: productsRaw.map(i => ({
+              id: i.id, category_id: i.category_id, name: i.name, description: i.description,
+              price: i.price, image_url: i.image_url, active: i.is_active ?? true,
+              sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra,
+              sizes: i.sizes, updated_at: i.updated_at
+            })),
+            beverages: beverages.map(b => ({
+              id: b.id, name: b.name, description: "", brand: b.brand, size: b.size, price: b.price,
+              active: b.is_active ?? true, updated_at: b.updated_at, type: "beverage"
+            })),
+            borders: borders.map(b => ({
+              id: b.id, pizzeria_id: restaurantId, name: b.name, description: "", price: b.price,
+              active: b.is_active ?? true, updated_at: b.updated_at, type: "border"
+            })),
+            additionals: additionals.map(a => ({
+              id: a.id, pizzeria_id: restaurantId, name: a.name, description: "", price: a.price,
+              active: a.is_active ?? true, updated_at: a.updated_at, type: "additional"
+            })),
+            flavors: [],
+            sizes: pizzaSizes.map(s => ({
+              id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, 
+              slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order, updated_at: s.updated_at
+            })),
+            combos: combos.map(c => ({
+              id: c.id, name: c.name, description: c.badge, price: c.price,
+              active: c.is_active ?? true, items: c.items, updated_at: c.updated_at
+            })),
+            delivery_zones: deliveryZones.map(z => ({
+              id: z.id, neighborhood: z.neighborhood, fee: z.fee, sort_order: z.sort_order, updated_at: z.updated_at
+            }))
+          }
+        };
  
        return new Response(JSON.stringify(response), {
          headers: { ...corsHeaders, "Content-Type": "application/json" }
