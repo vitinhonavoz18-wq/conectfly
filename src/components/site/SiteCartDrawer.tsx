@@ -264,14 +264,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const now = Date.now();
     
     // 2. Regra de Anti-Spam / Cooldown para erros
+    // Se for o mesmo valor e tiver passado pouco tempo, ignoramos para não poluir console/toasts
     if (text === lastInvalidQrRef.current?.value && (now - lastInvalidQrRef.current.at < qrErrorCooldownMs)) {
-      console.log("QR_ERROR_TOAST_BLOCKED: Mesma leitura inválida em cooldown");
       return;
     }
 
     const { restaurant_slug, table_token } = extractTableQrData(text);
 
-    // Atualiza o estado de debug visual
+    // Atualiza o estado de debug visual inicial
     setDebugQr({
       rawValue: text,
       slug: restaurant_slug,
@@ -281,10 +281,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     });
 
     if (!table_token) {
-      console.log("QR_VALIDATE_ERROR_REASON: Não foi possível extrair um token do valor lido");
-      setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "Token não extraído" } : null);
+      console.log("QR_RESULT: invalid_format (Token não extraído)");
+      setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "invalid_format" } : null);
       
-      if (!lastInvalidQrRef.current || text !== lastInvalidQrRef.current.value || (now - lastInvalidQrRef.current.at > qrErrorCooldownMs)) {
+      // Cooldown para erro de formato também
+      if (text !== lastInvalidQrRef.current?.value || (now - lastInvalidQrRef.current.at > qrErrorCooldownMs)) {
         toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         lastInvalidQrRef.current = { value: text, at: now };
       }
@@ -295,9 +296,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     
     if (!success) {
       lastInvalidQrRef.current = { value: text, at: now };
-      setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: "Mesa não encontrada ou inativa" } : null);
     } else {
-      setDebugQr(prev => prev ? { ...prev, status: "Válido!", reason: "" } : null);
+      // Sucesso: Limpa referências e o handleValidateTable já fechou o scanner
+      lastInvalidQrRef.current = null;
     }
   };
 
