@@ -878,9 +878,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                         </div>
                         <button 
                           onClick={() => {
-                            setTableId(null);
-                            setTableNumber(null);
-                            setTableToken(null);
+                            setValidatedTable(null);
                           }}
                           className="p-3 rounded-xl hover:bg-[hsl(var(--site-primary)/0.1)] text-[hsl(var(--site-muted-fg))] hover:text-[hsl(var(--site-primary))] transition-all"
                         >
