@@ -54,7 +54,24 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
            supabaseAdmin.from("delivery_zones").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         ]);
 
+         const isBorda = (c: any) => c.name.toLowerCase().includes("borda") || c.name.toLowerCase().includes("fill");
+         const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra") || c.name.toLowerCase().includes("complemento");
+
+         const categoriesData = cats.data || [];
+         const productsRaw = items.data || [];
+
+         const borders = productsRaw.filter(p => {
+           const cat = categoriesData.find(c => c.id === p.category_id);
+           return cat && isBorda(cat);
+         });
+
+         const additionals = productsRaw.filter(p => {
+           const cat = categoriesData.find(c => c.id === p.category_id);
+           return cat && isAdicional(cat);
+         });
+
          console.log(`[menu-sync] Encontrados: ${cats.data?.length || 0} categorias, ${items.data?.length || 0} produtos, ${bevs.data?.length || 0} bebidas, ${zones.data?.length || 0} taxas.`);
+
 
          return new Response(
           JSON.stringify({
@@ -86,7 +103,26 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
               brand: b.brand,
               size: b.size,
               price: b.price,
-              active: b.is_active
+              active: b.is_active,
+              type: "beverage"
+            })),
+            borders: borders.map(b => ({
+              id: b.id,
+              pizzeria_id: restaurant.id,
+              name: b.name,
+              description: "",
+              price: b.price,
+              active: b.is_active ?? true,
+              type: "border"
+            })),
+            additionals: additionals.map(a => ({
+              id: a.id,
+              pizzeria_id: restaurant.id,
+              name: a.name,
+              description: "",
+              price: a.price,
+              active: a.is_active ?? true,
+              type: "additional"
             })),
              combos: (combos.data || []).map(c => ({
                id: c.id,
@@ -94,7 +130,8 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
                description: c.badge,
                price: c.price,
                active: c.is_active ?? true,
-               items: c.items
+               items: c.items,
+               type: "combo"
              })),
              delivery_zones: (zones.data || []).map(z => ({
                id: z.id,
