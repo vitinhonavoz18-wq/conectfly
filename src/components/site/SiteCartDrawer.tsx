@@ -566,15 +566,72 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     )}
                     {(restaurant?.table_enabled || tableNumber) && (
                       <button
-                        onClick={() => setOrderType("table")}
+                        onClick={() => {
+                          setOrderType("table");
+                          if (!tableId && !tableNumber) {
+                            setIsScanning(true);
+                          }
+                        }}
                         className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
                       >
                         <Utensils className="h-5 w-5" />
-                        <span className="text-[10px] font-black uppercase tracking-tight">{tableNumber ? `Mesa ${tableNumber}` : 'Mesa'}</span>
+                        <span className="text-[10px] font-black uppercase tracking-tight">Mesa</span>
                       </button>
                     )}
                   </div>
                 </div>
+
+                {/* Identificação de Mesa */}
+                {orderType === "table" && (
+                  <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
+                      <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                      Sua Mesa
+                    </h3>
+                    
+                    {!tableId ? (
+                      <div className="p-6 rounded-[2rem] border-2 border-dashed border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col items-center gap-4 text-center">
+                        <div className="h-14 w-14 rounded-2xl bg-[hsl(var(--site-primary)/0.1)] flex items-center justify-center">
+                          <QrCode className="h-7 w-7 text-[hsl(var(--site-primary))]" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Escaneie o QR Code da Mesa</p>
+                          <p className="text-[10px] text-[hsl(var(--site-muted-fg))] font-medium uppercase tracking-widest mt-1">Obrigatório para pedidos locais</p>
+                        </div>
+                        <button
+                          onClick={() => setIsScanning(true)}
+                          disabled={validatingTable}
+                          className="w-full btn-premium py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl"
+                        >
+                          {validatingTable ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
+                          <span className="uppercase text-xs font-black tracking-widest">Ler QR Code</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-5 rounded-[2rem] border-2 border-[hsl(var(--site-primary)/0.3)] bg-[hsl(var(--site-primary)/0.05)] flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="h-14 w-14 rounded-2xl bg-[hsl(var(--site-primary))] flex items-center justify-center text-white shadow-glow">
+                            <span className="font-black text-2xl tracking-tighter">{tableNumber}</span>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-primary))] mb-0.5">Mesa Identificada</p>
+                            <h4 className="text-xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Mesa {tableNumber}</h4>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => {
+                            setTableId(null);
+                            setTableNumber(null);
+                            setTableToken(null);
+                          }}
+                          className="p-3 rounded-xl hover:bg-[hsl(var(--site-primary)/0.1)] text-[hsl(var(--site-muted-fg))] hover:text-[hsl(var(--site-primary))] transition-all"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Bloco 1 — Dados do cliente */}
                 <div className="space-y-2">
