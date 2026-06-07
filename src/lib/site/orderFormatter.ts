@@ -16,6 +16,9 @@ export interface OrderData {
   changeFor?: number | null;
   notes?: string | null;
   createdAt?: string;
+  order_type?: "delivery" | "pickup" | "table";
+  table_number?: string | null;
+  ticket_number?: string | null;
 }
 
 const SEPARATOR = "━━━━━━━━━━━━━━";
