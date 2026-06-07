@@ -194,7 +194,13 @@ export function InfoForm({ restaurant, onChange }: Props) {
    };
 
     const copySyncUrl = () => {
-      const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${r.menu_sync_token || ''}`;
+      // Ensure we have a token before copying
+      const token = r.menu_sync_token;
+      if (!token) {
+        toast.error("Gere um token de sincronização primeiro.");
+        return;
+      }
+      const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${token}`;
       navigator.clipboard.writeText(url);
       setMsg("URL de Sincronização copiada!");
       toast.success("Link de sincronização copiado com sucesso.");
