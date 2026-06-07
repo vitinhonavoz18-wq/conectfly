@@ -550,7 +550,9 @@ export type Database = {
           restaurant_id: string
           service_mode: string | null
           status: string | null
+          table_id: string | null
           table_number: string | null
+          table_token: string | null
           ticket_number: string | null
           total_amount: number
           updated_at: string
@@ -570,7 +572,9 @@ export type Database = {
           restaurant_id: string
           service_mode?: string | null
           status?: string | null
+          table_id?: string | null
           table_number?: string | null
+          table_token?: string | null
           ticket_number?: string | null
           total_amount: number
           updated_at?: string
@@ -590,7 +594,9 @@ export type Database = {
           restaurant_id?: string
           service_mode?: string | null
           status?: string | null
+          table_id?: string | null
           table_number?: string | null
+          table_token?: string | null
           ticket_number?: string | null
           total_amount?: number
           updated_at?: string
@@ -608,6 +614,13 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
             referencedColumns: ["id"]
           },
         ]
