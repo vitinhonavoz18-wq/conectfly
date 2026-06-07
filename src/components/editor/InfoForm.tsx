@@ -641,6 +641,51 @@ export function InfoForm({ restaurant, onChange }: Props) {
         </Field>
       </div>
 
+      <div className="space-y-4 p-6 rounded-2xl bg-white/5 border border-white/5">
+        <h3 className="text-lg font-black uppercase tracking-widest text-primary flex items-center gap-2">
+          <ShoppingBag className="h-5 w-5" /> Modos de Atendimento
+        </h3>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Habilite como seus clientes podem comprar no site</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${r.delivery_enabled ? 'bg-primary/5 border-primary/30' : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'}`}>
+            <input
+              type="checkbox"
+              checked={r.delivery_enabled ?? true}
+              onChange={(e) => set("delivery_enabled", e.target.checked)}
+              className="h-5 w-5 accent-primary"
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-bold">Delivery</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Entrega</span>
+            </div>
+          </label>
+          <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${r.pickup_enabled ? 'bg-primary/5 border-primary/30' : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'}`}>
+            <input
+              type="checkbox"
+              checked={r.pickup_enabled ?? false}
+              onChange={(e) => set("pickup_enabled", e.target.checked)}
+              className="h-5 w-5 accent-primary"
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-bold">Retirada</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Ficha Digital</span>
+            </div>
+          </label>
+          <label className={`flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${r.table_enabled ? 'bg-primary/5 border-primary/30' : 'bg-white/5 border-white/10 opacity-60 hover:opacity-100'}`}>
+            <input
+              type="checkbox"
+              checked={r.table_enabled ?? false}
+              onChange={(e) => set("table_enabled", e.target.checked)}
+              className="h-5 w-5 accent-primary"
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-bold">Consumo Local</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Mesa / Comanda</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
       <div className="space-y-4">
         <h3 className="text-lg font-black uppercase tracking-widest text-primary flex items-center gap-2">
           <Zap className="h-5 w-5" /> Comportamento Inicial do Cardápio
