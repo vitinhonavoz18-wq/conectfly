@@ -32,8 +32,9 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const beverageCategories = allCategories.filter(isBeverage);
   const foodCategories = allCategories.filter(c => !isBeverage(c) && !c.is_pizza);
   
-  // Dynamic categories for the quick nav
-  const navCategories = allCategories.filter(c => c.items && c.items.length > 0);
+  // Dynamic categories for the quick nav, excluding beverages as they have their own section
+  const navCategories = allCategories.filter(c => c.items && c.items.length > 0 && !isBeverage(c));
+
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
 
