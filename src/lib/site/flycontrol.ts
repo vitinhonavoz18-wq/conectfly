@@ -27,7 +27,11 @@ export interface FlycontrolOrderPayload {
     total: number;
     payment_method: string;
     change_for: number | null;
-    delivery_type: "delivery" | "retirada";
+    delivery_type: "delivery" | "retirada" | "mesa";
+    order_type?: "delivery" | "pickup" | "table";
+    service_mode?: "delivery" | "retirada" | "mesa";
+    table_number?: string | null;
+    ticket_number?: string | null;
     notes: string;
     whatsapp_message: string;
   };
@@ -50,7 +54,11 @@ export function buildOrderPayload(args: {
   pizzeria_slug: string;
   pizzeria_name: string;
   whatsapp_message: string;
-  delivery_type?: "delivery" | "retirada";
+  delivery_type?: "delivery" | "retirada" | "mesa";
+  table_number?: string | null;
+  ticket_number?: string | null;
+  order_type?: "delivery" | "pickup" | "table";
+  service_mode?: "delivery" | "retirada" | "mesa";
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => {
      const isBeverage = l.itemId.startsWith('bev-');
@@ -134,6 +142,10 @@ export function buildOrderPayload(args: {
       payment_method: args.paymentMethod || "PIX",
        change_for: args.changeFor ? Number(args.changeFor) : null,
       delivery_type: args.delivery_type || "delivery",
+      order_type: args.order_type || (args.delivery_type === "retirada" ? "pickup" : (args.delivery_type === "mesa" ? "table" : "delivery")),
+      service_mode: args.service_mode || args.delivery_type || "delivery",
+      table_number: args.table_number || null,
+      ticket_number: args.ticket_number || null,
       notes: (args.notes ?? "").trim(),
       whatsapp_message: args.whatsapp_message
     }

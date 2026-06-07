@@ -544,10 +544,14 @@ export type Database = {
           id: string
           is_test_order: boolean | null
           notes: string | null
+          order_type: string | null
           payment_method: string
           payment_status: string | null
           restaurant_id: string
+          service_mode: string | null
           status: string | null
+          table_number: string | null
+          ticket_number: string | null
           total_amount: number
           updated_at: string
         }
@@ -560,10 +564,14 @@ export type Database = {
           id?: string
           is_test_order?: boolean | null
           notes?: string | null
+          order_type?: string | null
           payment_method: string
           payment_status?: string | null
           restaurant_id: string
+          service_mode?: string | null
           status?: string | null
+          table_number?: string | null
+          ticket_number?: string | null
           total_amount: number
           updated_at?: string
         }
@@ -576,10 +584,14 @@ export type Database = {
           id?: string
           is_test_order?: boolean | null
           notes?: string | null
+          order_type?: string | null
           payment_method?: string
           payment_status?: string | null
           restaurant_id?: string
+          service_mode?: string | null
           status?: string | null
+          table_number?: string | null
+          ticket_number?: string | null
           total_amount?: number
           updated_at?: string
         }
@@ -737,6 +749,7 @@ export type Database = {
           continue_opening_whatsapp: boolean | null
           created_at: string
           custom_subdomain: string | null
+          delivery_enabled: boolean | null
           delivery_settings: Json | null
           description: string | null
           fiqon_webhook_url: string | null
@@ -757,6 +770,7 @@ export type Database = {
           name: string
           order_flow_mode: string | null
           owner_id: string | null
+          pickup_enabled: boolean | null
           primary_color: string
           published: boolean
           secondary_color: string
@@ -765,6 +779,7 @@ export type Database = {
           show_item_images: boolean | null
           site_settings: Json | null
           slug: string
+          table_enabled: boolean | null
           tagline: string | null
           theme_settings: Json | null
           updated_at: string
@@ -781,6 +796,7 @@ export type Database = {
           continue_opening_whatsapp?: boolean | null
           created_at?: string
           custom_subdomain?: string | null
+          delivery_enabled?: boolean | null
           delivery_settings?: Json | null
           description?: string | null
           fiqon_webhook_url?: string | null
@@ -801,6 +817,7 @@ export type Database = {
           name: string
           order_flow_mode?: string | null
           owner_id?: string | null
+          pickup_enabled?: boolean | null
           primary_color?: string
           published?: boolean
           secondary_color?: string
@@ -809,6 +826,7 @@ export type Database = {
           show_item_images?: boolean | null
           site_settings?: Json | null
           slug: string
+          table_enabled?: boolean | null
           tagline?: string | null
           theme_settings?: Json | null
           updated_at?: string
@@ -825,6 +843,7 @@ export type Database = {
           continue_opening_whatsapp?: boolean | null
           created_at?: string
           custom_subdomain?: string | null
+          delivery_enabled?: boolean | null
           delivery_settings?: Json | null
           description?: string | null
           fiqon_webhook_url?: string | null
@@ -845,6 +864,7 @@ export type Database = {
           name?: string
           order_flow_mode?: string | null
           owner_id?: string | null
+          pickup_enabled?: boolean | null
           primary_color?: string
           published?: boolean
           secondary_color?: string
@@ -853,6 +873,7 @@ export type Database = {
           show_item_images?: boolean | null
           site_settings?: Json | null
           slug?: string
+          table_enabled?: boolean | null
           tagline?: string | null
           theme_settings?: Json | null
           updated_at?: string

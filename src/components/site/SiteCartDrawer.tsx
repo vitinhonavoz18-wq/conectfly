@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
@@ -20,7 +20,12 @@ interface Props {
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
   const { items, updateQty, removeLine, totalPrice, clear } = useCart();
-  const [step, setStep] = useState<"cart" | "checkout">("cart");
+  const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
+  const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
+  const [tableNumber, setTableNumber] = useState<string | null>(null);
+  const [ticketNumber, setTicketNumber] = useState<string | null>(null);
+  const [finishedOrder, setFinishedOrder] = useState<any>(null);
+  
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -41,10 +46,38 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const fieldsContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Detect mesa parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mesa = params.get("mesa");
+    if (mesa) {
+      setTableNumber(mesa);
+      setOrderType("table");
+    }
+  }, []);
+
+  // Default mode selection if only one is active
+  useEffect(() => {
+    if (restaurant && step === "checkout") {
+      const activeModes = [];
+      if (restaurant.delivery_enabled !== false) activeModes.push("delivery");
+      if (restaurant.pickup_enabled) activeModes.push("pickup");
+      if (restaurant.table_enabled) activeModes.push("table");
+
+      // Auto select if only one mode and not already forced by mesa param
+      if (activeModes.length === 1 && !tableNumber) {
+        setOrderType(activeModes[0] as any);
+      }
+    }
+  }, [restaurant, step, tableNumber]);
+
   // Reset step when closed
   useEffect(() => {
     if (!open) {
-      setTimeout(() => setStep("cart"), 500);
+      setTimeout(() => {
+        setStep("cart");
+        setFinishedOrder(null);
+      }, 500);
     }
   }, [open]);
 
@@ -56,7 +89,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   }, [step]);
 
   const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
-  const deliveryFee = Number(selectedZone?.fee ?? 0);
+  const isDelivery = orderType === "delivery";
+  const deliveryFee = isDelivery ? Number(selectedZone?.fee ?? 0) : 0;
   const grandTotal = totalPrice + deliveryFee;
   const hasZones = deliveryZones.length > 0;
 
@@ -96,12 +130,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     } else if (!phone.trim() || phone.replace(/\D/g, "").length < 10) {
       firstEmptyField = phoneRef;
       errorMessage = "Por favor, preencha um telefone válido";
-    } else if (hasZones && !selectedZone) {
-      firstEmptyField = zoneRef;
-      errorMessage = "Selecione o bairro para entrega";
-    } else if (!address.trim()) {
-      firstEmptyField = addressRef;
-      errorMessage = "Informe o seu endereço completo";
+    } else if (orderType === "delivery") {
+      if (hasZones && !selectedZone) {
+        firstEmptyField = zoneRef;
+        errorMessage = "Selecione o bairro para entrega";
+      } else if (!address.trim()) {
+        firstEmptyField = addressRef;
+        errorMessage = "Informe o seu endereço completo";
+      }
     } else if (!paymentMethod) {
       firstEmptyField = paymentRef;
       errorMessage = "Selecione uma forma de pagamento";
@@ -122,12 +158,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
+    // Generate ticket number for pickup if not exists
+    let generatedTicket = ticketNumber;
+    if (orderType === "pickup" && !generatedTicket) {
+      generatedTicket = Math.floor(1000 + Math.random() * 9000).toString();
+      setTicketNumber(generatedTicket);
+    }
+
     const orderData = {
       customer: {
         name,
         phone,
-        address,
-        neighborhood: selectedZone?.neighborhood || null,
+        address: orderType === "delivery" ? address : (orderType === "table" ? `Mesa ${tableNumber}` : "Retirada no Balcão"),
+        neighborhood: orderType === "delivery" ? (selectedZone?.neighborhood || null) : null,
       },
       items,
       subtotal: totalPrice,
@@ -137,6 +180,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       changeFor: changeFor ? parseFloat(changeFor.replace(",", ".")) : null,
       notes,
       createdAt: new Date().toISOString(),
+      order_type: orderType,
+      table_number: orderType === "table" ? tableNumber : null,
+      ticket_number: generatedTicket,
     };
 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
@@ -169,8 +215,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       const orderPayload = buildOrderPayload({
         name,
         phone,
-        address,
-        neighborhood: selectedZone?.neighborhood ?? null,
+        address: orderData.customer.address,
+        neighborhood: orderData.customer.neighborhood,
         reference: null,
         deliveryFee,
         items,
@@ -182,7 +228,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         pizzeria_slug: restaurant?.slug || "",
         pizzeria_name: restaurant?.name || "",
         whatsapp_message: messageWhatsApp,
-        delivery_type: hasZones ? "delivery" : "retirada",
+        delivery_type: orderType === "delivery" ? "delivery" : (orderType === "table" ? "mesa" : "retirada"),
+        order_type: orderType,
+        table_number: orderData.table_number,
+        ticket_number: orderData.ticket_number,
       });
 
       const payload = orderPayload;
@@ -272,14 +321,21 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
         // Limpar carrinho e fechar SOMENTE EM CASO DE SUCESSO
         clear();
-        setName("");
-        setPhone("");
-        setAddress("");
-        setPaymentMethod("PIX");
-        setChangeFor("");
-        setNotes("");
-        setZoneId("");
-        onClose();
+        
+        if (orderType === "pickup" || orderType === "table") {
+          setFinishedOrder(orderData);
+          setStep("confirmation");
+        } else {
+          // Delivery normal fecha o drawer
+          setName("");
+          setPhone("");
+          setAddress("");
+          setPaymentMethod("PIX");
+          setChangeFor("");
+          setNotes("");
+          setZoneId("");
+          onClose();
+        }
       }
 
     } catch (err) {
@@ -317,10 +373,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               )}
               <div className="flex flex-col">
                 <h2 className="font-black text-lg tracking-tighter uppercase text-[hsl(var(--site-fg))]">
-                  {step === "cart" ? "Minha Seleção" : "Finalizar Pedido"}
+                  {step === "cart" ? "Minha Seleção" : (step === "checkout" ? "Finalizar Pedido" : "Pedido Confirmado")}
                 </h2>
                 <span className="text-[8px] text-[hsl(var(--site-primary))] font-black uppercase tracking-[0.2em]">
-                  {step === "cart" ? "Revise seus itens" : "Dados de Entrega"}
+                  {step === "cart" ? "Revise seus itens" : (step === "checkout" ? "Dados de Entrega" : "Sucesso")}
                 </span>
               </div>
             </div>
@@ -348,6 +404,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   </div>
                 ) : (
                   items.map((l) => (
+                    // ... item rendering remains same
                     <div
                       key={`${l.itemId}-${l.sizeLabel ?? ""}`}
                       className="rounded-[1.5rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-4 relative overflow-hidden group shadow-sm transition-all"
@@ -399,8 +456,45 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   ))
                 )}
               </div>
-            ) : (
+            ) : step === "checkout" ? (
               <div className="p-4 space-y-4 animate-in fade-in slide-in-from-right-4 duration-300" ref={fieldsContainerRef}>
+                {/* Seleção de Modo de Atendimento */}
+                <div className="space-y-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
+                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                    Como prefere seu pedido?
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {restaurant?.delivery_enabled !== false && (
+                      <button
+                        onClick={() => setOrderType("delivery")}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'delivery' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
+                      >
+                        <MapPin className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tight">Delivery</span>
+                      </button>
+                    )}
+                    {restaurant?.pickup_enabled && (
+                      <button
+                        onClick={() => setOrderType("pickup")}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'pickup' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
+                      >
+                        <Store className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tight">Retirada</span>
+                      </button>
+                    )}
+                    {(restaurant?.table_enabled || tableNumber) && (
+                      <button
+                        onClick={() => setOrderType("table")}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
+                      >
+                        <Utensils className="h-5 w-5" />
+                        <span className="text-[10px] font-black uppercase tracking-tight">{tableNumber ? `Mesa ${tableNumber}` : 'Mesa'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Bloco 1 — Dados do cliente */}
                 <div className="space-y-2">
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2 mb-1">
@@ -431,44 +525,46 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 </div>
 
                 {/* Bloco 2 — Entrega */}
-                <div className="space-y-3">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
-                    <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
-                    Entrega
-                  </h3>
-                  <div className="grid gap-2">
-                    {hasZones && (
-                      <div className="relative group">
-                        <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-primary))]" />
-                        <select
-                          ref={zoneRef}
-                          value={zoneId}
-                          onChange={(e) => setZoneId(e.target.value)}
-                          className={`w-full pl-10 pr-8 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold text-xs uppercase tracking-wider appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
-                            validationAttempted && !selectedZone ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
-                          }`}
-                        >
-                          <option value="">Selecione o Bairro *</option>
-                          {deliveryZones.map((z) => (
-                            <option key={z.id} value={z.id}>
-                              {z.neighborhood} (+{formatBRL(Number(z.fee) || 0)})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                    <textarea
-                      ref={addressRef}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Endereço (Rua, nº, complemento/referência)"
-                      rows={2}
-                      className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
-                        validationAttempted && !address.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
-                      }`}
-                    />
+                {orderType === "delivery" && (
+                  <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-secondary))] flex items-center gap-2">
+                      <span className="h-0.5 w-6 bg-[hsl(var(--site-secondary))] rounded-full"></span>
+                      Entrega
+                    </h3>
+                    <div className="grid gap-2">
+                      {hasZones && (
+                        <div className="relative group">
+                          <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--site-primary))]" />
+                          <select
+                            ref={zoneRef}
+                            value={zoneId}
+                            onChange={(e) => setZoneId(e.target.value)}
+                            className={`w-full pl-10 pr-8 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold text-xs uppercase tracking-wider appearance-none focus:outline-none text-[hsl(var(--site-fg))] ${
+                              validationAttempted && !selectedZone ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                            }`}
+                          >
+                            <option value="">Selecione o Bairro *</option>
+                            {deliveryZones.map((z) => (
+                              <option key={z.id} value={z.id}>
+                                {z.neighborhood} (+{formatBRL(Number(z.fee) || 0)})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                      <textarea
+                        ref={addressRef}
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Endereço (Rua, nº, complemento/referência)"
+                        rows={2}
+                        className={`w-full px-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none ${
+                          validationAttempted && !address.trim() ? "ring-2 ring-[hsl(var(--site-danger)/0.3)] border-[hsl(var(--site-danger)/0.5)]" : "focus:border-[hsl(var(--site-primary)/0.5)]"
+                        }`}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Bloco 3 — Pagamento */}
                 <div className="space-y-3">
@@ -531,68 +627,91 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                   </div>
                 )}
               </div>
-            )}
-          </div>
-
-          <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-end px-1">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
-                    {step === "cart" ? "Subtotal" : "Total a Pagar"}
-                  </span>
-                  <span className="text-3xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
-                    {formatBRL(step === "cart" ? totalPrice : grandTotal)}
-                  </span>
-                </div>
-                {step === "cart" && hasZones && (
-                  <div className="text-right flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Logística</span>
-                    <span className="text-sm font-black text-[hsl(var(--site-fg))]">sob consulta</span>
-                  </div>
+            ) : (
+              <div className="p-8 flex flex-col items-center justify-center text-center animate-in zoom-in duration-300">
+                <CheckCircle2 className="h-16 w-16 text-emerald-500 mb-6" />
+                <h3 className="text-xl font-black uppercase tracking-tight mb-2">Pedido Recebido!</h3>
+                {orderType === "pickup" && (
+                   <div className="bg-emerald-500/10 p-6 rounded-2xl border border-emerald-500/20 w-full mb-6">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-1">Número da Ficha</p>
+                     <p className="text-4xl font-black text-emerald-700">#{ticketNumber}</p>
+                   </div>
                 )}
-                {step === "checkout" && hasZones && selectedZone && (
-                  <div className="text-right flex flex-col items-end">
-                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Frete ({selectedZone.neighborhood})</span>
-                    <span className="text-sm font-black text-[hsl(var(--site-fg))]">{formatBRL(deliveryFee)}</span>
-                  </div>
+                {orderType === "table" && (
+                   <div className="bg-emerald-500/10 p-6 rounded-2xl border border-emerald-500/20 w-full mb-6">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 mb-1">Mesa</p>
+                     <p className="text-4xl font-black text-emerald-700">{tableNumber}</p>
+                   </div>
                 )}
+                <p className="text-sm text-[hsl(var(--site-muted-fg))]">Aguarde seu pedido ser preparado.</p>
+                <button onClick={onClose} className="mt-8 site-btn-primary w-full py-3">Fechar</button>
               </div>
-              
-              <button
-                onClick={step === "cart" ? goToCheckout : handleFinish}
-                disabled={sending || (step === "cart" && items.length === 0)}
-                className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 group uppercase tracking-widest font-black text-sm transition-all active:scale-95 ${
-                  step === "cart" 
-                    ? "site-btn-primary" 
-                    : "site-btn-success"
-                } ${sending || (step === "cart" && items.length === 0) ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {sending ? (
-                  <span className="animate-pulse">PROCESSANDO...</span>
-                ) : (
-                  <>
-                    <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
-                    {step === "cart" ? (
-                      <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    ) : (
-                      <ShoppingBag className="h-5 w-5" />
-                    )}
-                  </>
-                )}
-              </button>
-              
-              <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium px-4">
-                {step === "cart" 
-                  ? "Itens selecionados serão revisados no próximo passo."
-                  : (flycontrolOn && whatsappOn
-                    ? `Enviando para o painel e WhatsApp do ${restaurantName}`
-                    : flycontrolOn
-                      ? `Enviando para o painel do ${restaurantName}`
-                      : `Enviando para o WhatsApp do ${restaurantName}`)}
-              </p>
+            )}
             </div>
-          </div>
+
+
+          {step !== "confirmation" && (
+            <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-end px-1">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">
+                      {step === "cart" ? "Subtotal" : "Total a Pagar"}
+                    </span>
+                    <span className="text-3xl font-black text-[hsl(var(--site-primary))] tracking-tighter">
+                      {formatBRL(step === "cart" ? totalPrice : grandTotal)}
+                    </span>
+                  </div>
+                  {step === "cart" && hasZones && (
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Logística</span>
+                      <span className="text-sm font-black text-[hsl(var(--site-fg))]">sob consulta</span>
+                    </div>
+                  )}
+                  {step === "checkout" && orderType === "delivery" && hasZones && selectedZone && (
+                    <div className="text-right flex flex-col items-end">
+                      <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">Frete ({selectedZone.neighborhood})</span>
+                      <span className="text-sm font-black text-[hsl(var(--site-fg))]">{formatBRL(deliveryFee)}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={step === "cart" ? goToCheckout : handleFinish}
+                  disabled={sending || (step === "cart" && items.length === 0)}
+                  className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 group uppercase tracking-widest font-black text-sm transition-all active:scale-95 ${
+                    step === "cart" 
+                      ? "site-btn-primary" 
+                      : "site-btn-success"
+                  } ${sending || (step === "cart" && items.length === 0) ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {sending ? (
+                    <span className="animate-pulse">PROCESSANDO...</span>
+                  ) : (
+                    <>
+                      <span>{step === "cart" ? "Próximo Passo" : "Finalizar Pedido"}</span>
+                      {step === "cart" ? (
+                        <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      ) : (
+                        <ShoppingBag className="h-5 w-5" />
+                      )}
+                    </>
+                  )}
+                </button>
+                
+                <p className="text-[9px] text-center text-[hsl(var(--site-muted-fg))] leading-tight font-medium px-4">
+                  {step === "cart" 
+                    ? "Itens selecionados serão revisados no próximo passo."
+                    : (flycontrolOn && whatsappOn
+                      ? `Enviando para o painel e WhatsApp do ${restaurantName}`
+                      : flycontrolOn
+                        ? `Enviando para o painel do ${restaurantName}`
+                        : `Enviando para o WhatsApp do ${restaurantName}`)}
+                </p>
+              </div>
+            </div>
+          )}
+
         </aside>
     </>
   );
