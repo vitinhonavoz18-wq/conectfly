@@ -46,10 +46,38 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const fieldsContainerRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  // Detect mesa parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mesa = params.get("mesa");
+    if (mesa) {
+      setTableNumber(mesa);
+      setOrderType("table");
+    }
+  }, []);
+
+  // Default mode selection if only one is active
+  useEffect(() => {
+    if (restaurant && step === "checkout") {
+      const activeModes = [];
+      if (restaurant.delivery_enabled !== false) activeModes.push("delivery");
+      if (restaurant.pickup_enabled) activeModes.push("pickup");
+      if (restaurant.table_enabled) activeModes.push("table");
+
+      // Auto select if only one mode and not already forced by mesa param
+      if (activeModes.length === 1 && !tableNumber) {
+        setOrderType(activeModes[0] as any);
+      }
+    }
+  }, [restaurant, step, tableNumber]);
+
   // Reset step when closed
   useEffect(() => {
     if (!open) {
-      setTimeout(() => setStep("cart"), 500);
+      setTimeout(() => {
+        setStep("cart");
+        setFinishedOrder(null);
+      }, 500);
     }
   }, [open]);
 
