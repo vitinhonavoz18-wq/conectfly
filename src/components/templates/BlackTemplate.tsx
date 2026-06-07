@@ -89,7 +89,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           />
         </div>
 
-        {beveragesPosition === "after_products" && renderBeverages()}
+        
 
         {showCombos && (
           <div>
