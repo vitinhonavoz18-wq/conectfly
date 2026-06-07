@@ -31,12 +31,12 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   const directCategories = visibleCategories.filter(c => c.show_directly_in_menu !== false);
 
   const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 site-stagger">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 site-stagger">
       {cats.map((c) => (
          <button
            key={c.id}
            onClick={() => setActive(c.id)}
-           className="group relative aspect-square rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-all duration-500 shadow-2xl"
+           className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-all duration-500 shadow-xl sm:shadow-2xl"
          >
           {c.image_url && (
             <img
@@ -56,12 +56,12 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4 text-left">
-            <h3 className="text-white font-black text-base sm:text-lg leading-tight drop-shadow">
+          <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-4 text-left">
+            <h3 className="text-white font-black text-sm sm:text-lg leading-tight drop-shadow">
               {c.icon ? `${c.icon} ` : ""}
               {c.name}
             </h3>
-            <p className="text-white/80 text-xs mt-0.5">
+            <p className="text-white/80 text-[10px] sm:text-xs mt-0.5">
               {c.is_pizza
                 ? `${c.items.length} ${c.items.length === 1 ? "sabor" : "sabores"}`
                 : `${c.items.length} ${c.items.length === 1 ? "item" : "itens"}`}
@@ -127,7 +127,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                      <button
                        key={c.id}
                        onClick={() => setActive(c.id)}
-                       className={`px-6 py-2.5 rounded-2xl whitespace-nowrap font-black text-[10px] uppercase tracking-[0.2em] transition-all ${
+                       className={`px-4 sm:px-6 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl whitespace-nowrap font-black text-[9px] sm:text-[10px] uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all ${
                          active === c.id
                            ? "site-btn-primary shadow-glow"
                            : "site-btn-secondary text-muted-foreground"

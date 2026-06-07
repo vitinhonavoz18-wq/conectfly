@@ -54,7 +54,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
   );
 
   return (
-    <>
+    <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra">
       <SiteHeader 
         name={r.name} 
         logoUrl={r.logo_url} 
@@ -123,6 +123,6 @@ export function BlackTemplate({ data }: { data: SiteData }) {
         deliveryZones={data.deliveryZones ?? []}
         restaurant={r}
       />
-    </>
+    </div>
   );
 }

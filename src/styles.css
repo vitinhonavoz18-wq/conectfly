@@ -300,6 +300,18 @@
   &::-webkit-scrollbar { display: none; }
 }
 
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pb-safe-extra {
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
 /* Scroll-driven site animations */
 @keyframes site-hero-enter {
   0% { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(6px); }
