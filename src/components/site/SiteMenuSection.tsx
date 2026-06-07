@@ -15,7 +15,7 @@ interface Props {
 }
 
  
-export function SiteMenuSection({ categories, restaurant, entryMode = "navigation" }: Props) {
+export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", beverages, beverageCatalogs }: Props) {
   const [active, setActive] = useState<string | null>(null);
   if (categories.length === 0) return null;
   const current = active ? categories.find((c) => c.id === active) ?? null : null;
