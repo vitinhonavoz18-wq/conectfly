@@ -220,14 +220,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         data = JSON.parse(rawText);
       } catch (parseError) {
         console.error("QR_VALIDATE_JSON_PARSE_ERROR", parseError);
-        console.log("QR_VALIDATE_FINAL_RESULT: error (Response not JSON)");
+        console.log("QR_VALIDATE_ERROR: Response not JSON");
         throw new Error("Resposta da validação não é um JSON válido");
       }
 
       console.log("QR_VALIDATE_JSON_RESPONSE:", data);
 
       if (response.ok && data.valid) {
-        console.log("QR_VALIDATE_FINAL_RESULT: valid true");
+        console.log("QR_VALIDATE_SUCCESS");
         console.log("Mesa identificada:", data.table);
         
         const tableData = {
@@ -249,7 +249,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         return true;
       } else {
         const reason = data?.reason || "table_not_found";
-        console.log(`QR_VALIDATE_FINAL_RESULT: invalid (${reason})`);
+        console.log(`QR_VALIDATE_ERROR: ${reason}`);
         
         setDebugQr(prev => prev ? { ...prev, status: "Inválido", reason: reason } : null);
 
@@ -257,7 +257,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           toast.error("Restaurante não encontrado. Procure um atendente.", { id: "qr-error" });
         } else if (reason === "inactive_table") {
           toast.error("Esta mesa está indisponível no momento. Procure um atendente.", { id: "qr-error" });
-        } else if (reason === "invalid_token") {
+        } else if (reason === "table_not_found") {
           toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         } else {
           toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
