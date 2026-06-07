@@ -60,9 +60,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const params = new URLSearchParams(window.location.search);
     const mesa = params.get("mesa");
     const mode = params.get("mode");
-    const token = params.get("table_token");
+    const token = params.get("table_token") || params.get("token");
 
-    if (mode === "table" && token) {
+    if ((mode === "table" || params.has("table_token") || params.has("token")) && token) {
       handleValidateTable(token);
     } else if (mesa) {
       setTableNumber(mesa);
