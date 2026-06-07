@@ -409,7 +409,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setTicketNumber(generatedTicket);
     }
 
-    console.log("CHECKOUT_SERVICE_MODE_SELECTED:", orderType);
+    console.log("CHECKOUT_ORDER_TYPE:", orderType);
+    console.log("CHECKOUT_SERVICE_MODE:", orderType === "table" ? "mesa" : (orderType === "pickup" ? "retirada" : "delivery"));
+    console.log("CHECKOUT_TABLE_DATA:", {
+      table_number: tableNumber,
+      table_token: tableToken,
+      table_id: tableId
+    });
 
     const orderData = {
       customer: {
@@ -485,14 +491,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         ticket_number: orderData.ticket_number,
       });
 
-      const payload = orderPayload;
-      console.log("Payload real enviado:", payload);
+      console.log("CHECKOUT_FINAL_PAYLOAD:", orderPayload);
+      console.log("CHECKOUT_ENDPOINT_URL:", "/api/public/submit-order (Proxy)");
 
       // 1. Envio para FIQON (Webhook Externo)
       if (FEATURES.ENABLE_FIQON_AUTOMATION && (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp"))) {
         if (externalWebhookUrl) {
           try {
-            const result = await sendUnifiedOrderToFiqon(payload, restaurant as any, "public_checkout");
+            const result = await sendUnifiedOrderToFiqon(orderPayload, restaurant as any, "public_checkout");
+            console.log("CHECKOUT_RESPONSE_STATUS (FIQON):", result.status);
+            console.log("CHECKOUT_RESPONSE_BODY (FIQON):", result);
+
             if (result.success) {
               success = true;
             } else if (flowMode === "fiqon") {
@@ -500,9 +509,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               setSending(false);
               return;
             }
-          } catch (webhookErr) {
+          } catch (webhookErr: any) {
+            console.error("CHECKOUT_SEND_ERROR (FIQON):", webhookErr);
             if (flowMode === "fiqon") {
-              toast.error("Erro de conexão com o Webhook FIQON.");
+              toast.error(`Erro de conexão com o Webhook FIQON: ${webhookErr.message}`);
               setSending(false);
               return;
             }
@@ -514,22 +524,25 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (flycontrolOn && restaurant && (flowMode === "direct" || (allowDoubleSend && !success))) {
         try {
           const result = await sendOrderToFlycontrol(restaurant, orderPayload);
+          console.log("CHECKOUT_RESPONSE_STATUS (FlyControl): 200");
+          console.log("CHECKOUT_RESPONSE_BODY (FlyControl):", result);
+
           if (result.success) {
             success = true;
           } else {
-            // Se o erro for relacionado a token de mesa, FlyControl pode retornar erro específico
-            // A validação final do token acontece aqui
+            console.error("CHECKOUT_SEND_ERROR (FlyControl):", result.message);
             if (orderType === "table") {
               toast.error("Não foi possível confirmar esta mesa. Procure um atendente.");
             } else if (flowMode === "direct") {
-              toast.error("Erro ao registrar pedido no painel.");
+              toast.error(`Erro ao registrar pedido no painel: ${result.message || 'Erro desconhecido'}`);
             }
             setSending(false);
             return;
           }
-        } catch (err) {
+        } catch (err: any) {
+          console.error("CHECKOUT_SEND_ERROR (FlyControl):", err);
           if (flowMode === "direct") {
-            toast.error("Erro de conexão com o painel.");
+            toast.error(`Não foi possível enviar seu pedido para o painel. ${err.message || 'Tente novamente ou procure um atendente.'}`);
           }
           setSending(false);
           return;
@@ -561,9 +574,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         }
       }
 
-    } catch (err) {
+    } catch (err: any) {
       console.error("❌ [CHECKOUT] Erro geral ao finalizar pedido:", err);
-      setError("Ocorreu um erro ao processar seu pedido.");
+      setError(`Ocorreu um erro ao processar seu pedido: ${err.message}`);
     } finally {
       setSending(false);
       console.log("🏁 [CHECKOUT] Fluxo de finalização encerrado");
