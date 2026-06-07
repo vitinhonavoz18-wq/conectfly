@@ -28,14 +28,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     <button
       onClick={() => toggleFlavor(it.id)}
       disabled={!size || disabled}
-      className={`relative text-left rounded-2xl sm:rounded-3xl border p-4 sm:p-5 transition-all duration-300 flex items-start gap-3 sm:gap-4 overflow-hidden group h-full ${
+      className={`relative text-left rounded-xl sm:rounded-3xl border p-3 sm:p-5 transition-all duration-300 flex items-start gap-3 sm:gap-4 overflow-hidden group h-full ${
         checked
           ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.08)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.12)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
           : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.5)] hover:shadow-lg"
       } ${disabled ? "opacity-30 cursor-not-allowed" : "hover:scale-[1.02]"}`}
     >
       {(restaurant?.show_item_images ?? true) && it.image_url && (
-        <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-2xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
+        <div className="h-16 w-16 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))]">
           <img
             src={it.image_url}
             alt={it.name}
@@ -50,26 +50,26 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         </div>
       )}
       <div
-        className={`mt-1 h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+        className={`mt-1 h-5 w-5 sm:h-6 sm:w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
           checked
             ? "bg-[hsl(var(--site-primary))] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-[0_4px_12px_hsl(var(--site-primary)/0.3)] scale-110"
             : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] group-hover:border-[hsl(var(--site-primary)/0.5)]"
         }`}
       >
-        {checked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+        {checked && <Check className="h-3 sm:h-3.5 w-3 sm:w-3.5 stroke-[3]" />}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="font-bold text-base leading-tight text-[hsl(var(--site-fg))]">{it.name}</p>
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <p className="font-bold text-sm sm:text-base leading-tight text-[hsl(var(--site-fg))]">{it.name}</p>
           {it.is_special && (
-            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full font-extrabold bg-[hsl(var(--site-primary))] text-white shadow-sm">
-              <Sparkles className="h-3 w-3" /> Especial
+            <span className="inline-flex items-center gap-1 text-[8px] sm:text-[10px] uppercase tracking-wider px-1.5 sm:py-0.5 rounded-full font-extrabold bg-[hsl(var(--site-primary))] text-white shadow-sm">
+              <Sparkles className="h-2.5 sm:h-3 w-2.5 sm:w-3" /> Especial
               {it.special_extra > 0 ? ` +${formatBRL(it.special_extra)}` : ""}
             </span>
           )}
         </div>
         {it.description && (
-          <p className="text-sm text-[hsl(var(--site-muted-fg))] mt-1.5 leading-relaxed">
+          <p className="text-xs sm:text-sm text-[hsl(var(--site-muted-fg))] mt-1 sm:mt-1.5 leading-relaxed line-clamp-2">
             {it.description}
           </p>
         )}
@@ -78,7 +78,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-  export function SitePizzaBuilder({ category, restaurant, bordasCategory }: Props) {
+  export function SitePizzaBuilder({ category, restaurant, bordasCategory, beverages, beverageCatalogs }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
