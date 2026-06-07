@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2, QrCode, Camera, AlertCircle, Loader2 } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
@@ -7,6 +7,8 @@ import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, s
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
+import { supabase } from "@/integrations/supabase/client";
+import { QrScanner } from "./QrScanner";
 
 
 interface Props {
@@ -24,6 +26,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
   const [ticketNumber, setTicketNumber] = useState<string | null>(null);
+  const [tableId, setTableId] = useState<string | null>(null);
+  const [tableToken, setTableToken] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
+  const [validatingTable, setValidatingTable] = useState(false);
   const [finishedOrder, setFinishedOrder] = useState<any>(null);
   
   const [name, setName] = useState("");
@@ -50,11 +56,74 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const mesa = params.get("mesa");
-    if (mesa) {
+    const mode = params.get("mode");
+    const token = params.get("table_token");
+
+    if (mode === "table" && token) {
+      handleValidateTable(token);
+    } else if (mesa) {
       setTableNumber(mesa);
       setOrderType("table");
     }
   }, []);
+
+  const handleValidateTable = async (token: string) => {
+    if (!restaurant) return;
+    setValidatingTable(true);
+    try {
+      const { data, error } = await supabase
+        .from("restaurant_tables")
+        .select("*")
+        .eq("public_token", token)
+        .eq("restaurant_id", restaurant.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setTableId(data.id);
+        setTableNumber(data.table_number);
+        setTableToken(token);
+        setOrderType("table");
+        toast.success(`Mesa ${data.table_number} identificada!`);
+        setIsScanning(false);
+      } else {
+        toast.error("QR Code inválido ou mesa inativa");
+      }
+    } catch (err) {
+      console.error("Erro ao validar mesa:", err);
+      toast.error("Falha na validação da mesa");
+    } finally {
+      setValidatingTable(false);
+    }
+  };
+
+  const onQrScan = (text: string) => {
+    // Expected format: https://domain/slug?mode=table&table_token=TOKEN
+    // or just the token if the user is smart
+    try {
+      const url = new URL(text);
+      const token = url.searchParams.get("table_token");
+      if (token) {
+        handleValidateTable(token);
+      } else {
+        // Fallback: try raw text if it looks like a hex token
+        if (/^[0-9a-f]{24}$/.test(text)) {
+          handleValidateTable(text);
+        } else {
+          toast.error("QR Code não reconhecido como mesa");
+        }
+      }
+    } catch {
+      // Not a URL, try as raw token
+      if (/^[0-9a-f]{24}$/.test(text)) {
+        handleValidateTable(text);
+      } else {
+        toast.error("QR Code inválido");
+      }
+    }
+  };
 
   // Default mode selection if only one is active
   useEffect(() => {
@@ -142,6 +211,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         firstEmptyField = addressRef;
         errorMessage = "Informe o seu endereço completo";
       }
+    } else if (orderType === "table" && !tableId) {
+      errorMessage = "Identifique sua mesa lendo o QR Code";
     } else if (!paymentMethod) {
       firstEmptyField = paymentRef;
       errorMessage = "Selecione uma forma de pagamento";
@@ -188,6 +259,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       createdAt: new Date().toISOString(),
       order_type: orderType,
       table_number: orderType === "table" ? tableNumber : null,
+      table_id: orderType === "table" ? tableId : null,
+      table_token: orderType === "table" ? tableToken : null,
       ticket_number: generatedTicket,
     };
 
@@ -237,6 +310,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         delivery_type: orderType === "delivery" ? "delivery" : (orderType === "table" ? "mesa" : "retirada"),
         order_type: orderType,
         table_number: orderData.table_number,
+        table_id: orderData.table_id,
+        table_token: orderData.table_token,
         ticket_number: orderData.ticket_number,
       });
 
