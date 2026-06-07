@@ -71,18 +71,24 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   // Detect mesa parameter
   useEffect(() => {
+    if (!restaurant) return;
+    
     const params = new URLSearchParams(window.location.search);
     const mesa = params.get("mesa");
     const mode = params.get("mode");
     const token = params.get("table_token") || params.get("token");
 
     if ((mode === "table" || params.has("table_token") || params.has("token")) && token) {
+      // Evitar abrir novamente se já estiver aberta a mesma mesa
+      if (tableSessionOpened && lastOpenedTableToken === token) return;
+      
+      console.log("DETECTED_TABLE_PARAMS:", { token, mesa });
       handleValidateTable(token);
     } else if (mesa) {
       setTableNumber(mesa);
       setOrderType("table");
     }
-  }, [restaurant]); // Re-run when restaurant is loaded
+  }, [restaurant, tableSessionOpened, lastOpenedTableToken]); // Re-run when restaurant is loaded or session state changes
 
   // Synchronize context validatedTable with local state
   useEffect(() => {
