@@ -30,6 +30,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [tableToken, setTableToken] = useState<string | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [isValidatingQr, setIsValidatingQr] = useState(false);
+  const [debugQr, setDebugQr] = useState<{
+    rawValue: string;
+    slug: string | null;
+    token: string | null;
+    status: string;
+    reason: string;
+  } | null>(null);
   const lastInvalidQrRef = useRef<{ value: string; at: number } | null>(null);
   const qrErrorCooldownMs = 3000;
   const lastScannedQrRef = useRef<string | null>(null);
