@@ -1,5 +1,21 @@
 import { useState, useEffect } from "react";
-import { Image as ImageIcon, Save, Upload, Video as VideoIcon, Zap, RefreshCw, Copy, Wand2, Eye, ShoppingBag } from "lucide-react";
+import { 
+  Image as ImageIcon, 
+  Save, 
+  Upload, 
+  Video as VideoIcon, 
+  Zap, 
+  RefreshCw, 
+  Copy, 
+  Wand2, 
+  Eye, 
+  ShoppingBag,
+  FileJson,
+  CheckCircle2,
+  XCircle,
+  Coffee,
+  Utensils
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
 import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
@@ -8,6 +24,7 @@ import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
 import { FEATURES } from "@/lib/features";
 import { toast } from "sonner";
+
 
 
 
