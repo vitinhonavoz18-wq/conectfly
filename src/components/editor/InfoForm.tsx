@@ -1419,6 +1419,8 @@ export function InfoForm({ restaurant, onChange }: Props) {
                   </div>
                 </div>
               </div>
+            )}
+
 
 
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest text-center py-4">
