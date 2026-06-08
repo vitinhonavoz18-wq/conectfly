@@ -212,6 +212,11 @@ export function InfoForm({ restaurant, onChange }: Props) {
         final_sync_url: url
       });
 
+      // Visualizar JSON para debug
+      if (confirm("Deseja visualizar o JSON de sincronização agora?")) {
+        window.open(url, '_blank');
+      }
+
       setTimeout(() => setMsg(""), 2000);
     };
 
