@@ -104,15 +104,46 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
           },
           menu: {
             categories: categories.map(c => ({ id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order, is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes })),
-            products: productsRaw.filter(p => {
-              const cat = categories.find(c => c.id === p.category_id);
-              return !cat || (!isBorda(cat) && !isAdicional(cat));
-            }).map(i => ({ id: i.id, category_id: i.category_id, name: i.name, description: i.description, price: i.price, image_url: i.image_url, active: i.is_active ?? true, sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra, sizes: i.sizes })),
+            products: productsRaw.map(i => ({ 
+              id: i.id, 
+              category_id: i.category_id, 
+              name: i.name, 
+              description: i.description, 
+              price: i.price, 
+              image_url: i.image_url, 
+              active: i.is_active ?? true, 
+              sort_order: i.sort_order, 
+              is_special: i.is_special, 
+              special_extra: i.special_extra, 
+              sizes: i.sizes 
+            })),
             flavors: [],
             sizes: pizzaSizes.map(s => ({ id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order })),
             borders: borders.map(b => ({ id: b.id, name: b.name, price: b.price, active: b.is_active ?? true })),
             drinks: beverages.map(b => ({ id: b.id, name: b.name, brand: b.brand, size: b.size, price: b.price, active: b.is_active ?? true })),
-            addons: additionals.map(a => ({ id: a.id, name: a.name, price: a.price, active: a.is_active ?? true }))
+            addons: additionals.map(a => ({ id: a.id, name: a.name, price: a.price, active: a.is_active ?? true })),
+            normalized_products: [
+              ...productsRaw.map(i => ({
+                external_id: `sf_prod_${i.id}`,
+                name: i.name,
+                description: i.description || "",
+                price: i.price,
+                image_url: i.image_url || "",
+                category_name: categories.find(c => c.id === i.category_id)?.name || "Geral",
+                type: "product",
+                is_active: i.is_active ?? true
+              })),
+              ...beverages.map(b => ({
+                external_id: `sf_drink_${b.id}`,
+                name: b.name,
+                description: b.brand || "",
+                price: b.price,
+                image_url: "",
+                category_name: "Bebidas",
+                type: "drink",
+                is_active: b.is_active ?? true
+              }))
+            ]
           }
         };
 
