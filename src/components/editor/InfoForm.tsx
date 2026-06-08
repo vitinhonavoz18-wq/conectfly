@@ -396,7 +396,9 @@ export function InfoForm({ restaurant, onChange }: Props) {
   };
 
   return (
-    <div className="space-y-5">
+    <>
+      <div className="space-y-5">
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Nome do Estabelecimento">
           <input
@@ -1423,8 +1425,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
               ID interno da unidade: <span className="font-mono text-white/40">{r.id}</span>
             </p>
       </div>
-    );
-  }
+    </>
+  );
+}
+
 
 function Field({
   label,
