@@ -1314,8 +1314,17 @@ export function InfoForm({ restaurant, onChange }: Props) {
                    className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition"
                  >
                     <Copy className="h-5 w-5" />
+                   </button>
+                   <button
+                    type="button"
+                    onClick={fetchSyncPreview}
+                    disabled={loadingSync}
+                    className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition text-blue-400"
+                    title="Visualizar JSON"
+                  >
+                    {loadingSync ? <RefreshCw className="h-5 w-5 animate-spin" /> : <Eye className="h-5 w-5" />}
                   </button>
-                  <button
+                   <button
                     type="button"
                     onClick={regenerateSyncToken}
                     title="Regenerar Token"
@@ -1323,6 +1332,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                   >
                     <RefreshCw className="h-5 w-5" />
                   </button>
+
                </div>
              </Field>
 
