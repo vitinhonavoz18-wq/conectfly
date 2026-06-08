@@ -161,7 +161,7 @@ serve(async (req) => {
         supabase.from("menu_items").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         supabase.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
         supabase.from("pizzeria_pizza_sizes").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
-        supabase.from("beverage_catalogs").select("*").eq("restaurant_id", restaurant.id),
+        supabase.from("beverage_catalogs").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         supabase.from("combos").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
       ]);
 
@@ -172,10 +172,56 @@ serve(async (req) => {
       const catalogs = catalogsRes.data || [];
       const combos = combosRes.data || [];
 
-      console.log(`MENU_SYNC_COUNTS: normal_categories_count=${categories.length} normal_products_count=${productsRaw.length} drinks_count=${beverages.length} beverage_catalogs_count=${catalogs.length} combos_count=${combos.length}`);
+      console.log(`MENU_SYNC_COUNTS: categories_count=${categories.length} products_count=${productsRaw.length} drinks_count=${beverages.length} beverage_catalogs_count=${catalogs.length} combos_count=${combos.length}`);
 
       const isBorda = (c: any) => c.name.toLowerCase().includes("borda");
       const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra");
+
+      const normalizedProducts: any[] = [];
+
+      // Add regular products
+      productsRaw.forEach(i => {
+        const cat = categories.find(c => c.id === i.category_id);
+        normalizedProducts.push({
+          external_id: `sf_prod_${i.id}`,
+          name: i.name,
+          description: i.description || "",
+          price: i.price,
+          image_url: i.image_url || "",
+          category_name: cat?.name || "Geral",
+          type: "product",
+          is_active: i.is_active ?? true
+        });
+      });
+
+      // Add beverages
+      beverages.forEach(b => {
+        const cat = catalogs.find(c => c.id === b.catalog_id);
+        normalizedProducts.push({
+          external_id: `sf_drink_${b.id}`,
+          name: b.name,
+          description: b.description || b.brand || "",
+          price: b.price,
+          image_url: b.image_url || "",
+          category_name: cat?.name || "Bebidas",
+          type: "drink",
+          is_active: b.is_active ?? true
+        });
+      });
+
+      // Add combos
+      combos.forEach(c => {
+        normalizedProducts.push({
+          external_id: `sf_combo_${c.id}`,
+          name: c.name,
+          description: c.badge || "",
+          price: c.price,
+          image_url: "",
+          category_name: "Combos",
+          type: "combo",
+          is_active: c.is_active ?? true
+        });
+      });
 
       const borders = productsRaw.filter(p => {
         const cat = categories.find(c => c.id === p.category_id);
@@ -187,53 +233,39 @@ serve(async (req) => {
         return cat && isAdicional(cat);
       });
 
-      const normalizedProducts = [
-        ...productsRaw.map(i => ({
-          external_id: `sf_prod_${i.id}`,
-          name: i.name,
-          description: i.description || "",
-          price: i.price,
-          image_url: i.image_url || "",
-          category_name: categories.find(c => c.id === i.category_id)?.name || "Geral",
-          type: "product",
-          is_active: i.is_active ?? true
-        })),
-        ...beverages.map(b => ({
-          external_id: `sf_drink_${b.id}`,
-          name: b.name,
-          description: b.brand || "",
-          price: b.price,
-          image_url: "",
-          category_name: "Bebidas",
-          type: "drink",
-          is_active: b.is_active ?? true
-        })),
-        ...combos.map(c => ({
-          external_id: `sf_combo_${c.id}`,
-          name: c.name,
-          description: c.badge || "",
-          price: c.price,
-          image_url: "",
-          category_name: "Combos",
-          type: "combo",
-          is_active: c.is_active ?? true
-        }))
-      ];
+      console.log(`MENU_SYNC_SAMPLE: first_category_name=${categories[0]?.name} first_product_name=${productsRaw[0]?.name} first_drink_name=${beverages[0]?.name} first_normalized_product_name=${normalizedProducts[0]?.name}`);
+      
+      if (normalizedProducts.length === 0) {
+        console.log(`MENU_SYNC_FINAL_RESPONSE: success=false error=empty_menu_sync_payload`);
+        return new Response(JSON.stringify({
+          success: false,
+          error: "empty_menu_sync_payload",
+          message: "Nenhum item vendável foi encontrado para este restaurante.",
+          debug: {
+            restaurant_id: restaurant.id,
+            slug: restaurant.slug,
+            categories_count: categories.length,
+            products_count: productsRaw.length,
+            drinks_count: beverages.length,
+            normalized_products_count: 0
+          }
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
 
-      console.log(`MENU_SYNC_SAMPLE: first_category_name=${categories[0]?.name} first_product_name=${productsRaw[0]?.name} first_drink_name=${beverages[0]?.name}`);
-      console.log(`MENU_SYNC_RESPONSE_FINAL: success=true total_categories=${categories.length} total_products=${productsRaw.length} total_drinks=${beverages.length} total_normalized_items=${normalizedProducts.length}`);
+      console.log(`MENU_SYNC_FINAL_RESPONSE: success=true total_items=${normalizedProducts.length}`);
 
       const response = {
         success: true,
         restaurant: {
+          id: restaurant.id,
           slug: restaurant.slug,
           name: restaurant.name
         },
         menu: {
-          categories: categories.map(c => ({ id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order, is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes })),
-          products: productsRaw.map(i => ({ id: i.id, category_id: i.category_id, name: i.name, description: i.description, price: i.price, image_url: i.image_url, active: i.is_active ?? true, sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra, sizes: i.sizes })),
+          categories: categories.map(c => ({ id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order, is_pizza: c.is_pizza })),
+          products: productsRaw.map(i => ({ id: i.id, category_id: i.category_id, name: i.name, description: i.description, price: i.price, image_url: i.image_url, active: i.is_active ?? true })),
           flavors: [],
-          sizes: pizzaSizes.map(s => ({ id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order })),
+          sizes: pizzaSizes.map(s => ({ id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, slices: s.slices, active: s.is_active ?? true })),
           borders: borders.map(b => ({ id: b.id, name: b.name, price: b.price, active: b.is_active ?? true })),
           drinks: beverages.map(b => ({ id: b.id, name: b.name, brand: b.brand, size: b.size, price: b.price, active: b.is_active ?? true })),
           addons: additionals.map(a => ({ id: a.id, name: a.name, price: a.price, active: a.is_active ?? true })),
