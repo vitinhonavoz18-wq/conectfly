@@ -42,6 +42,10 @@ export function InfoForm({ restaurant, onChange }: Props) {
   const [testing, setTesting] = useState(false);
   const [testDebug, setTestDebug] = useState<any>(null);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [syncData, setSyncData] = useState<any>(null);
+  const [loadingSync, setLoadingSync] = useState(false);
+
 
   const isFiqonMode = FEATURES.ENABLE_FIQON_AUTOMATION && 
     ((r.order_flow_mode || (r.fiqon_webhook_url || r.site_settings?.external_webhook_url ? "fiqon" : "whatsapp")) === "fiqon");
@@ -259,6 +263,23 @@ export function InfoForm({ restaurant, onChange }: Props) {
         setSaving(false);
       }
     };
+
+    const fetchSyncPreview = async () => {
+      setLoadingSync(true);
+      try {
+        const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${r.menu_sync_token}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+        setSyncData(data);
+        setShowSyncModal(true);
+      } catch (err: any) {
+        console.error("Erro ao carregar preview de sincronização:", err);
+        toast.error("Falha ao carregar dados de sincronização.");
+      } finally {
+        setLoadingSync(false);
+      }
+    };
+
 
     // Garantir que o restaurante tenha um token se não houver
     useEffect(() => {
@@ -1304,10 +1325,99 @@ export function InfoForm({ restaurant, onChange }: Props) {
              </Field>
 
              <div className="pt-4 flex items-center gap-2">
-               <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endpoint Ativo e Pronto</span>
-             </div>
-           </div>
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Endpoint Ativo e Pronto</span>
+              </div>
+            </div>
+
+            {/* Modal de Debug do JSON */}
+            {showSyncModal && syncData && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="bg-[#1A1A1A] border border-white/10 rounded-[2rem] w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+                  <div className="p-6 border-b border-white/5 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-widest flex items-center gap-2">
+                        <FileJson className="h-5 w-5 text-primary" />
+                        Preview de Sincronização
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1">Este é o conteúdo exato enviado para o FlyControl</p>
+                    </div>
+                    <button onClick={() => setShowSyncModal(false)} className="p-2 hover:bg-white/5 rounded-full transition-all">
+                      <XCircle className="h-6 w-6 text-muted-foreground" />
+                    </button>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {/* Resumo de Contagem */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Categorias</p>
+                        <p className="text-2xl font-black text-primary">{syncData.menu?.categories?.length || 0}</p>
+                      </div>
+                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Produtos</p>
+                        <p className="text-2xl font-black text-primary">{syncData.menu?.products?.length || 0}</p>
+                      </div>
+                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center">
+                        <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">Bebidas</p>
+                        <p className="text-2xl font-black text-primary">{syncData.menu?.drinks?.length || 0}</p>
+                      </div>
+                      <div className="bg-white/5 p-4 rounded-2xl border border-white/5 text-center ring-2 ring-primary/20">
+                        <p className="text-[10px] font-black uppercase text-primary mb-1">Total Vendável</p>
+                        <p className="text-2xl font-black text-emerald-400">{syncData.menu?.normalized_products?.length || 0}</p>
+                      </div>
+                    </div>
+
+                    {/* Lista de Amostra */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-muted-foreground">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        Primeiros Itens Encontrados
+                      </h4>
+                      <div className="grid gap-2">
+                        {syncData.menu?.normalized_products?.slice(0, 5).map((item: any, idx: number) => (
+                          <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/5 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                {item.type === 'drink' ? <Coffee className="h-4 w-4" /> : <Utensils className="h-4 w-4" />}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold">{item.name}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase">{item.category_name}</p>
+                              </div>
+                            </div>
+                            <p className="font-black text-emerald-400">R$ {item.price?.toFixed(2)}</p>
+                          </div>
+                        ))}
+                        {(!syncData.menu?.normalized_products || syncData.menu.normalized_products.length === 0) && (
+                          <div className="p-8 text-center bg-red-500/10 border border-red-500/20 rounded-2xl">
+                            <p className="text-red-400 font-bold">Nenhum item encontrado no cardápio!</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* JSON Raw */}
+                    <div className="space-y-3">
+                      <h4 className="text-xs font-black uppercase tracking-widest text-muted-foreground">JSON Completo</h4>
+                      <pre className="bg-black/60 p-6 rounded-2xl border border-white/5 text-[10px] font-mono text-emerald-400/80 overflow-x-auto">
+                        {JSON.stringify(syncData, null, 2)}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="p-6 border-t border-white/5 bg-black/20 text-center">
+                    <button 
+                      type="button"
+                      onClick={() => setShowSyncModal(false)}
+                      className="btn-premium px-8 py-3 rounded-xl uppercase text-xs font-black tracking-widest"
+                    >
+                      Fechar Preview
+                    </button>
+                  </div>
+                </div>
+              </div>
+
 
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest text-center py-4">
               ID interno da unidade: <span className="font-mono text-white/40">{r.id}</span>
