@@ -80,7 +80,6 @@ serve(async (req) => {
     let syncToken = url.searchParams.get("sync_token") || url.searchParams.get("token");
 
     // Handle /menu-sync/:slug/:token
-    // If called via proxy /api/public/menu-sync/slug/token, pathParts will be ["api", "public", "menu-sync", "slug", "token"]
     const menuSyncIndex = pathParts.findIndex(p => p === "menu-sync");
     if (menuSyncIndex !== -1 && pathParts.length > menuSyncIndex + 2) {
       slug = pathParts[menuSyncIndex + 1];
@@ -98,7 +97,7 @@ serve(async (req) => {
       syncToken = syncToken || body.sync_token || body.token;
     }
 
-    console.log(`MENU_SYNC_DEBUG: slug_received=${slug} token_received_preview=${syncToken?.substring(0, 8)}...`);
+    console.log(`MENU_SYNC_DEBUG_START: slug_received=${slug} token_received_preview=${syncToken?.substring(0, 8)}...`);
 
     let restaurant;
     let authResult = "unauthorized";
@@ -107,28 +106,21 @@ serve(async (req) => {
     if (slug && syncToken) {
       const { data: res, error: resError } = await supabase.from("restaurants").select("*").eq("slug", slug).maybeSingle();
       
-      console.log(`MENU_SYNC_DEBUG: restaurant_found=${!!res} restaurant_id=${res?.id} error=${resError?.message}`);
-      
       if (res) {
         restaurant = res;
         const storedToken = restaurant.menu_sync_token;
         const tokenMatch = storedToken === syncToken;
         
-        console.log(`MENU_SYNC_DEBUG: stored_token_exists=${!!storedToken} stored_token_preview=${storedToken?.substring(0, 8)}... token_match=${tokenMatch}`);
+        console.log(`MENU_SYNC_RESTAURANT_LOOKUP: restaurant_found=true restaurant_id=${res.id} restaurant_slug=${res.slug} restaurant_name=${res.name}`);
         
         if (tokenMatch) {
           authResult = "success";
-          console.log(`MENU_SYNC_DEBUG: final_result=success Authorized by token for ${slug}`);
         } else {
           console.log(`MENU_SYNC_DEBUG: final_result=invalid_sync_token`);
           return new Response(JSON.stringify({ 
             success: false, 
             error: "invalid_sync_token", 
             message: "Token de sincronização inválido.",
-            debug: {
-              slug_received: slug,
-              token_received_preview: syncToken?.substring(0, 8) + "..."
-            }
           }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
       } else {
@@ -147,7 +139,6 @@ serve(async (req) => {
       if (res) {
         restaurant = res;
         authResult = "success";
-        console.log(`MENU_SYNC: Authorized by API Key for ${restaurant.slug}`);
       }
     }
 
@@ -163,17 +154,25 @@ serve(async (req) => {
 
     // GET: Return Menu Data
     if (req.method === "GET") {
-      const [catsRes, itemsRes, bevsRes, sizesRes] = await Promise.all([
+      console.log(`MENU_SYNC_DATA_SOURCES: categories_table_used=menu_categories products_table_used=menu_items beverage_catalogs_table_used=beverage_catalogs drinks_table_used=pizzeria_beverages`);
+
+      const [catsRes, itemsRes, bevsRes, sizesRes, catalogsRes, combosRes] = await Promise.all([
         supabase.from("menu_categories").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         supabase.from("menu_items").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         supabase.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
         supabase.from("pizzeria_pizza_sizes").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
+        supabase.from("beverage_catalogs").select("*").eq("restaurant_id", restaurant.id),
+        supabase.from("combos").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
       ]);
 
       const categories = catsRes.data || [];
       const productsRaw = itemsRes.data || [];
       const beverages = bevsRes.data || [];
       const pizzaSizes = sizesRes.data || [];
+      const catalogs = catalogsRes.data || [];
+      const combos = combosRes.data || [];
+
+      console.log(`MENU_SYNC_COUNTS: normal_categories_count=${categories.length} normal_products_count=${productsRaw.length} drinks_count=${beverages.length} beverage_catalogs_count=${catalogs.length} combos_count=${combos.length}`);
 
       const isBorda = (c: any) => c.name.toLowerCase().includes("borda");
       const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra");
@@ -188,6 +187,42 @@ serve(async (req) => {
         return cat && isAdicional(cat);
       });
 
+      const normalizedProducts = [
+        ...productsRaw.map(i => ({
+          external_id: `sf_prod_${i.id}`,
+          name: i.name,
+          description: i.description || "",
+          price: i.price,
+          image_url: i.image_url || "",
+          category_name: categories.find(c => c.id === i.category_id)?.name || "Geral",
+          type: "product",
+          is_active: i.is_active ?? true
+        })),
+        ...beverages.map(b => ({
+          external_id: `sf_drink_${b.id}`,
+          name: b.name,
+          description: b.brand || "",
+          price: b.price,
+          image_url: "",
+          category_name: "Bebidas",
+          type: "drink",
+          is_active: b.is_active ?? true
+        })),
+        ...combos.map(c => ({
+          external_id: `sf_combo_${c.id}`,
+          name: c.name,
+          description: c.badge || "",
+          price: c.price,
+          image_url: "",
+          category_name: "Combos",
+          type: "combo",
+          is_active: c.is_active ?? true
+        }))
+      ];
+
+      console.log(`MENU_SYNC_SAMPLE: first_category_name=${categories[0]?.name} first_product_name=${productsRaw[0]?.name} first_drink_name=${beverages[0]?.name}`);
+      console.log(`MENU_SYNC_RESPONSE_FINAL: success=true total_categories=${categories.length} total_products=${productsRaw.length} total_drinks=${beverages.length} total_normalized_items=${normalizedProducts.length}`);
+
       const response = {
         success: true,
         restaurant: {
@@ -196,22 +231,22 @@ serve(async (req) => {
         },
         menu: {
           categories: categories.map(c => ({ id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order, is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes })),
-          products: productsRaw.filter(p => {
-            const cat = categories.find(c => c.id === p.category_id);
-            return !cat || (!isBorda(cat) && !isAdicional(cat));
-          }).map(i => ({ id: i.id, category_id: i.category_id, name: i.name, description: i.description, price: i.price, image_url: i.image_url, active: i.is_active ?? true, sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra, sizes: i.sizes })),
-          flavors: [], // To be implemented if needed
+          products: productsRaw.map(i => ({ id: i.id, category_id: i.category_id, name: i.name, description: i.description, price: i.price, image_url: i.image_url, active: i.is_active ?? true, sort_order: i.sort_order, is_special: i.is_special, special_extra: i.special_extra, sizes: i.sizes })),
+          flavors: [],
           sizes: pizzaSizes.map(s => ({ id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order })),
           borders: borders.map(b => ({ id: b.id, name: b.name, price: b.price, active: b.is_active ?? true })),
           drinks: beverages.map(b => ({ id: b.id, name: b.name, brand: b.brand, size: b.size, price: b.price, active: b.is_active ?? true })),
-          addons: additionals.map(a => ({ id: a.id, name: a.name, price: a.price, active: a.is_active ?? true }))
+          addons: additionals.map(a => ({ id: a.id, name: a.name, price: a.price, active: a.is_active ?? true })),
+          beverage_catalogs: catalogs,
+          combos: combos,
+          normalized_products: normalizedProducts
         }
       };
 
       return new Response(JSON.stringify(response), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // POST: Manage Menu (Requires API Key for legacy, but we'll allow it if token is valid for now, though usually POST is for sync from FlyControl)
+    // POST handling remains for sync from FlyControl
     if (req.method === "POST") {
       const action = body.action;
       const type = body.type;
