@@ -429,10 +429,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   };
 
   const handleFinish = async () => {
-    console.log("FINAL_ORDER_SENT_ONLY_ON_BUTTON_CLICK");
+    console.log("CHECKOUT_SUBMIT_STARTED");
     setError("");
     setValidationAttempted(true);
-
 
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
@@ -465,10 +464,27 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       errorMessage = "Informe se precisa de troco";
     }
 
-    if (firstEmptyField && firstEmptyField.current) {
+    if (errorMessage) {
       setError(errorMessage);
-      firstEmptyField.current?.focus();
-      firstEmptyField.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (firstEmptyField && firstEmptyField.current) {
+        firstEmptyField.current?.focus();
+        firstEmptyField.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      return;
+    }
+
+    if (items.length === 0) {
+      setError("Seu carrinho está vazio");
+      return;
+    }
+
+    if (totalPrice <= 0) {
+      setError("O total do pedido deve ser maior que zero");
+      return;
+    }
+
+    if (!restaurant?.slug) {
+      setError("Erro interno: restaurante não identificado");
       return;
     }
 
@@ -484,16 +500,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setTicketNumber(generatedTicket);
     }
 
+    console.log("CHECKOUT_ITEMS_COUNT:", items.length);
+    console.log("CHECKOUT_TOTAL:", grandTotal);
     console.log("CHECKOUT_ORDER_TYPE:", orderType);
     console.log("CHECKOUT_SERVICE_MODE:", orderType === "table" ? "mesa" : (orderType === "pickup" ? "retirada" : "delivery"));
-    console.log("CHECKOUT_TABLE_DATA:", {
-      table_number: tableNumber,
-      table_token: tableToken,
-      table_id: tableId,
-      table_session_id: tableSessionId
-    });
-
-
+    
     const orderData = {
       customer: {
         name,
@@ -515,23 +526,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       table_id: orderType === "table" ? tableId : null,
       table_token: orderType === "table" ? tableToken : null,
       table_session_id: orderType === "table" ? tableSessionId : null,
-
       ticket_number: generatedTicket,
     };
 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
-    const messageFull = buildOrderMessage(orderData, "complete");
-
     
-
     setSending(true);
     let success = false;
     const siteSettings = restaurant?.site_settings as any;
     
-    // Prioriza os campos de topo solicitados pelo usuário, mas mantém fallback para site_settings
     let flowMode = restaurant?.order_flow_mode || siteSettings?.order_flow_mode || (restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url ? "fiqon" : "direct");
     
-    // Fallback se Fiqon estiver desativado nas features
     if (!FEATURES.ENABLE_FIQON_AUTOMATION && flowMode === "fiqon") {
       flowMode = "direct";
     }
@@ -540,12 +545,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
     const whatsappEnabled = restaurant?.continue_opening_whatsapp ?? (restaurant?.whatsapp_enabled !== false);
 
-    // LOGS OBRIGATÓRIOS DO CHECKOUT PÚBLICO
-    console.log("CHECKOUT_PUBLICO_INICIADO");
-    console.log("MODO_FLUXO_ATIVO:", flowMode);
-    console.log("URL_FIQON_USADA:", externalWebhookUrl || "Nenhuma");
-    console.log("Permitir envio duplo:", allowDoubleSend);
-    console.log("WHATSAPP_LIBERADO_APOS_WEBHOOK:", whatsappEnabled ? "SIM" : "NÃO");
+    console.log("CHECKOUT_FETCH_STARTED");
 
     try {
       const orderPayload = buildOrderPayload({
@@ -571,11 +571,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         table_token: orderData.table_token,
         table_session_id: orderData.table_session_id,
         ticket_number: orderData.ticket_number,
-
       });
 
-      console.log("FINAL_ORDER_PAYLOAD:", JSON.stringify(orderPayload, null, 2));
-      console.log("CHECKOUT_ENDPOINT_URL:", "/api/public/submit-order (Proxy)");
+      console.log("CHECKOUT_FINAL_PAYLOAD:", JSON.stringify(orderPayload, null, 2));
 
       // 1. Envio para FIQON (Webhook Externo)
       if (FEATURES.ENABLE_FIQON_AUTOMATION && (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp"))) {
@@ -583,21 +581,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           try {
             const result = await sendUnifiedOrderToFiqon(orderPayload, restaurant as any, "public_checkout");
             console.log("CHECKOUT_RESPONSE_STATUS (FIQON):", result.status);
-            console.log("CHECKOUT_RESPONSE_BODY (FIQON):", result);
+            console.log("CHECKOUT_RESPONSE_JSON (FIQON):", result);
 
             if (result.success) {
               success = true;
             } else if (flowMode === "fiqon") {
-              toast.error(`Erro no FIQON (${result.status}): ${result.error || 'Falha no envio'}`);
-              setSending(false);
-              return;
+              throw new Error(`Erro no FIQON (${result.status}): ${result.error || 'Falha no envio'}`);
             }
           } catch (webhookErr: any) {
             console.error("CHECKOUT_SEND_ERROR (FIQON):", webhookErr);
             if (flowMode === "fiqon") {
-              toast.error(`Erro de conexão com o Webhook FIQON: ${webhookErr.message}`);
-              setSending(false);
-              return;
+              throw webhookErr;
             }
           }
         }
@@ -607,29 +601,21 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (flycontrolOn && restaurant && (flowMode === "direct" || (allowDoubleSend && !success))) {
         try {
           const result = await sendOrderToFlycontrol(restaurant, orderPayload);
+          console.log("CHECKOUT_RESPONSE_JSON (FLYCONTROL):", result);
           
           if (result.success) {
             success = true;
+            console.log("CHECKOUT_SUCCESS_CONFIRMED");
           } else {
-            if (orderType === "table") {
-              toast.error("Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.");
-            } else if (flowMode === "direct") {
-              toast.error(`Erro ao registrar pedido no painel: ${result.message || 'Erro desconhecido'}`);
-            }
-            setSending(false);
-            return;
+            throw new Error(result.message || "FlyControl retornou success false");
           }
         } catch (err: any) {
-          if (orderType === "table") {
-            toast.error("Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.");
-          } else if (flowMode === "direct") {
-            toast.error(`Não foi possível enviar seu pedido para o painel. ${err.message || 'Tente novamente.'}`);
-          }
-          setSending(false);
-          return;
+          console.error("CHECKOUT_SEND_ERROR (FLYCONTROL):", err);
+          throw err;
         }
       }
 
+      // Se chegamos aqui sem erro e temos sucesso (ou modo apenas whatsapp)
       if (success || flowMode === "whatsapp") {
         if (orderType === "table") {
           toast.success(`Pedido enviado com sucesso para a Mesa ${tableNumber}.`);
@@ -642,6 +628,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           openWhatsAppOrder(messageWhatsApp);
         }
 
+        // Limpar carrinho e encerrar apenas APÓS confirmação
         clear();
         
         if (orderType === "pickup" || orderType === "table") {
@@ -657,17 +644,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           setZoneId("");
           onClose();
         }
+      } else {
+        throw new Error("Não foi possível confirmar o recebimento do pedido pelo painel.");
       }
 
     } catch (err: any) {
-      console.error("❌ [CHECKOUT] Erro geral ao finalizar pedido:", err);
-      const errorMsg = orderType === "table" 
-        ? "Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente."
-        : `Ocorreu um erro ao processar seu pedido: ${err.message}`;
+      console.error("CHECKOUT_SEND_ERROR:", err);
+      const errorMsg = "Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.";
+      
       setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSending(false);
-      console.log("🏁 [CHECKOUT] Fluxo de finalização encerrado");
+      console.log("CHECKOUT_FLOW_FINISHED");
     }
   };
 
@@ -1109,9 +1098,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                 >
                   {sending ? (
                     <span className="animate-pulse">
-                      {orderType === "table" ? `ENVIANDO MESA ${tableNumber}...` : 
-                       orderType === "delivery" ? "ENVIANDO AO WHATSAPP..." : 
-                       "ENVIANDO PEDIDO..."}
+                      ENVIANDO PEDIDO PARA O PAINEL...
                     </span>
                   ) : (
                     <>

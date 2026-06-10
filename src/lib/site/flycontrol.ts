@@ -404,40 +404,30 @@ export async function sendOrderToFlycontrol(
     const responseText = await response.text();
     const status = response.status;
     
+    console.log("CHECKOUT_RESPONSE_STATUS:", status);
+    console.log("CHECKOUT_RESPONSE_RAW_TEXT:", responseText);
+
     let data: any = {};
     try {
       data = JSON.parse(responseText);
     } catch {
-      data = { text: responseText };
+      throw new Error(`Resposta do FlyControl não é JSON: ${responseText}`);
     }
 
-    console.log("CHECKOUT_RESPONSE_STATUS:", status);
-    console.log("CHECKOUT_RESPONSE_BODY:", data);
+    console.log("CHECKOUT_RESPONSE_JSON:", data);
 
     if (data?.skipped) {
       return { success: false, skipped: true, message: data.message || "Integração desativada" };
     }
 
     if (!response.ok || data?.success === false) {
-      // Tentar extrair erro detalhado do JSON de erro se disponível
-      let errorMsg = data?.error || data?.message || `Falha no envio: ${status}`;
-      
-      // Se a resposta bruta contém o erro de coluna (como mencionado pelo usuário)
-      if (responseText.includes("Could not find the 'table_name' column")) {
-        errorMsg = "Erro de configuração no painel (coluna table_name ausente).";
-      }
-
+      const errorMsg = data?.error || data?.message || `HTTP ${status}: ${responseText}`;
       console.error("CHECKOUT_SEND_ERROR:", errorMsg);
-      
-      // Personalizar erro para mesa
-      if (payload.order.order_type === "table") {
-        throw new Error(`Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.`);
-      }
-      
       throw new Error(errorMsg);
     }
 
     const orderId = data?.response?.order_id || data?.order_id || payload.order.id;
+    console.log("CHECKOUT_SUCCESS_CONFIRMED", { order_id: orderId });
     return { success: true, order_id: orderId };
   } catch (err: any) {
     console.error("CHECKOUT_SEND_ERROR:", err.message);
