@@ -5,6 +5,7 @@ import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } fro
 import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 
 import { MenuImport } from "./MenuImport";
+import { MenuSyncDebug } from "./MenuSyncDebug";
 import { adminFetchSiteData, updateRestaurant } from "@/lib/site/queries";
 import { formatBRL } from "@/lib/site/format";
 
@@ -97,6 +98,7 @@ export function MenuManager({ restaurantId }: Props) {
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-black uppercase tracking-widest text-primary">Outras Categorias</h3>
           <div className="flex gap-2">
+            <MenuSyncDebug restaurantId={restaurantId} />
             <MenuImport restaurantId={restaurantId} onSuccess={reload} />
             <button onClick={addCategory} className="btn-premium px-6 py-2.5 rounded-xl flex items-center gap-2 text-xs uppercase tracking-widest">
               <Plus className="h-4 w-4" /> Nova Categoria
