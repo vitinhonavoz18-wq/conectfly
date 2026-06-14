@@ -541,6 +541,22 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       flowMode = "direct";
     }
 
+    // CRÍTICO: pedidos de Mesa e Retirada SEMPRE precisam de confirmação real do FlyControl.
+    // O modo "whatsapp" só é válido para Delivery. Sem essa regra, mesa/retirada mostravam
+    // "sucesso" sem o pedido chegar ao painel (bug observado no HSBOTECO).
+    const requiresBackend = orderType === "table" || orderType === "pickup";
+    if (requiresBackend) {
+      if (!flycontrolOn) {
+        setSending(false);
+        const msg = "Esta loja não está conectada ao painel. Pedidos de mesa/retirada não podem ser confirmados no momento.";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      // Força envio direto ao FlyControl para mesa/retirada
+      if (flowMode === "whatsapp") flowMode = "direct";
+    }
+
     const allowDoubleSend = restaurant?.allow_dual_send ?? !!siteSettings?.allow_double_send;
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
     const whatsappEnabled = restaurant?.continue_opening_whatsapp ?? (restaurant?.whatsapp_enabled !== false);
@@ -598,7 +614,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       }
 
       // 2. Envio Direto para FlyControl
-      if (flycontrolOn && restaurant && (flowMode === "direct" || (allowDoubleSend && !success))) {
+      if (flycontrolOn && restaurant && (flowMode === "direct" || requiresBackend || (allowDoubleSend && !success))) {
         try {
           const result = await sendOrderToFlycontrol(restaurant, orderPayload);
           console.log("CHECKOUT_RESPONSE_JSON (FLYCONTROL):", result);
@@ -615,8 +631,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         }
       }
 
-      // Se chegamos aqui sem erro e temos sucesso (ou modo apenas whatsapp)
-      if (success || flowMode === "whatsapp") {
+      // Mesa/Retirada exigem sucesso real do backend. Delivery ainda pode usar modo WhatsApp puro.
+      const canShowSuccess = success || (flowMode === "whatsapp" && !requiresBackend);
+      if (canShowSuccess) {
         if (orderType === "table") {
           toast.success(`Pedido enviado com sucesso para a Mesa ${tableNumber}.`);
         } else {
