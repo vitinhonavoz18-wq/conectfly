@@ -12,6 +12,42 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen, validatedTable, totalItems } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [isRequestingClose, setIsRequestingClose] = useState(false);
+  const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
+
+  const requestTableClose = async () => {
+    if (!validatedTable || isRequestingClose) return;
+    setIsRequestingClose(true);
+    try {
+      const res = await fetch("/api/public/table-close-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          restaurant_id: r.id,
+          table_id: validatedTable.id,
+          table_token: validatedTable.token,
+          table_number: validatedTable.number,
+          table_session_id: validatedTable.sessionId ?? null,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.success === false) {
+        setCloseModal({
+          open: true,
+          error: json?.error || "Não foi possível solicitar o fechamento. Procure um atendente.",
+        });
+      } else {
+        setCloseModal({ open: true, duplicate: !!json?.duplicate });
+      }
+    } catch (e) {
+      setCloseModal({
+        open: true,
+        error: "Não foi possível solicitar o fechamento. Procure um atendente.",
+      });
+    } finally {
+      setIsRequestingClose(false);
+    }
+  };
 
   const isBeverage = (c: any) => {
     const name = c.name.toLowerCase();
@@ -168,13 +204,11 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         {validatedTable && (
           <div className="max-w-6xl mx-auto px-4 py-12 border-t border-[hsl(var(--site-border))] text-center">
             <button 
-              onClick={() => {
-                // Logic to request table closing
-                alert(`Solicitação enviada! Um atendente irá até a Mesa ${validatedTable.number}.`);
-              }}
-              className="px-10 py-5 rounded-full bg-destructive text-destructive-foreground font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-destructive/20"
+              onClick={requestTableClose}
+              disabled={isRequestingClose}
+              className="px-10 py-5 rounded-full bg-destructive text-destructive-foreground font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-destructive/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Fechar Mesa
+              {isRequestingClose ? "Enviando..." : "Fechar Mesa"}
             </button>
             <p className="mt-4 text-xs sm:text-sm text-[hsl(var(--site-muted-fg))] font-medium">
               Chame o atendente para finalizar sua conta na Mesa {validatedTable.number}
@@ -199,6 +233,45 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         deliveryZones={data.deliveryZones ?? []}
         restaurant={r}
       />
+
+      {closeModal?.open && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4"
+          onClick={() => setCloseModal(null)}
+        >
+          <div
+            className="bg-white text-neutral-900 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {closeModal.error ? (
+              <>
+                <h3 className="text-xl font-black uppercase tracking-wide mb-3">Não foi possível enviar</h3>
+                <p className="text-sm text-neutral-600">{closeModal.error}</p>
+              </>
+            ) : closeModal.duplicate ? (
+              <>
+                <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação já enviada</h3>
+                <p className="text-sm text-neutral-600">
+                  Uma solicitação de fechamento já foi enviada para a Mesa {validatedTable?.number}. Aguarde um atendente.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação enviada</h3>
+                <p className="text-sm text-neutral-600">
+                  Um atendente foi notificado de que você deseja fechar sua conta. Aguarde o atendimento.
+                </p>
+              </>
+            )}
+            <button
+              onClick={() => setCloseModal(null)}
+              className="mt-6 px-8 py-3 rounded-full bg-neutral-900 text-white font-black uppercase tracking-widest text-sm"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

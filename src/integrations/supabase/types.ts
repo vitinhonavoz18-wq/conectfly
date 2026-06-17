@@ -947,6 +947,98 @@ export type Database = {
         }
         Relationships: []
       }
+      table_close_requests: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          allow_additional_orders: boolean
+          created_at: string
+          current_total: number
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          notes: string | null
+          order_count: number
+          requested_at: string
+          requested_by_ip: string | null
+          restaurant_id: string
+          status: string
+          table_id: string
+          table_number: string
+          table_session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          allow_additional_orders?: boolean
+          created_at?: string
+          current_total?: number
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          order_count?: number
+          requested_at?: string
+          requested_by_ip?: string | null
+          restaurant_id: string
+          status?: string
+          table_id: string
+          table_number: string
+          table_session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          allow_additional_orders?: boolean
+          created_at?: string
+          current_total?: number
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          notes?: string | null
+          order_count?: number
+          requested_at?: string
+          requested_by_ip?: string | null
+          restaurant_id?: string
+          status?: string
+          table_id?: string
+          table_number?: string
+          table_session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_close_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_close_requests_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_close_requests_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_close_requests_table_session_id_fkey"
+            columns: ["table_session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       table_session_orders: {
         Row: {
           created_at: string
