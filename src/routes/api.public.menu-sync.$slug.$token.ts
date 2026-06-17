@@ -71,17 +71,19 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
         console.log(`MENU_SYNC_DEBUG (Route): final_result=success`);
 
         // Fetch menu data
-        const [catsRes, itemsRes, bevsRes, sizesRes] = await Promise.all([
+        const [catsRes, itemsRes, bevsRes, sizesRes, bevCatsRes] = await Promise.all([
           supabaseAdmin.from("menu_categories").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("menu_items").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("pizzeria_beverages").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
           supabaseAdmin.from("pizzeria_pizza_sizes").select("*").eq("pizzeria_id", restaurant.id).order("sort_order"),
+          supabaseAdmin.from("beverage_catalogs").select("*").eq("restaurant_id", restaurant.id).order("sort_order"),
         ]);
 
         const categories = catsRes.data || [];
         const productsRaw = itemsRes.data || [];
         const beverages = bevsRes.data || [];
         const pizzaSizes = sizesRes.data || [];
+        const beverageCatalogs = bevCatsRes.data || [];
 
         const isBorda = (c: any) => c.name.toLowerCase().includes("borda");
         const isAdicional = (c: any) => c.name.toLowerCase().includes("adicional") || c.name.toLowerCase().includes("extra");
@@ -120,7 +122,15 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
             flavors: [],
             sizes: pizzaSizes.map(s => ({ id: s.id, name: s.name, price: Number(s.price), max_flavors: s.max_flavors, slices: s.slices, active: s.is_active ?? true, sort_order: s.sort_order })),
             borders: borders.map(b => ({ id: b.id, name: b.name, price: b.price, active: b.is_active ?? true })),
-            drinks: beverages.map(b => ({ id: b.id, name: b.name, brand: b.brand, size: b.size, price: b.price, active: b.is_active ?? true })),
+            drinks: beverages.map(b => ({ id: b.id, name: b.name, brand: b.brand, size: b.size, price: b.price, active: b.is_active ?? true, catalog_id: b.catalog_id ?? null, image_url: b.image_url || "" })),
+            beverage_categories: beverageCatalogs.map(bc => ({
+              id: bc.id,
+              name: bc.name,
+              description: bc.description || "",
+              image_url: bc.image_url || "",
+              active: bc.active ?? true,
+              sort_order: bc.sort_order,
+            })),
             addons: additionals.map(a => ({ id: a.id, name: a.name, price: a.price, active: a.is_active ?? true })),
             normalized_products: [
               ...productsRaw.map(i => ({

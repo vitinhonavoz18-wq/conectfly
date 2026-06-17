@@ -17,7 +17,9 @@ interface Props {
  
 export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", beverages, beverageCatalogs }: Props) {
   const [active, setActive] = useState<string | null>(null);
+  const [activeBevCatalog, setActiveBevCatalog] = useState<string | null>(null);
   const BEV_ID = "__beverages__";
+  const BEV_UNCAT = "__bev_uncategorized__";
   
   const hasBeverages = beverages && beverages.length > 0;
   if (categories.length === 0 && !hasBeverages) return null;
@@ -129,21 +131,118 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
       <section id="cardapio" className="py-12 sm:py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <button
-            onClick={() => setActive(null)}
+            onClick={() => {
+              if (isBev && activeBevCatalog) {
+                setActiveBevCatalog(null);
+              } else {
+                setActive(null);
+                setActiveBevCatalog(null);
+              }
+            }}
             className="mb-6 px-6 py-2.5 site-btn-secondary !rounded-2xl text-xs sm:text-sm font-bold"
           >
-            ← Voltar às categorias
+            ← Voltar
           </button>
 
           {isBev ? (
-            <>
-              <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">
-                🍺 Bebidas
-              </h3>
-              <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
-                <SiteBeverageSection beverages={beverages!} catalogs={beverageCatalogs} restaurant={restaurant} />
-              </div>
-            </>
+            (() => {
+              const allBevs = beverages ?? [];
+              const cats = (beverageCatalogs ?? []).filter(c => allBevs.some(b => b.catalog_id === c.id));
+              const uncatBevs = allBevs.filter(b => !b.catalog_id || !cats.some(c => c.id === b.catalog_id));
+              const hasSubcats = cats.length > 0;
+
+              // Level 3 — show beverages of selected subcategory
+              if (activeBevCatalog) {
+                const selected = activeBevCatalog === BEV_UNCAT
+                  ? { id: BEV_UNCAT, name: "Outras Bebidas", description: null as string | null, image_url: null as string | null }
+                  : cats.find(c => c.id === activeBevCatalog);
+                const bevList = activeBevCatalog === BEV_UNCAT
+                  ? uncatBevs
+                  : allBevs.filter(b => b.catalog_id === activeBevCatalog);
+                return (
+                  <>
+                    {selected?.image_url ? (
+                      <div className="relative h-40 sm:h-56 rounded-2xl overflow-hidden mb-6 border border-[hsl(var(--site-border))]">
+                        <img src={selected.image_url} alt={selected.name} className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                        <h3 className="absolute bottom-4 left-4 text-3xl font-black text-white drop-shadow uppercase">{selected.name}</h3>
+                      </div>
+                    ) : (
+                      <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">{selected?.name}</h3>
+                    )}
+                    <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                      <SiteBeverageSection beverages={bevList} catalogs={[]} restaurant={restaurant} />
+                    </div>
+                  </>
+                );
+              }
+
+              // Level 2 — show beverage subcategory cards. Skip if no subcategories at all.
+              if (!hasSubcats) {
+                return (
+                  <>
+                    <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">🍺 Bebidas</h3>
+                    <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                      <SiteBeverageSection beverages={allBevs} catalogs={beverageCatalogs} restaurant={restaurant} />
+                    </div>
+                  </>
+                );
+              }
+
+              return (
+                <>
+                  <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">🍺 Bebidas</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 site-stagger">
+                    {cats.map((bc) => {
+                      const count = allBevs.filter(b => b.catalog_id === bc.id).length;
+                      return (
+                        <button
+                          key={bc.id}
+                          onClick={() => setActiveBevCatalog(bc.id)}
+                          className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                        >
+                          {bc.image_url ? (
+                            <img src={bc.image_url} alt={bc.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-[hsl(var(--site-muted))]">
+                              <span className="text-6xl opacity-60">🍺</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                          <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                            <h4 className="text-white font-black text-xl sm:text-2xl leading-tight drop-shadow uppercase tracking-tight">{bc.name}</h4>
+                            <p className="text-white/80 text-xs sm:text-sm mt-1 font-medium">
+                              {count} {count === 1 ? "produto" : "produtos"}
+                            </p>
+                            {bc.description && (
+                              <p className="text-white/70 text-[11px] sm:text-xs mt-1 line-clamp-2">{bc.description}</p>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {uncatBevs.length > 0 && (
+                      <button
+                        key={BEV_UNCAT}
+                        onClick={() => setActiveBevCatalog(BEV_UNCAT)}
+                        className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-[hsl(var(--site-muted))]">
+                          <span className="text-6xl opacity-60">🥤</span>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                          <h4 className="text-white font-black text-xl sm:text-2xl leading-tight drop-shadow uppercase tracking-tight">Outras Bebidas</h4>
+                          <p className="text-white/80 text-xs sm:text-sm mt-1 font-medium">
+                            {uncatBevs.length} {uncatBevs.length === 1 ? "produto" : "produtos"}
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </>
+              );
+            })()
           ) : selectedCat ? (
             <>
               {selectedCat.image_url && (
