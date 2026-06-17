@@ -43,6 +43,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const beveragesPosition = r.site_settings?.beverages_position || "end";
+  const cardsCategories = data.categories.filter((c) => !isBordas(c) && !isBeverage(c));
 
 
   return (
@@ -70,35 +71,45 @@ export function BlackTemplate({ data }: { data: SiteData }) {
           />
         </div>
         
-        <div id="pizzas-container">
-          <SitePizzaSection 
-            categories={data.categories} 
-            restaurant={r} 
-            bordasCategory={bordasCategory}
-            beverages={data.beverages ?? []}
-            beverageCatalogs={data.beverageCatalogs}
-          />
-        </div>
-
-        
-
-        {showCombos && (
+        {entryMode === "cards" ? (
           <div>
-            <SiteComboSection groups={data.comboGroups} />
+            <SiteMenuSection
+              categories={cardsCategories}
+              restaurant={r}
+              entryMode="cards"
+              beverages={data.beverages ?? []}
+              beverageCatalogs={data.beverageCatalogs}
+            />
           </div>
+        ) : (
+          <>
+            <div id="pizzas-container">
+              <SitePizzaSection
+                categories={data.categories}
+                restaurant={r}
+                bordasCategory={bordasCategory}
+                beverages={data.beverages ?? []}
+                beverageCatalogs={data.beverageCatalogs}
+              />
+            </div>
+
+            {showCombos && (
+              <div>
+                <SiteComboSection groups={data.comboGroups} />
+              </div>
+            )}
+
+            <div>
+              <SiteMenuSection
+                categories={nonPizzaCategories}
+                restaurant={r}
+                entryMode={entryMode}
+                beverages={!hasPizzas ? (data.beverages ?? []) : []}
+                beverageCatalogs={data.beverageCatalogs}
+              />
+            </div>
+          </>
         )}
-
-        
-
-        <div>
-          <SiteMenuSection 
-            categories={nonPizzaCategories} 
-            restaurant={r} 
-            entryMode={entryMode}
-            beverages={!hasPizzas ? (data.beverages ?? []) : []}
-            beverageCatalogs={data.beverageCatalogs}
-          />
-        </div>
 
         
       </main>
