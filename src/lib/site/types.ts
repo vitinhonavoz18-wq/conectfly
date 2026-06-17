@@ -125,7 +125,7 @@ export interface RestaurantRow {
   site_settings?: {
     hero_button_text?: string;
     show_hero_button?: boolean;
-    entry_mode?: "navigation" | "direct";
+    entry_mode?: "navigation" | "direct" | "cards";
     combos_visibility?: "auto" | "always" | "hide";
     show_categories_section?: boolean;
     beverages_visibility?: boolean;

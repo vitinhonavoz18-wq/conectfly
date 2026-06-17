@@ -9,7 +9,7 @@ import { SiteBeverageSection } from "./SiteBeverageSection";
 interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
-  entryMode?: "navigation" | "direct";
+  entryMode?: "navigation" | "direct" | "cards";
   beverages?: BeverageRow[];
   beverageCatalogs?: BeverageCatalogRow[];
 }
@@ -17,6 +17,7 @@ interface Props {
  
 export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", beverages, beverageCatalogs }: Props) {
   const [active, setActive] = useState<string | null>(null);
+  const BEV_ID = "__beverages__";
   
   const hasBeverages = beverages && beverages.length > 0;
   if (categories.length === 0 && !hasBeverages) return null;
@@ -37,6 +38,159 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
 
   const clickableCategories = visibleCategories.filter(c => c.show_as_clickable_category !== false);
   const directCategories = visibleCategories.filter(c => c.show_directly_in_menu !== false);
+
+  // ============ NEW LAYOUT: Category Cards ============
+  if (entryMode === "cards") {
+    const hasBev = !!(beverages && beverages.length > 0);
+    // Auto-open if single category and no beverages
+    const totalCards = clickableCategories.length + (hasBev ? 1 : 0);
+    const autoActive =
+      active ??
+      (totalCards === 1
+        ? clickableCategories[0]?.id ?? (hasBev ? BEV_ID : null)
+        : null);
+
+    if (!autoActive) {
+      return (
+        <section id="cardapio" className="py-12 sm:py-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-10 sm:mb-14">
+              <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))]">
+                Nosso <span className="text-[hsl(var(--site-primary))]">Cardápio</span>
+              </h2>
+              <p className="text-[hsl(var(--site-muted-fg))] max-w-xl mx-auto text-sm sm:text-base px-4">
+                Escolha uma categoria para começar.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 site-stagger">
+              {clickableCategories.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => setActive(c.id)}
+                  className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                >
+                  {c.image_url ? (
+                    <img
+                      src={c.image_url}
+                      alt={c.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))]">
+                      <ImageIcon className="h-14 w-14 opacity-40" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                    <h3 className="text-white font-black text-xl sm:text-2xl leading-tight drop-shadow uppercase tracking-tight">
+                      {c.icon ? `${c.icon} ` : ""}
+                      {c.name}
+                    </h3>
+                    <p className="text-white/80 text-xs sm:text-sm mt-1 font-medium">
+                      {c.items.length} {c.items.length === 1 ? "produto" : "produtos"}
+                    </p>
+                  </div>
+                </button>
+              ))}
+              {hasBev && (
+                <button
+                  key={BEV_ID}
+                  onClick={() => setActive(BEV_ID)}
+                  className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                >
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-[hsl(var(--site-muted))]">
+                    <span className="text-7xl opacity-60">🍺</span>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                    <h3 className="text-white font-black text-xl sm:text-2xl leading-tight drop-shadow uppercase tracking-tight">
+                      🍺 Bebidas
+                    </h3>
+                    <p className="text-white/80 text-xs sm:text-sm mt-1 font-medium">
+                      {beverages!.length} {beverages!.length === 1 ? "item" : "itens"}
+                    </p>
+                  </div>
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    // Selected card view
+    const selectedCat = autoActive === BEV_ID ? null : clickableCategories.find((c) => c.id === autoActive) ?? null;
+    const isBev = autoActive === BEV_ID;
+    const canGoBack = totalCards > 1;
+
+    return (
+      <section id="cardapio" className="py-12 sm:py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          {canGoBack && (
+            <button
+              onClick={() => setActive(null)}
+              className="mb-6 px-6 py-2.5 site-btn-secondary !rounded-2xl text-xs sm:text-sm font-bold"
+            >
+              ← Voltar às categorias
+            </button>
+          )}
+
+          {isBev ? (
+            <>
+              <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">
+                🍺 Bebidas
+              </h3>
+              <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
+                <SiteBeverageSection beverages={beverages!} catalogs={beverageCatalogs} restaurant={restaurant} />
+              </div>
+            </>
+          ) : selectedCat ? (
+            <>
+              {selectedCat.image_url && (
+                <div className="relative h-40 sm:h-56 rounded-2xl overflow-hidden mb-6 border border-[hsl(var(--site-border))]">
+                  <img src={selectedCat.image_url} alt={selectedCat.name} className="absolute inset-0 w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                  <h3 className="absolute bottom-4 left-4 text-3xl font-black text-white drop-shadow uppercase">
+                    {selectedCat.icon ? `${selectedCat.icon} ` : ""}
+                    {selectedCat.name}
+                  </h3>
+                </div>
+              )}
+              {!selectedCat.image_url && (
+                <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">
+                  {selectedCat.icon ? `${selectedCat.icon} ` : ""}
+                  {selectedCat.name}
+                </h3>
+              )}
+              {selectedCat.is_pizza ? (
+                <SitePizzaBuilder
+                  category={selectedCat}
+                  restaurant={restaurant}
+                  beverages={beverages}
+                  beverageCatalogs={beverageCatalogs}
+                />
+              ) : selectedCat.items.length === 0 ? (
+                <div className="py-16 text-center text-[hsl(var(--site-muted-fg))]">
+                  Nenhum produto disponível nesta categoria.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 site-stagger">
+                  {selectedCat.items.map((it) => (
+                    <div key={it.id} className="h-full">
+                      <SiteMenuItemCard item={it} restaurant={restaurant} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+  // ============ END NEW LAYOUT ============
 
   const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 site-stagger">
