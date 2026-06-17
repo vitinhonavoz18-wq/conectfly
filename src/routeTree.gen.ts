@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
+import { Route as ApiPublicTableCloseRequestRouteImport } from './routes/api/public/table-close-request'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/public/open-table-session'
 import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
@@ -52,6 +53,12 @@ const ApiMenuSyncRoute = ApiMenuSyncRouteImport.update({
   path: '/api/menu-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicTableCloseRequestRoute =
+  ApiPublicTableCloseRequestRouteImport.update({
+    id: '/api/public/table-close-request',
+    path: '/api/public/table-close-request',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSubmitOrderRoute = ApiPublicSubmitOrderRouteImport.update({
   id: '/api/public/submit-order',
   path: '/api/public/submit-order',
@@ -102,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
+  '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
   '/api/public/menu-sync/$slug/$token': typeof ApiPublicMenuSyncSlugTokenRoute
   '/api/public/pizzerias/$slug/menu-sync': typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -116,6 +124,7 @@ export interface FileRoutesByTo {
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
+  '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
   '/api/public/menu-sync/$slug/$token': typeof ApiPublicMenuSyncSlugTokenRoute
   '/api/public/pizzerias/$slug/menu-sync': typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -132,6 +141,7 @@ export interface FileRoutesById {
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
+  '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
   '/api/public/menu-sync/$slug/$token': typeof ApiPublicMenuSyncSlugTokenRoute
   '/api/public/pizzerias/$slug/menu-sync': typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/api/menu-sync/$'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
+    | '/api/public/table-close-request'
     | '/api/public/menu-sync/$slug/$token'
     | '/api/public/pizzerias/$slug/menu-sync'
   fileRoutesByTo: FileRoutesByTo
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/api/menu-sync/$'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
+    | '/api/public/table-close-request'
     | '/api/public/menu-sync/$slug/$token'
     | '/api/public/pizzerias/$slug/menu-sync'
   id:
@@ -177,6 +189,7 @@ export interface FileRouteTypes {
     | '/api/menu-sync/$'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
+    | '/api/public/table-close-request'
     | '/api/public/menu-sync/$slug/$token'
     | '/api/public/pizzerias/$slug/menu-sync'
   fileRoutesById: FileRoutesById
@@ -189,6 +202,7 @@ export interface RootRouteChildren {
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiPublicOpenTableSessionRoute: typeof ApiPublicOpenTableSessionRoute
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
+  ApiPublicTableCloseRequestRoute: typeof ApiPublicTableCloseRequestRoute
   ApiPublicMenuSyncSlugTokenRoute: typeof ApiPublicMenuSyncSlugTokenRoute
   ApiPublicPizzeriasSlugMenuSyncRoute: typeof ApiPublicPizzeriasSlugMenuSyncRoute
 }
@@ -235,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/api/menu-sync'
       fullPath: '/api/menu-sync'
       preLoaderRoute: typeof ApiMenuSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/table-close-request': {
+      id: '/api/public/table-close-request'
+      path: '/api/public/table-close-request'
+      fullPath: '/api/public/table-close-request'
+      preLoaderRoute: typeof ApiPublicTableCloseRequestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/submit-order': {
@@ -325,6 +346,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiPublicOpenTableSessionRoute: ApiPublicOpenTableSessionRoute,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
+  ApiPublicTableCloseRequestRoute: ApiPublicTableCloseRequestRoute,
   ApiPublicMenuSyncSlugTokenRoute: ApiPublicMenuSyncSlugTokenRoute,
   ApiPublicPizzeriasSlugMenuSyncRoute: ApiPublicPizzeriasSlugMenuSyncRoute,
 }
