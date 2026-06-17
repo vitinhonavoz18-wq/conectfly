@@ -176,6 +176,7 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
 
     try {
       const finalCategoryName = categoryName.trim() || "Nova Categoria";
+      const categoryImage = (data as any).image_url || (data as any).imagem || (data as any).image || null;
       console.log(`[MenuImport] Iniciando importação para categoria: ${finalCategoryName} (${categoryType})`);
       
       const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
@@ -200,7 +201,8 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
           show_on_public_site: showOnPublic,
           show_directly_in_menu: showDirectly,
           allow_cart_addition: allowCart,
-          type: categoryType
+          type: categoryType,
+          ...(categoryImage ? { image_url: categoryImage } : {}),
         }).select().single();
         if (catErr) throw catErr;
         mainCat = newCat;
