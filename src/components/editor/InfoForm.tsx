@@ -599,6 +599,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
               >
                 <option value="navigation">Navegação por Categorias (Clique para abrir)</option>
                 <option value="direct">Exibição Direta (Scroll infinito)</option>
+                <option value="cards">Cards de Categoria (Novo)</option>
               </select>
               <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-tight">
                 No modo direto, todos os produtos aparecem um abaixo do outro.
@@ -822,6 +823,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
               >
                 <option value="navigation">Navegação por botão (modelo antigo)</option>
                 <option value="direct">Exibir cardápio direto (novo padrão)</option>
+                <option value="cards">Cards de Categoria (Novo)</option>
               </select>
             </Field>
             
