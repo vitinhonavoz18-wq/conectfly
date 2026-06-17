@@ -113,7 +113,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                     </p>
                   </div>
                 </button>
-              ))}
+              )}
             </div>
           </div>
         </section>
