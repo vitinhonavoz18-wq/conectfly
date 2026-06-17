@@ -42,15 +42,8 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   // ============ NEW LAYOUT: Category Cards ============
   if (entryMode === "cards") {
     const hasBev = !!(beverages && beverages.length > 0);
-    // Auto-open if single category and no beverages
-    const totalCards = clickableCategories.length + (hasBev ? 1 : 0);
-    const autoActive =
-      active ??
-      (totalCards === 1
-        ? clickableCategories[0]?.id ?? (hasBev ? BEV_ID : null)
-        : null);
-
-    if (!autoActive) {
+    // No auto-open: always show cards first, even with a single category.
+    if (!active) {
       return (
         <section id="cardapio" className="py-12 sm:py-20 px-4">
           <div className="max-w-6xl mx-auto">
@@ -63,7 +56,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 site-stagger">
-              {clickableCategories.map((c) => (
+              {clickableCategories.map((c) => {
+                const count = c.is_pizza
+                  ? c.items.length
+                  : c.items.length;
+                return (
                 <button
                   key={c.id}
                   onClick={() => setActive(c.id)}
@@ -89,11 +86,15 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                       {c.name}
                     </h3>
                     <p className="text-white/80 text-xs sm:text-sm mt-1 font-medium">
-                      {c.items.length} {c.items.length === 1 ? "produto" : "produtos"}
+                      {count} {count === 1 ? (c.is_pizza ? "sabor" : "produto") : (c.is_pizza ? "sabores" : "produtos")}
                     </p>
+                    {c.description && (
+                      <p className="text-white/70 text-[11px] sm:text-xs mt-1 line-clamp-2">{c.description}</p>
+                    )}
                   </div>
                 </button>
-              ))}
+                );
+              })}
               {hasBev && (
                 <button
                   key={BEV_ID}
@@ -120,22 +121,19 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
       );
     }
 
-    // Selected card view
-    const selectedCat = autoActive === BEV_ID ? null : clickableCategories.find((c) => c.id === autoActive) ?? null;
-    const isBev = autoActive === BEV_ID;
-    const canGoBack = totalCards > 1;
+    // Selected card view (lazy-rendered: products only mount after a card click)
+    const selectedCat = active === BEV_ID ? null : clickableCategories.find((c) => c.id === active) ?? null;
+    const isBev = active === BEV_ID;
 
     return (
       <section id="cardapio" className="py-12 sm:py-20 px-4">
         <div className="max-w-6xl mx-auto">
-          {canGoBack && (
-            <button
-              onClick={() => setActive(null)}
-              className="mb-6 px-6 py-2.5 site-btn-secondary !rounded-2xl text-xs sm:text-sm font-bold"
-            >
-              ← Voltar às categorias
-            </button>
-          )}
+          <button
+            onClick={() => setActive(null)}
+            className="mb-6 px-6 py-2.5 site-btn-secondary !rounded-2xl text-xs sm:text-sm font-bold"
+          >
+            ← Voltar às categorias
+          </button>
 
           {isBev ? (
             <>

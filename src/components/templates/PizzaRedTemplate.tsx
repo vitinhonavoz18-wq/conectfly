@@ -43,6 +43,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const beveragesPosition = r.site_settings?.beverages_position || "end";
+  const cardsCategories = data.categories.filter((c) => !isBordas(c) && !isBeverage(c));
 
 
   return (
@@ -69,35 +70,45 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             combosVisibility={combosVisibility}
           />
         </div>
-        <div id="pizzas-container" className="py-12 bg-[hsl(var(--site-bg))]">
-          <SitePizzaSection 
-            categories={data.categories} 
-            restaurant={r} 
-            bordasCategory={bordasCategory}
-            beverages={data.beverages ?? []}
-            beverageCatalogs={data.beverageCatalogs}
-          />
-        </div>
-
-        
-
-        {showCombos && (
-          <div className="bg-[hsl(var(--site-muted))] py-12">
-            <SiteComboSection groups={data.comboGroups} />
+        {entryMode === "cards" ? (
+          <div className="bg-[hsl(var(--site-bg))] py-12">
+            <SiteMenuSection
+              categories={cardsCategories}
+              restaurant={r}
+              entryMode="cards"
+              beverages={data.beverages ?? []}
+              beverageCatalogs={data.beverageCatalogs}
+            />
           </div>
-        )}
+        ) : (
+          <>
+            <div id="pizzas-container" className="py-12 bg-[hsl(var(--site-bg))]">
+              <SitePizzaSection
+                categories={data.categories}
+                restaurant={r}
+                bordasCategory={bordasCategory}
+                beverages={data.beverages ?? []}
+                beverageCatalogs={data.beverageCatalogs}
+              />
+            </div>
 
-        
-        
-        <div className="bg-[hsl(var(--site-bg))] py-12">
-          <SiteMenuSection 
-            categories={nonPizzaCategories} 
-            restaurant={r} 
-            entryMode={entryMode}
-            beverages={!hasPizzas ? (data.beverages ?? []) : []}
-            beverageCatalogs={data.beverageCatalogs}
-          />
-        </div>
+            {showCombos && (
+              <div className="bg-[hsl(var(--site-muted))] py-12">
+                <SiteComboSection groups={data.comboGroups} />
+              </div>
+            )}
+
+            <div className="bg-[hsl(var(--site-bg))] py-12">
+              <SiteMenuSection
+                categories={nonPizzaCategories}
+                restaurant={r}
+                entryMode={entryMode}
+                beverages={!hasPizzas ? (data.beverages ?? []) : []}
+                beverageCatalogs={data.beverageCatalogs}
+              />
+            </div>
+          </>
+        )}
 
         
       </main>
