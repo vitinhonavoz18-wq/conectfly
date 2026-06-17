@@ -37,6 +37,8 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
 
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
+  const entryMode = r.site_settings?.entry_mode || "navigation";
+  const cardsCategories = allCategories.filter((c) => !isBeverage(c));
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra font-sans">
@@ -83,6 +85,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         </div>
 
         {/* Categories Horizontal Nav */}
+        {entryMode !== "cards" && (
         <div className="sticky top-16 sm:top-20 z-30 bg-[hsl(var(--site-bg)/0.8)] backdrop-blur-md border-b border-[hsl(var(--site-border))] py-3 overflow-x-auto scrollbar-hide">
           <div className="max-w-6xl mx-auto px-4 flex gap-2">
             <button
@@ -121,8 +124,18 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
             ))}
           </div>
         </div>
+        )}
 
         {/* Menu Sections */}
+        {entryMode === "cards" ? (
+          <SiteMenuSection
+            categories={cardsCategories as any}
+            restaurant={r}
+            entryMode="cards"
+            beverages={data.beverages ?? []}
+            beverageCatalogs={data.beverageCatalogs}
+          />
+        ) : (
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-12 sm:space-y-20">
           {navCategories.map(cat => (
             <section key={cat.id} id={`category-${cat.id}`} className="scroll-mt-32">
@@ -149,6 +162,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
              </section>
           )}
         </div>
+        )}
 
         {/* Table Closing Request Button */}
         {validatedTable && (
