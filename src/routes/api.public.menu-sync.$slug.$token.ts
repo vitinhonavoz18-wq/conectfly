@@ -103,7 +103,7 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
             name: restaurant.name
           },
           menu: {
-            categories: categories.map(c => ({ id: c.id, name: c.name, active: c.is_active ?? true, sort_order: c.sort_order, is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes })),
+            categories: categories.map(c => ({ id: c.id, name: c.name, image_url: c.image_url || "", active: c.is_active ?? true, sort_order: c.sort_order, is_pizza: c.is_pizza, pizza_sizes: c.pizza_sizes })),
             products: productsRaw.map(i => ({ 
               id: i.id, 
               category_id: i.category_id, 
@@ -138,7 +138,7 @@ export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
                 name: b.name,
                 description: b.brand || "",
                 price: b.price,
-                image_url: "",
+                image_url: b.image_url || "",
                 category_name: "Bebidas",
                 type: "drink",
                 is_active: b.is_active ?? true

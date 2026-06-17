@@ -176,6 +176,7 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
 
     try {
       const finalCategoryName = categoryName.trim() || "Nova Categoria";
+      const categoryImage = (data as any).image_url || (data as any).imagem || (data as any).image || null;
       console.log(`[MenuImport] Iniciando importação para categoria: ${finalCategoryName} (${categoryType})`);
       
       const { data: existingCats } = await supabase.from("menu_categories").select("*").eq("restaurant_id", restaurantId);
@@ -200,7 +201,8 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
           show_on_public_site: showOnPublic,
           show_directly_in_menu: showDirectly,
           allow_cart_addition: allowCart,
-          type: categoryType
+          type: categoryType,
+          ...(categoryImage ? { image_url: categoryImage } : {}),
         }).select().single();
         if (catErr) throw catErr;
         mainCat = newCat;
@@ -260,6 +262,7 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
         const itemName = getItemName(item);
         const itemCode = getItemCode(item);
         const itemPrice = getPrice(item);
+        const itemImage = item.image_url || item.imagem || item.foto || item.image || null;
         
         const existing = existingItems?.find(ex => 
           (itemCode && ex.name.includes(`[${itemCode}]`)) || 
@@ -284,6 +287,7 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
               description: description,
               price: categoryType === "PIZZA" ? 0 : itemPrice,
               sort_order: i,
+              ...(itemImage ? { image_url: itemImage } : {}),
             })
             .eq("id", existing.id);
         } else {
@@ -297,7 +301,8 @@ export function MenuImport({ restaurantId, onSuccess }: Props) {
               price: categoryType === "PIZZA" ? 0 : itemPrice,
               sort_order: i,
               is_special: false,
-              special_extra: 0
+              special_extra: 0,
+              ...(itemImage ? { image_url: itemImage } : {}),
             });
         }
       }
