@@ -252,14 +252,14 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
               <>
                 <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação já enviada</h3>
                 <p className="text-sm text-neutral-600">
-                  Uma solicitação de fechamento já foi enviada para a Mesa {validatedTable?.number}. Aguarde um atendente.
+                  Uma solicitação de fechamento já foi enviada para a Mesa {validatedTable?.number}. Aguarde o atendimento.
                 </p>
               </>
             ) : (
               <>
                 <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação enviada</h3>
                 <p className="text-sm text-neutral-600">
-                  Um atendente foi notificado de que você deseja fechar sua conta. Aguarde o atendimento.
+                  Um atendente foi notificado de que você deseja fechar sua mesa. Por favor, aguarde o atendimento.
                 </p>
               </>
             )}
