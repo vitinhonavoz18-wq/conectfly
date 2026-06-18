@@ -30,10 +30,57 @@ function keyOf(itemId: string, sizeLabel?: string) {
   return `${itemId}-${sizeLabel ?? ""}`;
 }
 
+const TABLE_STORAGE_KEY = "sf:validated_table";
+const CART_STORAGE_KEY = "sf:cart_items";
+
+function readStoredTable(): ValidatedTable | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(TABLE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.token === "string" && typeof parsed.number === "string") {
+      return parsed as ValidatedTable;
+    }
+  } catch {}
+  return null;
+}
+
+function readStoredItems(): CartLine[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as CartLine[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartLine[]>([]);
+  const [items, setItems] = useState<CartLine[]>(() => readStoredItems());
   const [isCartOpen, setCartOpen] = useState(false);
-  const [validatedTable, setValidatedTable] = useState<ValidatedTable | null>(null);
+  const [validatedTable, setValidatedTableState] = useState<ValidatedTable | null>(() => readStoredTable());
+
+  // Persist validated table across refreshes (so QR scan survives reload).
+  const setValidatedTable = (table: ValidatedTable | null) => {
+    setValidatedTableState(table);
+    if (typeof window === "undefined") return;
+    try {
+      if (table) window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(table));
+      else window.localStorage.removeItem(TABLE_STORAGE_KEY);
+    } catch {}
+  };
+
+  // Persist cart items across refreshes.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (items.length) window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+      else window.localStorage.removeItem(CART_STORAGE_KEY);
+    } catch {}
+  }, [items]);
 
   const addLine: CartCtx["addLine"] = (line, qty = 1) => {
     setItems((cur) => {
