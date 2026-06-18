@@ -81,14 +81,30 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if ((mode === "table" || params.has("table_token") || params.has("token")) && token) {
       // Evitar abrir novamente se já estiver aberta a mesma mesa
       if (tableSessionOpened && lastOpenedTableToken === token) return;
-      
+
+      // Após refresh: se o contexto/localStorage já tem a mesa validada com o
+      // mesmo token, restauramos sem chamar o FlyControl de novo (a segunda
+      // chamada de open-table-session frequentemente retorna `invalid_table`).
+      if (validatedTable && validatedTable.token === token) {
+        console.log("TABLE_RESTORED_FROM_STORAGE", validatedTable);
+        setTableId(validatedTable.id);
+        setTableNumber(validatedTable.number);
+        setTableToken(validatedTable.token);
+        setTableSessionId(validatedTable.sessionId || null);
+        setTableSessionOpened(true);
+        setLastOpenedTableToken(token);
+        setCurrentTableSessionId(validatedTable.sessionId || null);
+        setOrderType("table");
+        return;
+      }
+
       console.log("DETECTED_TABLE_PARAMS:", { token, mesa });
-      handleValidateTable(token);
+      handleValidateTable(token, null, mesa);
     } else if (mesa) {
       setTableNumber(mesa);
       setOrderType("table");
     }
-  }, [restaurant, tableSessionOpened, lastOpenedTableToken]); // Re-run when restaurant is loaded or session state changes
+  }, [restaurant, tableSessionOpened, lastOpenedTableToken, validatedTable]); // Re-run when restaurant is loaded or session state changes
 
   // Synchronize context validatedTable with local state
   useEffect(() => {
