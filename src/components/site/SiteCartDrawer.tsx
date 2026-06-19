@@ -812,6 +812,33 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto overscroll-contain bg-[hsl(var(--site-bg))] scroll-smooth"
           >
+            {validatedTable && step !== "confirmation" && (
+              <div className="mx-4 mt-4 rounded-2xl border border-[hsl(var(--site-primary)/0.35)] bg-[hsl(var(--site-primary)/0.08)] p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-primary))]">
+                      Mesa {validatedTable.number}
+                    </div>
+                    <div className="text-[11px] text-[hsl(var(--site-muted-fg))] mt-1">
+                      Pedidos realizados: <span className="font-bold text-[hsl(var(--site-fg))]">{sessionOrderCount}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] uppercase tracking-widest text-[hsl(var(--site-muted-fg))] font-bold">
+                      Total da Mesa
+                    </div>
+                    <div className="text-xl font-black tracking-tighter text-[hsl(var(--site-fg))]">
+                      {formatBRL(sessionConsumed + totalPrice)}
+                    </div>
+                    {totalPrice > 0 && sessionConsumed > 0 && (
+                      <div className="text-[10px] text-[hsl(var(--site-muted-fg))] mt-0.5">
+                        Consumido {formatBRL(sessionConsumed)} + carrinho {formatBRL(totalPrice)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             {step === "cart" ? (
               <div className="p-4 space-y-3 animate-in fade-in slide-in-from-left-4 duration-300">
                 {items.length === 0 ? (
