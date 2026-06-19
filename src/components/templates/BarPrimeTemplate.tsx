@@ -9,7 +9,7 @@ import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBa
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
-  const { isCartOpen, setCartOpen, validatedTable, totalItems } = useCart();
+  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
@@ -19,22 +19,24 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     if (!validatedTable || isRequestingClose) return;
     setIsRequestingClose(true);
     try {
-      const res = await fetch("/api/public/table-close-request", {
+      const res = await fetch("https://flycontrol.conectfly.com.br/api/public/request-close-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          restaurant_id: r.id,
-          table_id: validatedTable.id,
-          table_token: validatedTable.token,
+          restaurant_slug: (r as any).slug,
           table_number: validatedTable.number,
-          table_session_id: validatedTable.sessionId ?? null,
+          table_token: validatedTable.token,
+          customer_name: (validatedTable as any).customerName ?? null,
+          session_id: validatedTable.sessionId ?? null,
+          current_total: totalPrice,
+          order_count: items.length,
         }),
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json?.success === false) {
         setCloseModal({
           open: true,
-          error: json?.error || "Não foi possível solicitar o fechamento. Procure um atendente.",
+          error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
         });
       } else {
         setCloseModal({ open: true, duplicate: !!json?.duplicate });
@@ -42,7 +44,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     } catch (e) {
       setCloseModal({
         open: true,
-        error: "Não foi possível solicitar o fechamento. Procure um atendente.",
+        error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
       });
     } finally {
       setIsRequestingClose(false);
