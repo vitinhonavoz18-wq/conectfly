@@ -79,13 +79,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const token = params.get("table_token") || params.get("token");
 
     if ((mode === "table" || params.has("table_token") || params.has("token")) && token) {
+      const normalizedUrlToken = token.trim();
+      const storedToken = validatedTable?.token?.trim();
+
       // Evitar abrir novamente se já estiver aberta a mesma mesa
-      if (tableSessionOpened && lastOpenedTableToken === token) return;
+      if (tableSessionOpened && lastOpenedTableToken?.trim() === normalizedUrlToken) return;
 
       // Após refresh: se o contexto/localStorage já tem a mesa validada com o
       // mesmo token, restauramos sem chamar o FlyControl de novo (a segunda
       // chamada de open-table-session frequentemente retorna `invalid_table`).
-      if (validatedTable && validatedTable.token === token) {
+      if (validatedTable && storedToken === normalizedUrlToken) {
         console.log("TABLE_RESTORED_FROM_STORAGE", validatedTable);
         setTableId(validatedTable.id);
         setTableNumber(validatedTable.number);
@@ -298,8 +301,30 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         setIsScanning(false);
         return true;
       } else {
-        // Se falhar a abertura de sessão, pode ser token inválido ou mesa inativa
-        const errorMsg = sessionResult.message || "QR Code de mesa inválido ou mesa inativa. Procure um atendente.";
+        // Fallback: se já temos uma mesa validada armazenada com o mesmo token,
+        // restauramos do storage em vez de mostrar o erro bruto do FlyControl
+        // (ex.: "invalid_table" quando a sessão já estava aberta).
+        const stored = validatedTable;
+        if (stored && stored.token?.trim() === token.trim()) {
+          console.log("TABLE_RESTORED_FROM_STORAGE_AFTER_FAILURE", stored);
+          setTableId(stored.id);
+          setTableNumber(stored.number);
+          setTableToken(stored.token);
+          setTableSessionId(stored.sessionId || null);
+          setTableSessionOpened(true);
+          setLastOpenedTableToken(stored.token);
+          setCurrentTableSessionId(stored.sessionId || null);
+          setOrderType("table");
+          setIsScanning(false);
+          return true;
+        }
+
+        // Nunca mostrar códigos brutos do FlyControl (ex.: "invalid_table") ao cliente.
+        const raw = (sessionResult.message || "").toString().toLowerCase();
+        const isRawCode = /^[a-z_]+$/.test(raw);
+        const errorMsg = !raw || isRawCode
+          ? "Não foi possível identificar a mesa. Procure um atendente."
+          : sessionResult.message!;
         toast.error(errorMsg, { id: "qr-error" });
         return false;
       }
