@@ -79,13 +79,16 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const token = params.get("table_token") || params.get("token");
 
     if ((mode === "table" || params.has("table_token") || params.has("token")) && token) {
+      const normalizedUrlToken = token.trim();
+      const storedToken = validatedTable?.token?.trim();
+
       // Evitar abrir novamente se já estiver aberta a mesma mesa
-      if (tableSessionOpened && lastOpenedTableToken === token) return;
+      if (tableSessionOpened && lastOpenedTableToken?.trim() === normalizedUrlToken) return;
 
       // Após refresh: se o contexto/localStorage já tem a mesa validada com o
       // mesmo token, restauramos sem chamar o FlyControl de novo (a segunda
       // chamada de open-table-session frequentemente retorna `invalid_table`).
-      if (validatedTable && validatedTable.token === token) {
+      if (validatedTable && storedToken === normalizedUrlToken) {
         console.log("TABLE_RESTORED_FROM_STORAGE", validatedTable);
         setTableId(validatedTable.id);
         setTableNumber(validatedTable.number);
