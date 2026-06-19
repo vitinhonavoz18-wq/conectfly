@@ -732,6 +732,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         // Limpar carrinho e encerrar apenas APÓS confirmação
         clear();
         
+        // Registrar consumo acumulado para a sessão de mesa atual.
+        if (orderType === "table" && validatedTable) {
+          addSessionOrder(grandTotal);
+        }
+
         if (orderType === "pickup" || orderType === "table") {
           setFinishedOrder(orderData);
           setStep("confirmation");
