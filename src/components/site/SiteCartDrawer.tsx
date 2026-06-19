@@ -301,8 +301,30 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         setIsScanning(false);
         return true;
       } else {
-        // Se falhar a abertura de sessão, pode ser token inválido ou mesa inativa
-        const errorMsg = sessionResult.message || "QR Code de mesa inválido ou mesa inativa. Procure um atendente.";
+        // Fallback: se já temos uma mesa validada armazenada com o mesmo token,
+        // restauramos do storage em vez de mostrar o erro bruto do FlyControl
+        // (ex.: "invalid_table" quando a sessão já estava aberta).
+        const stored = validatedTable;
+        if (stored && stored.token?.trim() === token.trim()) {
+          console.log("TABLE_RESTORED_FROM_STORAGE_AFTER_FAILURE", stored);
+          setTableId(stored.id);
+          setTableNumber(stored.number);
+          setTableToken(stored.token);
+          setTableSessionId(stored.sessionId || null);
+          setTableSessionOpened(true);
+          setLastOpenedTableToken(stored.token);
+          setCurrentTableSessionId(stored.sessionId || null);
+          setOrderType("table");
+          setIsScanning(false);
+          return true;
+        }
+
+        // Nunca mostrar códigos brutos do FlyControl (ex.: "invalid_table") ao cliente.
+        const raw = (sessionResult.message || "").toString().toLowerCase();
+        const isRawCode = /^[a-z_]+$/.test(raw);
+        const errorMsg = !raw || isRawCode
+          ? "Não foi possível identificar a mesa. Procure um atendente."
+          : sessionResult.message!;
         toast.error(errorMsg, { id: "qr-error" });
         return false;
       }
