@@ -9,7 +9,7 @@ import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBa
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
-  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items } = useCart();
+  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
@@ -213,6 +213,31 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         {/* Table Closing Request Button */}
         {validatedTable && (
           <div className="max-w-6xl mx-auto px-4 py-12 border-t border-[hsl(var(--site-border))] text-center">
+            <div className="mx-auto mb-8 max-w-md rounded-2xl border border-[hsl(var(--site-primary)/0.35)] bg-[hsl(var(--site-primary)/0.08)] p-5 text-left">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[hsl(var(--site-primary))]">
+                    Mesa {validatedTable.number}
+                  </div>
+                  <div className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
+                    Pedidos realizados: <span className="font-bold text-[hsl(var(--site-fg))]">{sessionOrderCount}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] uppercase tracking-widest text-[hsl(var(--site-muted-fg))] font-bold">
+                    Total da Mesa
+                  </div>
+                  <div className="text-2xl font-black tracking-tighter text-[hsl(var(--site-fg))]">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sessionConsumed + totalPrice)}
+                  </div>
+                  {totalPrice > 0 && sessionConsumed > 0 && (
+                    <div className="text-[10px] text-[hsl(var(--site-muted-fg))] mt-0.5">
+                      Consumido + carrinho atual
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
             <button 
               onClick={requestTableClose}
               disabled={isRequestingClose}
