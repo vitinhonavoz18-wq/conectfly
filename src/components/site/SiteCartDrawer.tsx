@@ -357,16 +357,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           return true;
         }
 
-        // Silent revalidation: nunca exibir erros se o cardápio ainda funciona.
-        if (!silent) {
-          // Nunca mostrar códigos brutos do FlyControl (ex.: "invalid_table") ao cliente.
-          const raw = rawMsg;
-          const isRawCode = /^[a-z_]+$/.test(raw);
-          const errorMsg = !raw || isRawCode
-            ? "Não foi possível identificar a mesa. Procure um atendente."
-            : sessionResult.message!;
-          toast.error(errorMsg, { id: "qr-error" });
-        }
+        // Menu permanece funcional — não exibir avisos falsos de mesa.
         return false;
       }
     } catch (err: any) {
