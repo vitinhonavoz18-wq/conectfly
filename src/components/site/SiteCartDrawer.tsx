@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable } = useCart();
+  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -331,7 +331,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             window.localStorage.removeItem("sf:cart_items");
           } catch {}
           if (!silent) {
-            toast.error("Esta mesa foi fechada. Escaneie o QR Code novamente para iniciar uma nova sessão.", { id: "qr-error" });
+            toast.error(
+              "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa ou solicite ajuda a um atendente.",
+              { id: "qr-error", duration: 6000 }
+            );
           }
           return false;
         }
