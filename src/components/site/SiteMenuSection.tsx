@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, ArrowLeft } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
@@ -142,6 +142,24 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
             className="mb-6 px-6 py-2.5 site-btn-secondary !rounded-2xl text-xs sm:text-sm font-bold"
           >
             ← Voltar
+          </button>
+
+          {/* Floating back button — always visible while browsing products */}
+          <button
+            type="button"
+            aria-label="Voltar"
+            onClick={() => {
+              if (isBev && activeBevCatalog) {
+                setActiveBevCatalog(null);
+              } else {
+                setActive(null);
+                setActiveBevCatalog(null);
+              }
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="fixed left-4 bottom-24 sm:bottom-8 z-40 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-2xl border-4 border-white/10 flex items-center justify-center active:scale-90 hover:scale-105 transition-all animate-in fade-in slide-in-from-bottom-4"
+          >
+            <ArrowLeft className="h-6 w-6 sm:h-7 sm:w-7" />
           </button>
 
           {isBev ? (
