@@ -5,7 +5,7 @@ import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
-import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
@@ -14,6 +14,14 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
   const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const requestTableClose = async () => {
     if (!validatedTable || isRequestingClose) return;
