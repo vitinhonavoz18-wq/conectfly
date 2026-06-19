@@ -98,6 +98,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         setLastOpenedTableToken(token);
         setCurrentTableSessionId(validatedTable.sessionId || null);
         setOrderType("table");
+        // Revalidate silently against FlyControl to detect tables that were
+        // closed remotely (operator finalized via FL). On explicit closure
+        // signals, clear local state so the customer cannot keep ordering.
+        handleValidateTable(token, null, mesa, { silent: true });
         return;
       }
 
