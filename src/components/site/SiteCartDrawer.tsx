@@ -98,6 +98,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         setLastOpenedTableToken(token);
         setCurrentTableSessionId(validatedTable.sessionId || null);
         setOrderType("table");
+        // Revalidate silently against FlyControl to detect tables that were
+        // closed remotely (operator finalized via FL). On explicit closure
+        // signals, clear local state so the customer cannot keep ordering.
+        handleValidateTable(token, null, mesa, { silent: true });
         return;
       }
 
@@ -225,7 +229,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     return result;
   };
 
-  const handleValidateTable = async (token: string, slugFromQr?: string | null, numberFromQr?: string | null) => {
+  const handleValidateTable = async (
+    token: string,
+    slugFromQr?: string | null,
+    numberFromQr?: string | null,
+    options?: { silent?: boolean }
+  ) => {
+    const silent = !!options?.silent;
     if (!restaurant) return false;
     
     // TRAVAS DE SEGURANÇA (Conforme solicitado)
@@ -233,7 +243,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       console.log("OPEN_TABLE_SESSION_SKIPPED_ALREADY_OPENING");
       return false;
     }
-    if (tableSessionOpened && lastOpenedTableToken === token) {
+    if (!silent && tableSessionOpened && lastOpenedTableToken === token) {
       console.log("OPEN_TABLE_SESSION_SKIPPED_ALREADY_OPENED");
       return false;
     }
@@ -292,15 +302,40 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
         setOrderType("table");
 
-        if (sessionResult.already_open) {
-          toast.success(`Mesa ${tableData.number} já está aberta.`, { id: "qr-success" });
-        } else {
-          toast.success(`Mesa ${tableData.number} aberta com sucesso!`, { id: "qr-success" });
+        if (!silent) {
+          if (sessionResult.already_open) {
+            toast.success(`Mesa ${tableData.number} já está aberta.`, { id: "qr-success" });
+          } else {
+            toast.success(`Mesa ${tableData.number} aberta com sucesso!`, { id: "qr-success" });
+          }
         }
         
         setIsScanning(false);
         return true;
       } else {
+        // Detectar fechamento remoto da mesa (operador finalizou no FlyControl).
+        const rawMsg = (sessionResult.message || "").toString().toLowerCase();
+        const closedByOperator = /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
+        if (closedByOperator) {
+          console.log("TABLE_SESSION_CLOSED_REMOTELY_CLEARING", rawMsg);
+          setValidatedTable(null);
+          setTableId(null);
+          setTableNumber(null);
+          setTableToken(null);
+          setTableSessionId(null);
+          setTableSessionOpened(false);
+          setLastOpenedTableToken(null);
+          setCurrentTableSessionId(null);
+          try {
+            window.sessionStorage.removeItem("sf:validated_table");
+            window.localStorage.removeItem("sf:cart_items");
+          } catch {}
+          if (!silent) {
+            toast.error("Esta mesa foi fechada. Escaneie o QR Code novamente para iniciar uma nova sessão.", { id: "qr-error" });
+          }
+          return false;
+        }
+
         // Fallback: se já temos uma mesa validada armazenada com o mesmo token,
         // restauramos do storage em vez de mostrar o erro bruto do FlyControl
         // (ex.: "invalid_table" quando a sessão já estava aberta).
@@ -319,18 +354,23 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           return true;
         }
 
-        // Nunca mostrar códigos brutos do FlyControl (ex.: "invalid_table") ao cliente.
-        const raw = (sessionResult.message || "").toString().toLowerCase();
-        const isRawCode = /^[a-z_]+$/.test(raw);
-        const errorMsg = !raw || isRawCode
-          ? "Não foi possível identificar a mesa. Procure um atendente."
-          : sessionResult.message!;
-        toast.error(errorMsg, { id: "qr-error" });
+        // Silent revalidation: nunca exibir erros se o cardápio ainda funciona.
+        if (!silent) {
+          // Nunca mostrar códigos brutos do FlyControl (ex.: "invalid_table") ao cliente.
+          const raw = rawMsg;
+          const isRawCode = /^[a-z_]+$/.test(raw);
+          const errorMsg = !raw || isRawCode
+            ? "Não foi possível identificar a mesa. Procure um atendente."
+            : sessionResult.message!;
+          toast.error(errorMsg, { id: "qr-error" });
+        }
         return false;
       }
     } catch (err: any) {
       console.error("QR_VALIDATE_ERROR:", err);
-      toast.error("Falha ao sincronizar mesa. Procure um atendente.", { id: "qr-error" });
+      if (!silent) {
+        toast.error("Falha ao sincronizar mesa. Procure um atendente.", { id: "qr-error" });
+      }
       return false;
     } finally {
       setIsValidatingQr(false);

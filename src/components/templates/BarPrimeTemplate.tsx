@@ -5,7 +5,7 @@ import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
-import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
@@ -14,6 +14,14 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
   const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setShowScrollTop(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const requestTableClose = async () => {
     if (!validatedTable || isRequestingClose) return;
@@ -226,6 +234,21 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         address={r.address}
         city={r.city}
       />
+
+      {/* Floating back-to-top / back-to-categories button */}
+      {showScrollTop && (
+        <button
+          type="button"
+          aria-label="Voltar para o topo"
+          onClick={() => {
+            setActiveCategory("all");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className={`fixed left-4 z-40 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-2xl border-4 border-white/10 flex items-center justify-center active:scale-90 hover:scale-105 transition-all animate-in fade-in slide-in-from-bottom-4 ${totalItems > 0 && !isCartOpen ? "bottom-28 sm:bottom-8" : "bottom-8"}`}
+        >
+          <ArrowUp className="h-6 w-6 sm:h-7 sm:w-7" />
+        </button>
+      )}
 
       <SiteCartDrawer
         open={isCartOpen}
