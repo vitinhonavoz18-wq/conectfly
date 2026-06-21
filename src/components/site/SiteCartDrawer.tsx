@@ -59,6 +59,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [validationAttempted, setValidationAttempted] = useState(false);
+  const [sessionClosed, setSessionClosed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem("sf:session_closed") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -141,6 +149,47 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setCurrentTableSessionId(null);
     }
   }, [validatedTable]);
+
+  // Active session check: poll FlyControl periodically while a table session
+  // is active. If the operator marks the session as closed remotely, we
+  // immediately terminate the customer's access.
+  useEffect(() => {
+    if (!restaurant || !validatedTable?.token) return;
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      if (document.hidden) return; // Skip when tab is hidden
+      try {
+        const payload: OpenTableSessionPayload = {
+          type: "open_table_session",
+          restaurant_slug: restaurant.slug,
+          order_type: "table",
+          service_mode: "mesa",
+          table_number: validatedTable.number || "N/A",
+          table_token: validatedTable.token,
+          opened_from: "qrcode_scan",
+          opened_at: new Date().toISOString(),
+        };
+        const res = await openTableSession(restaurant, payload);
+        if (cancelled) return;
+        if (res.closed) {
+          terminateClosedSession({ silent: true });
+        }
+      } catch (e) {
+        // Network errors during polling are ignored
+        console.warn("SESSION_POLL_ERROR", e);
+      }
+    };
+    const id = window.setInterval(tick, 30000);
+    // Also run once on mount/visibility change
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [restaurant?.id, restaurant?.slug, validatedTable?.token]);
 
 
   const extractTableQrData = (qrValue: string) => {
@@ -229,6 +278,42 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     return result;
   };
 
+  // Centralized termination when FlyControl reports the session as CLOSED.
+  // Wipes local table/session/cart state and shows the customer message.
+  const terminateClosedSession = (opts?: { silent?: boolean }) => {
+    console.log("TABLE_SESSION_CLOSED_BY_FLYCONTROL_TERMINATING");
+    setValidatedTable(null);
+    setTableId(null);
+    setTableNumber(null);
+    setTableToken(null);
+    setTableSessionId(null);
+    setTableSessionOpened(false);
+    setLastOpenedTableToken(null);
+    setCurrentTableSessionId(null);
+    clear();
+    setStep("cart");
+    setSessionClosed(true);
+    try {
+      window.localStorage.removeItem("sf:validated_table");
+      window.localStorage.removeItem("sf:cart_items");
+      window.localStorage.removeItem("sf:session_consumed");
+      window.sessionStorage.removeItem("sf:validated_table");
+      window.sessionStorage.setItem("sf:session_closed", "1");
+    } catch {}
+    if (!opts?.silent) {
+      toast.error(
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
+        { id: "qr-error", duration: 8000 }
+      );
+    } else {
+      // Even during silent revalidation the customer MUST be informed.
+      toast.message(
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
+        { id: "qr-error", duration: 8000 }
+      );
+    }
+  };
+
   const handleValidateTable = async (
     token: string,
     slugFromQr?: string | null,
@@ -237,6 +322,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   ) => {
     const silent = !!options?.silent;
     if (!restaurant) return false;
+
+    // If we already detected closure, refuse to (re)open the session silently.
+    if (sessionClosed && !silent) {
+      toast.error(
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
+        { id: "qr-error", duration: 6000 }
+      );
+      return false;
+    }
     
     // TRAVAS DE SEGURANÇA (Conforme solicitado)
     if (isOpeningTableSession) {
@@ -278,6 +372,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       console.log("OPEN_TABLE_SESSION_RESPONSE", sessionResult);
 
       if (sessionResult.success) {
+        // Defensive: if FlyControl reports the session as closed even with
+        // success=true, treat it as closed.
+        if (sessionResult.closed) {
+          terminateClosedSession({ silent });
+          return false;
+        }
         const tableData = {
           id: "flycontrol-table",
           number: numberFromQr || "Mesa", 
@@ -315,27 +415,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       } else {
         // Detectar fechamento remoto da mesa (operador finalizou no FlyControl).
         const rawMsg = (sessionResult.message || "").toString().toLowerCase();
-        const closedByOperator = /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
+        const closedByOperator =
+          sessionResult.closed === true ||
+          /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
         if (closedByOperator) {
-          console.log("TABLE_SESSION_CLOSED_REMOTELY_CLEARING", rawMsg);
-          setValidatedTable(null);
-          setTableId(null);
-          setTableNumber(null);
-          setTableToken(null);
-          setTableSessionId(null);
-          setTableSessionOpened(false);
-          setLastOpenedTableToken(null);
-          setCurrentTableSessionId(null);
-          try {
-            window.sessionStorage.removeItem("sf:validated_table");
-            window.localStorage.removeItem("sf:cart_items");
-          } catch {}
-          if (!silent) {
-            toast.error(
-              "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa ou solicite ajuda a um atendente.",
-              { id: "qr-error", duration: 6000 }
-            );
-          }
+          terminateClosedSession({ silent });
           return false;
         }
 
@@ -376,6 +460,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const onQrScan = async (text: string) => {
     // 1. Verificações iniciais e bloqueio de múltiplas leituras
     if (!text || isValidatingQr || isOpeningTableSession || !isScanning) return;
+
+    // Permitir nova sessão após uma anterior ter sido encerrada
+    if (sessionClosed) {
+      try { window.sessionStorage.removeItem("sf:session_closed"); } catch {}
+      setSessionClosed(false);
+    }
     
     // Se já estiver aberta a mesma mesa, não faz nada
     const { table_token: extractedToken } = extractTableQrData(text);
@@ -507,6 +597,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     console.log("CHECKOUT_SUBMIT_STARTED");
     setError("");
     setValidationAttempted(true);
+
+    // Block submissions for sessions that have been closed remotely.
+    if (sessionClosed || (orderType === "table" && !validatedTable)) {
+      const msg = "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
+      setError(msg);
+      toast.error(msg, { id: "qr-error", duration: 6000 });
+      return;
+    }
 
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
@@ -803,6 +901,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto overscroll-contain bg-[hsl(var(--site-bg))] scroll-smooth"
           >
+            {sessionClosed && (
+              <div className="mx-4 mt-4 rounded-2xl border border-destructive/40 bg-destructive/10 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div className="text-sm leading-relaxed text-[hsl(var(--site-fg))]">
+                    <p className="font-black uppercase tracking-wide text-[11px] text-destructive mb-1">
+                      Mesa encerrada
+                    </p>
+                    Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.
+                  </div>
+                </div>
+              </div>
+            )}
             {validatedTable && step !== "confirmation" && (
               <div className="mx-4 mt-4 rounded-2xl border border-[hsl(var(--site-primary)/0.35)] bg-[hsl(var(--site-primary)/0.08)] p-4">
                 <div className="flex items-start justify-between gap-3">
