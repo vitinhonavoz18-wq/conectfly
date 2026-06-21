@@ -59,6 +59,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [validationAttempted, setValidationAttempted] = useState(false);
+  const [sessionClosed, setSessionClosed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem("sf:session_closed") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -376,6 +384,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const onQrScan = async (text: string) => {
     // 1. Verificações iniciais e bloqueio de múltiplas leituras
     if (!text || isValidatingQr || isOpeningTableSession || !isScanning) return;
+
+    // Permitir nova sessão após uma anterior ter sido encerrada
+    if (sessionClosed) {
+      try { window.sessionStorage.removeItem("sf:session_closed"); } catch {}
+      setSessionClosed(false);
+    }
     
     // Se já estiver aberta a mesma mesa, não faz nada
     const { table_token: extractedToken } = extractTableQrData(text);
