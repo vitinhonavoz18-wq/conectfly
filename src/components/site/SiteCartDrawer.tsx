@@ -901,6 +901,19 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto overscroll-contain bg-[hsl(var(--site-bg))] scroll-smooth"
           >
+            {sessionClosed && (
+              <div className="mx-4 mt-4 rounded-2xl border border-destructive/40 bg-destructive/10 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div className="text-sm leading-relaxed text-[hsl(var(--site-fg))]">
+                    <p className="font-black uppercase tracking-wide text-[11px] text-destructive mb-1">
+                      Mesa encerrada
+                    </p>
+                    Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.
+                  </div>
+                </div>
+              </div>
+            )}
             {validatedTable && step !== "confirmation" && (
               <div className="mx-4 mt-4 rounded-2xl border border-[hsl(var(--site-primary)/0.35)] bg-[hsl(var(--site-primary)/0.08)] p-4">
                 <div className="flex items-start justify-between gap-3">
