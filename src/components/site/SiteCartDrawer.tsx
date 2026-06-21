@@ -237,6 +237,42 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     return result;
   };
 
+  // Centralized termination when FlyControl reports the session as CLOSED.
+  // Wipes local table/session/cart state and shows the customer message.
+  const terminateClosedSession = (opts?: { silent?: boolean }) => {
+    console.log("TABLE_SESSION_CLOSED_BY_FLYCONTROL_TERMINATING");
+    setValidatedTable(null);
+    setTableId(null);
+    setTableNumber(null);
+    setTableToken(null);
+    setTableSessionId(null);
+    setTableSessionOpened(false);
+    setLastOpenedTableToken(null);
+    setCurrentTableSessionId(null);
+    clear();
+    setStep("cart");
+    setSessionClosed(true);
+    try {
+      window.localStorage.removeItem("sf:validated_table");
+      window.localStorage.removeItem("sf:cart_items");
+      window.localStorage.removeItem("sf:session_consumed");
+      window.sessionStorage.removeItem("sf:validated_table");
+      window.sessionStorage.setItem("sf:session_closed", "1");
+    } catch {}
+    if (!opts?.silent) {
+      toast.error(
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
+        { id: "qr-error", duration: 8000 }
+      );
+    } else {
+      // Even during silent revalidation the customer MUST be informed.
+      toast.message(
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
+        { id: "qr-error", duration: 8000 }
+      );
+    }
+  };
+
   const handleValidateTable = async (
     token: string,
     slugFromQr?: string | null,
