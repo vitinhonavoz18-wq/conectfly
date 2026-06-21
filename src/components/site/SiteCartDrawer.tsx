@@ -598,6 +598,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     setError("");
     setValidationAttempted(true);
 
+    // Block submissions for sessions that have been closed remotely.
+    if (sessionClosed || (orderType === "table" && !validatedTable)) {
+      const msg = "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
+      setError(msg);
+      toast.error(msg, { id: "qr-error", duration: 6000 });
+      return;
+    }
+
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
 
