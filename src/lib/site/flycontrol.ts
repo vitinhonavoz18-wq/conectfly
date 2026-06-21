@@ -441,7 +441,7 @@ export async function sendOrderToFlycontrol(
 export async function openTableSession(
   restaurant: Pick<RestaurantRow, "id" | "slug">,
   payload: OpenTableSessionPayload
-): Promise<{ success: boolean; session_id?: string; message?: string; already_open?: boolean }> {
+): Promise<{ success: boolean; session_id?: string; message?: string; already_open?: boolean; status?: string; closed?: boolean }> {
   console.log("OPEN_TABLE_SESSION_ONLY", { 
     restaurant_slug: payload.restaurant_slug,
     table_number: payload.table_number,
@@ -476,9 +476,18 @@ export async function openTableSession(
     const data = await response.json();
     console.log("OPEN_TABLE_SESSION_RESPONSE:", data);
 
+    // Extract status from any common shape returned by FlyControl
+    const rawStatus = (
+      data.response?.status ?? data.status ?? data.response?.session_status ?? data.session_status ?? ""
+    )
+      .toString()
+      .toLowerCase();
+    const closedSignals = /(closed|fechad|finaliz|encerr|ended)/;
+    const isClosed = closedSignals.test(rawStatus);
+
     if (!response.ok || data.success === false) {
       console.error("OPEN_TABLE_SESSION_ERROR:", data.error || data.message || `HTTP ${response.status}`);
-      return { success: false, message: data.error || data.message };
+      return { success: false, message: data.error || data.message, status: rawStatus || undefined, closed: isClosed };
     }
 
     const sessionId = data.response?.session_id || data.session_id;
@@ -486,10 +495,13 @@ export async function openTableSession(
       console.log("TABLE_SESSION_ID_SAVED:", sessionId);
     }
 
-    return { 
-      success: true, 
+    return {
+      success: !isClosed,
       session_id: sessionId,
-      already_open: data.response?.already_open || data.already_open
+      already_open: data.response?.already_open || data.already_open,
+      status: rawStatus || undefined,
+      closed: isClosed,
+      message: isClosed ? "session_closed" : undefined,
     };
   } catch (err: any) {
     console.error("OPEN_TABLE_SESSION_ERROR:", err.message);
