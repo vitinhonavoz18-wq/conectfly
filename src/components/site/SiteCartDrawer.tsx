@@ -245,6 +245,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   ) => {
     const silent = !!options?.silent;
     if (!restaurant) return false;
+
+    // If we already detected closure, refuse to (re)open the session silently.
+    if (sessionClosed && !silent) {
+      toast.error(
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
+        { id: "qr-error", duration: 6000 }
+      );
+      return false;
+    }
     
     // TRAVAS DE SEGURANÇA (Conforme solicitado)
     if (isOpeningTableSession) {
@@ -286,6 +295,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       console.log("OPEN_TABLE_SESSION_RESPONSE", sessionResult);
 
       if (sessionResult.success) {
+        // Defensive: if FlyControl reports the session as closed even with
+        // success=true, treat it as closed.
+        if (sessionResult.closed) {
+          terminateClosedSession({ silent });
+          return false;
+        }
         const tableData = {
           id: "flycontrol-table",
           number: numberFromQr || "Mesa", 
