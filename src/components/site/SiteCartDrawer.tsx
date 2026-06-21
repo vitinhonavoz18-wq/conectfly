@@ -374,27 +374,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       } else {
         // Detectar fechamento remoto da mesa (operador finalizou no FlyControl).
         const rawMsg = (sessionResult.message || "").toString().toLowerCase();
-        const closedByOperator = /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
+        const closedByOperator =
+          sessionResult.closed === true ||
+          /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
         if (closedByOperator) {
-          console.log("TABLE_SESSION_CLOSED_REMOTELY_CLEARING", rawMsg);
-          setValidatedTable(null);
-          setTableId(null);
-          setTableNumber(null);
-          setTableToken(null);
-          setTableSessionId(null);
-          setTableSessionOpened(false);
-          setLastOpenedTableToken(null);
-          setCurrentTableSessionId(null);
-          try {
-            window.sessionStorage.removeItem("sf:validated_table");
-            window.localStorage.removeItem("sf:cart_items");
-          } catch {}
-          if (!silent) {
-            toast.error(
-              "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa ou solicite ajuda a um atendente.",
-              { id: "qr-error", duration: 6000 }
-            );
-          }
+          terminateClosedSession({ silent });
           return false;
         }
 
