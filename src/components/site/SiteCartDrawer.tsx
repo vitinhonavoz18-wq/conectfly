@@ -150,6 +150,47 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
   }, [validatedTable]);
 
+  // Active session check: poll FlyControl periodically while a table session
+  // is active. If the operator marks the session as closed remotely, we
+  // immediately terminate the customer's access.
+  useEffect(() => {
+    if (!restaurant || !validatedTable?.token) return;
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled) return;
+      if (document.hidden) return; // Skip when tab is hidden
+      try {
+        const payload: OpenTableSessionPayload = {
+          type: "open_table_session",
+          restaurant_slug: restaurant.slug,
+          order_type: "table",
+          service_mode: "mesa",
+          table_number: validatedTable.number || "N/A",
+          table_token: validatedTable.token,
+          opened_from: "qrcode_scan",
+          opened_at: new Date().toISOString(),
+        };
+        const res = await openTableSession(restaurant, payload);
+        if (cancelled) return;
+        if (res.closed) {
+          terminateClosedSession({ silent: true });
+        }
+      } catch (e) {
+        // Network errors during polling are ignored
+        console.warn("SESSION_POLL_ERROR", e);
+      }
+    };
+    const id = window.setInterval(tick, 30000);
+    // Also run once on mount/visibility change
+    const onVisible = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [restaurant?.id, restaurant?.slug, validatedTable?.token]);
+
 
   const extractTableQrData = (qrValue: string) => {
     console.log("QR_RAW_VALUE:", qrValue);
