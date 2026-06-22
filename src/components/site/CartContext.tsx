@@ -7,6 +7,7 @@ export interface ValidatedTable {
   token: string;
   name?: string | null;
   sessionId?: string | null;
+  restaurantId?: string | null;
 }
 
 
@@ -26,6 +27,14 @@ interface CartCtx {
   sessionOrderCount: number;
   addSessionOrder: (orderTotal: number) => void;
   resetSessionConsumption: () => void;
+  /** True after FlyControl closed the table; blocks new orders until QR rescan. */
+  sessionClosed: boolean;
+  /** Centralized session destruction. Wipes table, cart, storage and shows modal. */
+  terminateSession: (opts?: { silent?: boolean }) => void;
+  /** Manually dismisses the "MESA ENCERRADA" modal (after closure). */
+  acknowledgeClosure: () => void;
+  /** Clears the closed flag so a fresh QR scan can start a new session. */
+  clearSessionClosed: () => void;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -37,6 +46,7 @@ function keyOf(itemId: string, sizeLabel?: string) {
 const TABLE_STORAGE_KEY = "sf:validated_table";
 const CART_STORAGE_KEY = "sf:cart_items";
 const SESSION_CONSUMED_KEY = "sf:session_consumed";
+const SESSION_CLOSED_KEY = "sf:session_closed";
 
 interface StoredSessionConsumed {
   token: string;
@@ -98,6 +108,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (t && s && s.token === t.token) return s.count;
     return 0;
   });
+  const [sessionClosed, setSessionClosed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem(SESSION_CLOSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const [showClosedModal, setShowClosedModal] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem(SESSION_CLOSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const persistConsumption = (token: string | null, total: number, count: number) => {
     if (typeof window === "undefined") return;
@@ -146,6 +172,80 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setSessionOrderCount(0);
     persistConsumption(validatedTable?.token ?? null, 0, 0);
   };
+
+  // Centralized session destruction. Works from anywhere in the Digital Menu
+  // (home page, menu sections, cart drawer). Wipes table, cart and storage,
+  // then surfaces the blocking "MESA ENCERRADA" modal.
+  const terminateSession = (_opts?: { silent?: boolean }) => {
+    console.log("CART_CTX_TERMINATE_SESSION");
+    setValidatedTableState(null);
+    setItems([]);
+    setSessionConsumed(0);
+    setSessionOrderCount(0);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(TABLE_STORAGE_KEY);
+        window.localStorage.removeItem(CART_STORAGE_KEY);
+        window.localStorage.removeItem(SESSION_CONSUMED_KEY);
+        window.sessionStorage.removeItem(TABLE_STORAGE_KEY);
+        window.sessionStorage.setItem(SESSION_CLOSED_KEY, "1");
+      } catch {}
+    }
+    setSessionClosed(true);
+    setShowClosedModal(true);
+  };
+
+  const acknowledgeClosure = () => {
+    setShowClosedModal(false);
+  };
+
+  const clearSessionClosed = () => {
+    if (typeof window !== "undefined") {
+      try { window.sessionStorage.removeItem(SESSION_CLOSED_KEY); } catch {}
+    }
+    setSessionClosed(false);
+    setShowClosedModal(false);
+  };
+
+  // Global poll: while a table is active and we know its restaurant, ask the
+  // server every 8s whether the session was closed in FlyControl. As soon as
+  // the closure is mirrored into public.table_sessions, terminate the
+  // customer session — no matter which screen they are on.
+  useEffect(() => {
+    if (!validatedTable?.token || !validatedTable.restaurantId) return;
+    let cancelled = false;
+    const tick = async () => {
+      if (cancelled || typeof document === "undefined") return;
+      if (document.hidden) return;
+      try {
+        const res = await fetch("/api/public/check-table-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            restaurant_id: validatedTable.restaurantId,
+            table_token: validatedTable.token ?? null,
+            table_session_id: validatedTable.sessionId ?? null,
+            table_number: validatedTable.number ?? null,
+          }),
+        });
+        const data = await res.json().catch(() => ({} as any));
+        if (cancelled) return;
+        if (data?.closed) terminateSession({ silent: true });
+      } catch (err) {
+        console.warn("CART_CTX_SESSION_POLL_ERROR", err);
+      }
+    };
+    tick();
+    const id = window.setInterval(tick, 8000);
+    const onVis = () => { if (!document.hidden) tick(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validatedTable?.token, validatedTable?.restaurantId, validatedTable?.sessionId]);
 
   // Persist cart items across refreshes.
   useEffect(() => {
@@ -210,10 +310,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
       sessionOrderCount,
       addSessionOrder,
       resetSessionConsumption,
+      sessionClosed,
+      terminateSession,
+      acknowledgeClosure,
+      clearSessionClosed,
     };
-  }, [items, isCartOpen, validatedTable, sessionConsumed, sessionOrderCount]);
+  }, [items, isCartOpen, validatedTable, sessionConsumed, sessionOrderCount, sessionClosed]);
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      {children}
+      {showClosedModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mesa-encerrada-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white text-neutral-900 shadow-2xl overflow-hidden">
+            <div className="px-6 pt-6 pb-2 flex flex-col items-center text-center">
+              <div className="h-14 w-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+              </div>
+              <h3 id="mesa-encerrada-title" className="font-black text-xl tracking-tight uppercase">
+                Mesa Encerrada
+              </h3>
+            </div>
+            <div className="px-6 pb-4 text-center text-sm text-neutral-600 leading-relaxed">
+              <p>Sua mesa foi encerrada pelo estabelecimento.</p>
+              <p className="mt-2">
+                Caso deseje continuar consumindo, solicite uma nova mesa ou escaneie novamente o QR Code.
+              </p>
+            </div>
+            <div className="px-6 pb-6">
+              <button
+                type="button"
+                onClick={acknowledgeClosure}
+                className="w-full rounded-xl bg-neutral-900 text-white font-black uppercase tracking-wider text-sm py-3 hover:bg-neutral-800 active:scale-[0.98] transition"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </Ctx.Provider>
+  );
 }
 
 export function useCart() {
