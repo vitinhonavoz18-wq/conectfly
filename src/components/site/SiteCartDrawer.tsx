@@ -354,7 +354,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           id: "flycontrol-table",
           number: numberFromQr || "Mesa", 
           token: token,
-          sessionId: sessionResult.session_id
+          sessionId: sessionResult.session_id,
+          restaurantId: restaurant?.id ?? null,
         };
 
         setValidatedTable(tableData);
