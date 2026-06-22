@@ -273,7 +273,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   // Wipes local table/session/cart state and shows the customer message.
   const terminateClosedSession = (opts?: { silent?: boolean }) => {
     console.log("TABLE_SESSION_CLOSED_BY_FLYCONTROL_TERMINATING");
-    setValidatedTable(null);
+    // Reset local drawer state; CartContext owns global tear-down + modal.
     setTableId(null);
     setTableNumber(null);
     setTableToken(null);
@@ -281,19 +281,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     setTableSessionOpened(false);
     setLastOpenedTableToken(null);
     setCurrentTableSessionId(null);
-    clear();
     setStep("cart");
-    setSessionClosed(true);
-    try {
-      window.localStorage.removeItem("sf:validated_table");
-      window.localStorage.removeItem("sf:cart_items");
-      window.localStorage.removeItem("sf:session_consumed");
-      window.sessionStorage.removeItem("sf:validated_table");
-      window.sessionStorage.setItem("sf:session_closed", "1");
-    } catch {}
-    // Always surface the blocking modal (silent or not). The customer MUST
-    // acknowledge the closure before any further interaction is possible.
-    setShowClosedModal(true);
+    ctxTerminateSession(opts);
     try { toast.dismiss("qr-error"); } catch {}
   };
 
@@ -446,9 +435,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     // Permitir nova sessão após uma anterior ter sido encerrada
     if (sessionClosed) {
-      try { window.sessionStorage.removeItem("sf:session_closed"); } catch {}
-      setSessionClosed(false);
-      setShowClosedModal(false);
+      clearSessionClosed();
     }
     
     // Se já estiver aberta a mesma mesa, não faz nada
@@ -842,46 +829,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   return (
     <>
-      {showClosedModal && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="mesa-encerrada-title"
-        >
-          <div className="w-full max-w-sm rounded-2xl bg-white text-neutral-900 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-6 pt-6 pb-2 flex flex-col items-center text-center">
-              <div className="h-14 w-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
-                <AlertCircle className="h-7 w-7" />
-              </div>
-              <h3
-                id="mesa-encerrada-title"
-                className="font-black text-xl tracking-tight uppercase"
-              >
-                Mesa Encerrada
-              </h3>
-            </div>
-            <div className="px-6 pb-4 text-center text-sm text-neutral-600 leading-relaxed">
-              <p>Seu atendimento foi finalizado.</p>
-              <p className="mt-2">
-                Esta mesa foi encerrada e está disponível para novos clientes.
-              </p>
-              <p className="mt-2">
-                Para realizar novos pedidos, escaneie novamente o QR Code da mesa.
-              </p>
-            </div>
-            <div className="px-6 pb-6">
-              <button
-                type="button"
-                onClick={() => setShowClosedModal(false)}
-                className="w-full rounded-xl bg-neutral-900 text-white font-black uppercase tracking-wider text-sm py-3 hover:bg-neutral-800 active:scale-[0.98] transition"
-              >
-                Entendi
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       <div
         className={`fixed inset-0 bg-black/60 z-50 transition-opacity ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
