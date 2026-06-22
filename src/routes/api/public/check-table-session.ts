@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
@@ -27,11 +26,33 @@ function getCorsHeaders(origin: string | null) {
   };
 }
 
-function joinUrl(base: string, path: string) {
-  return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
-}
-
-const CLOSED_RE = /(closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist)/i;
+const CLOSED_STATUSES = new Set([
+  "closed",
+  "fechada",
+  "fechado",
+  "finalized",
+  "finalizada",
+  "finalizado",
+  "encerrada",
+  "encerrado",
+  "acknowledged",
+  "approved",
+  "completed",
+  "done",
+  "confirmed",
+  "confirmada",
+  "confirmado",
+]);
+const REJECTED_STATUSES = new Set([
+  "rejected",
+  "rejeitada",
+  "rejeitado",
+  "cancelled",
+  "canceled",
+  "cancelada",
+  "cancelado",
+  "denied",
+]);
 
 /**
  * Non-mutating session status check. Queries FlyControl to determine whether a
@@ -58,75 +79,82 @@ export const Route = createFileRoute("/api/public/check-table-session")({
             return new Response(JSON.stringify({ success: false, error: "Dados incompletos" }), { status: 400, headers });
           }
 
-          const { data: r, error } = await supabaseAdmin
-            .from("restaurants")
-            .select("id, slug, flycontrol_api_key, flycontrol_base_url")
-            .eq("id", body.restaurant_id)
-            .maybeSingle();
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          if (error || !r) {
-            return new Response(JSON.stringify({ success: false, error: "Restaurante não encontrado" }), { status: 404, headers });
-          }
-
-          let base = (r.flycontrol_base_url ?? "").trim();
-          if (!base) {
-            return new Response(JSON.stringify({ success: false, closed: false }), { status: 200, headers });
-          }
-          if (!base.startsWith("http")) base = "https://" + base;
-
-          const key = (r.flycontrol_api_key ?? "").trim();
-          const candidatePaths = [
-            "api/public/check-table-session",
-            "api/public/table-session-status",
-            "api/public/get-table-session",
-          ];
-
-          const reqBody = JSON.stringify({
-            restaurant_slug: r.slug,
-            table_token: body.table_token ?? null,
-            table_number: body.table_number ?? null,
-            table_session_id: body.table_session_id ?? null,
-            api_key: key,
-          });
-
-          let resolved: any = null;
-          let lastStatus = 0;
-          for (const path of candidatePaths) {
-            try {
-              const res = await fetch(joinUrl(base, path), {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "x-api-key": key,
-                  "Authorization": `Bearer ${key}`,
-                },
-                body: reqBody,
-              });
-              lastStatus = res.status;
-              if (res.status === 404) continue;
-              const txt = await res.text();
-              try { resolved = JSON.parse(txt); } catch { resolved = { text: txt }; }
-              break;
-            } catch {
-              continue;
+          // Resolve the local restaurant_tables row by public_token (preferred)
+          // because table sessions in FlyControl are mirrored locally via the
+          // close-request flow.
+          let tableId: string | null = null;
+          if (body.table_token) {
+            const { data: t } = await supabaseAdmin
+              .from("restaurant_tables")
+              .select("id, is_active")
+              .eq("restaurant_id", body.restaurant_id)
+              .eq("public_token", body.table_token)
+              .maybeSingle();
+            if (t) {
+              tableId = t.id;
+              if (t.is_active === false) {
+                return new Response(
+                  JSON.stringify({ success: true, closed: true, reason: "table_inactive" }),
+                  { status: 200, headers },
+                );
+              }
             }
           }
 
-          if (!resolved) {
-            // No FlyControl endpoint available — assume still open to avoid
-            // wiping a legit session on a transient/missing endpoint.
-            return new Response(JSON.stringify({ success: true, closed: false, unavailable: true }), { status: 200, headers });
+          // 1) If we have a local session_id, trust table_sessions.status.
+          if (body.table_session_id) {
+            const { data: s } = await supabaseAdmin
+              .from("table_sessions")
+              .select("id, status, closed_at")
+              .eq("id", body.table_session_id)
+              .maybeSingle();
+            if (s) {
+              const st = (s.status ?? "").toString().toLowerCase();
+              const isClosed = !!s.closed_at || (st !== "open" && st !== "");
+              if (isClosed) {
+                return new Response(
+                  JSON.stringify({ success: true, closed: true, status: st, source: "table_sessions" }),
+                  { status: 200, headers },
+                );
+              }
+            }
           }
 
-          const rawStatus = (
-            resolved?.status ?? resolved?.session_status ?? resolved?.response?.status ?? resolved?.response?.session_status ?? ""
-          ).toString();
-          const closedFlag = resolved?.closed === true || resolved?.response?.closed === true;
-          const notFound = resolved?.error && /not[_ -]?found|inexist|invalid/i.test(String(resolved.error));
-          const isClosed = closedFlag || CLOSED_RE.test(rawStatus) || !!notFound;
+          // 2) Inspect the most recent close-request for this table. When the
+          //    operator acts on it in FlyControl, status moves away from
+          //    'pending'. Treat acknowledged/closed-like statuses as closed,
+          //    and rejected/cancelled as still open.
+          if (tableId) {
+            const { data: req } = await supabaseAdmin
+              .from("table_close_requests")
+              .select("status, acknowledged_at, requested_at")
+              .eq("restaurant_id", body.restaurant_id)
+              .eq("table_id", tableId)
+              .order("requested_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            if (req) {
+              const st = (req.status ?? "").toString().toLowerCase();
+              if (REJECTED_STATUSES.has(st)) {
+                return new Response(
+                  JSON.stringify({ success: true, closed: false, status: st, source: "close_requests" }),
+                  { status: 200, headers },
+                );
+              }
+              const isClosed = CLOSED_STATUSES.has(st) || (!!req.acknowledged_at && st !== "pending");
+              if (isClosed) {
+                return new Response(
+                  JSON.stringify({ success: true, closed: true, status: st, source: "close_requests" }),
+                  { status: 200, headers },
+                );
+              }
+            }
+          }
 
           return new Response(
-            JSON.stringify({ success: true, closed: isClosed, status: rawStatus || null, http_status: lastStatus }),
+            JSON.stringify({ success: true, closed: false }),
             { status: 200, headers },
           );
         } catch (e: any) {
