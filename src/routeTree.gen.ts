@@ -18,6 +18,7 @@ import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
 import { Route as ApiPublicTableCloseRequestRouteImport } from './routes/api/public/table-close-request'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/public/open-table-session'
+import { Route as ApiPublicFlycontrolTableClosedRouteImport } from './routes/api/public/flycontrol-table-closed'
 import { Route as ApiPublicCheckTableSessionRouteImport } from './routes/api/public/check-table-session'
 import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
@@ -71,6 +72,12 @@ const ApiPublicOpenTableSessionRoute =
     path: '/api/public/open-table-session',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicFlycontrolTableClosedRoute =
+  ApiPublicFlycontrolTableClosedRouteImport.update({
+    id: '/api/public/flycontrol-table-closed',
+    path: '/api/public/flycontrol-table-closed',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCheckTableSessionRoute =
   ApiPublicCheckTableSessionRouteImport.update({
     id: '/api/public/check-table-session',
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
+  '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
+  '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
+  '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/export/$id'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
+    | '/api/public/flycontrol-table-closed'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
     | '/api/public/table-close-request'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/export/$id'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
+    | '/api/public/flycontrol-table-closed'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
     | '/api/public/table-close-request'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/_authenticated/export/$id'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
+    | '/api/public/flycontrol-table-closed'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
     | '/api/public/table-close-request'
@@ -214,6 +227,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiPublicCheckTableSessionRoute: typeof ApiPublicCheckTableSessionRoute
+  ApiPublicFlycontrolTableClosedRoute: typeof ApiPublicFlycontrolTableClosedRoute
   ApiPublicOpenTableSessionRoute: typeof ApiPublicOpenTableSessionRoute
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
   ApiPublicTableCloseRequestRoute: typeof ApiPublicTableCloseRequestRoute
@@ -284,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/open-table-session'
       fullPath: '/api/public/open-table-session'
       preLoaderRoute: typeof ApiPublicOpenTableSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/flycontrol-table-closed': {
+      id: '/api/public/flycontrol-table-closed'
+      path: '/api/public/flycontrol-table-closed'
+      fullPath: '/api/public/flycontrol-table-closed'
+      preLoaderRoute: typeof ApiPublicFlycontrolTableClosedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/check-table-session': {
@@ -366,6 +387,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiPublicCheckTableSessionRoute: ApiPublicCheckTableSessionRoute,
+  ApiPublicFlycontrolTableClosedRoute: ApiPublicFlycontrolTableClosedRoute,
   ApiPublicOpenTableSessionRoute: ApiPublicOpenTableSessionRoute,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
   ApiPublicTableCloseRequestRoute: ApiPublicTableCloseRequestRoute,
