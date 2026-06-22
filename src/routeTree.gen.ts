@@ -18,6 +18,7 @@ import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
 import { Route as ApiPublicTableCloseRequestRouteImport } from './routes/api/public/table-close-request'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/public/open-table-session'
+import { Route as ApiPublicCheckTableSessionRouteImport } from './routes/api/public/check-table-session'
 import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
@@ -70,6 +71,12 @@ const ApiPublicOpenTableSessionRoute =
     path: '/api/public/open-table-session',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCheckTableSessionRoute =
+  ApiPublicCheckTableSessionRouteImport.update({
+    id: '/api/public/check-table-session',
+    path: '/api/public/check-table-session',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMenuSyncSplatRoute = ApiMenuSyncSplatRouteImport.update({
   id: '/$',
   path: '/$',
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
+  '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
@@ -122,6 +130,7 @@ export interface FileRoutesByTo {
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
+  '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
@@ -139,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
+  '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/open-table-session': typeof ApiPublicOpenTableSessionRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/public/table-close-request': typeof ApiPublicTableCloseRequestRoute
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/edit/$id'
     | '/export/$id'
     | '/api/menu-sync/$'
+    | '/api/public/check-table-session'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
     | '/api/public/table-close-request'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/edit/$id'
     | '/export/$id'
     | '/api/menu-sync/$'
+    | '/api/public/check-table-session'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
     | '/api/public/table-close-request'
@@ -187,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
     | '/api/menu-sync/$'
+    | '/api/public/check-table-session'
     | '/api/public/open-table-session'
     | '/api/public/submit-order'
     | '/api/public/table-close-request'
@@ -200,6 +213,7 @@ export interface RootRouteChildren {
   DebugHostRoute: typeof DebugHostRoute
   LoginRoute: typeof LoginRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
+  ApiPublicCheckTableSessionRoute: typeof ApiPublicCheckTableSessionRoute
   ApiPublicOpenTableSessionRoute: typeof ApiPublicOpenTableSessionRoute
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
   ApiPublicTableCloseRequestRoute: typeof ApiPublicTableCloseRequestRoute
@@ -270,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/open-table-session'
       fullPath: '/api/public/open-table-session'
       preLoaderRoute: typeof ApiPublicOpenTableSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/check-table-session': {
+      id: '/api/public/check-table-session'
+      path: '/api/public/check-table-session'
+      fullPath: '/api/public/check-table-session'
+      preLoaderRoute: typeof ApiPublicCheckTableSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/menu-sync/$': {
@@ -344,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugHostRoute: DebugHostRoute,
   LoginRoute: LoginRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
+  ApiPublicCheckTableSessionRoute: ApiPublicCheckTableSessionRoute,
   ApiPublicOpenTableSessionRoute: ApiPublicOpenTableSessionRoute,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
   ApiPublicTableCloseRequestRoute: ApiPublicTableCloseRequestRoute,
@@ -353,12 +375,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
