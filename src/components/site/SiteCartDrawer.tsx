@@ -67,6 +67,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return false;
     }
   });
+  const [showClosedModal, setShowClosedModal] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem("sf:session_closed") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -180,9 +188,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         console.warn("SESSION_POLL_ERROR", e);
       }
     };
-    const id = window.setInterval(tick, 30000);
+    const id = window.setInterval(tick, 15000);
     // Also run once on mount/visibility change
     const onVisible = () => { if (!document.hidden) tick(); };
+    // Kick once immediately so closures detected during background time
+    // are surfaced as soon as the drawer mounts.
+    tick();
     document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
@@ -300,18 +311,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       window.sessionStorage.removeItem("sf:validated_table");
       window.sessionStorage.setItem("sf:session_closed", "1");
     } catch {}
-    if (!opts?.silent) {
-      toast.error(
-        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
-        { id: "qr-error", duration: 8000 }
-      );
-    } else {
-      // Even during silent revalidation the customer MUST be informed.
-      toast.message(
-        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
-        { id: "qr-error", duration: 8000 }
-      );
-    }
+    // Always surface the blocking modal (silent or not). The customer MUST
+    // acknowledge the closure before any further interaction is possible.
+    setShowClosedModal(true);
+    try { toast.dismiss("qr-error"); } catch {}
   };
 
   const handleValidateTable = async (
@@ -465,6 +468,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if (sessionClosed) {
       try { window.sessionStorage.removeItem("sf:session_closed"); } catch {}
       setSessionClosed(false);
+      setShowClosedModal(false);
     }
     
     // Se já estiver aberta a mesma mesa, não faz nada
@@ -858,6 +862,45 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   return (
     <>
+      {showClosedModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mesa-encerrada-title"
+        >
+          <div className="w-full max-w-sm rounded-2xl bg-white text-neutral-900 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-6 pt-6 pb-2 flex flex-col items-center text-center">
+              <div className="h-14 w-14 rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-4">
+                <AlertCircle className="h-7 w-7" />
+              </div>
+              <h3
+                id="mesa-encerrada-title"
+                className="font-black text-xl tracking-tight uppercase"
+              >
+                Mesa Encerrada
+              </h3>
+            </div>
+            <div className="px-6 pb-4 text-center text-sm text-neutral-600 leading-relaxed">
+              <p>
+                Seu atendimento foi finalizado e sua mesa foi encerrada.
+              </p>
+              <p className="mt-2">
+                Caso deseje realizar novos pedidos, solicite a abertura de uma nova mesa ao atendente ou escaneie novamente o QR Code.
+              </p>
+            </div>
+            <div className="px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => setShowClosedModal(false)}
+                className="w-full rounded-xl bg-neutral-900 text-white font-black uppercase tracking-wider text-sm py-3 hover:bg-neutral-800 active:scale-[0.98] transition"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className={`fixed inset-0 bg-black/60 z-50 transition-opacity ${
           open ? "opacity-100" : "opacity-0 pointer-events-none"
