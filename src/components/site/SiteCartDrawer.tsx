@@ -308,18 +308,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       window.sessionStorage.removeItem("sf:validated_table");
       window.sessionStorage.setItem("sf:session_closed", "1");
     } catch {}
-    if (!opts?.silent) {
-      toast.error(
-        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
-        { id: "qr-error", duration: 8000 }
-      );
-    } else {
-      // Even during silent revalidation the customer MUST be informed.
-      toast.message(
-        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
-        { id: "qr-error", duration: 8000 }
-      );
-    }
+    // Always surface the blocking modal (silent or not). The customer MUST
+    // acknowledge the closure before any further interaction is possible.
+    setShowClosedModal(true);
+    try { toast.dismiss("qr-error"); } catch {}
   };
 
   const handleValidateTable = async (
