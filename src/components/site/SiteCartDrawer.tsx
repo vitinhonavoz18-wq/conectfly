@@ -465,6 +465,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if (sessionClosed) {
       try { window.sessionStorage.removeItem("sf:session_closed"); } catch {}
       setSessionClosed(false);
+      setShowClosedModal(false);
     }
     
     // Se já estiver aberta a mesma mesa, não faz nada
