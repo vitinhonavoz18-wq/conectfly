@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder } = useCart();
+  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, terminateSession: ctxTerminateSession, clearSessionClosed } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -59,22 +59,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
   const [validationAttempted, setValidationAttempted] = useState(false);
-  const [sessionClosed, setSessionClosed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem("sf:session_closed") === "1";
-    } catch {
-      return false;
-    }
-  });
-  const [showClosedModal, setShowClosedModal] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem("sf:session_closed") === "1";
-    } catch {
-      return false;
-    }
-  });
+  // Closure state is now owned by CartContext so it works on every screen.
+  const sessionClosed = ctxSessionClosed;
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
