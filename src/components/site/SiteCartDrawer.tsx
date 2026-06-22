@@ -182,7 +182,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         console.warn("SESSION_POLL_ERROR", e);
       }
     };
-    const id = window.setInterval(tick, 15000);
+    const id = window.setInterval(tick, 8000);
     // Also run once on mount/visibility change
     const onVisible = () => { if (!document.hidden) tick(); };
     // Kick once immediately so closures detected during background time
@@ -876,11 +876,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
               </h3>
             </div>
             <div className="px-6 pb-4 text-center text-sm text-neutral-600 leading-relaxed">
-              <p>
-                Seu atendimento foi finalizado e sua mesa foi encerrada.
+              <p>Seu atendimento foi finalizado.</p>
+              <p className="mt-2">
+                Esta mesa foi encerrada e está disponível para novos clientes.
               </p>
               <p className="mt-2">
-                Caso deseje realizar novos pedidos, solicite a abertura de uma nova mesa ao atendente ou escaneie novamente o QR Code.
+                Para realizar novos pedidos, escaneie novamente o QR Code da mesa.
               </p>
             </div>
             <div className="px-6 pb-6">
