@@ -67,6 +67,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return false;
     }
   });
+  const [showClosedModal, setShowClosedModal] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.sessionStorage.getItem("sf:session_closed") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   const nameRef = useRef<HTMLInputElement>(null);
   const phoneRef = useRef<HTMLInputElement>(null);
