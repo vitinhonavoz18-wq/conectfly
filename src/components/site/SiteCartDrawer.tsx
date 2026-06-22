@@ -3,7 +3,7 @@ import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, Sh
 import { useCart } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl, openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
+import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl, openTableSession, checkTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
@@ -168,17 +168,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       if (cancelled) return;
       if (document.hidden) return; // Skip when tab is hidden
       try {
-        const payload: OpenTableSessionPayload = {
-          type: "open_table_session",
-          restaurant_slug: restaurant.slug,
-          order_type: "table",
-          service_mode: "mesa",
-          table_number: validatedTable.number || "N/A",
+        const res = await checkTableSession(restaurant, {
           table_token: validatedTable.token,
-          opened_from: "qrcode_scan",
-          opened_at: new Date().toISOString(),
-        };
-        const res = await openTableSession(restaurant, payload);
+          table_session_id: validatedTable.sessionId ?? null,
+          table_number: validatedTable.number ?? null,
+        });
         if (cancelled) return;
         if (res.closed) {
           terminateClosedSession({ silent: true });
