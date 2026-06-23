@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
@@ -48,6 +47,8 @@ export const Route = createFileRoute("/api/public/open-table-session")({
           if (!body?.restaurant_id || !body?.payload) {
             return new Response(JSON.stringify({ success: false, error: "Dados incompletos" }), { status: 400, headers });
           }
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           const { data: r, error } = await supabaseAdmin
             .from("restaurants")

@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
@@ -149,6 +148,8 @@ export const Route = createFileRoute("/api/public/submit-order")({
               { status: 400, headers },
             );
           }
+
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           const { data: allowed, error: limitErr } = await supabaseAdmin.rpc("check_order_rate_limit", {
             p_restaurant_id: body.restaurant_id,
