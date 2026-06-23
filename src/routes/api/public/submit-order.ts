@@ -274,6 +274,35 @@ export const Route = createFileRoute("/api/public/submit-order")({
             );
           }
 
+          const isTableOrder =
+            payload.order?.order_type === "table" ||
+            payload.order?.service_mode === "mesa" ||
+            payload.order?.delivery_type === "mesa";
+          if (isTableOrder) {
+            const tableSessionId = String(payload.order?.table_session_id ?? "").trim();
+            if (!tableSessionId) {
+              return new Response(
+                JSON.stringify({ success: false, closed: true, error: "Sessão da mesa não está ativa. Escaneie o QR Code novamente." }),
+                { status: 409, headers },
+              );
+            }
+
+            const { data: session, error: sessionErr } = await supabaseAdmin
+              .from("table_sessions")
+              .select("id, status, closed_at")
+              .eq("id", tableSessionId)
+              .eq("restaurant_id", body.restaurant_id)
+              .maybeSingle();
+
+            const status = (session?.status ?? "").toString().toLowerCase();
+            if (sessionErr || !session || !!session.closed_at || status !== "open") {
+              return new Response(
+                JSON.stringify({ success: false, closed: true, status: status || null, error: "Esta mesa foi encerrada. Escaneie novamente o QR Code da mesa." }),
+                { status: 409, headers },
+              );
+            }
+          }
+
           payload.api_key = key;
 
           const idempotencyKey = request.headers.get("x-idempotency-key") || payload.order?.id || "";

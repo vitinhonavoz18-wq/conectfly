@@ -356,7 +356,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const addLine: CartCtx["addLine"] = (line, qty = 1) => {
-    if (sessionClosed) {
+    if (sessionClosed || sessionHydrating) {
       console.warn("CART_CTX_ADDLINE_BLOCKED_SESSION_CLOSED");
       return;
     }
