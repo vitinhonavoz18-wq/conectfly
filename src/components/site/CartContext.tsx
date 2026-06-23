@@ -105,6 +105,7 @@ function readStoredTable(): ValidatedTable | null {
     // Corrupted/legacy state ("Mesa", "N/A", empty): purge so the customer is
     // forced to revalidate via QR / direct URL.
     try { window.localStorage.removeItem(TABLE_STORAGE_KEY); } catch {}
+    try { window.localStorage.removeItem(CART_STORAGE_KEY); } catch {}
     try { window.localStorage.removeItem(SESSION_CONSUMED_KEY); } catch {}
   } catch {}
   return null;
