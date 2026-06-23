@@ -360,7 +360,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       console.warn("CART_CTX_ADDLINE_BLOCKED_SESSION_CLOSED");
       return;
     }
-    setItems((cur) => {
+    const applyLine = () => setItems((cur) => {
       const idx = cur.findIndex(
         (l) => keyOf(l.itemId, l.sizeLabel) === keyOf(line.itemId, line.sizeLabel),
       );
@@ -371,6 +371,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...cur, { ...line, quantity: qty }];
     });
+    if (validatedTable) {
+      revalidateSession(validatedTable).then((active) => {
+        if (active) applyLine();
+      });
+      return;
+    }
+    applyLine();
   };
 
   const updateQty: CartCtx["updateQty"] = (itemId, sizeLabel, qty) => {
