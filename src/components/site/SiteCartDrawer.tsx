@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession } = useCart();
+  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, sessionHydrating, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -73,7 +73,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
   // Detect mesa parameter
   useEffect(() => {
-    if (!restaurant) return;
+    if (!restaurant || sessionHydrating) return;
     
     const params = new URLSearchParams(window.location.search);
     const numberParam =
@@ -104,10 +104,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         setLastOpenedTableToken(token);
         setCurrentTableSessionId(validatedTable.sessionId || null);
         setOrderType("table");
-        // Revalidate silently against FlyControl to detect tables that were
-        // closed remotely (operator finalized via FL). On explicit closure
-        // signals, clear local state so the customer cannot keep ordering.
-        handleValidateTable(token, null, numberParam, { silent: true });
         return;
       }
 
@@ -117,7 +113,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       setTableNumber(numberParam);
       setOrderType("table");
     }
-  }, [restaurant, tableSessionOpened, lastOpenedTableToken, validatedTable]); // Re-run when restaurant is loaded or session state changes
+  }, [restaurant, tableSessionOpened, lastOpenedTableToken, validatedTable, sessionHydrating]); // Re-run when restaurant is loaded or session state changes
 
   // Synchronize context validatedTable with local state
   useEffect(() => {
@@ -377,6 +373,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           terminateClosedSession({ silent });
           return false;
         }
+        if (!sessionResult.session_id) {
+          if (!silent) {
+            toast.error("Sessão da mesa não foi confirmada. Escaneie novamente o QR Code.", { id: "qr-error", duration: 6000 });
+          }
+          return false;
+        }
         const tableData = {
           id: "flycontrol-table",
           number: resolvedNumber,
@@ -423,11 +425,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           return false;
         }
 
-        // Fallback: se já temos uma mesa validada armazenada com o mesmo token,
-        // restauramos do storage em vez de mostrar o erro bruto do FlyControl
-        // (ex.: "invalid_table" quando a sessão já estava aberta).
+        // Fallback only if the exact cached session_id is still active on the
+        // server. Never restore localStorage as authority.
         const stored = validatedTable;
         if (stored && stored.token?.trim() === token.trim()) {
+          const stillActive = await revalidateSession(stored);
+          if (!stillActive) return false;
           console.log("TABLE_RESTORED_FROM_STORAGE_AFTER_FAILURE", stored);
           setTableId(stored.id);
           setTableNumber(stored.number);
@@ -598,7 +601,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     setValidationAttempted(true);
 
     // Block submissions for sessions that have been closed remotely.
-    if (sessionClosed || (orderType === "table" && !validatedTable)) {
+    if (sessionClosed || (orderType === "table" && (sessionHydrating || !validatedTable))) {
       const msg = "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
       setError(msg);
       toast.error(msg, { id: "qr-error", duration: 6000 });

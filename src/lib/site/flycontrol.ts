@@ -354,6 +354,7 @@ export async function sendOrderToFlycontrol(
   if (payload.order.order_type === "table") {
     if (!payload.order.table_number) missingFields.push("table_number");
     if (!payload.order.table_token) missingFields.push("table_token");
+    if (!payload.order.table_session_id) missingFields.push("table_session_id");
   }
 
   if (missingFields.length > 0) {
@@ -493,6 +494,8 @@ export async function openTableSession(
     const sessionId = data.response?.session_id || data.session_id;
     if (sessionId) {
       console.log("TABLE_SESSION_ID_SAVED:", sessionId);
+    } else {
+      return { success: false, message: "session_id_missing", status: rawStatus || undefined, closed: false };
     }
 
     return {

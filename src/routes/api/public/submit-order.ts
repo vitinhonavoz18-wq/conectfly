@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
@@ -150,6 +149,8 @@ export const Route = createFileRoute("/api/public/submit-order")({
             );
           }
 
+          const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
           const { data: allowed, error: limitErr } = await supabaseAdmin.rpc("check_order_rate_limit", {
             p_restaurant_id: body.restaurant_id,
             p_ip: ip
@@ -272,6 +273,35 @@ export const Route = createFileRoute("/api/public/submit-order")({
               JSON.stringify({ success: false, error: "Payload ausente" }),
               { status: 400, headers },
             );
+          }
+
+          const isTableOrder =
+            payload.order?.order_type === "table" ||
+            payload.order?.service_mode === "mesa" ||
+            payload.order?.delivery_type === "mesa";
+          if (isTableOrder) {
+            const tableSessionId = String(payload.order?.table_session_id ?? "").trim();
+            if (!tableSessionId) {
+              return new Response(
+                JSON.stringify({ success: false, closed: true, error: "Sessão da mesa não está ativa. Escaneie o QR Code novamente." }),
+                { status: 409, headers },
+              );
+            }
+
+            const { data: session, error: sessionErr } = await supabaseAdmin
+              .from("table_sessions")
+              .select("id, status, closed_at")
+              .eq("id", tableSessionId)
+              .eq("restaurant_id", body.restaurant_id)
+              .maybeSingle();
+
+            const status = (session?.status ?? "").toString().toLowerCase();
+            if (sessionErr || !session || !!session.closed_at || status !== "open") {
+              return new Response(
+                JSON.stringify({ success: false, closed: true, status: status || null, error: "Esta mesa foi encerrada. Escaneie novamente o QR Code da mesa." }),
+                { status: 409, headers },
+              );
+            }
           }
 
           payload.api_key = key;
