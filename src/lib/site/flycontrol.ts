@@ -494,6 +494,8 @@ export async function openTableSession(
     const sessionId = data.response?.session_id || data.session_id;
     if (sessionId) {
       console.log("TABLE_SESSION_ID_SAVED:", sessionId);
+    } else {
+      return { success: false, message: "session_id_missing", status: rawStatus || undefined, closed: false };
     }
 
     return {

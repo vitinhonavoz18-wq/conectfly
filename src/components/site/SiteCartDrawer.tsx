@@ -373,6 +373,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           terminateClosedSession({ silent });
           return false;
         }
+        if (!sessionResult.session_id) {
+          if (!silent) {
+            toast.error("Sessão da mesa não foi confirmada. Escaneie novamente o QR Code.", { id: "qr-error", duration: 6000 });
+          }
+          return false;
+        }
         const tableData = {
           id: "flycontrol-table",
           number: resolvedNumber,
