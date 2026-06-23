@@ -105,28 +105,6 @@ export const Route = createFileRoute("/api/public/check-table-session")({
             );
           }
 
-          // Optional secondary safety: if the physical table row was disabled,
-          // an otherwise-open session should not be considered usable.
-          let tableId: string | null = null;
-          if (body.table_token) {
-            const { data: t } = await supabaseAdmin
-              .from("restaurant_tables")
-              .select("id, is_active")
-              .eq("restaurant_id", body.restaurant_id)
-              .eq("public_token", body.table_token)
-              .maybeSingle();
-            if (t) {
-              tableId = t.id;
-              if (t.is_active === false) {
-                return new Response(
-                  JSON.stringify({ success: true, closed: true, reason: "table_inactive" }),
-                  { status: 200, headers },
-                );
-              }
-            }
-          }
-          if (!tableId) tableId = session.table_id ?? null;
-
           // Inspect close-requests bound to this exact session. When the
           //    operator acts on it in FlyControl, status moves away from
           //    'pending'. Treat acknowledged/closed-like statuses as closed,
