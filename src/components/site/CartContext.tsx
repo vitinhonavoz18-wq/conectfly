@@ -35,6 +35,13 @@ interface CartCtx {
   acknowledgeClosure: () => void;
   /** Clears the closed flag so a fresh QR scan can start a new session. */
   clearSessionClosed: () => void;
+  /**
+   * Server-authoritative session check. Returns true when the table session is
+   * still ACTIVE on the server. Returns false (and terminates the local
+   * session) when the server reports the table as closed or unknown.
+   * Always trust this over localStorage.
+   */
+  revalidateSession: () => Promise<boolean>;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
