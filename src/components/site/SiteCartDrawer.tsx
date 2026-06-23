@@ -605,6 +605,20 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
+    // Server-authoritative re-check for table orders. localStorage is only a
+    // cache — never the source of truth. If the table was closed in
+    // FlyControl, terminateSession() fires inside revalidateSession() and we
+    // bail out before submitting any order.
+    if (orderType === "table") {
+      const stillActive = await revalidateSession();
+      if (!stillActive) {
+        const msg = "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
+        setError(msg);
+        toast.error(msg, { id: "qr-error", duration: 6000 });
+        return;
+      }
+    }
+
     let firstEmptyField: React.RefObject<HTMLElement | null> | null = null;
     let errorMessage = "";
 
