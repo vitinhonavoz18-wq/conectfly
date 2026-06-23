@@ -59,9 +59,87 @@ export const Route = createFileRoute("/api/public/open-table-session")({
             return new Response(JSON.stringify({ success: false, error: "Pizzaria não encontrada" }), { status: 404, headers });
           }
 
+          // Resolve local table + ensure an open table_sessions row exists.
+          // This is what /api/public/flycontrol-table-closed matches against
+          // when FlyControl notifies us that the operator closed the table.
+          const rawToken = (body.payload?.table_token ?? "").toString().trim();
+          const rawNumber = (body.payload?.table_number ?? "").toString().trim();
+          let localSessionId: string | null = null;
+          let resolvedTableId: string | null = null;
+          let resolvedTableNumber: string | null = rawNumber || null;
+          try {
+            let tableRow: { id: string; table_number: string } | null = null;
+            if (rawToken) {
+              const { data } = await supabaseAdmin
+                .from("restaurant_tables")
+                .select("id, table_number")
+                .eq("restaurant_id", body.restaurant_id)
+                .eq("public_token", rawToken)
+                .maybeSingle();
+              tableRow = data ?? null;
+            }
+            if (!tableRow && rawNumber) {
+              const { data } = await supabaseAdmin
+                .from("restaurant_tables")
+                .select("id, table_number")
+                .eq("restaurant_id", body.restaurant_id)
+                .eq("table_number", rawNumber)
+                .maybeSingle();
+              tableRow = data ?? null;
+            }
+            if (tableRow) {
+              resolvedTableId = tableRow.id;
+              resolvedTableNumber = tableRow.table_number;
+              const { data: openRow } = await supabaseAdmin
+                .from("table_sessions")
+                .select("id")
+                .eq("restaurant_id", body.restaurant_id)
+                .eq("table_id", tableRow.id)
+                .eq("status", "open")
+                .order("opened_at", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              if (openRow?.id) {
+                localSessionId = openRow.id;
+                console.log("[OPEN-TABLE-SESSION] Reusing open table_sessions row:", localSessionId);
+              } else {
+                const { data: inserted, error: insErr } = await supabaseAdmin
+                  .from("table_sessions")
+                  .insert({
+                    restaurant_id: body.restaurant_id,
+                    table_id: tableRow.id,
+                    table_number: tableRow.table_number,
+                    status: "open",
+                    opened_at: new Date().toISOString(),
+                  })
+                  .select("id")
+                  .single();
+                if (insErr) {
+                  console.error("[OPEN-TABLE-SESSION] insert table_sessions failed:", insErr);
+                } else {
+                  localSessionId = inserted?.id ?? null;
+                  console.log("[OPEN-TABLE-SESSION] Created table_sessions row:", localSessionId);
+                }
+              }
+            } else {
+              console.warn("[OPEN-TABLE-SESSION] Could not resolve restaurant_tables row for token/number:", { rawToken, rawNumber });
+            }
+          } catch (sessErr) {
+            console.error("[OPEN-TABLE-SESSION] table_sessions provisioning error:", sessErr);
+          }
+
           let base = (r.flycontrol_base_url ?? "").trim();
           if (!base) {
-            return new Response(JSON.stringify({ success: false, error: "Configuração incompleta" }), { status: 400, headers });
+            // Even without upstream config, we can return our local session so
+            // the digital menu has something to track and the close webhook
+            // can later match by table_id / table_number.
+            return new Response(JSON.stringify({
+              success: !!localSessionId,
+              error: localSessionId ? undefined : "Configuração incompleta",
+              session_id: localSessionId,
+              table_id: resolvedTableId,
+              table_number: resolvedTableNumber,
+            }), { status: localSessionId ? 200 : 400, headers });
           }
           if (!base.startsWith("http")) base = "https://" + base;
 
@@ -90,7 +168,12 @@ export const Route = createFileRoute("/api/public/open-table-session")({
           return new Response(
             JSON.stringify({ 
               success: res.ok && (finalData.success !== false), 
-              ...finalData 
+              ...finalData,
+              // Always override session_id with the LOCAL session id so the
+              // client persists the id that flycontrol-table-closed will match.
+              session_id: localSessionId ?? finalData.session_id ?? null,
+              table_id: resolvedTableId ?? finalData.table_id ?? null,
+              table_number: resolvedTableNumber ?? finalData.table_number ?? null,
             }), 
             { status: res.status, headers }
           );
