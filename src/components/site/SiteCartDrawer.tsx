@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, terminateSession: ctxTerminateSession, clearSessionClosed } = useCart();
+  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
