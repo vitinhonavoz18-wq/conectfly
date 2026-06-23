@@ -35,13 +35,15 @@ interface CartCtx {
   acknowledgeClosure: () => void;
   /** Clears the closed flag so a fresh QR scan can start a new session. */
   clearSessionClosed: () => void;
+  /** True while a cached table session is being checked with the server. */
+  sessionHydrating: boolean;
   /**
    * Server-authoritative session check. Returns true when the table session is
    * still ACTIVE on the server. Returns false (and terminates the local
    * session) when the server reports the table as closed or unknown.
    * Always trust this over localStorage.
    */
-  revalidateSession: () => Promise<boolean>;
+  revalidateSession: (table?: ValidatedTable | null) => Promise<boolean>;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -92,6 +94,10 @@ function readStoredTable(): ValidatedTable | null {
       parsed &&
       typeof parsed.token === "string" &&
       parsed.token.trim() &&
+      typeof parsed.sessionId === "string" &&
+      parsed.sessionId.trim() &&
+      typeof parsed.restaurantId === "string" &&
+      parsed.restaurantId.trim() &&
       isValidTableNumber(parsed.number)
     ) {
       return parsed as ValidatedTable;
@@ -117,17 +123,19 @@ function readStoredItems(): CartLine[] {
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const [pendingStoredTable] = useState<ValidatedTable | null>(() => readStoredTable());
   const [items, setItems] = useState<CartLine[]>(() => readStoredItems());
   const [isCartOpen, setCartOpen] = useState(false);
-  const [validatedTable, setValidatedTableState] = useState<ValidatedTable | null>(() => readStoredTable());
+  const [validatedTable, setValidatedTableState] = useState<ValidatedTable | null>(null);
+  const [sessionHydrating, setSessionHydrating] = useState<boolean>(() => !!pendingStoredTable);
   const [sessionConsumed, setSessionConsumed] = useState<number>(() => {
-    const t = readStoredTable();
+    const t = pendingStoredTable;
     const s = readStoredConsumption();
     if (t && s && s.token === t.token) return s.total;
     return 0;
   });
   const [sessionOrderCount, setSessionOrderCount] = useState<number>(() => {
-    const t = readStoredTable();
+    const t = pendingStoredTable;
     const s = readStoredConsumption();
     if (t && s && s.token === t.token) return s.count;
     return 0;
@@ -162,7 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Persist validated table across refreshes (so QR scan survives reload).
   const setValidatedTable = (table: ValidatedTable | null) => {
-    if (table && (!isValidTableNumber(table.number) || !table.token?.trim())) {
+    if (table && (!isValidTableNumber(table.number) || !table.token?.trim() || !table.sessionId?.trim() || !table.restaurantId?.trim())) {
       console.warn("CART_CTX_REJECTED_INVALID_TABLE", table);
       return;
     }
@@ -237,9 +245,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Server-authoritative session check. Never trust localStorage alone — this
   // call is the only source of truth for "is the table session still active?".
-  const revalidateSession = async (): Promise<boolean> => {
-    const table = validatedTable;
-    if (!table?.token || !table.restaurantId) return false;
+  const revalidateSession = async (tableOverride?: ValidatedTable | null): Promise<boolean> => {
+    const table = tableOverride ?? validatedTable;
+    if (!table?.token || !table.restaurantId || !table.sessionId) {
+      terminateSession({ silent: true });
+      return false;
+    }
     try {
       const res = await fetch("/api/public/check-table-session", {
         method: "POST",
@@ -247,7 +258,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           restaurant_id: table.restaurantId,
           table_token: table.token ?? null,
-          table_session_id: table.sessionId ?? null,
+          table_session_id: table.sessionId,
           table_number: table.number ?? null,
         }),
       });
@@ -264,6 +275,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return false;
     }
   };
+
+  // Restore cached table session only after the server confirms that the exact
+  // session_id still exists and is open. localStorage is cache, never authority.
+  useEffect(() => {
+    if (!pendingStoredTable) {
+      setSessionHydrating(false);
+      return;
+    }
+    let cancelled = false;
+    const restore = async () => {
+      const active = await revalidateSession(pendingStoredTable);
+      if (cancelled) return;
+      if (active) {
+        setValidatedTableState(pendingStoredTable);
+        const stored = readStoredConsumption();
+        if (stored && stored.token === pendingStoredTable.token) {
+          setSessionConsumed(stored.total);
+          setSessionOrderCount(stored.count);
+        } else {
+          setSessionConsumed(0);
+          setSessionOrderCount(0);
+          persistConsumption(pendingStoredTable.token, 0, 0);
+        }
+      }
+      setSessionHydrating(false);
+    };
+    restore();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Global poll: while a table is active and we know its restaurant, ask the
   // server every 8s whether the session was closed in FlyControl. As soon as
@@ -373,12 +414,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       addSessionOrder,
       resetSessionConsumption,
       sessionClosed,
+      sessionHydrating,
       terminateSession,
       acknowledgeClosure,
       clearSessionClosed,
       revalidateSession,
     };
-  }, [items, isCartOpen, validatedTable, sessionConsumed, sessionOrderCount, sessionClosed]);
+  }, [items, isCartOpen, validatedTable, sessionConsumed, sessionOrderCount, sessionClosed, sessionHydrating]);
 
   return (
     <Ctx.Provider value={value}>
