@@ -623,10 +623,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         errorMessage = "Informe o seu endereço completo";
       }
     } else if (orderType === "table") {
-      if (!tableNumber) {
+      if (!isValidTableNumber(tableNumber)) {
         errorMessage = "O número da mesa não foi identificado.";
-      } else if (!tableToken) {
+      } else if (!tableToken || !tableToken.trim()) {
         errorMessage = "O token de validação da mesa está ausente. Escaneie o QR Code novamente.";
+      } else if (!tableSessionId) {
+        errorMessage = "Sessão da mesa não está ativa. Escaneie o QR Code novamente.";
       }
     } else if (!paymentMethod) {
       firstEmptyField = paymentRef;
