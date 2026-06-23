@@ -354,6 +354,7 @@ export async function sendOrderToFlycontrol(
   if (payload.order.order_type === "table") {
     if (!payload.order.table_number) missingFields.push("table_number");
     if (!payload.order.table_token) missingFields.push("table_token");
+    if (!payload.order.table_session_id) missingFields.push("table_session_id");
   }
 
   if (missingFields.length > 0) {
