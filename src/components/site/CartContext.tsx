@@ -382,6 +382,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const updateQty: CartCtx["updateQty"] = (itemId, sizeLabel, qty) => {
+    if (sessionClosed || sessionHydrating) {
+      console.warn("CART_CTX_UPDATEQTY_BLOCKED_SESSION_CLOSED");
+      return;
+    }
     setItems((cur) => {
       if (qty <= 0) {
         return cur.filter(
@@ -397,6 +401,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const removeLine: CartCtx["removeLine"] = (itemId, sizeLabel) => {
+    if (sessionClosed || sessionHydrating) {
+      console.warn("CART_CTX_REMOVELINE_BLOCKED_SESSION_CLOSED");
+      return;
+    }
     setItems((cur) =>
       cur.filter((l) => keyOf(l.itemId, l.sizeLabel) !== keyOf(itemId, sizeLabel)),
     );
