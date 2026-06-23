@@ -48,6 +48,14 @@ const CART_STORAGE_KEY = "sf:cart_items";
 const SESSION_CONSUMED_KEY = "sf:session_consumed";
 const SESSION_CLOSED_KEY = "sf:session_closed";
 
+const INVALID_TABLE_NUMBERS = new Set(["", "n/a", "na", "mesa", "null", "undefined"]);
+export function isValidTableNumber(n: unknown): n is string {
+  if (typeof n !== "string") return false;
+  const t = n.trim();
+  if (!t) return false;
+  return !INVALID_TABLE_NUMBERS.has(t.toLowerCase());
+}
+
 interface StoredSessionConsumed {
   token: string;
   total: number;
@@ -73,9 +81,18 @@ function readStoredTable(): ValidatedTable | null {
     const raw = window.localStorage.getItem(TABLE_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.token === "string" && typeof parsed.number === "string") {
+    if (
+      parsed &&
+      typeof parsed.token === "string" &&
+      parsed.token.trim() &&
+      isValidTableNumber(parsed.number)
+    ) {
       return parsed as ValidatedTable;
     }
+    // Corrupted/legacy state ("Mesa", "N/A", empty): purge so the customer is
+    // forced to revalidate via QR / direct URL.
+    try { window.localStorage.removeItem(TABLE_STORAGE_KEY); } catch {}
+    try { window.localStorage.removeItem(SESSION_CONSUMED_KEY); } catch {}
   } catch {}
   return null;
 }
@@ -138,6 +155,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Persist validated table across refreshes (so QR scan survives reload).
   const setValidatedTable = (table: ValidatedTable | null) => {
+    if (table && (!isValidTableNumber(table.number) || !table.token?.trim())) {
+      console.warn("CART_CTX_REJECTED_INVALID_TABLE", table);
+      return;
+    }
     setValidatedTableState(table);
     if (typeof window === "undefined") return;
     try {
