@@ -30,7 +30,7 @@ function getCorsHeaders(origin: string | null) {
  * Digital Menu's `checkTableSession` poll sees `closed: true` immediately.
  *
  * Payload:
- * { restaurant_id, table_number?, session_id?, table_token?, closed_at? }
+ * { restaurant_id, session_id, closed_at? }
  */
 export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
   server: {
@@ -50,6 +50,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
           };
 
           const restaurantId = body?.restaurant_id;
+          const sessionId = body?.session_id?.trim();
           if (!restaurantId) {
             return new Response(
               JSON.stringify({ success: false, error: "restaurant_id is required" }),
@@ -57,77 +58,42 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
             );
           }
 
+          if (!sessionId) {
+            return new Response(
+              JSON.stringify({ success: false, error: "session_id is required" }),
+              { status: 400, headers },
+            );
+          }
+
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const closedAt = body.closed_at ?? new Date().toISOString();
 
-          // Resolve table_id from token or number for the close-request mirror.
-          let tableId: string | null = null;
-          if (body.table_token) {
-            const { data: t } = await supabaseAdmin
-              .from("restaurant_tables")
-              .select("id")
-              .eq("restaurant_id", restaurantId)
-              .eq("public_token", String(body.table_token))
-              .maybeSingle();
-            if (t) tableId = t.id;
-          }
-          if (!tableId && body.table_number != null) {
-            const { data: t } = await supabaseAdmin
-              .from("restaurant_tables")
-              .select("id")
-              .eq("restaurant_id", restaurantId)
-              .eq("table_number", String(body.table_number))
-              .maybeSingle();
-            if (t) tableId = t.id;
-          }
+          // Authoritative closure: session_id is the ONLY lookup key. Never
+          // fall back to table_number/table_token, because that can terminate
+          // or resurrect the wrong table session.
+          const { data: updatedSessions, error: updateError } = await supabaseAdmin
+            .from("table_sessions")
+            .update({ status: "closed", closed_at: closedAt })
+            .eq("id", sessionId)
+            .eq("restaurant_id", restaurantId)
+            .select("id, table_id");
+          if (updateError) console.error("[FC-TABLE-CLOSED] sessions update by session_id error:", updateError);
 
-          // 1) Update table_sessions -> status=closed, closed_at=now
-          let sessionsUpdated = 0;
-          if (body.session_id) {
-            const { data, error } = await supabaseAdmin
-              .from("table_sessions")
-              .update({ status: "closed", closed_at: closedAt })
-              .eq("id", body.session_id)
-              .eq("restaurant_id", restaurantId)
-              .select("id");
-            if (error) console.error("[FC-TABLE-CLOSED] sessions update by id error:", error);
-            sessionsUpdated += data?.length ?? 0;
-          } else if (tableId) {
-            const { data, error } = await supabaseAdmin
-              .from("table_sessions")
-              .update({ status: "closed", closed_at: closedAt })
-              .eq("restaurant_id", restaurantId)
-              .eq("table_id", tableId)
-              .eq("status", "open")
-              .select("id");
-            if (error) console.error("[FC-TABLE-CLOSED] sessions update by table error:", error);
-            sessionsUpdated += data?.length ?? 0;
-          } else if (body.table_number != null) {
-            const { data, error } = await supabaseAdmin
-              .from("table_sessions")
-              .update({ status: "closed", closed_at: closedAt })
-              .eq("restaurant_id", restaurantId)
-              .eq("table_number", String(body.table_number))
-              .eq("status", "open")
-              .select("id");
-            if (error) console.error("[FC-TABLE-CLOSED] sessions update by number error:", error);
-            sessionsUpdated += data?.length ?? 0;
-          }
+          const sessionsUpdated = updatedSessions?.length ?? 0;
 
-          // 2) Acknowledge any pending close requests for this table.
-          if (tableId) {
+          // Acknowledge only close requests bound to the exact same session.
+          if (sessionsUpdated > 0) {
             await supabaseAdmin
               .from("table_close_requests")
               .update({ status: "acknowledged", acknowledged_at: closedAt })
               .eq("restaurant_id", restaurantId)
-              .eq("table_id", tableId)
+              .eq("table_session_id", sessionId)
               .eq("status", "pending");
           }
 
           console.log("[FC-TABLE-CLOSED]", {
             restaurantId,
-            tableId,
-            session_id: body.session_id ?? null,
+            session_id: sessionId,
             table_number: body.table_number ?? null,
             sessionsUpdated,
           });
