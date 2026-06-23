@@ -235,6 +235,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setShowClosedModal(false);
   };
 
+  // Server-authoritative session check. Never trust localStorage alone — this
+  // call is the only source of truth for "is the table session still active?".
+  const revalidateSession = async (): Promise<boolean> => {
+    const table = validatedTable;
+    if (!table?.token || !table.restaurantId) return false;
+    try {
+      const res = await fetch("/api/public/check-table-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          restaurant_id: table.restaurantId,
+          table_token: table.token ?? null,
+          table_session_id: table.sessionId ?? null,
+          table_number: table.number ?? null,
+        }),
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (data?.closed || !data?.success) {
+        terminateSession({ silent: true });
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.warn("CART_CTX_REVALIDATE_ERROR", err);
+      // Network/server unreachable: do NOT trust local cache. Block.
+      terminateSession({ silent: true });
+      return false;
+    }
+  };
+
   // Global poll: while a table is active and we know its restaurant, ask the
   // server every 8s whether the session was closed in FlyControl. As soon as
   // the closure is mirrored into public.table_sessions, terminate the
@@ -285,6 +315,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const addLine: CartCtx["addLine"] = (line, qty = 1) => {
+    if (sessionClosed) {
+      console.warn("CART_CTX_ADDLINE_BLOCKED_SESSION_CLOSED");
+      return;
+    }
     setItems((cur) => {
       const idx = cur.findIndex(
         (l) => keyOf(l.itemId, l.sizeLabel) === keyOf(line.itemId, line.sizeLabel),
@@ -342,6 +376,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       terminateSession,
       acknowledgeClosure,
       clearSessionClosed,
+      revalidateSession,
     };
   }, [items, isCartOpen, validatedTable, sessionConsumed, sessionOrderCount, sessionClosed]);
 
