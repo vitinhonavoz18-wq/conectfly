@@ -157,6 +157,9 @@ export const Route = createFileRoute("/api/public/open-table-session")({
             },
             body: JSON.stringify({
               ...body.payload,
+              session_id: localSessionId,
+              table_session_id: localSessionId,
+              sitecreator_session_id: localSessionId,
               api_key: key // Add key to payload as well for backward compatibility
             }),
           });
