@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2, QrCode, Camera, AlertCircle, Loader2 } from "lucide-react";
-import { useCart } from "./CartContext";
+import { useCart, isValidTableNumber } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl, openTableSession, checkTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
@@ -76,7 +76,11 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     if (!restaurant) return;
     
     const params = new URLSearchParams(window.location.search);
-    const mesa = params.get("mesa");
+    const numberParam =
+      params.get("table_number") ||
+      params.get("mesa") ||
+      params.get("table") ||
+      params.get("m");
     const mode = params.get("mode");
     const token = params.get("table_token") || params.get("token");
 
@@ -103,14 +107,14 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         // Revalidate silently against FlyControl to detect tables that were
         // closed remotely (operator finalized via FL). On explicit closure
         // signals, clear local state so the customer cannot keep ordering.
-        handleValidateTable(token, null, mesa, { silent: true });
+        handleValidateTable(token, null, numberParam, { silent: true });
         return;
       }
 
-      console.log("DETECTED_TABLE_PARAMS:", { token, mesa });
-      handleValidateTable(token, null, mesa);
-    } else if (mesa) {
-      setTableNumber(mesa);
+      console.log("DETECTED_TABLE_PARAMS:", { token, numberParam });
+      handleValidateTable(token, null, numberParam);
+    } else if (numberParam && isValidTableNumber(numberParam)) {
+      setTableNumber(numberParam);
       setOrderType("table");
     }
   }, [restaurant, tableSessionOpened, lastOpenedTableToken, validatedTable]); // Re-run when restaurant is loaded or session state changes
@@ -295,6 +299,29 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const silent = !!options?.silent;
     if (!restaurant) return false;
 
+    // HARD GUARD: never create or restore a table session without a valid
+    // table number + token. Silent placeholders ("N/A", "Mesa", null) used to
+    // corrupt every downstream piece of state (session, localStorage, order
+    // payload sent to FlyControl). Abort loudly instead.
+    const cleanToken = (token || "").trim();
+    if (!cleanToken) {
+      if (!silent) {
+        toast.error("Token da mesa ausente. Escaneie novamente o QR Code.", { id: "qr-error" });
+      }
+      return false;
+    }
+    if (!isValidTableNumber(numberFromQr)) {
+      if (!silent) {
+        toast.error(
+          "Número da mesa não identificado. Escaneie novamente o QR Code da mesa.",
+          { id: "qr-error", duration: 6000 }
+        );
+      }
+      console.warn("VALIDATE_TABLE_ABORTED_INVALID_NUMBER", { numberFromQr, token: cleanToken });
+      return false;
+    }
+    const resolvedNumber = (numberFromQr as string).trim();
+
     // If we already detected closure, refuse to (re)open the session silently.
     if (sessionClosed && !silent) {
       toast.error(
@@ -330,8 +357,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         restaurant_slug: targetSlug,
         order_type: "table",
         service_mode: "mesa",
-        table_number: numberFromQr || "N/A", 
-        table_token: token,
+        table_number: resolvedNumber,
+        table_token: cleanToken,
         customer_name: name || undefined,
         customer_phone: phone || undefined,
         opened_from: "qrcode_scan",
@@ -352,8 +379,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         }
         const tableData = {
           id: "flycontrol-table",
-          number: numberFromQr || "Mesa", 
-          token: token,
+          number: resolvedNumber,
+          token: cleanToken,
           sessionId: sessionResult.session_id,
           restaurantId: restaurant?.id ?? null,
         };
