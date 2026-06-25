@@ -148,17 +148,18 @@ export const Route = createFileRoute("/api/public/table-close-request")({
           let sessionId: string | null = null;
           let currentTotal = 0;
 
+          const ACTIVE_SESSION_STATUSES = ["open", "Solicitando Fechamento"];
           if (isUuid(body.table_session_id)) {
             const { data: s } = await supabaseAdmin
               .from("table_sessions")
-              .select("id, total_amount, status")
+              .select("id, total_amount, status, closed_at")
               .eq("id", body.table_session_id!)
               .maybeSingle();
-            if (s && s.status === "open") {
+            if (s && !s.closed_at && ACTIVE_SESSION_STATUSES.includes(s.status as string)) {
               sessionId = s.id;
               currentTotal = Number(s.total_amount ?? 0);
             } else {
-              log("supplied session_id not open or missing", { supplied: body.table_session_id, found: s });
+              log("supplied session_id not active or missing", { supplied: body.table_session_id, found: s });
             }
           }
 
@@ -168,7 +169,8 @@ export const Route = createFileRoute("/api/public/table-close-request")({
               .select("id, total_amount")
               .eq("table_id", table.id)
               .eq("restaurant_id", body.restaurant_id)
-              .eq("status", "open")
+              .in("status", ACTIVE_SESSION_STATUSES)
+              .is("closed_at", null)
               .order("opened_at", { ascending: false })
               .limit(1)
               .maybeSingle();
@@ -247,6 +249,21 @@ export const Route = createFileRoute("/api/public/table-close-request")({
           }
 
           log("created", { request_id: inserted.id, table_id: inserted.table_id, session_id: inserted.table_session_id });
+
+          // 6. Mirror the request onto the table session so FlyControl listeners
+          //    that subscribe to `table_sessions` (UPDATE → status='Solicitando
+          //    Fechamento') receive an immediate realtime event. This restores
+          //    the original FL detection path that was being missed when only
+          //    `table_close_requests` was published.
+          if (sessionId) {
+            const { error: updErr } = await supabaseAdmin
+              .from("table_sessions")
+              .update({ status: "Solicitando Fechamento", updated_at: new Date().toISOString() })
+              .eq("id", sessionId)
+              .in("status", ["open"]);
+            if (updErr) log("session status update error", updErr);
+            else log("session marked Solicitando Fechamento", { sessionId });
+          }
 
           return new Response(
             JSON.stringify({

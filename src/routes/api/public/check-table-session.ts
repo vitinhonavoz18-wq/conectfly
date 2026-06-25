@@ -98,7 +98,10 @@ export const Route = createFileRoute("/api/public/check-table-session")({
           }
 
           const sessionStatus = (session.status ?? "").toString().toLowerCase();
-          if (!!session.closed_at || sessionStatus !== "open") {
+          // "solicitando fechamento" is a pending-operator state — the session
+          // is still active until FlyControl approves; do NOT terminate locally.
+          const ACTIVE_STATUSES = new Set(["open", "solicitando fechamento", "solicitando_fechamento"]);
+          if (!!session.closed_at || !ACTIVE_STATUSES.has(sessionStatus)) {
             return new Response(
               JSON.stringify({ success: true, closed: true, status: sessionStatus, source: "table_sessions" }),
               { status: 200, headers },
