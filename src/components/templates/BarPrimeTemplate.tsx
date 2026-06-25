@@ -1,5 +1,6 @@
 import { useCart } from "../site/CartContext";
 import { SiteHeader } from "../site/SiteHeader";
+import { TableQrScanButton } from "../site/TableQrScanButton";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCartDrawer } from "../site/SiteCartDrawer";
@@ -137,6 +138,9 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       )}
       
       <main className="pt-16 sm:pt-20">
+        <div className="max-w-6xl mx-auto px-4 pt-4 flex justify-center">
+          <TableQrScanButton restaurant={r} />
+        </div>
         {/* Compact Hero */}
         <div className="relative overflow-hidden bg-gradient-to-b from-[hsl(var(--site-primary)/0.1)] to-transparent">
           <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 flex flex-col items-center text-center">

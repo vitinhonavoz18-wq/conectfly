@@ -1051,12 +1051,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     )}
                     {(restaurant?.table_enabled || tableNumber) && (
                       <button
-                        onClick={() => {
-                          setOrderType("table");
-                          if (!tableId && !tableNumber) {
-                            setIsScanning(true);
-                          }
-                        }}
+                        onClick={() => setOrderType("table")}
                         className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
                       >
                         <Utensils className="h-5 w-5" />
@@ -1077,40 +1072,15 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     </h3>
                     
                     {!tableId ? (
-                      <div className="p-6 rounded-[2rem] border-2 border-dashed border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col items-center gap-4 text-center">
+                      <div className="p-6 rounded-[2rem] border-2 border-dashed border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col items-center gap-3 text-center">
                         <div className="h-14 w-14 rounded-2xl bg-[hsl(var(--site-primary)/0.1)] flex items-center justify-center">
                           <QrCode className="h-7 w-7 text-[hsl(var(--site-primary))]" />
                         </div>
                         <div>
-                          <p className="text-sm font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Escaneie o QR Code da Mesa</p>
-                          <p className="text-[10px] text-[hsl(var(--site-muted-fg))] font-medium uppercase tracking-widest mt-1">Obrigatório para pedidos locais</p>
-                        </div>
-                        <button
-                          onClick={() => setIsScanning(true)}
-                          disabled={isValidatingQr}
-                          className="w-full btn-premium py-4 rounded-2xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl"
-                        >
-                          {isValidatingQr ? <Loader2 className="h-5 w-5 animate-spin" /> : <Camera className="h-5 w-5" />}
-                          <span className="uppercase text-xs font-black tracking-widest">Ler QR Code</span>
-                        </button>
-                        {/* Testar token manualmente (Debug/Admin) */}
-                        <div className="w-full pt-4 border-t border-[hsl(var(--site-border))/0.5] mt-2">
-                          <p className="text-[9px] font-black uppercase tracking-widest text-[hsl(var(--site-muted-fg))] mb-2">Testar token manualmente (Debug)</p>
-                          <div className="flex gap-2">
-                            <input 
-                              value={manualTableToken}
-                              onChange={(e) => setManualTableToken(e.target.value)}
-                              placeholder="URL ou Token"
-                              className="flex-1 px-3 py-2 rounded-lg bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] text-[10px] font-bold focus:outline-none focus:border-[hsl(var(--site-primary))]"
-                            />
-                            <button 
-                              onClick={handleManualTest}
-                              disabled={isValidatingQr}
-                              className="px-4 py-2 bg-[hsl(var(--site-primary)/0.1)] text-[hsl(var(--site-primary))] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[hsl(var(--site-primary)/0.2)] transition-all"
-                            >
-                              {isValidatingQr ? <Loader2 className="h-3 w-3 animate-spin" /> : "Validar"}
-                            </button>
-                          </div>
+                          <p className="text-sm font-black uppercase tracking-tight text-[hsl(var(--site-fg))]">Mesa não identificada</p>
+                          <p className="text-[10px] text-[hsl(var(--site-muted-fg))] font-medium uppercase tracking-widest mt-1">
+                            Use o botão "Scanear QR da Mesa" no topo da página antes de continuar.
+                          </p>
                         </div>
                       </div>
                     ) : (

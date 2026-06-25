@@ -1,5 +1,6 @@
 import { useCart } from "../site/CartContext";
 import { SiteHeader } from "../site/SiteHeader";
+import { TableQrScanButton } from "../site/TableQrScanButton";
 import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
@@ -50,6 +51,9 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
         showCartButton={r.site_settings?.show_cart_button !== false}
       />
       <main>
+        <div className="max-w-6xl mx-auto px-4 pt-20 sm:pt-24 flex justify-center">
+          <TableQrScanButton restaurant={r} />
+        </div>
         <div className="site-hero-section">
           <SiteHero
             name={r.name}
