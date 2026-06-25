@@ -248,6 +248,21 @@ export const Route = createFileRoute("/api/public/table-close-request")({
 
           log("created", { request_id: inserted.id, table_id: inserted.table_id, session_id: inserted.table_session_id });
 
+          // 6. Mirror the request onto the table session so FlyControl listeners
+          //    that subscribe to `table_sessions` (UPDATE → status='Solicitando
+          //    Fechamento') receive an immediate realtime event. This restores
+          //    the original FL detection path that was being missed when only
+          //    `table_close_requests` was published.
+          if (sessionId) {
+            const { error: updErr } = await supabaseAdmin
+              .from("table_sessions")
+              .update({ status: "Solicitando Fechamento", updated_at: new Date().toISOString() })
+              .eq("id", sessionId)
+              .eq("status", "open");
+            if (updErr) log("session status update error", updErr);
+            else log("session marked Solicitando Fechamento", { sessionId });
+          }
+
           return new Response(
             JSON.stringify({
               success: true,
