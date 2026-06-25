@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Camera, Loader2, QrCode, Utensils, X } from "lucide-react";
+import { Loader2, QrCode, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { useCart, isValidTableNumber } from "./CartContext";
 import { QrScanner } from "./QrScanner";
@@ -132,22 +132,7 @@ export function TableQrScanButton({ restaurant, className }: Props) {
         </button>
       )}
 
-      {scanning && (
-        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[hsl(var(--site-card))] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] shadow-2xl">
-            <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--site-border))]">
-              <div className="flex items-center gap-2">
-                <Camera className="h-4 w-4 text-[hsl(var(--site-primary))]" />
-                <span className="font-black uppercase text-xs tracking-widest text-[hsl(var(--site-fg))]">Escanear Mesa</span>
-              </div>
-              <button onClick={() => setScanning(false)} className="p-2 rounded-lg hover:bg-[hsl(var(--site-border)/0.3)]">
-                <X className="h-4 w-4 text-[hsl(var(--site-muted-fg))]" />
-              </button>
-            </div>
-            <QrScanner onScan={handleScan} onClose={() => setScanning(false)} />
-          </div>
-        </div>
-      )}
+      {scanning && <QrScanner onScan={handleScan} onClose={() => setScanning(false)} />}
     </div>
   );
 }
