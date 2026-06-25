@@ -1051,12 +1051,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
                     )}
                     {(restaurant?.table_enabled || tableNumber) && (
                       <button
-                        onClick={() => {
-                          setOrderType("table");
-                          if (!tableId && !tableNumber) {
-                            setIsScanning(true);
-                          }
-                        }}
+                        onClick={() => setOrderType("table")}
                         className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${orderType === 'table' ? 'bg-[hsl(var(--site-primary)/0.1)] border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary))]' : 'bg-[hsl(var(--site-card))] border-[hsl(var(--site-border))] text-[hsl(var(--site-muted-fg))]'}`}
                       >
                         <Utensils className="h-5 w-5" />
