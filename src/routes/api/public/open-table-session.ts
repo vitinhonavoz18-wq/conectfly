@@ -169,18 +169,56 @@ export const Route = createFileRoute("/api/public/open-table-session")({
           let finalData: any = {};
           try { finalData = JSON.parse(txt); } catch { finalData = { text: txt }; }
 
-          return new Response(
-            JSON.stringify({ 
-              success: res.ok && (finalData.success !== false), 
-              ...finalData,
-              // Always override session_id with the LOCAL session id so the
-              // client persists the id that flycontrol-table-closed will match.
-              session_id: localSessionId ?? finalData.session_id ?? null,
-              table_id: resolvedTableId ?? finalData.table_id ?? null,
-              table_number: resolvedTableNumber ?? finalData.table_number ?? null,
-            }), 
-            { status: res.status, headers }
-          );
+          // Mine session_id from any FlyControl response shape so a missing
+          // local row (e.g. table not mirrored in restaurant_tables yet) never
+          // forces the frontend down the error path while FL is happily open.
+          const upstreamSessionId =
+            finalData?.session_id ??
+            finalData?.table_session_id ??
+            finalData?.response?.session_id ??
+            finalData?.response?.table_session_id ??
+            finalData?.response?.id ??
+            finalData?.data?.session_id ??
+            finalData?.data?.id ??
+            finalData?.id ??
+            null;
+
+          const upstreamStatus = (
+            finalData?.response?.status ?? finalData?.status ?? finalData?.response?.session_status ?? finalData?.session_status ?? ""
+          ).toString().toLowerCase();
+          const upstreamClosed = /(closed|fechad|finaliz|encerr|ended)/.test(upstreamStatus);
+
+          const upstreamOk = res.ok && finalData?.success !== false && !upstreamClosed;
+
+          // Pick the most reliable id available. Prefer the local row (matched
+          // by flycontrol-table-closed webhook) → upstream id → synthesized id
+          // so the client ALWAYS receives a non-empty session_id when FL accepted
+          // the open. The synthesized id keeps the ValidatedTable contract intact.
+          let finalSessionId: string | null = localSessionId ?? upstreamSessionId ?? null;
+          if (!finalSessionId && upstreamOk) {
+            try { finalSessionId = (globalThis as any).crypto?.randomUUID?.() ?? null; } catch {}
+            if (!finalSessionId) finalSessionId = `tsess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+            console.warn("[OPEN-TABLE-SESSION] Synthesized session_id (no local, no upstream id):", finalSessionId);
+          }
+
+          const overallSuccess = upstreamOk && !!finalSessionId;
+
+          // IMPORTANT: spread finalData FIRST, then override our authoritative
+          // fields so FlyControl's payload can never clobber success/session_id.
+          const responseBody = {
+            ...finalData,
+            success: overallSuccess,
+            session_id: finalSessionId,
+            table_id: resolvedTableId ?? finalData?.table_id ?? null,
+            table_number: resolvedTableNumber ?? finalData?.table_number ?? null,
+            status: upstreamStatus || finalData?.status || (overallSuccess ? "open" : undefined),
+            closed: upstreamClosed,
+            already_open: finalData?.already_open ?? finalData?.response?.already_open ?? false,
+          };
+
+          console.log("[OPEN-TABLE-SESSION] Returning to client:", { success: overallSuccess, session_id: finalSessionId, table_id: resolvedTableId, closed: upstreamClosed, upstreamStatus });
+
+          return new Response(JSON.stringify(responseBody), { status: overallSuccess ? 200 : res.status, headers });
         } catch (e: any) {
           console.error("[OPEN-TABLE-SESSION] Error:", e);
           return new Response(JSON.stringify({ success: false, error: "Erro interno" }), { status: 500, headers });
