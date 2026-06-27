@@ -474,37 +474,53 @@ export async function openTableSession(
       }),
     });
 
-    const data = await response.json();
-    console.log("OPEN_TABLE_SESSION_RESPONSE:", data);
+    const data = await response.json().catch(() => ({} as any));
+    console.log("OPEN_TABLE_SESSION_RESPONSE:", { httpStatus: response.status, data });
 
-    // Extract status from any common shape returned by FlyControl
     const rawStatus = (
-      data.response?.status ?? data.status ?? data.response?.session_status ?? data.session_status ?? ""
-    )
-      .toString()
-      .toLowerCase();
-    const closedSignals = /(closed|fechad|finaliz|encerr|ended)/;
-    const isClosed = closedSignals.test(rawStatus);
+      data?.status ?? data?.response?.status ?? data?.session_status ?? data?.response?.session_status ?? ""
+    ).toString().toLowerCase();
+    const isClosed = !!data?.closed || /(closed|fechad|finaliz|encerr|ended)/.test(rawStatus);
 
-    if (!response.ok || data.success === false) {
-      console.error("OPEN_TABLE_SESSION_ERROR:", data.error || data.message || `HTTP ${response.status}`);
-      return { success: false, message: data.error || data.message, status: rawStatus || undefined, closed: isClosed };
+    // Our /api/public/open-table-session wrapper always normalizes session_id
+    // at the top-level when the upstream call succeeded. Fall back to legacy
+    // shapes for backward compatibility.
+    const sessionId =
+      data?.session_id ||
+      data?.response?.session_id ||
+      data?.table_session_id ||
+      data?.response?.table_session_id ||
+      null;
+
+    // Treat the open as successful when: HTTP ok, server didn't explicitly
+    // fail, table isn't closed, AND we received a session_id (the wrapper
+    // synthesizes one when FlyControl accepts but doesn't return an id).
+    const success = response.ok && data?.success !== false && !isClosed && !!sessionId;
+
+    if (!success) {
+      console.error("OPEN_TABLE_SESSION_ERROR:", {
+        httpOk: response.ok,
+        success: data?.success,
+        isClosed,
+        sessionId,
+        message: data?.error || data?.message,
+      });
+      return {
+        success: false,
+        session_id: sessionId || undefined,
+        message: data?.error || data?.message || (isClosed ? "session_closed" : "open_failed"),
+        status: rawStatus || undefined,
+        closed: isClosed,
+      };
     }
 
-    const sessionId = data.response?.session_id || data.session_id;
-    if (sessionId) {
-      console.log("TABLE_SESSION_ID_SAVED:", sessionId);
-    } else {
-      return { success: false, message: "session_id_missing", status: rawStatus || undefined, closed: false };
-    }
-
+    console.log("TABLE_SESSION_ID_SAVED:", sessionId);
     return {
-      success: !isClosed,
-      session_id: sessionId,
-      already_open: data.response?.already_open || data.already_open,
-      status: rawStatus || undefined,
-      closed: isClosed,
-      message: isClosed ? "session_closed" : undefined,
+      success: true,
+      session_id: sessionId!,
+      already_open: !!(data?.already_open || data?.response?.already_open),
+      status: rawStatus || "open",
+      closed: false,
     };
   } catch (err: any) {
     console.error("OPEN_TABLE_SESSION_ERROR:", err.message);
