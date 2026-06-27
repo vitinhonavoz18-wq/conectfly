@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, ReactNode, useEffect } from "react";
-import type { CartLine } from "@/lib/site/types";
+import type { CartLine, RestaurantRow } from "@/lib/site/types";
+import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 
 export interface ValidatedTable {
   id: string;
@@ -44,6 +45,19 @@ interface CartCtx {
    * Always trust this over localStorage.
    */
   revalidateSession: (table?: ValidatedTable | null) => Promise<boolean>;
+  /**
+   * Single source of truth for "scan QR → open FL session → persist locally".
+   * Both the header QR button and the cart drawer flow call this so the
+   * validatedTable lifecycle stays identical regardless of entry point.
+   */
+  validateAndOpenTable: (args: {
+    restaurant: Pick<RestaurantRow, "id" | "slug">;
+    table_number: string;
+    table_token: string;
+    restaurant_slug?: string | null;
+    customer_name?: string | null;
+    customer_phone?: string | null;
+  }) => Promise<{ success: boolean; closed?: boolean; already_open?: boolean; session_id?: string | null; message?: string }>;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
