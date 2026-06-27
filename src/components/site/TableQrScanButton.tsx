@@ -3,7 +3,6 @@ import { Loader2, QrCode, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { useCart, isValidTableNumber } from "./CartContext";
 import { QrScanner } from "./QrScanner";
-import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 import type { RestaurantRow } from "@/lib/site/types";
 
 interface Props {
@@ -54,7 +53,7 @@ function extractTableQrData(qrValue: string, fallbackSlug?: string | null) {
 }
 
 export function TableQrScanButton({ restaurant, className }: Props) {
-  const { validatedTable, setValidatedTable, sessionClosed, clearSessionClosed } = useCart();
+  const { validatedTable, sessionClosed, clearSessionClosed, validateAndOpenTable } = useCart();
   const [scanning, setScanning] = useState(false);
   const [validating, setValidating] = useState(false);
 
@@ -78,25 +77,13 @@ export function TableQrScanButton({ restaurant, className }: Props) {
 
     setValidating(true);
     try {
-      const payload: OpenTableSessionPayload = {
-        type: "open_table_session",
-        restaurant_slug: (restaurant_slug || restaurant.slug)!,
-        order_type: "table",
-        service_mode: "mesa",
+      const result = await validateAndOpenTable({
+        restaurant,
         table_number: (table_number as string).trim(),
         table_token: table_token.trim(),
-        opened_from: "qrcode_scan",
-        opened_at: new Date().toISOString(),
-      };
-      const result = await openTableSession(restaurant, payload);
-      if (result.success && result.session_id && !result.closed) {
-        setValidatedTable({
-          id: "flycontrol-table",
-          number: (table_number as string).trim(),
-          token: table_token.trim(),
-          sessionId: result.session_id,
-          restaurantId: restaurant?.id ?? null,
-        });
+        restaurant_slug: restaurant_slug || restaurant.slug,
+      });
+      if (result.success) {
         toast.success(
           result.already_open
             ? `Mesa ${table_number} já está aberta.`
@@ -104,7 +91,12 @@ export function TableQrScanButton({ restaurant, className }: Props) {
           { id: "qr-success" }
         );
       } else {
-        toast.error("Não foi possível abrir a mesa. Procure um atendente.", { id: "qr-error" });
+        toast.error(
+          result.closed
+            ? "Esta mesa foi encerrada. Solicite uma nova."
+            : "Não foi possível abrir a mesa. Procure um atendente.",
+          { id: "qr-error" }
+        );
       }
     } catch (e) {
       console.error("TABLE_QR_SCAN_ERROR", e);
