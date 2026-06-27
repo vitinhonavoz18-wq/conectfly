@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, ReactNode, useEffect } from "react";
-import type { CartLine } from "@/lib/site/types";
+import type { CartLine, RestaurantRow } from "@/lib/site/types";
+import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 
 export interface ValidatedTable {
   id: string;
@@ -44,6 +45,19 @@ interface CartCtx {
    * Always trust this over localStorage.
    */
   revalidateSession: (table?: ValidatedTable | null) => Promise<boolean>;
+  /**
+   * Single source of truth for "scan QR → open FL session → persist locally".
+   * Both the header QR button and the cart drawer flow call this so the
+   * validatedTable lifecycle stays identical regardless of entry point.
+   */
+  validateAndOpenTable: (args: {
+    restaurant: Pick<RestaurantRow, "id" | "slug">;
+    table_number: string;
+    table_token: string;
+    restaurant_slug?: string | null;
+    customer_name?: string | null;
+    customer_phone?: string | null;
+  }) => Promise<{ success: boolean; closed?: boolean; already_open?: boolean; session_id?: string | null; message?: string }>;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -277,6 +291,74 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Unified scan→open→persist pipeline. Idempotent: safe to call multiple times
+  // with the same token. Always uses the SAME setValidatedTable path so the
+  // validatedTable lifecycle (state + localStorage + sessionConsumed reset)
+  // stays identical to the cart-drawer flow.
+  const validateAndOpenTable: CartCtx["validateAndOpenTable"] = async ({
+    restaurant,
+    table_number,
+    table_token,
+    restaurant_slug,
+    customer_name,
+    customer_phone,
+  }) => {
+    const number = (table_number || "").trim();
+    const token = (table_token || "").trim();
+    if (!isValidTableNumber(number) || !token) {
+      console.warn("VALIDATE_AND_OPEN_TABLE_INVALID_INPUT", { number, token });
+      return { success: false, message: "invalid_input" };
+    }
+    if (!restaurant?.id) {
+      console.warn("VALIDATE_AND_OPEN_TABLE_MISSING_RESTAURANT");
+      return { success: false, message: "missing_restaurant" };
+    }
+    if (sessionClosed) clearSessionClosed();
+
+    const payload: OpenTableSessionPayload = {
+      type: "open_table_session",
+      restaurant_slug: (restaurant_slug || restaurant.slug || "").trim(),
+      order_type: "table",
+      service_mode: "mesa",
+      table_number: number,
+      table_token: token,
+      customer_name: customer_name || undefined,
+      customer_phone: customer_phone || undefined,
+      opened_from: "qrcode_scan",
+      opened_at: new Date().toISOString(),
+    };
+
+    try {
+      const result = await openTableSession(restaurant, payload);
+      console.log("VALIDATE_AND_OPEN_TABLE_RESULT", result);
+      if (!result.success || result.closed || !result.session_id) {
+        return {
+          success: false,
+          closed: !!result.closed,
+          session_id: result.session_id ?? null,
+          message: result.message,
+        };
+      }
+      const tableData: ValidatedTable = {
+        id: "flycontrol-table",
+        number,
+        token,
+        sessionId: result.session_id,
+        restaurantId: restaurant.id,
+      };
+      setValidatedTable(tableData);
+      console.log("TABLE_VALIDATED_AND_PERSISTED", tableData);
+      return {
+        success: true,
+        already_open: !!result.already_open,
+        session_id: result.session_id,
+      };
+    } catch (err: any) {
+      console.error("VALIDATE_AND_OPEN_TABLE_ERROR", err);
+      return { success: false, message: err?.message || "open_failed" };
+    }
+  };
+
   // Restore cached table session only after the server confirms that the exact
   // session_id still exists and is open. localStorage is cache, never authority.
   useEffect(() => {
@@ -435,6 +517,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       acknowledgeClosure,
       clearSessionClosed,
       revalidateSession,
+      validateAndOpenTable,
     };
   }, [items, isCartOpen, validatedTable, sessionConsumed, sessionOrderCount, sessionClosed, sessionHydrating]);
 
