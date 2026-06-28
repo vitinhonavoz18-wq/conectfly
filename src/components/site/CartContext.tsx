@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo, useState, ReactNode, useEffect } from "react";
 import type { CartLine, RestaurantRow } from "@/lib/site/types";
 import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
+import { newTraceId, traceLog, traceWarn } from "@/lib/site/closeDebug";
 
 export interface ValidatedTable {
   id: string;
@@ -228,7 +229,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // (home page, menu sections, cart drawer). Wipes table, cart and storage,
   // then surfaces the blocking "MESA ENCERRADA" modal.
   const terminateSession = (_opts?: { silent?: boolean }) => {
-    console.log("CART_CTX_TERMINATE_SESSION");
+    const traceId = newTraceId("terminate");
+    traceLog(traceId, "STEP 9 — CartContext.terminateSession (THIS overwrites validatedTable→null)", {
+      reason: "called by poller or revalidate",
+      stack: new Error().stack?.split("\n").slice(1, 6).join("\n"),
+      had_validated_table: !!validatedTable,
+      had_items: items.length,
+    });
     setValidatedTableState(null);
     setItems([]);
     setSessionConsumed(0);
@@ -405,6 +412,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const tick = async () => {
       if (cancelled || typeof document === "undefined") return;
       if (document.hidden) return;
+      const pollTraceId = newTraceId("poll-ctx");
+      const t0 = Date.now();
+      traceLog(pollTraceId, "STEP 8a — CartContext poll tick START", {
+        session_id: validatedTable.sessionId,
+        table_number: validatedTable.number,
+      });
       try {
         const res = await fetch("/api/public/check-table-session", {
           method: "POST",
@@ -418,9 +431,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         });
         const data = await res.json().catch(() => ({} as any));
         if (cancelled) return;
-        if (data?.closed) terminateSession({ silent: true });
+        traceLog(pollTraceId, "STEP 8a — CartContext poll tick END", {
+          elapsed_ms: Date.now() - t0,
+          http_status: res.status,
+          body: data,
+        });
+        if (data?.closed) {
+          traceLog(pollTraceId, "STEP 9 — CartContext poll → terminateSession (will overwrite state)", data);
+          terminateSession({ silent: true });
+        }
       } catch (err) {
-        console.warn("CART_CTX_SESSION_POLL_ERROR", err);
+        traceWarn(pollTraceId, "CartContext poll error", err);
       }
     };
     tick();
