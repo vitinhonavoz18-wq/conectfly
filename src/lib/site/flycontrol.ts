@@ -532,33 +532,28 @@ export async function openTableSession(
  * Non-mutating status check. Returns `{ closed: true }` when FlyControl
  * reports the session as closed/finalized. Used by the customer-side poll
  * to terminate the session without re-opening it.
+ *
+ * @deprecated Import `checkTableSession` from `@/services/tableSessionService`.
+ * This re-export remains only for backward compatibility and delegates to
+ * the unified service layer.
  */
 export async function checkTableSession(
   restaurant: Pick<RestaurantRow, "id" | "slug">,
   params: { table_token?: string | null; table_session_id?: string | null; table_number?: string | null }
 ): Promise<{ success: boolean; closed: boolean; status?: string | null; unavailable?: boolean }> {
-  try {
-    const res = await fetch("/api/public/check-table-session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        restaurant_id: restaurant.id,
-        table_token: params.table_token ?? null,
-        table_session_id: params.table_session_id ?? null,
-        table_number: params.table_number ?? null,
-      }),
-    });
-    const data = await res.json();
-    return {
-      success: !!data?.success,
-      closed: !!data?.closed,
-      status: data?.status ?? null,
-      unavailable: !!data?.unavailable,
-    };
-  } catch (err: any) {
-    console.warn("CHECK_TABLE_SESSION_ERROR", err?.message);
-    return { success: false, closed: false };
-  }
+  const { checkTableSession: svcCheck } = await import("@/services/tableSessionService");
+  const result = await svcCheck({
+    restaurant_id: restaurant.id,
+    table_token: params.table_token ?? null,
+    table_session_id: params.table_session_id ?? null,
+    table_number: params.table_number ?? null,
+  });
+  return {
+    success: result.success,
+    closed: result.closed,
+    status: result.status,
+    unavailable: result.unavailable,
+  };
 }
 
 /**
