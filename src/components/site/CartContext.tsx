@@ -416,7 +416,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       });
       try {
         const data = await svcCheckTableSession({
-          restaurant_id: validatedTable.restaurantId,
+          restaurant_id: validatedTable.restaurantId!,
           table_token: validatedTable.token ?? null,
           table_session_id: validatedTable.sessionId ?? null,
           table_number: validatedTable.number ?? null,
