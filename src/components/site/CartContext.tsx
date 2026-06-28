@@ -252,6 +252,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     setSessionClosed(true);
     setShowClosedModal(true);
+    // Per product spec: after FL confirms closure, reload automatically so
+    // the device returns to the initial QR-scan state. Delay a few seconds
+    // so the user sees the "Mesa Encerrada" notice first.
+    if (typeof window !== "undefined") {
+      window.setTimeout(() => {
+        try {
+          window.sessionStorage.removeItem(SESSION_CLOSED_KEY);
+        } catch {}
+        window.location.reload();
+      }, 4000);
+    }
   };
 
   const acknowledgeClosure = () => {
