@@ -417,6 +417,41 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
           </div>
         </div>
       )}
+
+      {closeWarningOpen && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/70 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCloseWarningOpen(false)}
+        >
+          <div
+            className="bg-white text-neutral-900 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-black uppercase tracking-wide mb-3">Ainda aguardando confirmação</h3>
+            <p className="text-sm text-neutral-600">
+              We are still waiting for the restaurant to confirm the closure. Sua mesa permanece ativa e a verificação continua acontecendo automaticamente.
+            </p>
+            <div className="mt-6 flex gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => setCloseWarningOpen(false)}
+                className="px-6 py-3 rounded-full bg-neutral-900 text-white font-black uppercase tracking-widest text-sm"
+              >
+                Continuar aguardando
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 rounded-full bg-neutral-200 text-neutral-900 font-black uppercase tracking-widest text-sm"
+              >
+                Atualizar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
