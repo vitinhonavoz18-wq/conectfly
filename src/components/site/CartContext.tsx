@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState, ReactNode, useEffect } fr
 import type { CartLine, RestaurantRow } from "@/lib/site/types";
 import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 import { newTraceId, traceLog, traceWarn } from "@/lib/site/closeDebug";
+import { checkTableSession as svcCheckTableSession } from "@/services/tableSessionService";
 
 export interface ValidatedTable {
   id: string;
@@ -280,18 +281,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return false;
     }
     try {
-      const res = await fetch("/api/public/check-table-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          restaurant_id: table.restaurantId,
-          table_token: table.token ?? null,
-          table_session_id: table.sessionId,
-          table_number: table.number ?? null,
-        }),
+      const data = await svcCheckTableSession({
+        restaurant_id: table.restaurantId,
+        table_token: table.token ?? null,
+        table_session_id: table.sessionId,
+        table_number: table.number ?? null,
       });
-      const data = await res.json().catch(() => ({} as any));
-      if (data?.closed || !data?.success) {
+      if (data.closed || !data.success) {
         terminateSession({ silent: true });
         return false;
       }
@@ -419,24 +415,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         table_number: validatedTable.number,
       });
       try {
-        const res = await fetch("/api/public/check-table-session", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            restaurant_id: validatedTable.restaurantId,
-            table_token: validatedTable.token ?? null,
-            table_session_id: validatedTable.sessionId ?? null,
-            table_number: validatedTable.number ?? null,
-          }),
+        const data = await svcCheckTableSession({
+          restaurant_id: validatedTable.restaurantId,
+          table_token: validatedTable.token ?? null,
+          table_session_id: validatedTable.sessionId ?? null,
+          table_number: validatedTable.number ?? null,
+          traceId: pollTraceId,
         });
-        const data = await res.json().catch(() => ({} as any));
         if (cancelled) return;
         traceLog(pollTraceId, "STEP 8a — CartContext poll tick END", {
           elapsed_ms: Date.now() - t0,
-          http_status: res.status,
-          body: data,
+          body: data.raw ?? data,
         });
-        if (data?.closed) {
+        if (data.closed) {
           traceLog(pollTraceId, "STEP 9 — CartContext poll → terminateSession (will overwrite state)", data);
           terminateSession({ silent: true });
         }
