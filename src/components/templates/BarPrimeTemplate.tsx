@@ -8,7 +8,8 @@ import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { newTraceId, traceGroup, traceGroupEnd, traceLog, traceError, TRACE_HEADER } from "@/lib/site/closeDebug";
+import { newTraceId, traceGroup, traceGroupEnd, traceLog, traceError } from "@/lib/site/closeDebug";
+import { requestTableClose as svcRequestTableClose } from "@/services/tableSessionService";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount } = useCart();
@@ -54,30 +55,31 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       table_session_id: validatedTable.sessionId ?? null,
       customer_name: (validatedTable as any).customerName ?? null,
     };
-    traceGroup(traceId, "STEP 2/3 — POST /api/public/table-close-request");
+    traceGroup(traceId, "STEP 2/3 — tableSessionService.requestTableClose()");
     traceLog(traceId, "request payload (exact JSON)", payload);
     traceGroupEnd();
     try {
-      const res = await fetch("/api/public/table-close-request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", [TRACE_HEADER]: traceId },
-        body: JSON.stringify(payload),
+      const result = await svcRequestTableClose({
+        restaurant_id: payload.restaurant_id,
+        table_number: payload.table_number ?? null,
+        table_token: payload.table_token ?? null,
+        table_session_id: payload.table_session_id,
+        customer_name: payload.customer_name,
+        traceId,
       });
       const elapsed = Math.round(performance.now() - t0);
-      const json = await res.json().catch(() => ({}));
-      traceGroup(traceId, `STEP 4 — backend response (status=${res.status}, ${elapsed}ms)`);
-      traceLog(traceId, "response headers (trace echo)", res.headers.get(TRACE_HEADER));
-      traceLog(traceId, "response body", json);
+      traceGroup(traceId, `STEP 4 — backend response (status=${result.status}, ${elapsed}ms)`);
+      traceLog(traceId, "response body", result.raw ?? result);
       traceGroupEnd();
-      if (!res.ok || json?.success === false) {
-        traceError(traceId, "STEP 10 — flow stopped: backend rejected request", { status: res.status, body: json });
+      if (!result.success) {
+        traceError(traceId, "STEP 10 — flow stopped: backend rejected request", { status: result.status, body: result.raw });
         setCloseModal({
           open: true,
           error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
         });
       } else {
-        traceLog(traceId, "STEP 7 — UI received success; awaiting realtime closure via poll", json);
-        setCloseModal({ open: true, duplicate: !!json?.duplicate });
+        traceLog(traceId, "STEP 7 — UI received success; awaiting realtime closure via poll", result.raw);
+        setCloseModal({ open: true, duplicate: !!result.duplicate });
       }
     } catch (e) {
       traceError(traceId, "STEP 10 — flow stopped: network error", e);
