@@ -17,6 +17,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
   const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -276,7 +277,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
               </div>
             </div>
             <button 
-              onClick={requestTableClose}
+              onClick={() => setConfirmClose(true)}
               disabled={isRequestingClose}
               className="px-10 py-5 rounded-full bg-destructive text-destructive-foreground font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-destructive/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
@@ -356,6 +357,49 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
             >
               OK
             </button>
+          </div>
+        </div>
+      )}
+
+      {confirmClose && validatedTable && (
+        <div
+          className="fixed inset-0 z-[110] bg-black/70 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => !isRequestingClose && setConfirmClose(false)}
+        >
+          <div
+            className="bg-white text-neutral-900 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-black uppercase tracking-wide mb-2">Fechar a sessão da mesa?</h3>
+            <p className="text-sm text-neutral-600 mb-2">
+              Deseja realmente solicitar o fechamento da Mesa {validatedTable.number}?
+            </p>
+            <p className="text-xs text-neutral-500 mb-6">
+              A mesa só será encerrada após a confirmação do atendente no sistema.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                type="button"
+                disabled={isRequestingClose}
+                onClick={() => setConfirmClose(false)}
+                className="px-6 py-3 rounded-full bg-neutral-200 text-neutral-900 font-black uppercase tracking-widest text-sm disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={isRequestingClose}
+                onClick={async () => {
+                  await requestTableClose();
+                  setConfirmClose(false);
+                }}
+                className="px-6 py-3 rounded-full bg-destructive text-destructive-foreground font-black uppercase tracking-widest text-sm disabled:opacity-60"
+              >
+                {isRequestingClose ? "Enviando..." : "Finalizar Sessão"}
+              </button>
+            </div>
           </div>
         </div>
       )}
