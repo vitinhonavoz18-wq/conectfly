@@ -10,12 +10,11 @@ import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBa
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
-  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount, terminateSession } = useCart();
+  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
-  const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string; awaitingFinalize?: boolean } | null>(null);
-  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -25,9 +24,12 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // STEP 1 — send the close request to FlyControl via the SF backend.
-  // This does NOT terminate the session. Customer must explicitly confirm
-  // via "Finalizar Sessão" before any local state is wiped.
+  // Send the close request to FlyControl via the SF backend.
+  // The Digital Menu NEVER closes the table itself: it only requests closure.
+  // The customer stays attached to the table until FlyControl's operator
+  // confirms the closure and the `/api/public/flycontrol-table-closed`
+  // webhook flips the local session to `closed`. The CartContext poller
+  // (see check-table-session) is the only path that calls terminateSession.
   const requestTableClose = async () => {
     if (!validatedTable || isRequestingClose) return;
     setIsRequestingClose(true);
@@ -47,41 +49,18 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       if (!res.ok || json?.success === false) {
         setCloseModal({
           open: true,
-          awaitingFinalize: false,
           error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
         });
       } else {
-        setCloseModal({ open: true, awaitingFinalize: true, duplicate: !!json?.duplicate });
+        setCloseModal({ open: true, duplicate: !!json?.duplicate });
       }
     } catch (e) {
       setCloseModal({
         open: true,
-        awaitingFinalize: false,
         error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
       });
     } finally {
       setIsRequestingClose(false);
-    }
-  };
-
-  // STEP 2 — the customer explicitly finalizes the session.
-  // This is the ONLY true session termination point on the SF side: wipes
-  // CartContext + localStorage + cancels polling (via terminateSession),
-  // then redirects to a clean home URL so the app behaves like a fresh
-  // visitor (no table_number, no session_id, no validation cache).
-  const finalizeSession = () => {
-    if (isFinalizing) return;
-    setIsFinalizing(true);
-    try {
-      terminateSession({ silent: true });
-    } catch (e) {
-      console.warn("FINALIZE_SESSION_ERROR", e);
-    }
-    setCloseModal(null);
-    if (typeof window !== "undefined") {
-      const slug = (r as any)?.slug;
-      const cleanPath = slug ? `/${slug}` : "/";
-      window.location.replace(cleanPath);
     }
   };
 
@@ -331,41 +310,23 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
               <>
                 <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação já enviada</h3>
                 <p className="text-sm text-neutral-600">
-                  Solicitação de fechamento enviada para o restaurante. Aguarde a confirmação do atendente e, quando estiver pronto, finalize sua sessão.
+                  Já existe uma solicitação de fechamento em andamento. Aguarde o atendente concluir o pagamento — sua mesa será encerrada automaticamente.
                 </p>
               </>
             ) : (
               <>
                 <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação enviada</h3>
                 <p className="text-sm text-neutral-600">
-                  Solicitação de fechamento enviada para o restaurante. Quando o atendimento concluir o pagamento, toque em <strong>Finalizar Sessão</strong> para encerrar.
+                  Sua solicitação foi enviada ao restaurante. Aguarde o atendente concluir o pagamento — sua mesa será encerrada automaticamente assim que ele confirmar.
                 </p>
               </>
             )}
-            {closeModal.awaitingFinalize && !closeModal.error ? (
-              <div className="mt-6 flex flex-col gap-3">
-                <button
-                  onClick={finalizeSession}
-                  disabled={isFinalizing}
-                  className="px-8 py-3 rounded-full bg-destructive text-destructive-foreground font-black uppercase tracking-widest text-sm disabled:opacity-60"
-                >
-                  {isFinalizing ? "Finalizando..." : "Finalizar Sessão"}
-                </button>
-                <button
-                  onClick={() => setCloseModal(null)}
-                  className="px-8 py-2 rounded-full bg-transparent text-neutral-700 font-bold uppercase tracking-widest text-xs"
-                >
-                  Voltar
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setCloseModal(null)}
-                className="mt-6 px-8 py-3 rounded-full bg-neutral-900 text-white font-black uppercase tracking-widest text-sm"
-              >
-                OK
-              </button>
-            )}
+            <button
+              onClick={() => setCloseModal(null)}
+              className="mt-6 px-8 py-3 rounded-full bg-neutral-900 text-white font-black uppercase tracking-widest text-sm"
+            >
+              OK
+            </button>
           </div>
         </div>
       )}
