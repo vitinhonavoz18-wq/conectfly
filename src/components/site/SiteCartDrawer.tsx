@@ -3,13 +3,12 @@ import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, Sh
 import { useCart, isValidTableNumber } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl, openTableSession, checkTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
+import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl, openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
 import { supabase } from "@/integrations/supabase/client";
 import { QrScanner } from "./QrScanner";
-import { newTraceId, traceLog, traceWarn } from "@/lib/site/closeDebug";
 
 
 interface Props {
@@ -145,54 +144,9 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     }
   }, [validatedTable]);
 
-  // Active session check: poll FlyControl periodically while a table session
-  // is active. If the operator marks the session as closed remotely, we
-  // immediately terminate the customer's access.
-  useEffect(() => {
-    if (!restaurant || !validatedTable?.token) return;
-    let cancelled = false;
-    const tick = async () => {
-      if (cancelled) return;
-      if (document.hidden) return; // Skip when tab is hidden
-      const pollTraceId = newTraceId("poll-drawer");
-      const t0 = Date.now();
-      traceLog(pollTraceId, "STEP 8b — SiteCartDrawer poll tick START", {
-        session_id: validatedTable.sessionId,
-        table_number: validatedTable.number,
-      });
-      try {
-        const res = await checkTableSession(restaurant, {
-          table_token: validatedTable.token,
-          table_session_id: validatedTable.sessionId ?? null,
-          table_number: validatedTable.number ?? null,
-        });
-        if (cancelled) return;
-        traceLog(pollTraceId, "STEP 8b — SiteCartDrawer poll tick END", {
-          elapsed_ms: Date.now() - t0,
-          result: res,
-        });
-        if (res.closed) {
-          traceLog(pollTraceId, "STEP 9 — SiteCartDrawer poll → terminateClosedSession (will overwrite state)", res);
-          terminateClosedSession({ silent: true });
-        }
-      } catch (e) {
-        // Network errors during polling are ignored
-        traceWarn(pollTraceId, "SiteCartDrawer poll error", e);
-      }
-    };
-    const id = window.setInterval(tick, 8000);
-    // Also run once on mount/visibility change
-    const onVisible = () => { if (!document.hidden) tick(); };
-    // Kick once immediately so closures detected during background time
-    // are surfaced as soon as the drawer mounts.
-    tick();
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [restaurant?.id, restaurant?.slug, validatedTable?.token]);
+  // Session closure detection is centralized in CartContext (single polling loop).
+  // SiteCartDrawer only consumes shared state and never performs polling or
+  // direct session status fetches.
 
 
   const extractTableQrData = (qrValue: string) => {
