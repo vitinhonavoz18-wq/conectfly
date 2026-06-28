@@ -156,21 +156,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return 0;
   });
   const [sessionClosed, setSessionClosed] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem(SESSION_CLOSED_KEY) === "1";
-    } catch {
-      return false;
-    }
+    // Never persist the closed flag — a closed table must not block any
+    // future visitor or QR scan on this device. The flag only lives for the
+    // lifetime of the current tab session in memory.
+    return false;
   });
   const [showClosedModal, setShowClosedModal] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    try {
-      return window.sessionStorage.getItem(SESSION_CLOSED_KEY) === "1";
-    } catch {
-      return false;
-    }
+    return false;
   });
+
+  // Defensive: purge any legacy SESSION_CLOSED_KEY left behind by older
+  // builds so it cannot block a fresh QR scan after refresh.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { window.sessionStorage.removeItem(SESSION_CLOSED_KEY); } catch {}
+  }, []);
 
   const persistConsumption = (token: string | null, total: number, count: number) => {
     if (typeof window === "undefined") return;
@@ -239,7 +239,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         window.localStorage.removeItem(CART_STORAGE_KEY);
         window.localStorage.removeItem(SESSION_CONSUMED_KEY);
         window.sessionStorage.removeItem(TABLE_STORAGE_KEY);
-        window.sessionStorage.setItem(SESSION_CLOSED_KEY, "1");
+        window.sessionStorage.removeItem(SESSION_CLOSED_KEY);
       } catch {}
     }
     setSessionClosed(true);
@@ -248,6 +248,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const acknowledgeClosure = () => {
     setShowClosedModal(false);
+    // Acknowledging the closure must fully unblock the app so the next QR
+    // scan starts a brand new validation flow without any leftover guard.
+    setSessionClosed(false);
+    if (typeof window !== "undefined") {
+      try { window.sessionStorage.removeItem(SESSION_CLOSED_KEY); } catch {}
+    }
   };
 
   const clearSessionClosed = () => {
