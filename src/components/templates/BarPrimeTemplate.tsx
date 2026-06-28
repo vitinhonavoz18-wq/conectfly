@@ -19,6 +19,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [closeWarningOpen, setCloseWarningOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -26,6 +27,19 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // UX safety net: if FL has not confirmed closure within 60s of a successful
+  // "Solicitação enviada" toast, surface a soft warning. Polling stays active.
+  useEffect(() => {
+    if (!closeModal?.open || closeModal.error) return;
+    const id = window.setTimeout(() => setCloseWarningOpen(true), 60_000);
+    return () => window.clearTimeout(id);
+  }, [closeModal?.open, closeModal?.error]);
+
+  // Reset warning whenever the session changes (closed by FL, refreshed, etc.).
+  useEffect(() => {
+    if (!validatedTable) setCloseWarningOpen(false);
+  }, [validatedTable]);
 
   // Send the close request to FlyControl via the SF backend.
   // The Digital Menu NEVER closes the table itself: it only requests closure.
