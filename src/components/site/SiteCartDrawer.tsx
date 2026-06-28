@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
 import { supabase } from "@/integrations/supabase/client";
 import { QrScanner } from "./QrScanner";
+import { newTraceId, traceLog, traceWarn } from "@/lib/site/closeDebug";
 
 
 interface Props {
@@ -153,6 +154,12 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     const tick = async () => {
       if (cancelled) return;
       if (document.hidden) return; // Skip when tab is hidden
+      const pollTraceId = newTraceId("poll-drawer");
+      const t0 = Date.now();
+      traceLog(pollTraceId, "STEP 8b — SiteCartDrawer poll tick START", {
+        session_id: validatedTable.sessionId,
+        table_number: validatedTable.number,
+      });
       try {
         const res = await checkTableSession(restaurant, {
           table_token: validatedTable.token,
@@ -160,12 +167,17 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           table_number: validatedTable.number ?? null,
         });
         if (cancelled) return;
+        traceLog(pollTraceId, "STEP 8b — SiteCartDrawer poll tick END", {
+          elapsed_ms: Date.now() - t0,
+          result: res,
+        });
         if (res.closed) {
+          traceLog(pollTraceId, "STEP 9 — SiteCartDrawer poll → terminateClosedSession (will overwrite state)", res);
           terminateClosedSession({ silent: true });
         }
       } catch (e) {
         // Network errors during polling are ignored
-        console.warn("SESSION_POLL_ERROR", e);
+        traceWarn(pollTraceId, "SiteCartDrawer poll error", e);
       }
     };
     const id = window.setInterval(tick, 8000);
