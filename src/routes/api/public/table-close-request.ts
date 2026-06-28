@@ -32,7 +32,16 @@ export const Route = createFileRoute("/api/public/table-close-request")({
       OPTIONS: async () => new Response(null, { headers: CORS }),
       POST: async ({ request }) => {
         const headers = { ...CORS, "Content-Type": "application/json" };
-        const log = (...a: any[]) => console.log("[TABLE-CLOSE-REQUEST]", ...a);
+        const traceId =
+          request.headers.get("x-debug-trace-id") ||
+          request.headers.get("X-Debug-Trace-Id") ||
+          `srv-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+        // Echo back so the browser can correlate the network response with
+        // its own console trace group.
+        (headers as Record<string, string>)["x-debug-trace-id"] = traceId;
+        const tStart = Date.now();
+        const log = (...a: any[]) =>
+          console.log(`[TABLE-CLOSE-REQUEST ${traceId} +${Date.now() - tStart}ms]`, ...a);
 
         try {
           const body = (await request.json().catch(() => ({}))) as {
@@ -44,7 +53,7 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             customer_name?: string | null;
           };
 
-          log("incoming", {
+          log("STEP 3 — incoming payload", {
             restaurant_id: body?.restaurant_id,
             table_id: body?.table_id,
             table_id_is_uuid: isUuid(body?.table_id),
@@ -52,6 +61,7 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             table_number: body?.table_number,
             table_session_id: body?.table_session_id,
             table_session_id_is_uuid: isUuid(body?.table_session_id),
+            raw_body: body,
           });
 
           if (!body?.restaurant_id || (!body?.table_token && !isUuid(body?.table_id))) {
@@ -126,6 +136,7 @@ export const Route = createFileRoute("/api/public/table-close-request")({
                 success: false,
                 error: "Mesa não localizada. Escaneie o QR Code novamente.",
                 code: "table_not_found",
+                trace_id: traceId,
               }),
               { status: 404, headers },
             );
@@ -136,10 +147,13 @@ export const Route = createFileRoute("/api/public/table-close-request")({
                 success: false,
                 error: "Mesa inativa.",
                 code: "table_inactive",
+                trace_id: traceId,
               }),
               { status: 400, headers },
             );
           }
+
+          log("resolved local table", table);
 
           // 3. Best-effort session lookup. We accept the supplied session_id
           //    only when it is a real local UUID. Otherwise we try to find the
@@ -195,18 +209,34 @@ export const Route = createFileRoute("/api/public/table-close-request")({
           ).maybeSingle();
 
           if (existing) {
+            log("STEP 5 — duplicate pending request detected; skipping insert", existing);
             return new Response(
               JSON.stringify({
                 success: true,
                 duplicate: true,
                 request_id: existing.id,
                 message: "Uma solicitação de fechamento já foi enviada.",
+                trace_id: traceId,
               }),
               { status: 200, headers },
             );
           }
 
-          // 5. Insert pending request (Realtime publication delivers to FlyControl).
+          // 5. Capture pre-insert state for diagnostics, then INSERT.
+          let sessionBefore: unknown = null;
+          if (sessionId) {
+            const { data: pre } = await supabaseAdmin
+              .from("table_sessions")
+              .select("id, status, closed_at, total_amount, updated_at")
+              .eq("id", sessionId)
+              .maybeSingle();
+            sessionBefore = pre ?? null;
+            log("STEP 5 — table_sessions BEFORE insert", sessionBefore);
+          } else {
+            log("STEP 5 — no session_id to mirror; insert will use table_id only");
+          }
+
+          // Insert pending request (Realtime publication delivers to FlyControl).
           const { data: inserted, error: insErr } = await supabaseAdmin
             .from("table_close_requests")
             .insert({
@@ -243,12 +273,20 @@ export const Route = createFileRoute("/api/public/table-close-request")({
                 success: false,
                 error: insErr?.message || "Erro ao criar solicitação.",
                 code: "insert_failed",
+                trace_id: traceId,
               }),
               { status: 500, headers },
             );
           }
 
-          log("created", { request_id: inserted.id, table_id: inserted.table_id, session_id: inserted.table_session_id });
+          log("STEP 5 — table_close_requests INSERT success", {
+            request_id: inserted.id,
+            table_id: inserted.table_id,
+            session_id: inserted.table_session_id,
+            status: inserted.status,
+            requested_at: inserted.requested_at,
+            current_total: inserted.current_total,
+          });
 
           // 6. Mirror the request onto the table session so FlyControl listeners
           //    that subscribe to `table_sessions` (UPDATE → status='Solicitando
@@ -263,12 +301,23 @@ export const Route = createFileRoute("/api/public/table-close-request")({
               .in("status", ["open"]);
             if (updErr) log("session status update error", updErr);
             else log("session marked Solicitando Fechamento", { sessionId });
+
+            const { data: post } = await supabaseAdmin
+              .from("table_sessions")
+              .select("id, status, closed_at, total_amount, updated_at")
+              .eq("id", sessionId)
+              .maybeSingle();
+            log("STEP 5/6 — table_sessions AFTER update (Realtime UPDATE event emitted)", {
+              before: sessionBefore,
+              after: post,
+            });
           }
 
           return new Response(
             JSON.stringify({
               success: true,
               request_id: inserted.id,
+              trace_id: traceId,
               event: {
                 event: "table_close_request",
                 restaurant_id: inserted.restaurant_id,
@@ -283,9 +332,9 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             { status: 201, headers },
           );
         } catch (e: any) {
-          console.error("[TABLE-CLOSE-REQUEST] Unhandled:", e?.message, e?.stack);
+          console.error(`[TABLE-CLOSE-REQUEST ${traceId}] Unhandled:`, e?.message, e?.stack);
           return new Response(
-            JSON.stringify({ success: false, error: e?.message || "Erro interno.", code: "unhandled" }),
+            JSON.stringify({ success: false, error: e?.message || "Erro interno.", code: "unhandled", trace_id: traceId }),
             { status: 500, headers },
           );
         }
