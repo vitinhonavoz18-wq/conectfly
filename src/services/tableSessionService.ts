@@ -46,6 +46,10 @@ export interface RequestTableCloseParams {
   table_token: string | null;
   table_session_id?: string | null;
   customer_name?: string | null;
+  /** Identifier of the local table row when known. */
+  table_id?: string | null;
+  /** Origin of the request. Defaults to `customer_ui`. */
+  source?: string;
   traceId?: string;
 }
 
@@ -140,6 +144,9 @@ export async function requestTableClose(
         table_token: body.table_token,
         table_session_id: body.table_session_id ?? null,
         customer_name: body.customer_name ?? null,
+        table_id: body.table_id ?? null,
+        source: body.source ?? "customer_ui",
+        timestamp: new Date().toISOString(),
       }),
     });
     const data = await readJson(res);
