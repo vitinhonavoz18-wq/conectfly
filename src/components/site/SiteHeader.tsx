@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "./CartContext";
+import { SiteBrandLogo } from "./SiteBrandLogo";
 
 interface Props {
   name: string;
@@ -12,6 +13,7 @@ interface Props {
 export function SiteHeader({ name, logoUrl, onOpenCart, showCartButton = true }: Props) {
   const { totalItems } = useCart();
   const [isAnimating, setIsAnimating] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (totalItems > 0) {
@@ -21,52 +23,98 @@ export function SiteHeader({ name, logoUrl, onOpenCart, showCartButton = true }:
     }
   }, [totalItems]);
 
+  // Collapse the stacked brand header into a slim bar on scroll so the
+  // page content (categories, products) stays close to the top once the
+  // user is browsing. Threshold = 64px (one tap below the fold).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onScroll = () => setCollapsed(window.scrollY > 48);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 bg-[hsl(var(--site-header-bg)/0.95)] backdrop-blur-md border-b border-[hsl(var(--site-border))] transition-all duration-300"
+      data-collapsed={collapsed ? "true" : "false"}
+      className={[
+        "fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b transition-all duration-300",
+        collapsed
+          ? "bg-[hsl(var(--site-header-bg)/0.95)] border-[hsl(var(--site-border))]"
+          : "bg-[hsl(var(--site-header-bg)/0.6)] border-transparent",
+      ].join(" ")}
     >
-      <div className="max-w-6xl mx-auto px-4 h-16 sm:h-20 flex items-center justify-between gap-4">
-          <div 
-            className="flex items-center gap-2 sm:gap-4 group cursor-pointer min-w-0"
-            onClick={scrollToTop}
+      {/* Expanded (default) — stacked brand block: LOGO on top, then name + cart row. */}
+      <div
+        className={[
+          "max-w-6xl mx-auto px-4 transition-all duration-300",
+          collapsed
+            ? "h-16 sm:h-20 flex items-center justify-between gap-4"
+            : "py-4 sm:py-6 flex flex-col items-center gap-3 sm:gap-4",
+        ].join(" ")}
+      >
+        <button
+          type="button"
+          onClick={scrollToTop}
+          aria-label={`Voltar ao topo — ${name}`}
+          className={[
+            "group flex items-center gap-3 min-w-0 outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--site-primary))] rounded-xl",
+            collapsed ? "flex-row" : "flex-col text-center",
+          ].join(" ")}
+        >
+          <SiteBrandLogo
+            name={name}
+            logoUrl={logoUrl}
+            variant={collapsed ? "compact" : "header"}
+            priority
+            className="group-hover:scale-[1.03] transition-transform"
+          />
+          <span
+            className={[
+              "font-extrabold tracking-tight text-[hsl(var(--site-header-fg))] truncate max-w-[80vw]",
+              collapsed
+                ? "text-base sm:text-xl lg:text-2xl"
+                : "text-xl sm:text-3xl md:text-4xl",
+            ].join(" ")}
           >
-           {logoUrl ? (
-             <div className="relative shrink-0">
-                <div className="absolute inset-0 bg-white/10 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <img 
-                  src={logoUrl} 
-                  alt={name} 
-                  className="h-10 w-10 sm:h-14 sm:w-14 object-contain group-hover:scale-110 transition-transform relative z-10"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).parentElement?.querySelector('.fallback-header-logo')?.classList.remove('hidden');
-                  }}
-                />
-             </div>
-           ) : null}
-            {(!logoUrl || logoUrl) && (
-              <div className={`fallback-header-logo h-10 w-10 sm:h-12 sm:w-12 rounded-xl bg-gradient-gold shadow-lg border border-white/20 shrink-0 ${logoUrl ? 'hidden' : ''}`} />
+            {name}
+          </span>
+        </button>
+
+        {showCartButton && (
+          <button
+            onClick={onOpenCart}
+            aria-label={`Abrir carrinho${totalItems ? `, ${totalItems} ${totalItems === 1 ? "item" : "itens"}` : ""}`}
+            className={[
+              "relative group site-btn-primary rounded-full hover:scale-105 active:scale-95",
+              "uppercase tracking-widest border border-[hsl(var(--site-border))] flex items-center gap-2 shadow-lg",
+              collapsed
+                ? "absolute right-4 top-1/2 -translate-y-1/2 px-4 sm:px-6 py-2 text-[10px] sm:text-xs"
+                : "px-5 sm:px-7 py-2.5 text-[11px] sm:text-xs",
+            ].join(" ")}
+          >
+            <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 group-hover:animate-bounce" aria-hidden="true" />
+            <span>Meu Pedido</span>
+            {totalItems > 0 && (
+              <span
+                aria-hidden="true"
+                className={[
+                  "absolute -top-1.5 -right-1.5 min-w-6 h-6 sm:min-w-7 sm:h-7 px-1 rounded-full",
+                  "bg-[hsl(var(--site-primary-fg))] text-[hsl(var(--site-primary))]",
+                  "text-[10px] sm:text-xs font-black flex items-center justify-center shadow-xl",
+                  "border-2 border-[hsl(var(--site-primary))] transition-transform duration-300",
+                  isAnimating ? "scale-125" : "scale-100",
+                ].join(" ")}
+              >
+                {totalItems > 99 ? "99+" : totalItems}
+              </span>
             )}
-           <span className="font-extrabold tracking-tighter text-lg sm:text-2xl lg:text-3xl text-[hsl(var(--site-header-fg))] transition-colors truncate">{name}</span>
-         </div>
-          {showCartButton && (
-            <button
-              onClick={onOpenCart}
-              className="relative group site-btn-primary px-4 sm:px-8 py-2.5 sm:py-3 rounded-full hover:scale-105 active:scale-95 uppercase text-[10px] sm:text-xs tracking-widest border border-[hsl(var(--site-border))] flex items-center gap-2 shrink-0 shadow-lg"
-            >
-             <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5 group-hover:animate-bounce" />
-             <span className="hidden xs:inline">Meu Pedido</span>
-             {totalItems > 0 && (
-               <span className={`absolute -top-1.5 -right-1.5 min-w-6 h-6 sm:min-w-7 sm:h-7 px-1 rounded-full bg-[hsl(var(--site-primary-fg))] text-[hsl(var(--site-primary))] text-[10px] sm:text-xs font-black flex items-center justify-center shadow-xl border-2 border-[hsl(var(--site-primary))] transition-transform duration-300 ${isAnimating ? 'scale-125 bg-white' : 'scale-100'}`}>
-                 {totalItems}
-               </span>
-             )}
-           </button>
-         )}
+          </button>
+        )}
       </div>
     </header>
   );
