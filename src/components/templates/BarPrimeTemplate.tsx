@@ -148,7 +148,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       {/* Floating cart is now rendered globally by TemplateRenderer
           via <FloatingCartButton />. Do not re-add it per template. */}
 
-      <main className="pt-16 sm:pt-20">
+      <main>
         <div className="max-w-6xl mx-auto px-4 pt-4 flex justify-center">
           <TableQrScanButton restaurant={r} />
         </div>
