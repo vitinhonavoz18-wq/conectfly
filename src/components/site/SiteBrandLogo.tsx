@@ -28,7 +28,7 @@ export function SiteBrandLogo({ name, logoUrl, variant = "header", className = "
 
   const sizeClass =
     variant === "hero"
-      ? "h-44 sm:h-76 md:h-96"
+      ? "h-[173px] sm:h-[302px] md:h-[389px]"
       : variant === "compact"
         ? "h-10 sm:h-12"
         : "h-[100px] sm:h-[120px] lg:h-[150px] xl:h-[170px]";
