@@ -40,6 +40,7 @@ export function FloatingCartButton() {
         type="button"
         onClick={() => setCartOpen(true)}
         aria-label={label}
+        data-floating-action="cart"
         className={[
           "pointer-events-auto group flex items-center gap-3 min-h-[48px] px-4 sm:px-5 py-3",
           "rounded-full border border-white/10",

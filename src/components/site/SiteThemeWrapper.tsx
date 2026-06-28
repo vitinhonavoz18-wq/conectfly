@@ -110,7 +110,7 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
   return (
     <div
       style={style}
-      className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] selection:bg-[hsl(var(--site-primary)/0.3)]"
+      className="site-root min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] selection:bg-[hsl(var(--site-primary)/0.3)]"
     >
       {children}
     </div>

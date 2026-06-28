@@ -166,6 +166,63 @@
      -webkit-font-smoothing: antialiased;
    }
  }
+
+ /* =========================================================================
+  * Mobile touch & zoom stability
+  *
+  * - `touch-action: manipulation` on interactive elements disables the
+  *   browser's 300ms double-tap-to-zoom delay without blocking pinch zoom
+  *   on the page itself (accessibility zoom still works).
+  * - `-webkit-tap-highlight-color: transparent` removes the gray flash that
+  *   makes rapid taps feel laggy.
+  * - `-webkit-touch-callout: none` prevents the iOS long-press callout on
+  *   buttons/cards (it remains enabled on text content).
+  * - Inputs keep their default `touch-action` so text selection still works.
+  * Scoped to the customer-facing site shell (`.site-root`) so the admin
+  * editor is unaffected; floating buttons rendered outside the shell are
+  * covered by the global selector below.
+  * ========================================================================= */
+ @layer base {
+   html {
+     /* Stop iOS Safari from auto-zooming the page when small text inputs
+      * gain focus. Inputs themselves enforce a 16px minimum below. */
+     -webkit-text-size-adjust: 100%;
+     text-size-adjust: 100%;
+   }
+
+   .site-root,
+   .site-root * {
+     -webkit-tap-highlight-color: transparent;
+   }
+
+   .site-root button,
+   .site-root [role="button"],
+   .site-root a,
+   .site-root label,
+   .site-root summary,
+   .site-root select,
+   button,
+   [role="button"] {
+     touch-action: manipulation;
+     -webkit-touch-callout: none;
+   }
+
+   /* Prevent iOS Safari from zooming when focusing a form control whose
+    * computed font-size is below 16px. */
+   .site-root input,
+   .site-root select,
+   .site-root textarea {
+     font-size: max(16px, 1em);
+   }
+
+   /* Block accidental pinch-zoom on tap-only chrome (floating buttons,
+    * sticky bars) without disabling pinch on scrollable content. */
+   .site-root [data-floating-action],
+   .site-root [data-no-zoom] {
+     touch-action: manipulation;
+     user-select: none;
+   }
+ }
  
  @utility bg-gradient-primary {
    background-image: var(--gradient-primary);

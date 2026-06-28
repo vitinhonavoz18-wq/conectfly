@@ -32,7 +32,11 @@ export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover",
+      },
       { title: "CONECTFLY EMPRESARIAL" },
       { name: "description", content: "O futuro começa aqui" },
       { name: "author", content: "SiteCreatorFly" },
