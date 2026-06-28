@@ -8,6 +8,7 @@ import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { newTraceId, traceGroup, traceGroupEnd, traceLog, traceError, TRACE_HEADER } from "@/lib/site/closeDebug";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount } = useCart();
@@ -32,35 +33,61 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   // (see check-table-session) is the only path that calls terminateSession.
   const requestTableClose = async () => {
     if (!validatedTable || isRequestingClose) return;
+    const traceId = newTraceId("close");
+    const t0 = performance.now();
+    traceGroup(traceId, "STEP 1 — click on 'Fechar Mesa'");
+    traceLog(traceId, "click context", {
+      restaurant_id: (r as any).id,
+      restaurant_slug: (r as any).slug,
+      validatedTable,
+      totalItems,
+      totalPrice,
+      sessionConsumed,
+      sessionOrderCount,
+    });
+    traceGroupEnd();
     setIsRequestingClose(true);
+    const payload = {
+      restaurant_id: (r as any).id,
+      table_number: validatedTable.number,
+      table_token: validatedTable.token,
+      table_session_id: validatedTable.sessionId ?? null,
+      customer_name: (validatedTable as any).customerName ?? null,
+    };
+    traceGroup(traceId, "STEP 2/3 — POST /api/public/table-close-request");
+    traceLog(traceId, "request payload (exact JSON)", payload);
+    traceGroupEnd();
     try {
       const res = await fetch("/api/public/table-close-request", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          restaurant_id: (r as any).id,
-          table_number: validatedTable.number,
-          table_token: validatedTable.token,
-          table_session_id: validatedTable.sessionId ?? null,
-          customer_name: (validatedTable as any).customerName ?? null,
-        }),
+        headers: { "Content-Type": "application/json", [TRACE_HEADER]: traceId },
+        body: JSON.stringify(payload),
       });
+      const elapsed = Math.round(performance.now() - t0);
       const json = await res.json().catch(() => ({}));
+      traceGroup(traceId, `STEP 4 — backend response (status=${res.status}, ${elapsed}ms)`);
+      traceLog(traceId, "response headers (trace echo)", res.headers.get(TRACE_HEADER));
+      traceLog(traceId, "response body", json);
+      traceGroupEnd();
       if (!res.ok || json?.success === false) {
+        traceError(traceId, "STEP 10 — flow stopped: backend rejected request", { status: res.status, body: json });
         setCloseModal({
           open: true,
           error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
         });
       } else {
+        traceLog(traceId, "STEP 7 — UI received success; awaiting realtime closure via poll", json);
         setCloseModal({ open: true, duplicate: !!json?.duplicate });
       }
     } catch (e) {
+      traceError(traceId, "STEP 10 — flow stopped: network error", e);
       setCloseModal({
         open: true,
         error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
       });
     } finally {
       setIsRequestingClose(false);
+      traceLog(traceId, "click handler finished", { elapsed_ms: Math.round(performance.now() - t0) });
     }
   };
 
