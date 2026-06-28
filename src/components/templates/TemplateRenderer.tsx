@@ -5,6 +5,7 @@ import { PizzaRedTemplate } from "./PizzaRedTemplate";
 import { BurgerTemplate } from "./BurgerTemplate";
 import { BarPrimeTemplate } from "./BarPrimeTemplate";
 import { FloatingCartButton } from "../site/FloatingCartButton";
+import { InteractionProvider } from "@/lib/interaction";
 
 interface TemplateRendererProps {
   data: SiteData;
@@ -30,10 +31,10 @@ export function TemplateRenderer({ data }: TemplateRendererProps) {
   })();
 
   return (
-    <>
+    <InteractionProvider>
       {rendered}
       {/* Universal floating cart — single instance for every template. */}
       <FloatingCartButton />
-    </>
+    </InteractionProvider>
   );
 }
