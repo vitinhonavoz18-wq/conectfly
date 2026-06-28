@@ -1,5 +1,6 @@
 import { useCart } from "../site/CartContext";
 import { SiteHeader } from "../site/SiteHeader";
+import { SiteBrandLogo } from "../site/SiteBrandLogo";
 import { TableQrScanButton } from "../site/TableQrScanButton";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SiteBeverageSection } from "../site/SiteBeverageSection";
@@ -154,6 +155,14 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         {/* Compact Hero */}
         <div className="relative overflow-hidden bg-gradient-to-b from-[hsl(var(--site-primary)/0.1)] to-transparent">
           <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 flex flex-col items-center text-center">
+            {/* Prominent restaurant logo — universal branding block. */}
+            <SiteBrandLogo
+              name={r.name}
+              logoUrl={r.logo_url}
+              variant="hero"
+              priority
+              className="mb-4 sm:mb-6 drop-shadow-[0_8px_30px_hsl(var(--site-primary)/0.35)]"
+            />
             {validatedTable && (
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] font-black uppercase text-[10px] sm:text-xs mb-4 shadow-lg animate-bounce">
                 <Utensils className="h-3 w-3 sm:h-4 sm:w-4" />
