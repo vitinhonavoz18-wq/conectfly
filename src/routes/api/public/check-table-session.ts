@@ -28,30 +28,13 @@ function getCorsHeaders(origin: string | null) {
 
 const CLOSED_STATUSES = new Set([
   "closed",
+  "finished",
   "fechada",
   "fechado",
-  "finalized",
   "finalizada",
   "finalizado",
   "encerrada",
   "encerrado",
-  "acknowledged",
-  "approved",
-  "completed",
-  "done",
-  "confirmed",
-  "confirmada",
-  "confirmado",
-]);
-const REJECTED_STATUSES = new Set([
-  "rejected",
-  "rejeitada",
-  "rejeitado",
-  "cancelled",
-  "canceled",
-  "cancelada",
-  "cancelado",
-  "denied",
 ]);
 
 /**
@@ -81,8 +64,13 @@ export const Route = createFileRoute("/api/public/check-table-session")({
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          // Authoritative check: a client-restored table is valid only if the
-          // exact server session_id exists for this restaurant and is still open.
+          // SINGLE SOURCE OF TRUTH for closure detection:
+          //   table_sessions.closed_at IS NOT NULL  OR
+          //   table_sessions.status IN ('closed', 'finished', ...)
+          //
+          // table_close_requests is NEVER consulted here — it is history only.
+          // FlyControl is the authoritative writer of table_sessions.status and
+          // closed_at when the operator approves a closure.
           const { data: session, error: sessionError } = await supabaseAdmin
             .from("table_sessions")
             .select("id, table_id, status, closed_at")
@@ -97,48 +85,16 @@ export const Route = createFileRoute("/api/public/check-table-session")({
             );
           }
 
-          const sessionStatus = (session.status ?? "").toString().toLowerCase();
-          // "solicitando fechamento" is a pending-operator state — the session
-          // is still active until FlyControl approves; do NOT terminate locally.
-          const ACTIVE_STATUSES = new Set(["open", "solicitando fechamento", "solicitando_fechamento"]);
-          if (!!session.closed_at || !ACTIVE_STATUSES.has(sessionStatus)) {
-            return new Response(
-              JSON.stringify({ success: true, closed: true, status: sessionStatus, source: "table_sessions" }),
-              { status: 200, headers },
-            );
-          }
-
-          // Inspect close-requests bound to this exact session. When the
-          //    operator acts on it in FlyControl, status moves away from
-          //    'pending'. Treat acknowledged/closed-like statuses as closed,
-          //    and rejected/cancelled as still open.
-          const { data: req } = await supabaseAdmin
-            .from("table_close_requests")
-            .select("status, acknowledged_at, requested_at")
-            .eq("restaurant_id", body.restaurant_id)
-            .eq("table_session_id", body.table_session_id)
-            .order("requested_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          if (req) {
-            const st = (req.status ?? "").toString().toLowerCase();
-            if (REJECTED_STATUSES.has(st)) {
-              return new Response(
-                JSON.stringify({ success: true, closed: false, status: st, source: "close_requests" }),
-                { status: 200, headers },
-              );
-            }
-            const isClosed = CLOSED_STATUSES.has(st) || (!!req.acknowledged_at && st !== "pending");
-            if (isClosed) {
-              return new Response(
-                JSON.stringify({ success: true, closed: true, status: st, source: "close_requests" }),
-                { status: 200, headers },
-              );
-            }
-          }
+          const sessionStatus = (session.status ?? "").toString().trim().toLowerCase();
+          const isClosed = !!session.closed_at || CLOSED_STATUSES.has(sessionStatus);
 
           return new Response(
-            JSON.stringify({ success: true, closed: false }),
+            JSON.stringify({
+              success: true,
+              closed: isClosed,
+              status: sessionStatus,
+              source: "table_sessions",
+            }),
             { status: 200, headers },
           );
         } catch (e: any) {
