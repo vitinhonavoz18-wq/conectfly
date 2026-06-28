@@ -645,7 +645,13 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       return;
     }
 
-    if (whatsappOn && !whatsappNumber && !flycontrolOn) {
+    // FlyControl é a fonte da verdade para TODOS os modos (delivery, retirada, mesa).
+    // O WhatsApp é apenas notificação pós-confirmação para delivery.
+    if (!flycontrolOn) {
+      setError("Esta loja não está conectada ao painel. Pedidos não podem ser confirmados no momento.");
+      return;
+    }
+    if (orderType === "delivery" && whatsappOn && !whatsappNumber) {
       setError("Loja sem WhatsApp configurado");
       return;
     }
@@ -698,21 +704,10 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       flowMode = "direct";
     }
 
-    // CRÍTICO: pedidos de Mesa e Retirada SEMPRE precisam de confirmação real do FlyControl.
-    // O modo "whatsapp" só é válido para Delivery. Sem essa regra, mesa/retirada mostravam
-    // "sucesso" sem o pedido chegar ao painel (bug observado no HSBOTECO).
-    const requiresBackend = orderType === "table" || orderType === "pickup";
-    if (requiresBackend) {
-      if (!flycontrolOn) {
-        setSending(false);
-        const msg = "Esta loja não está conectada ao painel. Pedidos de mesa/retirada não podem ser confirmados no momento.";
-        setError(msg);
-        toast.error(msg);
-        return;
-      }
-      // Força envio direto ao FlyControl para mesa/retirada
-      if (flowMode === "whatsapp") flowMode = "direct";
-    }
+    // CRÍTICO: TODOS os tipos de pedido (delivery, retirada, mesa) exigem
+    // confirmação real do FlyControl antes de qualquer notificação ao cliente.
+    const requiresBackend = true;
+    if (flowMode === "whatsapp") flowMode = "direct";
 
     const allowDoubleSend = restaurant?.allow_dual_send ?? !!siteSettings?.allow_double_send;
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
@@ -788,9 +783,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         }
       }
 
-      // Mesa/Retirada exigem sucesso real do backend. Delivery ainda pode usar modo WhatsApp puro.
-      const canShowSuccess = success || (flowMode === "whatsapp" && !requiresBackend);
-      if (canShowSuccess) {
+      // Sucesso só após confirmação real do FlyControl (qualquer modo).
+      if (success) {
         if (orderType === "table") {
           toast.success(`Pedido enviado com sucesso para a Mesa ${tableNumber}.`);
         } else {
