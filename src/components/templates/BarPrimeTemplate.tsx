@@ -17,6 +17,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
   const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
+  const [confirmClose, setConfirmClose] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -276,7 +277,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
               </div>
             </div>
             <button 
-              onClick={requestTableClose}
+              onClick={() => setConfirmClose(true)}
               disabled={isRequestingClose}
               className="px-10 py-5 rounded-full bg-destructive text-destructive-foreground font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-destructive/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
