@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "./CartContext";
 import { formatBRL } from "@/lib/site/format";
+import { shouldFire, registerFloating, useFloatingOffset } from "@/lib/interaction";
 
 /**
  * Universal floating cart button. Rendered once at the platform level
@@ -13,6 +14,10 @@ export function FloatingCartButton() {
   const { items, totalItems, totalPrice, isCartOpen, setCartOpen, validatedTable } = useCart();
   const [pulse, setPulse] = useState(false);
   const prevSignature = useRef<string>("");
+  const bottomOffset = useFloatingOffset("cart");
+
+  // Reserve a stack slot so future floating actions never overlap the cart.
+  useEffect(() => registerFloating("global-cart", "cart", 56), []);
 
   // Lightweight pulse whenever item count or subtotal changes.
   useEffect(() => {
@@ -34,11 +39,15 @@ export function FloatingCartButton() {
   return (
     <div
       className="fixed z-40 right-4 sm:right-6 pointer-events-none animate-in fade-in slide-in-from-bottom-4 duration-300"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)" }}
+      style={{ bottom: bottomOffset }}
     >
       <button
         type="button"
-        onClick={() => setCartOpen(true)}
+        onClick={() => {
+          // Single-fire guard — prevents rapid double-tap from re-opening the drawer.
+          if (!shouldFire("floating-cart:open")) return;
+          setCartOpen(true);
+        }}
         aria-label={label}
         data-floating-action="cart"
         className={[
