@@ -19,6 +19,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [closeWarningOpen, setCloseWarningOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -26,6 +27,19 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // UX safety net: if FL has not confirmed closure within 60s of a successful
+  // "Solicitação enviada" toast, surface a soft warning. Polling stays active.
+  useEffect(() => {
+    if (!closeModal?.open || closeModal.error) return;
+    const id = window.setTimeout(() => setCloseWarningOpen(true), 60_000);
+    return () => window.clearTimeout(id);
+  }, [closeModal?.open, closeModal?.error]);
+
+  // Reset warning whenever the session changes (closed by FL, refreshed, etc.).
+  useEffect(() => {
+    if (!validatedTable) setCloseWarningOpen(false);
+  }, [validatedTable]);
 
   // Send the close request to FlyControl via the SF backend.
   // The Digital Menu NEVER closes the table itself: it only requests closure.
@@ -398,6 +412,41 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
                 className="px-6 py-3 rounded-full bg-destructive text-destructive-foreground font-black uppercase tracking-widest text-sm disabled:opacity-60"
               >
                 {isRequestingClose ? "Enviando..." : "Finalizar Sessão"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {closeWarningOpen && (
+        <div
+          className="fixed inset-0 z-[120] bg-black/70 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setCloseWarningOpen(false)}
+        >
+          <div
+            className="bg-white text-neutral-900 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-black uppercase tracking-wide mb-3">Ainda aguardando confirmação</h3>
+            <p className="text-sm text-neutral-600">
+              We are still waiting for the restaurant to confirm the closure. Sua mesa permanece ativa e a verificação continua acontecendo automaticamente.
+            </p>
+            <div className="mt-6 flex gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => setCloseWarningOpen(false)}
+                className="px-6 py-3 rounded-full bg-neutral-900 text-white font-black uppercase tracking-widest text-sm"
+              >
+                Continuar aguardando
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-6 py-3 rounded-full bg-neutral-200 text-neutral-900 font-black uppercase tracking-widest text-sm"
+              >
+                Atualizar
               </button>
             </div>
           </div>
