@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { SiteBrandLogo } from "./SiteBrandLogo";
 
 interface Props {
   name: string;
@@ -105,17 +106,17 @@ export function SiteHero({
        <div className="absolute inset-0 bg-radial-at-c from-primary/5 to-transparent opacity-40" />
        <div className="relative z-10 text-center px-4 py-12 sm:py-20 site-hero-enter max-w-5xl mx-auto">
          {logoUrl ? (
-           <div className="relative group inline-block">
+           <div className="relative group inline-block mb-6 sm:mb-8">
              <div className="absolute inset-0 bg-primary/10 blur-[80px] group-hover:bg-primary/30 transition-all rounded-full" />
-              <img
-                src={logoUrl}
-                alt={name}
-                loading="eager"
-                className="relative mx-auto mb-6 sm:mb-8 h-32 sm:h-56 md:h-72 w-auto object-contain drop-shadow-[0_0_25px_rgba(255,122,0,0.2)] group-hover:scale-105 transition-transform duration-700"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
+             <div className="relative mx-auto">
+               <SiteBrandLogo
+                 name={name}
+                 logoUrl={logoUrl}
+                 variant="hero"
+                 priority
+                 className="mx-auto drop-shadow-[0_0_25px_rgba(255,122,0,0.2)] group-hover:scale-105 transition-transform duration-700"
+               />
+             </div>
            </div>
          ) : (
           <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-lg">
