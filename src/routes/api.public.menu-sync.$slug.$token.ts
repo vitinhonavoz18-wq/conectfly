@@ -1,17 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { buildCorsHeaders, preflightResponse } from "@/lib/cors";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, authorization, x-api-key",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-};
+const CORS_OPTS = { methods: "GET, OPTIONS" };
 
 export const Route = createFileRoute("/api/public/menu-sync/$slug/$token")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { headers: corsHeaders }),
-      GET: async ({ params }) => {
+      OPTIONS: async ({ request }) => preflightResponse(request, CORS_OPTS),
+      GET: async ({ params, request }) => {
+        const corsHeaders = buildCorsHeaders(request, CORS_OPTS);
         const { slug, token } = params;
 
         console.log(`MENU_SYNC_DEBUG (Route): slug_received=${slug} token_received_preview=${token?.substring(0, 8)}...`);

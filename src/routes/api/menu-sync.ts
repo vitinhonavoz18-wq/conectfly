@@ -1,25 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { validateApiKey } from "@/lib/api-auth";
+import { buildCorsHeaders } from "@/lib/cors";
 
-const getCorsHeaders = (request: Request) => {
-  const origin = request.headers.get("Origin");
-  
-  // Allow all lovable.app subdomains and standard FlyControl domains
-  const isAllowed = origin && (
-    origin.includes("flycontrol") || 
-    origin.includes("conectfly.com.br") ||
-    origin.endsWith(".lovable.app") ||
-    origin.includes("localhost")
-  );
-  
-  return {
-    "Access-Control-Allow-Origin": isAllowed ? origin : "*",
-    "Access-Control-Allow-Headers": "content-type, x-api-key, apikey, authorization",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, OPTIONS",
-    "Access-Control-Allow-Credentials": "true",
-  };
+const CORS_OPTS = {
+  methods: "GET, POST, PUT, PATCH, OPTIONS",
+  headers: "content-type, x-api-key, apikey, authorization",
 };
+const getCorsHeaders = (request: Request) => buildCorsHeaders(request, CORS_OPTS);
 
 export const Route = createFileRoute("/api/menu-sync")({
   server: {

@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { buildCorsHeaders, preflightResponse } from "@/lib/cors";
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "content-type, authorization, x-api-key",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Max-Age": "86400",
-};
+const CORS_OPTS = { methods: "POST, OPTIONS" };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.test(v);
@@ -29,9 +25,12 @@ const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.tes
 export const Route = createFileRoute("/api/public/table-close-request")({
   server: {
     handlers: {
-      OPTIONS: async () => new Response(null, { headers: CORS }),
+      OPTIONS: async ({ request }) => preflightResponse(request, CORS_OPTS),
       POST: async ({ request }) => {
-        const headers = { ...CORS, "Content-Type": "application/json" };
+        const headers: Record<string, string> = {
+          ...buildCorsHeaders(request, CORS_OPTS),
+          "Content-Type": "application/json",
+        };
         const traceId =
           request.headers.get("x-debug-trace-id") ||
           request.headers.get("X-Debug-Trace-Id") ||
