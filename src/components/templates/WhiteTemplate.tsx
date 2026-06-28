@@ -51,7 +51,7 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
         showCartButton={r.site_settings?.show_cart_button !== false}
       />
       <main>
-        <div className="max-w-6xl mx-auto px-4 pt-20 sm:pt-24 flex justify-center">
+        <div className="max-w-6xl mx-auto px-4 pt-6 flex justify-center">
           <TableQrScanButton restaurant={r} />
         </div>
         <div className="site-hero-section">
