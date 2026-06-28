@@ -8,7 +8,7 @@ import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ShoppingBag, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { newTraceId, traceGroup, traceGroupEnd, traceLog, traceError, TRACE_HEADER } from "@/lib/site/closeDebug";
+import { newTraceId, traceGroup, traceGroupEnd, traceLog, traceError } from "@/lib/site/closeDebug";
 import { requestTableClose as svcRequestTableClose } from "@/services/tableSessionService";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
