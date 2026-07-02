@@ -69,6 +69,8 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       table_number: validatedTable.number,
       table_token: validatedTable.token,
       table_session_id: validatedTable.sessionId ?? null,
+      dining_session_id: validatedTable.diningSessionId ?? null,
+      customer_token: validatedTable.customerToken ?? null,
       customer_name: (validatedTable as any).customerName ?? null,
     };
     traceGroup(traceId, "STEP 2/3 — tableSessionService.requestTableClose()");
@@ -80,6 +82,8 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         table_number: payload.table_number ?? null,
         table_token: payload.table_token ?? null,
         table_session_id: payload.table_session_id,
+        dining_session_id: payload.dining_session_id,
+        customer_token: payload.customer_token,
         customer_name: payload.customer_name,
         traceId,
       });
