@@ -3,6 +3,7 @@ import type { CartLine, RestaurantRow } from "@/lib/site/types";
 import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
 import { newTraceId, traceLog, traceWarn } from "@/lib/site/closeDebug";
 import { checkTableSession as svcCheckTableSession } from "@/services/tableSessionService";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ValidatedTable {
   id: string;
@@ -465,6 +466,36 @@ export function CartProvider({ children }: { children: ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [validatedTable?.token, validatedTable?.restaurantId, validatedTable?.sessionId]);
+
+  // Realtime subscription: the AUTHORITATIVE closure signal. Filtered by the
+  // exact session_id so a closure on a previous session on the same physical
+  // table can never terminate the current one. Polling above remains as a
+  // backup for missed events / offline gaps.
+  useEffect(() => {
+    const sid = validatedTable?.sessionId;
+    if (!sid) return;
+    const channel = supabase
+      .channel(`table-session-${sid}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "table_sessions", filter: `id=eq.${sid}` },
+        (payload) => {
+          const next = (payload.new ?? {}) as { status?: string | null; closed_at?: string | null };
+          const status = (next.status ?? "").toString().trim().toLowerCase();
+          const closed = !!next.closed_at || ["closed","finished","fechada","fechado","finalizada","finalizado","encerrada","encerrado"].includes(status);
+          if (closed) {
+            const traceId = newTraceId("realtime");
+            traceLog(traceId, "STEP 9 — Realtime UPDATE → terminateSession", { session_id: sid, next });
+            terminateSession({ silent: true });
+          }
+        },
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validatedTable?.sessionId]);
 
   // Persist cart items across refreshes.
   useEffect(() => {
