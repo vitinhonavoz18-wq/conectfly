@@ -78,7 +78,67 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             );
           }
 
+          // Dining session identity is MANDATORY. Every table interaction must
+          // reference a live dining_sessions row — there is no legacy fallback.
+          if (!isUuid(body.dining_session_id) || !isUuid(body.customer_token)) {
+            return new Response(
+              JSON.stringify({
+                success: false,
+                error: "Sessão da mesa não encontrada. Escaneie o QR Code novamente.",
+                code: "missing_dining_session",
+                trace_id: traceId,
+              }),
+              { status: 409, headers },
+            );
+          }
+
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+          // Verify the dining session exists, is active, and belongs to the
+          // supplied restaurant + customer_token before creating a close
+          // request. This is the single source of truth check.
+          {
+            const { data: ds, error: dsErr } = await supabaseAdmin
+              .from("dining_sessions")
+              .select("id, status, closed_at, customer_token, restaurant_id")
+              .eq("id", body.dining_session_id!)
+              .eq("restaurant_id", body.restaurant_id)
+              .maybeSingle();
+            if (dsErr || !ds) {
+              log("dining session lookup failed", { err: dsErr, dining_session_id: body.dining_session_id });
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  error: "Sessão da mesa não encontrada.",
+                  code: "dining_session_not_found",
+                  trace_id: traceId,
+                }),
+                { status: 409, headers },
+              );
+            }
+            if (ds.customer_token !== body.customer_token) {
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  error: "Sessão da mesa inválida.",
+                  code: "customer_token_mismatch",
+                  trace_id: traceId,
+                }),
+                { status: 409, headers },
+              );
+            }
+            if (ds.status !== "active" || ds.closed_at) {
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  error: "Esta sessão já foi encerrada.",
+                  code: "dining_session_not_active",
+                  trace_id: traceId,
+                }),
+                { status: 409, headers },
+              );
+            }
+          }
 
           // 1. Resolve table — by UUID id first, else by QR public_token.
           let table: { id: string; table_number: string; is_active: boolean } | null = null;
@@ -247,8 +307,8 @@ export const Route = createFileRoute("/api/public/table-close-request")({
               table_id: table.id,
               table_number: table.table_number,
               table_session_id: sessionId,
-              dining_session_id: isUuid(body.dining_session_id) ? body.dining_session_id! : null,
-              customer_token: isUuid(body.customer_token) ? body.customer_token! : null,
+              dining_session_id: body.dining_session_id!,
+              customer_token: body.customer_token!,
               current_total: currentTotal,
               customer_name: body.customer_name ?? null,
               status: "pending",
