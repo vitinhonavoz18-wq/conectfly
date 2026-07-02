@@ -129,18 +129,56 @@ export const Route = createFileRoute("/api/public/open-table-session")({
             console.error("[OPEN-TABLE-SESSION] table_sessions provisioning error:", sessErr);
           }
 
+          // === DINING SESSION (new source-of-truth identity) ===================
+          // Every successful QR scan MUST mint a fresh dining_sessions row. The
+          // `id` and `customer_token` are handed back to the browser and become
+          // the only identity used for validation, closure, and orders. Never
+          // reuse a previous dining_session — a new scan = a new session.
+          let diningSessionId: string | null = null;
+          let diningCustomerToken: string | null = null;
+          try {
+            const { data: ds, error: dsErr } = await supabaseAdmin
+              .from("dining_sessions")
+              .insert({
+                restaurant_id: body.restaurant_id,
+                table_id: resolvedTableId,
+                table_number: resolvedTableNumber ?? rawNumber ?? "QR",
+                table_token: rawToken || null,
+                status: "active",
+                opened_at: new Date().toISOString(),
+                legacy_table_session_id: localSessionId,
+                metadata: {
+                  opened_from: body.payload?.opened_from ?? "qrcode_scan",
+                  restaurant_slug: r.slug,
+                },
+              })
+              .select("id, customer_token")
+              .single();
+            if (dsErr) {
+              console.error("[OPEN-TABLE-SESSION] dining_sessions insert failed:", dsErr);
+            } else {
+              diningSessionId = ds?.id ?? null;
+              diningCustomerToken = (ds?.customer_token as string) ?? null;
+              console.log("[OPEN-TABLE-SESSION] Created dining_sessions row:", diningSessionId);
+            }
+          } catch (dsErrCatch) {
+            console.error("[OPEN-TABLE-SESSION] dining_sessions creation error:", dsErrCatch);
+          }
+
           let base = (r.flycontrol_base_url ?? "").trim();
           if (!base) {
             // Even without upstream config, we can return our local session so
             // the digital menu has something to track and the close webhook
             // can later match by table_id / table_number.
             return new Response(JSON.stringify({
-              success: !!localSessionId,
-              error: localSessionId ? undefined : "Configuração incompleta",
+              success: !!diningSessionId,
+              error: diningSessionId ? undefined : "Configuração incompleta",
               session_id: localSessionId,
+              dining_session_id: diningSessionId,
+              customer_token: diningCustomerToken,
               table_id: resolvedTableId,
               table_number: resolvedTableNumber,
-            }), { status: localSessionId ? 200 : 400, headers });
+            }), { status: diningSessionId ? 200 : 400, headers });
           }
           if (!base.startsWith("http")) base = "https://" + base;
 
@@ -161,6 +199,8 @@ export const Route = createFileRoute("/api/public/open-table-session")({
               session_id: localSessionId,
               table_session_id: localSessionId,
               sitecreator_session_id: localSessionId,
+              dining_session_id: diningSessionId,
+              customer_token: diningCustomerToken,
               api_key: key // Add key to payload as well for backward compatibility
             }),
           });
@@ -209,6 +249,8 @@ export const Route = createFileRoute("/api/public/open-table-session")({
             ...finalData,
             success: overallSuccess,
             session_id: finalSessionId,
+            dining_session_id: diningSessionId,
+            customer_token: diningCustomerToken,
             table_id: resolvedTableId ?? finalData?.table_id ?? null,
             table_number: resolvedTableNumber ?? finalData?.table_number ?? null,
             status: upstreamStatus || finalData?.status || (overallSuccess ? "open" : undefined),
@@ -216,7 +258,16 @@ export const Route = createFileRoute("/api/public/open-table-session")({
             already_open: finalData?.already_open ?? finalData?.response?.already_open ?? false,
           };
 
-          console.log("[OPEN-TABLE-SESSION] Returning to client:", { success: overallSuccess, session_id: finalSessionId, table_id: resolvedTableId, closed: upstreamClosed, upstreamStatus });
+          console.log("[OPEN-TABLE-SESSION] Returning to client:", { success: overallSuccess, session_id: finalSessionId, dining_session_id: diningSessionId, table_id: resolvedTableId, closed: upstreamClosed, upstreamStatus });
+
+          // If FL rejected the open, mark the dining_session as closed so
+          // the browser doesn't retain an orphan active session.
+          if (!overallSuccess && diningSessionId) {
+            await supabaseAdmin
+              .from("dining_sessions")
+              .update({ status: "closed", closed_at: new Date().toISOString() })
+              .eq("id", diningSessionId);
+          }
 
           return new Response(JSON.stringify(responseBody), { status: overallSuccess ? 200 : res.status, headers });
         } catch (e: any) {
