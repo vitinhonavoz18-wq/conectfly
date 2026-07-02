@@ -56,25 +56,58 @@ export const Route = createFileRoute("/api/public/check-table-session")({
             table_token?: string;
             table_session_id?: string;
             table_number?: string;
+            dining_session_id?: string;
+            customer_token?: string;
           };
 
-          if (!body?.restaurant_id || !body.table_session_id) {
+          if (!body?.restaurant_id || (!body.dining_session_id && !body.table_session_id)) {
             return new Response(JSON.stringify({ success: false, error: "Dados incompletos" }), { status: 400, headers });
           }
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          // SINGLE SOURCE OF TRUTH for closure detection:
-          //   table_sessions.closed_at IS NOT NULL  OR
-          //   table_sessions.status IN ('closed', 'finished', ...)
-          //
-          // table_close_requests is NEVER consulted here — it is history only.
-          // FlyControl is the authoritative writer of table_sessions.status and
-          // closed_at when the operator approves a closure.
+          // AUTHORITATIVE SOURCE OF TRUTH: dining_sessions.status.
+          // Only `status = 'active'` allows ordering. Any other state (or a
+          // missing row) means the customer must scan the QR again.
+          if (body.dining_session_id) {
+            const { data: ds, error: dsErr } = await supabaseAdmin
+              .from("dining_sessions")
+              .select("id, status, closed_at, customer_token")
+              .eq("id", body.dining_session_id)
+              .eq("restaurant_id", body.restaurant_id)
+              .maybeSingle();
+
+            if (dsErr || !ds) {
+              return new Response(
+                JSON.stringify({ success: true, closed: true, reason: "dining_session_not_found", source: "dining_sessions" }),
+                { status: 200, headers },
+              );
+            }
+            // Optional bind check: customer_token must match when supplied.
+            if (body.customer_token && ds.customer_token && body.customer_token !== ds.customer_token) {
+              return new Response(
+                JSON.stringify({ success: true, closed: true, reason: "customer_token_mismatch", source: "dining_sessions" }),
+                { status: 200, headers },
+              );
+            }
+            const isActive = ds.status === "active" && !ds.closed_at;
+            return new Response(
+              JSON.stringify({
+                success: true,
+                closed: !isActive,
+                status: ds.status,
+                source: "dining_sessions",
+              }),
+              { status: 200, headers },
+            );
+          }
+
+          // Legacy path: fall back to table_sessions when no dining_session_id
+          // was supplied (older clients / long-lived tabs pre-refactor).
           const { data: session, error: sessionError } = await supabaseAdmin
             .from("table_sessions")
             .select("id, table_id, status, closed_at")
-            .eq("id", body.table_session_id)
+            .eq("id", body.table_session_id!)
             .eq("restaurant_id", body.restaurant_id)
             .maybeSingle();
 
