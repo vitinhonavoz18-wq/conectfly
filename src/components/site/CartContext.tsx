@@ -475,6 +475,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           table_token: validatedTable.token ?? null,
           table_session_id: validatedTable.sessionId ?? null,
           table_number: validatedTable.number ?? null,
+          dining_session_id: validatedTable.diningSessionId ?? null,
+          customer_token: validatedTable.customerToken ?? null,
           traceId: pollTraceId,
         });
         if (cancelled) return;
@@ -500,27 +502,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onVis);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validatedTable?.token, validatedTable?.restaurantId, validatedTable?.sessionId]);
+  }, [validatedTable?.token, validatedTable?.restaurantId, validatedTable?.diningSessionId]);
 
   // Realtime subscription: the AUTHORITATIVE closure signal. Filtered by the
   // exact session_id so a closure on a previous session on the same physical
   // table can never terminate the current one. Polling above remains as a
   // backup for missed events / offline gaps.
   useEffect(() => {
-    const sid = validatedTable?.sessionId;
-    if (!sid) return;
+    const dsid = validatedTable?.diningSessionId;
+    if (!dsid) return;
     const channel = supabase
-      .channel(`table-session-${sid}`)
+      .channel(`dining-session-${dsid}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "table_sessions", filter: `id=eq.${sid}` },
+        { event: "UPDATE", schema: "public", table: "dining_sessions", filter: `id=eq.${dsid}` },
         (payload) => {
           const next = (payload.new ?? {}) as { status?: string | null; closed_at?: string | null };
           const status = (next.status ?? "").toString().trim().toLowerCase();
-          const closed = !!next.closed_at || ["closed","finished","fechada","fechado","finalizada","finalizado","encerrada","encerrado"].includes(status);
-          if (closed) {
+          const stillActive = status === "active" && !next.closed_at;
+          if (!stillActive) {
             const traceId = newTraceId("realtime");
-            traceLog(traceId, "STEP 9 — Realtime UPDATE → terminateSession", { session_id: sid, next });
+            traceLog(traceId, "STEP 9 — Realtime UPDATE → terminateSession", { dining_session_id: dsid, next });
             terminateSession({ silent: true });
           }
         },
@@ -530,7 +532,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validatedTable?.sessionId]);
+  }, [validatedTable?.diningSessionId]);
 
   // Persist cart items across refreshes.
   useEffect(() => {
