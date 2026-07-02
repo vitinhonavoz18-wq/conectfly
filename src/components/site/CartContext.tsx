@@ -120,13 +120,18 @@ function readStoredTable(): ValidatedTable | null {
       parsed.sessionId.trim() &&
       typeof parsed.restaurantId === "string" &&
       parsed.restaurantId.trim() &&
-      isValidTableNumber(parsed.number)
+      isValidTableNumber(parsed.number) &&
+      typeof parsed.diningSessionId === "string" &&
+      parsed.diningSessionId.trim() &&
+      typeof parsed.customerToken === "string" &&
+      parsed.customerToken.trim()
     ) {
       return parsed as ValidatedTable;
     }
     // Corrupted/legacy state ("Mesa", "N/A", empty): purge so the customer is
     // forced to revalidate via QR / direct URL.
     try { window.localStorage.removeItem(TABLE_STORAGE_KEY); } catch {}
+    try { window.localStorage.removeItem(DINING_STORAGE_KEY); } catch {}
     try { window.localStorage.removeItem(CART_STORAGE_KEY); } catch {}
     try { window.localStorage.removeItem(SESSION_CONSUMED_KEY); } catch {}
   } catch {}
