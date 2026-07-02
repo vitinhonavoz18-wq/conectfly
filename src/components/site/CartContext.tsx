@@ -12,6 +12,10 @@ export interface ValidatedTable {
   name?: string | null;
   sessionId?: string | null;
   restaurantId?: string | null;
+  /** Authoritative Dining Session id — single source of truth for the session. */
+  diningSessionId?: string | null;
+  /** Private per-browser token bound to the dining session. */
+  customerToken?: string | null;
 }
 
 
