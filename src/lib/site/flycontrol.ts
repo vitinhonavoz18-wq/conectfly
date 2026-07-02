@@ -48,6 +48,8 @@ export interface FlycontrolOrderPayload {
     table_id?: string | null;
     table_token?: string | null;
     table_session_id?: string | null;
+    dining_session_id?: string | null;
+    customer_token?: string | null;
     ticket_number?: string | null;
 
     notes: string;
@@ -77,6 +79,8 @@ export function buildOrderPayload(args: {
   table_id?: string | null;
   table_token?: string | null;
   table_session_id?: string | null;
+  dining_session_id?: string | null;
+  customer_token?: string | null;
   ticket_number?: string | null;
   order_type?: "delivery" | "pickup" | "table";
   service_mode?: "delivery" | "retirada" | "mesa";
@@ -170,6 +174,8 @@ export function buildOrderPayload(args: {
       table_id: args.table_id || null,
       table_token: args.table_token || null,
       table_session_id: args.table_session_id || null,
+      dining_session_id: args.dining_session_id || null,
+      customer_token: args.customer_token || null,
       ticket_number: args.ticket_number || null,
 
       notes: (args.notes ?? "").trim(),
@@ -354,7 +360,8 @@ export async function sendOrderToFlycontrol(
   if (payload.order.order_type === "table") {
     if (!payload.order.table_number) missingFields.push("table_number");
     if (!payload.order.table_token) missingFields.push("table_token");
-    if (!payload.order.table_session_id) missingFields.push("table_session_id");
+    if (!payload.order.dining_session_id) missingFields.push("dining_session_id");
+    if (!payload.order.customer_token) missingFields.push("customer_token");
   }
 
   if (missingFields.length > 0) {
@@ -442,7 +449,7 @@ export async function sendOrderToFlycontrol(
 export async function openTableSession(
   restaurant: Pick<RestaurantRow, "id" | "slug">,
   payload: OpenTableSessionPayload
-): Promise<{ success: boolean; session_id?: string; message?: string; already_open?: boolean; status?: string; closed?: boolean }> {
+): Promise<{ success: boolean; session_id?: string; dining_session_id?: string; customer_token?: string; message?: string; already_open?: boolean; status?: string; closed?: boolean }> {
   console.log("OPEN_TABLE_SESSION_ONLY", { 
     restaurant_slug: payload.restaurant_slug,
     table_number: payload.table_number,
@@ -492,10 +499,19 @@ export async function openTableSession(
       data?.response?.table_session_id ||
       null;
 
+    const diningSessionId = (data?.dining_session_id ?? data?.response?.dining_session_id ?? null) as string | null;
+    const customerToken = (data?.customer_token ?? data?.response?.customer_token ?? null) as string | null;
+
     // Treat the open as successful when: HTTP ok, server didn't explicitly
-    // fail, table isn't closed, AND we received a session_id (the wrapper
-    // synthesizes one when FlyControl accepts but doesn't return an id).
-    const success = response.ok && data?.success !== false && !isClosed && !!sessionId;
+    // fail, table isn't closed, AND we received BOTH a legacy session_id and
+    // a dining_session_id + customer_token (single source of truth).
+    const success =
+      response.ok &&
+      data?.success !== false &&
+      !isClosed &&
+      !!sessionId &&
+      !!diningSessionId &&
+      !!customerToken;
 
     if (!success) {
       console.error("OPEN_TABLE_SESSION_ERROR:", {
@@ -503,21 +519,27 @@ export async function openTableSession(
         success: data?.success,
         isClosed,
         sessionId,
+        diningSessionId,
+        customerToken: customerToken ? "present" : "missing",
         message: data?.error || data?.message,
       });
       return {
         success: false,
         session_id: sessionId || undefined,
+        dining_session_id: diningSessionId || undefined,
+        customer_token: customerToken || undefined,
         message: data?.error || data?.message || (isClosed ? "session_closed" : "open_failed"),
         status: rawStatus || undefined,
         closed: isClosed,
       };
     }
 
-    console.log("TABLE_SESSION_ID_SAVED:", sessionId);
+    console.log("DINING_SESSION_OPENED:", { sessionId, diningSessionId });
     return {
       success: true,
       session_id: sessionId!,
+      dining_session_id: diningSessionId!,
+      customer_token: customerToken!,
       already_open: !!(data?.already_open || data?.response?.already_open),
       status: rawStatus || "open",
       closed: false,
