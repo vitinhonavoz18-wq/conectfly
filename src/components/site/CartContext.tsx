@@ -327,7 +327,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // call is the only source of truth for "is the table session still active?".
   const revalidateSession = async (tableOverride?: ValidatedTable | null): Promise<boolean> => {
     const table = tableOverride ?? validatedTable;
-    if (!table?.token || !table.restaurantId || !table.sessionId) {
+    if (!table?.token || !table.restaurantId || !table.diningSessionId || !table.customerToken) {
       terminateSession({ silent: true });
       return false;
     }
@@ -337,6 +337,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         table_token: table.token ?? null,
         table_session_id: table.sessionId,
         table_number: table.number ?? null,
+        dining_session_id: table.diningSessionId,
+        customer_token: table.customerToken,
       });
       if (data.closed || !data.success) {
         terminateSession({ silent: true });
