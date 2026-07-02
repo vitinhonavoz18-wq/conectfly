@@ -130,13 +130,13 @@ export const Route = createFileRoute("/api/public/open-table-session")({
           }
 
           // === DINING SESSION (new source-of-truth identity) ===================
-          // Every successful QR scan MUST mint a fresh dining_sessions row. The
-          // `id` and `customer_token` are handed back to the browser and become
-          // the only identity used for validation, closure, and orders. Never
-          // reuse a previous dining_session — a new scan = a new session.
+          // Every successful QR scan MUST mint a fresh dining_sessions row. If
+          // this insert fails we FAIL the whole request — the dining session is
+          // the single source of truth and there is no valid downstream flow
+          // without it. No silent fallback.
           let diningSessionId: string | null = null;
           let diningCustomerToken: string | null = null;
-          try {
+          {
             const { data: ds, error: dsErr } = await supabaseAdmin
               .from("dining_sessions")
               .insert({
@@ -154,15 +154,21 @@ export const Route = createFileRoute("/api/public/open-table-session")({
               })
               .select("id, customer_token")
               .single();
-            if (dsErr) {
+            if (dsErr || !ds?.id || !ds?.customer_token) {
               console.error("[OPEN-TABLE-SESSION] dining_sessions insert failed:", dsErr);
-            } else {
-              diningSessionId = ds?.id ?? null;
-              diningCustomerToken = (ds?.customer_token as string) ?? null;
-              console.log("[OPEN-TABLE-SESSION] Created dining_sessions row:", diningSessionId);
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  error: "Não foi possível criar a sessão da mesa. Tente novamente.",
+                  code: "dining_session_insert_failed",
+                  details: dsErr?.message ?? null,
+                }),
+                { status: 500, headers },
+              );
             }
-          } catch (dsErrCatch) {
-            console.error("[OPEN-TABLE-SESSION] dining_sessions creation error:", dsErrCatch);
+            diningSessionId = ds.id;
+            diningCustomerToken = ds.customer_token as string;
+            console.log("[OPEN-TABLE-SESSION] Created dining_sessions row:", diningSessionId);
           }
 
           let base = (r.flycontrol_base_url ?? "").trim();
