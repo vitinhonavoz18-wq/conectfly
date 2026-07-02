@@ -73,6 +73,7 @@ const TABLE_STORAGE_KEY = "sf:validated_table";
 const CART_STORAGE_KEY = "sf:cart_items";
 const SESSION_CONSUMED_KEY = "sf:session_consumed";
 const SESSION_CLOSED_KEY = "sf:session_closed";
+const DINING_STORAGE_KEY = "sf:dining_session";
 
 const INVALID_TABLE_NUMBERS = new Set(["", "n/a", "na", "mesa", "null", "undefined"]);
 export function isValidTableNumber(n: unknown): n is string {
