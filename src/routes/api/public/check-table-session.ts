@@ -26,17 +26,6 @@ function getCorsHeaders(origin: string | null) {
   };
 }
 
-const CLOSED_STATUSES = new Set([
-  "closed",
-  "finished",
-  "fechada",
-  "fechado",
-  "finalizada",
-  "finalizado",
-  "encerrada",
-  "encerrado",
-]);
-
 /**
  * Non-mutating session status check. Queries FlyControl to determine whether a
  * table session is still open. Falls back to "open" when no signal is found so
@@ -60,16 +49,20 @@ export const Route = createFileRoute("/api/public/check-table-session")({
             customer_token?: string;
           };
 
-          if (!body?.restaurant_id || (!body.dining_session_id && !body.table_session_id)) {
-            return new Response(JSON.stringify({ success: false, error: "Dados incompletos" }), { status: 400, headers });
+          if (!body?.restaurant_id || !body.dining_session_id) {
+            return new Response(
+              JSON.stringify({ success: false, error: "dining_session_id é obrigatório", code: "missing_dining_session" }),
+              { status: 400, headers },
+            );
           }
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           // AUTHORITATIVE SOURCE OF TRUTH: dining_sessions.status.
-          // Only `status = 'active'` allows ordering. Any other state (or a
-          // missing row) means the customer must scan the QR again.
-          if (body.dining_session_id) {
+          // Only `status = 'active'` (with no closed_at) allows ordering. Any
+          // other state — or a missing row — means the customer must scan the
+          // QR again. There is NO legacy table_sessions fallback.
+          {
             const { data: ds, error: dsErr } = await supabaseAdmin
               .from("dining_sessions")
               .select("id, status, closed_at, customer_token")
@@ -101,35 +94,6 @@ export const Route = createFileRoute("/api/public/check-table-session")({
               { status: 200, headers },
             );
           }
-
-          // Legacy path: fall back to table_sessions when no dining_session_id
-          // was supplied (older clients / long-lived tabs pre-refactor).
-          const { data: session, error: sessionError } = await supabaseAdmin
-            .from("table_sessions")
-            .select("id, table_id, status, closed_at")
-            .eq("id", body.table_session_id!)
-            .eq("restaurant_id", body.restaurant_id)
-            .maybeSingle();
-
-          if (sessionError || !session) {
-            return new Response(
-              JSON.stringify({ success: true, closed: true, reason: "session_not_found", source: "table_sessions" }),
-              { status: 200, headers },
-            );
-          }
-
-          const sessionStatus = (session.status ?? "").toString().trim().toLowerCase();
-          const isClosed = !!session.closed_at || CLOSED_STATUSES.has(sessionStatus);
-
-          return new Response(
-            JSON.stringify({
-              success: true,
-              closed: isClosed,
-              status: sessionStatus,
-              source: "table_sessions",
-            }),
-            { status: 200, headers },
-          );
         } catch (e: any) {
           console.error("[CHECK-TABLE-SESSION] Error:", e);
           return new Response(JSON.stringify({ success: false, closed: false, error: "Erro interno" }), { status: 500, headers });

@@ -62,9 +62,9 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
             );
           }
 
-          if (!sessionId && !diningSessionId) {
+          if (!sessionId && !diningSessionId && !customerToken) {
             return new Response(
-              JSON.stringify({ success: false, error: "session_id or dining_session_id is required" }),
+              JSON.stringify({ success: false, error: "dining_session_id or customer_token is required" }),
               { status: 400, headers },
             );
           }
@@ -74,19 +74,29 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
 
           // 1) Authoritative: close the dining_sessions row. Its Realtime UPDATE
           //    event is what the customer's browser subscribes to.
+          //    Lookup order: dining_session_id → customer_token. Never table_number.
           let diningClosed = 0;
+          let resolvedDiningSessionId: string | null = diningSessionId || null;
           let resolvedLegacySessionId: string | null = sessionId || null;
-          if (diningSessionId) {
-            const q = supabaseAdmin
+          {
+            let q = supabaseAdmin
               .from("dining_sessions")
               .update({ status: "closed", closed_at: closedAt })
-              .eq("id", diningSessionId)
               .eq("restaurant_id", restaurantId);
-            const { data: dsRows, error: dsErr } = customerToken
-              ? await q.eq("customer_token", customerToken).select("id, legacy_table_session_id")
-              : await q.select("id, legacy_table_session_id");
+            if (diningSessionId) {
+              q = q.eq("id", diningSessionId);
+              if (customerToken) q = q.eq("customer_token", customerToken);
+            } else if (customerToken) {
+              // Fallback: match by customer_token only (still active row).
+              q = q.eq("customer_token", customerToken).eq("status", "active");
+            } else {
+              // Nothing usable; skip dining_sessions close and fail below.
+              q = q.eq("id", "00000000-0000-0000-0000-000000000000");
+            }
+            const { data: dsRows, error: dsErr } = await q.select("id, legacy_table_session_id");
             if (dsErr) console.error("[FC-TABLE-CLOSED] dining_sessions update error:", dsErr);
             diningClosed = dsRows?.length ?? 0;
+            if (dsRows?.[0]?.id) resolvedDiningSessionId = dsRows[0].id as string;
             if (!resolvedLegacySessionId && dsRows?.[0]?.legacy_table_session_id) {
               resolvedLegacySessionId = dsRows[0].legacy_table_session_id as string;
             }
@@ -94,6 +104,8 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
 
           // 2) Mirror closure into legacy table_sessions so any code still
           //    reading it (kitchen totals, admin views) stays consistent.
+          //    table_sessions is a FL compatibility mirror ONLY — never used
+          //    as customer authority.
           let sessionsUpdated = 0;
           if (resolvedLegacySessionId) {
             const { data: updatedSessions, error: updateError } = await supabaseAdmin
@@ -104,20 +116,29 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               .select("id");
             if (updateError) console.error("[FC-TABLE-CLOSED] sessions update error:", updateError);
             sessionsUpdated = updatedSessions?.length ?? 0;
+          }
 
-            if (sessionsUpdated > 0) {
-              await supabaseAdmin
-                .from("table_close_requests")
-                .update({ status: "acknowledged", acknowledged_at: closedAt })
-                .eq("restaurant_id", restaurantId)
-                .eq("table_session_id", resolvedLegacySessionId)
-                .eq("status", "pending");
-            }
+          // 3) Acknowledge any pending close request — by dining_session_id
+          //    first, then by legacy session id as fallback.
+          if (resolvedDiningSessionId) {
+            await supabaseAdmin
+              .from("table_close_requests")
+              .update({ status: "acknowledged", acknowledged_at: closedAt })
+              .eq("restaurant_id", restaurantId)
+              .eq("dining_session_id", resolvedDiningSessionId)
+              .eq("status", "pending");
+          } else if (resolvedLegacySessionId) {
+            await supabaseAdmin
+              .from("table_close_requests")
+              .update({ status: "acknowledged", acknowledged_at: closedAt })
+              .eq("restaurant_id", restaurantId)
+              .eq("table_session_id", resolvedLegacySessionId)
+              .eq("status", "pending");
           }
 
           console.log("[FC-TABLE-CLOSED]", {
             restaurantId,
-            dining_session_id: diningSessionId,
+            dining_session_id: resolvedDiningSessionId,
             legacy_session_id: resolvedLegacySessionId,
             table_number: body.table_number ?? null,
             diningClosed,
