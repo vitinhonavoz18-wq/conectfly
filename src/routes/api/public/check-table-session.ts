@@ -26,17 +26,6 @@ function getCorsHeaders(origin: string | null) {
   };
 }
 
-const CLOSED_STATUSES = new Set([
-  "closed",
-  "finished",
-  "fechada",
-  "fechado",
-  "finalizada",
-  "finalizado",
-  "encerrada",
-  "encerrado",
-]);
-
 /**
  * Non-mutating session status check. Queries FlyControl to determine whether a
  * table session is still open. Falls back to "open" when no signal is found so
