@@ -12,6 +12,10 @@ export interface ValidatedTable {
   name?: string | null;
   sessionId?: string | null;
   restaurantId?: string | null;
+  /** Authoritative Dining Session id — single source of truth for the session. */
+  diningSessionId?: string | null;
+  /** Private per-browser token bound to the dining session. */
+  customerToken?: string | null;
 }
 
 
@@ -73,6 +77,7 @@ const TABLE_STORAGE_KEY = "sf:validated_table";
 const CART_STORAGE_KEY = "sf:cart_items";
 const SESSION_CONSUMED_KEY = "sf:session_consumed";
 const SESSION_CLOSED_KEY = "sf:session_closed";
+const DINING_STORAGE_KEY = "sf:dining_session";
 
 const INVALID_TABLE_NUMBERS = new Set(["", "n/a", "na", "mesa", "null", "undefined"]);
 export function isValidTableNumber(n: unknown): n is string {
@@ -115,13 +120,18 @@ function readStoredTable(): ValidatedTable | null {
       parsed.sessionId.trim() &&
       typeof parsed.restaurantId === "string" &&
       parsed.restaurantId.trim() &&
-      isValidTableNumber(parsed.number)
+      isValidTableNumber(parsed.number) &&
+      typeof parsed.diningSessionId === "string" &&
+      parsed.diningSessionId.trim() &&
+      typeof parsed.customerToken === "string" &&
+      parsed.customerToken.trim()
     ) {
       return parsed as ValidatedTable;
     }
     // Corrupted/legacy state ("Mesa", "N/A", empty): purge so the customer is
     // forced to revalidate via QR / direct URL.
     try { window.localStorage.removeItem(TABLE_STORAGE_KEY); } catch {}
+    try { window.localStorage.removeItem(DINING_STORAGE_KEY); } catch {}
     try { window.localStorage.removeItem(CART_STORAGE_KEY); } catch {}
     try { window.localStorage.removeItem(SESSION_CONSUMED_KEY); } catch {}
   } catch {}
@@ -188,15 +198,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Persist validated table across refreshes (so QR scan survives reload).
   const setValidatedTable = (table: ValidatedTable | null) => {
-    if (table && (!isValidTableNumber(table.number) || !table.token?.trim() || !table.sessionId?.trim() || !table.restaurantId?.trim())) {
+    if (table && (
+      !isValidTableNumber(table.number) ||
+      !table.token?.trim() ||
+      !table.sessionId?.trim() ||
+      !table.restaurantId?.trim() ||
+      !table.diningSessionId?.trim() ||
+      !table.customerToken?.trim()
+    )) {
       console.warn("CART_CTX_REJECTED_INVALID_TABLE", table);
       return;
     }
     setValidatedTableState(table);
     if (typeof window === "undefined") return;
     try {
-      if (table) window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(table));
-      else window.localStorage.removeItem(TABLE_STORAGE_KEY);
+      if (table) {
+        window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(table));
+        window.localStorage.setItem(DINING_STORAGE_KEY, JSON.stringify({
+          dining_session_id: table.diningSessionId,
+          customer_token: table.customerToken,
+          restaurant_id: table.restaurantId,
+          table_id: table.id,
+          table_number: table.number,
+          session_status: "active",
+        }));
+      } else {
+        window.localStorage.removeItem(TABLE_STORAGE_KEY);
+        window.localStorage.removeItem(DINING_STORAGE_KEY);
+      }
     } catch {}
     // When the table changes (or is cleared), reset accumulated consumption
     // unless the same token is being re-applied (refresh restoration).
@@ -245,6 +274,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       try {
         window.localStorage.removeItem(TABLE_STORAGE_KEY);
+        window.localStorage.removeItem(DINING_STORAGE_KEY);
         window.localStorage.removeItem(CART_STORAGE_KEY);
         window.localStorage.removeItem(SESSION_CONSUMED_KEY);
         window.sessionStorage.removeItem(TABLE_STORAGE_KEY);
@@ -277,6 +307,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         window.sessionStorage.removeItem(SESSION_CLOSED_KEY);
         window.localStorage.removeItem(TABLE_STORAGE_KEY);
+        window.localStorage.removeItem(DINING_STORAGE_KEY);
         window.localStorage.removeItem(CART_STORAGE_KEY);
         window.localStorage.removeItem(SESSION_CONSUMED_KEY);
       } catch {}
@@ -296,7 +327,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // call is the only source of truth for "is the table session still active?".
   const revalidateSession = async (tableOverride?: ValidatedTable | null): Promise<boolean> => {
     const table = tableOverride ?? validatedTable;
-    if (!table?.token || !table.restaurantId || !table.sessionId) {
+    if (!table?.token || !table.restaurantId || !table.diningSessionId || !table.customerToken) {
       terminateSession({ silent: true });
       return false;
     }
@@ -306,6 +337,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         table_token: table.token ?? null,
         table_session_id: table.sessionId,
         table_number: table.number ?? null,
+        dining_session_id: table.diningSessionId,
+        customer_token: table.customerToken,
       });
       if (data.closed || !data.success) {
         terminateSession({ silent: true });
@@ -360,7 +393,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const result = await openTableSession(restaurant, payload);
       console.log("VALIDATE_AND_OPEN_TABLE_RESULT", result);
-      if (!result.success || result.closed || !result.session_id) {
+      if (!result.success || result.closed || !result.session_id || !result.dining_session_id || !result.customer_token) {
         return {
           success: false,
           closed: !!result.closed,
@@ -373,6 +406,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         number,
         token,
         sessionId: result.session_id,
+        diningSessionId: result.dining_session_id,
+        customerToken: result.customer_token,
         restaurantId: restaurant.id,
       };
       setValidatedTable(tableData);
@@ -440,6 +475,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           table_token: validatedTable.token ?? null,
           table_session_id: validatedTable.sessionId ?? null,
           table_number: validatedTable.number ?? null,
+          dining_session_id: validatedTable.diningSessionId ?? null,
+          customer_token: validatedTable.customerToken ?? null,
           traceId: pollTraceId,
         });
         if (cancelled) return;
@@ -465,27 +502,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", onVis);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validatedTable?.token, validatedTable?.restaurantId, validatedTable?.sessionId]);
+  }, [validatedTable?.token, validatedTable?.restaurantId, validatedTable?.diningSessionId]);
 
   // Realtime subscription: the AUTHORITATIVE closure signal. Filtered by the
   // exact session_id so a closure on a previous session on the same physical
   // table can never terminate the current one. Polling above remains as a
   // backup for missed events / offline gaps.
   useEffect(() => {
-    const sid = validatedTable?.sessionId;
-    if (!sid) return;
+    const dsid = validatedTable?.diningSessionId;
+    if (!dsid) return;
     const channel = supabase
-      .channel(`table-session-${sid}`)
+      .channel(`dining-session-${dsid}`)
       .on(
         "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "table_sessions", filter: `id=eq.${sid}` },
+        { event: "UPDATE", schema: "public", table: "dining_sessions", filter: `id=eq.${dsid}` },
         (payload) => {
           const next = (payload.new ?? {}) as { status?: string | null; closed_at?: string | null };
           const status = (next.status ?? "").toString().trim().toLowerCase();
-          const closed = !!next.closed_at || ["closed","finished","fechada","fechado","finalizada","finalizado","encerrada","encerrado"].includes(status);
-          if (closed) {
+          const stillActive = status === "active" && !next.closed_at;
+          if (!stillActive) {
             const traceId = newTraceId("realtime");
-            traceLog(traceId, "STEP 9 — Realtime UPDATE → terminateSession", { session_id: sid, next });
+            traceLog(traceId, "STEP 9 — Realtime UPDATE → terminateSession", { dining_session_id: dsid, next });
             terminateSession({ silent: true });
           }
         },
@@ -495,7 +532,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validatedTable?.sessionId]);
+  }, [validatedTable?.diningSessionId]);
 
   // Persist cart items across refreshes.
   useEffect(() => {

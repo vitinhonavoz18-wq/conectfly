@@ -28,6 +28,10 @@ export interface CheckTableSessionParams {
   table_token?: string | null;
   table_session_id?: string | null;
   table_number?: string | null;
+  /** Authoritative dining session identifier. Preferred over table_session_id. */
+  dining_session_id?: string | null;
+  /** Customer's private token bound to this dining session. */
+  customer_token?: string | null;
   /** Optional debug trace id; echoed back by the server when supplied. */
   traceId?: string;
 }
@@ -45,6 +49,8 @@ export interface RequestTableCloseParams {
   table_number: string | null;
   table_token: string | null;
   table_session_id?: string | null;
+  dining_session_id?: string | null;
+  customer_token?: string | null;
   customer_name?: string | null;
   /** Identifier of the local table row when known. */
   table_id?: string | null;
@@ -64,6 +70,8 @@ export interface RequestTableCloseResult {
 export interface CloseTableSessionParams {
   restaurant_id: string;
   table_session_id?: string | null;
+  dining_session_id?: string | null;
+  customer_token?: string | null;
   table_token?: string | null;
   table_number?: string | null;
   final_total?: number | null;
@@ -110,6 +118,8 @@ export async function checkTableSession(
         table_token: body.table_token ?? null,
         table_session_id: body.table_session_id ?? null,
         table_number: body.table_number ?? null,
+        dining_session_id: body.dining_session_id ?? null,
+        customer_token: body.customer_token ?? null,
       }),
     });
     const data = await readJson(res);
@@ -143,6 +153,8 @@ export async function requestTableClose(
         table_number: body.table_number,
         table_token: body.table_token,
         table_session_id: body.table_session_id ?? null,
+        dining_session_id: body.dining_session_id ?? null,
+        customer_token: body.customer_token ?? null,
         customer_name: body.customer_name ?? null,
         table_id: body.table_id ?? null,
         source: body.source ?? "customer_ui",
@@ -183,6 +195,8 @@ export async function closeTableSession(
       body: JSON.stringify({
         restaurant_id: body.restaurant_id,
         table_session_id: body.table_session_id ?? null,
+        dining_session_id: body.dining_session_id ?? null,
+        customer_token: body.customer_token ?? null,
         table_token: body.table_token ?? null,
         table_number: body.table_number ?? null,
         final_total: body.final_total ?? null,

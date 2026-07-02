@@ -280,27 +280,49 @@ export const Route = createFileRoute("/api/public/submit-order")({
             payload.order?.service_mode === "mesa" ||
             payload.order?.delivery_type === "mesa";
           if (isTableOrder) {
-            const tableSessionId = String(payload.order?.table_session_id ?? "").trim();
-            if (!tableSessionId) {
+            // AUTHORITATIVE: dining_session_id + customer_token. Reject any
+            // table order that does not present an active dining session.
+            const diningId = String(payload.order?.dining_session_id ?? "").trim();
+            const custToken = String(payload.order?.customer_token ?? "").trim();
+            if (!diningId) {
               return new Response(
                 JSON.stringify({ success: false, closed: true, error: "Sessão da mesa não está ativa. Escaneie o QR Code novamente." }),
                 { status: 409, headers },
               );
             }
-
-            const { data: session, error: sessionErr } = await supabaseAdmin
-              .from("table_sessions")
-              .select("id, status, closed_at")
-              .eq("id", tableSessionId)
-              .eq("restaurant_id", body.restaurant_id)
-              .maybeSingle();
-
-            const status = (session?.status ?? "").toString().toLowerCase();
-            if (sessionErr || !session || !!session.closed_at || status !== "open") {
+            const dq = supabaseAdmin
+              .from("dining_sessions")
+              .select("id, status, closed_at, customer_token")
+              .eq("id", diningId)
+              .eq("restaurant_id", body.restaurant_id);
+            const { data: ds, error: dsErr } = await dq.maybeSingle();
+            const dsStatus = (ds?.status ?? "").toString();
+            const activeDs = ds && !ds.closed_at && dsStatus === "active";
+            const tokenOk = !ds?.customer_token || !custToken || ds.customer_token === custToken;
+            if (dsErr || !activeDs || !tokenOk) {
               return new Response(
-                JSON.stringify({ success: false, closed: true, status: status || null, error: "Esta mesa foi encerrada. Escaneie novamente o QR Code da mesa." }),
+                JSON.stringify({ success: false, closed: true, status: dsStatus || null, error: "Esta mesa foi encerrada. Escaneie novamente o QR Code da mesa." }),
                 { status: 409, headers },
               );
+            }
+
+            const tableSessionId = String(payload.order?.table_session_id ?? "").trim();
+            // Legacy table_sessions check kept as a soft guard when supplied;
+            // dining_sessions is authoritative above.
+            if (tableSessionId) {
+              const { data: session } = await supabaseAdmin
+                .from("table_sessions")
+                .select("id, status, closed_at")
+                .eq("id", tableSessionId)
+                .eq("restaurant_id", body.restaurant_id)
+                .maybeSingle();
+              const status = (session?.status ?? "").toString().toLowerCase();
+              if (session && (session.closed_at || (status && status !== "open" && status !== "solicitando fechamento"))) {
+                return new Response(
+                  JSON.stringify({ success: false, closed: true, status: status || null, error: "Esta mesa foi encerrada. Escaneie novamente o QR Code da mesa." }),
+                  { status: 409, headers },
+                );
+              }
             }
           }
 

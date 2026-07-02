@@ -689,6 +689,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
       table_id: orderType === "table" ? tableId : null,
       table_token: orderType === "table" ? tableToken : null,
       table_session_id: orderType === "table" ? tableSessionId : null,
+      dining_session_id: orderType === "table" ? (validatedTable?.diningSessionId ?? null) : null,
+      customer_token: orderType === "table" ? (validatedTable?.customerToken ?? null) : null,
       ticket_number: generatedTicket,
     };
 
@@ -738,6 +740,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         table_id: orderData.table_id,
         table_token: orderData.table_token,
         table_session_id: orderData.table_session_id,
+        dining_session_id: (orderData as any).dining_session_id,
+        customer_token: (orderData as any).customer_token,
         ticket_number: orderData.ticket_number,
       });
 

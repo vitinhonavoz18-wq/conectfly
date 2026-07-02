@@ -201,6 +201,89 @@ export type Database = {
         }
         Relationships: []
       }
+      dining_sessions: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          customer_token: string
+          fl_session_id: string | null
+          id: string
+          last_activity_at: string
+          legacy_table_session_id: string | null
+          metadata: Json
+          opened_at: string
+          restaurant_id: string
+          status: Database["public"]["Enums"]["dining_session_status"]
+          table_id: string | null
+          table_number: string
+          table_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          customer_token?: string
+          fl_session_id?: string | null
+          id?: string
+          last_activity_at?: string
+          legacy_table_session_id?: string | null
+          metadata?: Json
+          opened_at?: string
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["dining_session_status"]
+          table_id?: string | null
+          table_number: string
+          table_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          customer_token?: string
+          fl_session_id?: string | null
+          id?: string
+          last_activity_at?: string
+          legacy_table_session_id?: string | null
+          metadata?: Json
+          opened_at?: string
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["dining_session_status"]
+          table_id?: string | null
+          table_number?: string
+          table_token?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dining_sessions_legacy_table_session_id_fkey"
+            columns: ["legacy_table_session_id"]
+            isOneToOne: false
+            referencedRelation: "table_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dining_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "pizzerias_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dining_sessions_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dining_sessions_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flycontrol_order_logs: {
         Row: {
           created_at: string
@@ -540,7 +623,9 @@ export type Database = {
           customer_address: string | null
           customer_name: string
           customer_phone: string | null
+          customer_token: string | null
           delivery_fee: number | null
+          dining_session_id: string | null
           id: string
           is_test_order: boolean | null
           notes: string | null
@@ -562,7 +647,9 @@ export type Database = {
           customer_address?: string | null
           customer_name: string
           customer_phone?: string | null
+          customer_token?: string | null
           delivery_fee?: number | null
+          dining_session_id?: string | null
           id?: string
           is_test_order?: boolean | null
           notes?: string | null
@@ -584,7 +671,9 @@ export type Database = {
           customer_address?: string | null
           customer_name?: string
           customer_phone?: string | null
+          customer_token?: string | null
           delivery_fee?: number | null
+          dining_session_id?: string | null
           id?: string
           is_test_order?: boolean | null
           notes?: string | null
@@ -602,6 +691,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_dining_session_id_fkey"
+            columns: ["dining_session_id"]
+            isOneToOne: false
+            referencedRelation: "dining_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -956,6 +1052,8 @@ export type Database = {
           current_total: number
           customer_name: string | null
           customer_phone: string | null
+          customer_token: string | null
+          dining_session_id: string | null
           id: string
           notes: string | null
           order_count: number
@@ -976,6 +1074,8 @@ export type Database = {
           current_total?: number
           customer_name?: string | null
           customer_phone?: string | null
+          customer_token?: string | null
+          dining_session_id?: string | null
           id?: string
           notes?: string | null
           order_count?: number
@@ -996,6 +1096,8 @@ export type Database = {
           current_total?: number
           customer_name?: string | null
           customer_phone?: string | null
+          customer_token?: string | null
+          dining_session_id?: string | null
           id?: string
           notes?: string | null
           order_count?: number
@@ -1009,6 +1111,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "table_close_requests_dining_session_id_fkey"
+            columns: ["dining_session_id"]
+            isOneToOne: false
+            referencedRelation: "dining_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "table_close_requests_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -1079,6 +1188,7 @@ export type Database = {
         Row: {
           closed_at: string | null
           created_at: string
+          dining_session_id: string | null
           id: string
           opened_at: string
           restaurant_id: string
@@ -1091,6 +1201,7 @@ export type Database = {
         Insert: {
           closed_at?: string | null
           created_at?: string
+          dining_session_id?: string | null
           id?: string
           opened_at?: string
           restaurant_id: string
@@ -1103,6 +1214,7 @@ export type Database = {
         Update: {
           closed_at?: string | null
           created_at?: string
+          dining_session_id?: string | null
           id?: string
           opened_at?: string
           restaurant_id?: string
@@ -1113,6 +1225,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "table_sessions_dining_session_id_fkey"
+            columns: ["dining_session_id"]
+            isOneToOne: false
+            referencedRelation: "dining_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "table_sessions_restaurant_id_fkey"
             columns: ["restaurant_id"]
@@ -1323,6 +1442,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "owner"
+      dining_session_status:
+        | "active"
+        | "requested_close"
+        | "closing"
+        | "closed"
+        | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1451,6 +1576,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "owner"],
+      dining_session_status: [
+        "active",
+        "requested_close",
+        "closing",
+        "closed",
+        "archived",
+      ],
     },
   },
 } as const
