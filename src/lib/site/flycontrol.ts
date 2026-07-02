@@ -489,10 +489,16 @@ export async function openTableSession(
     ).toString().toLowerCase();
     const isClosed = !!data?.closed || /(closed|fechad|finaliz|encerr|ended)/.test(rawStatus);
 
-    // Our /api/public/open-table-session wrapper always normalizes session_id
-    // at the top-level when the upstream call succeeded. Fall back to legacy
-    // shapes for backward compatibility.
+    // Authoritative contract:
+    //   1. response.table_session.id  (new FL)
+    //   2. response.session_id        (legacy)
+    //   3. response.table_session_id  (legacy)
+    // Never synthesize a UUID — SF proxy already normalizes and returns null
+    // when the open truly failed.
+    const fcTableSession =
+      (data as any)?.table_session ?? (data as any)?.response?.table_session ?? null;
     const sessionId =
+      fcTableSession?.id ||
       data?.session_id ||
       data?.response?.session_id ||
       data?.table_session_id ||
