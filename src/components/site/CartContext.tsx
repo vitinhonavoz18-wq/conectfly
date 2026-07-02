@@ -393,7 +393,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const result = await openTableSession(restaurant, payload);
       console.log("VALIDATE_AND_OPEN_TABLE_RESULT", result);
-      if (!result.success || result.closed || !result.session_id) {
+      if (!result.success || result.closed || !result.session_id || !result.dining_session_id || !result.customer_token) {
         return {
           success: false,
           closed: !!result.closed,
@@ -406,6 +406,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         number,
         token,
         sessionId: result.session_id,
+        diningSessionId: result.dining_session_id,
+        customerToken: result.customer_token,
         restaurantId: restaurant.id,
       };
       setValidatedTable(tableData);
