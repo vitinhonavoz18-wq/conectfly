@@ -49,6 +49,8 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             table_token?: string;
             table_number?: string;
             table_session_id?: string | null;
+            dining_session_id?: string | null;
+            customer_token?: string | null;
             customer_name?: string | null;
           };
 
@@ -60,6 +62,8 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             table_number: body?.table_number,
             table_session_id: body?.table_session_id,
             table_session_id_is_uuid: isUuid(body?.table_session_id),
+            dining_session_id: body?.dining_session_id,
+            has_customer_token: !!body?.customer_token,
             raw_body: body,
           });
 
@@ -243,6 +247,8 @@ export const Route = createFileRoute("/api/public/table-close-request")({
               table_id: table.id,
               table_number: table.table_number,
               table_session_id: sessionId,
+              dining_session_id: isUuid(body.dining_session_id) ? body.dining_session_id! : null,
+              customer_token: isUuid(body.customer_token) ? body.customer_token! : null,
               current_total: currentTotal,
               customer_name: body.customer_name ?? null,
               status: "pending",
@@ -312,6 +318,22 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             });
           }
 
+          // Mirror onto dining_sessions so the customer's browser Realtime
+          // subscription (filtered by dining_sessions.id) sees the request.
+          if (isUuid(body.dining_session_id)) {
+            const dq = supabaseAdmin
+              .from("dining_sessions")
+              .update({ status: "requested_close", last_activity_at: new Date().toISOString() })
+              .eq("id", body.dining_session_id!)
+              .eq("restaurant_id", body.restaurant_id)
+              .eq("status", "active");
+            const { error: dsUpdErr } = isUuid(body.customer_token)
+              ? await dq.eq("customer_token", body.customer_token!)
+              : await dq;
+            if (dsUpdErr) log("dining_sessions requested_close update error", dsUpdErr);
+            else log("dining_sessions marked requested_close", { dining_session_id: body.dining_session_id });
+          }
+
           return new Response(
             JSON.stringify({
               success: true,
@@ -323,6 +345,7 @@ export const Route = createFileRoute("/api/public/table-close-request")({
                 table_id: inserted.table_id,
                 table_number: inserted.table_number,
                 session_id: inserted.table_session_id,
+                dining_session_id: (inserted as any).dining_session_id ?? null,
                 current_total: Number(inserted.current_total),
                 status: inserted.status,
                 requested_at: inserted.requested_at,
