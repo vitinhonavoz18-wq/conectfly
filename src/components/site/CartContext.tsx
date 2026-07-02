@@ -274,6 +274,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") {
       try {
         window.localStorage.removeItem(TABLE_STORAGE_KEY);
+        window.localStorage.removeItem(DINING_STORAGE_KEY);
         window.localStorage.removeItem(CART_STORAGE_KEY);
         window.localStorage.removeItem(SESSION_CONSUMED_KEY);
         window.sessionStorage.removeItem(TABLE_STORAGE_KEY);
