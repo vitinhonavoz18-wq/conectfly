@@ -198,15 +198,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // Persist validated table across refreshes (so QR scan survives reload).
   const setValidatedTable = (table: ValidatedTable | null) => {
-    if (table && (!isValidTableNumber(table.number) || !table.token?.trim() || !table.sessionId?.trim() || !table.restaurantId?.trim())) {
+    if (table && (
+      !isValidTableNumber(table.number) ||
+      !table.token?.trim() ||
+      !table.sessionId?.trim() ||
+      !table.restaurantId?.trim() ||
+      !table.diningSessionId?.trim() ||
+      !table.customerToken?.trim()
+    )) {
       console.warn("CART_CTX_REJECTED_INVALID_TABLE", table);
       return;
     }
     setValidatedTableState(table);
     if (typeof window === "undefined") return;
     try {
-      if (table) window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(table));
-      else window.localStorage.removeItem(TABLE_STORAGE_KEY);
+      if (table) {
+        window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(table));
+        window.localStorage.setItem(DINING_STORAGE_KEY, JSON.stringify({
+          dining_session_id: table.diningSessionId,
+          customer_token: table.customerToken,
+          restaurant_id: table.restaurantId,
+          table_id: table.id,
+          table_number: table.number,
+          session_status: "active",
+        }));
+      } else {
+        window.localStorage.removeItem(TABLE_STORAGE_KEY);
+        window.localStorage.removeItem(DINING_STORAGE_KEY);
+      }
     } catch {}
     // When the table changes (or is cleared), reset accumulated consumption
     // unless the same token is being re-applied (refresh restoration).
