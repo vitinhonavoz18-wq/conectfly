@@ -83,7 +83,11 @@ export const Route = createFileRoute("/api/public/check-table-session")({
                 { status: 200, headers },
               );
             }
-            const isActive = ds.status === "active" && !ds.closed_at;
+            // `requested_close` é um estado intermediário aguardando o
+            // operador confirmar o fechamento no FlyControl — a sessão do
+            // cliente ainda está viva até o webhook chegar com status=closed.
+            const isActive =
+              (ds.status === "active" || ds.status === "requested_close") && !ds.closed_at;
             return new Response(
               JSON.stringify({
                 success: true,
