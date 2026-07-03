@@ -431,7 +431,15 @@ export async function sendOrderToFlycontrol(
     if (!response.ok || data?.success === false) {
       const errorMsg = data?.error || data?.message || `HTTP ${status}: ${responseText}`;
       console.error("CHECKOUT_SEND_ERROR:", errorMsg);
-      throw new Error(errorMsg);
+      const err = new Error(errorMsg) as Error & { sessionClosed?: boolean; httpStatus?: number };
+      err.httpStatus = status;
+      const raw = `${errorMsg} ${JSON.stringify(data ?? {})}`.toLowerCase();
+      err.sessionClosed =
+        data?.closed === true ||
+        status === 404 ||
+        status === 409 ||
+        /session_closed|session_not_found|dining_session_not_active|invalid_dining_session|mesa encerrada|mesa foi encerrada|table_closed/.test(raw);
+      throw err;
     }
 
     const orderId = data?.response?.order_id || data?.order_id || payload.order.id;
