@@ -827,8 +827,20 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
     } catch (err: any) {
       console.error("CHECKOUT_SEND_ERROR:", err);
+      // CORREÇÃO 4: se o FlyControl reportou sessão encerrada durante o
+      // submit-order, destruir toda a sessão local imediatamente.
+      const raw = `${err?.message || ""}`.toLowerCase();
+      const sessionClosed =
+        err?.sessionClosed === true ||
+        err?.httpStatus === 404 ||
+        err?.httpStatus === 409 ||
+        /session_closed|session_not_found|dining_session_not_active|invalid_dining_session|mesa encerrada|mesa foi encerrada|table_closed/.test(raw);
+      if (sessionClosed) {
+        toast.error("Esta mesa foi encerrada. Escaneie novamente o QR Code.");
+        terminateClosedSession({ silent: true });
+        return;
+      }
       const errorMsg = "Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.";
-      
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
