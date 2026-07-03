@@ -87,8 +87,10 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               q = q.eq("id", diningSessionId);
               if (customerToken) q = q.eq("customer_token", customerToken);
             } else if (customerToken) {
-              // Fallback: match by customer_token only (still active row).
-              q = q.eq("customer_token", customerToken).eq("status", "active");
+              // Fallback: match by customer_token only. Accept both active
+              // and requested_close so the operator confirmation always
+              // succeeds regardless of the intermediate state.
+              q = q.eq("customer_token", customerToken).in("status", ["active", "requested_close"]);
             } else {
               // Nothing usable; skip dining_sessions close and fail below.
               q = q.eq("id", "00000000-0000-0000-0000-000000000000");
