@@ -73,11 +73,78 @@ function keyOf(itemId: string, sizeLabel?: string) {
   return `${itemId}-${sizeLabel ?? ""}`;
 }
 
-const TABLE_STORAGE_KEY = "sf:validated_table";
-const CART_STORAGE_KEY = "sf:cart_items";
-const SESSION_CONSUMED_KEY = "sf:session_consumed";
-const SESSION_CLOSED_KEY = "sf:session_closed";
-const DINING_STORAGE_KEY = "sf:dining_session";
+// Per-restaurant namespaced storage keys. Each restaurant gets its own bucket
+// so opening restaurant B in the same browser cannot restore restaurant A's
+// table/cart/session state. See CartProvider({ namespace }).
+const LEGACY_TABLE_KEY = "sf:validated_table";
+const LEGACY_CART_KEY = "sf:cart_items";
+const LEGACY_CONSUMED_KEY = "sf:session_consumed";
+const LEGACY_CLOSED_KEY = "sf:session_closed";
+const LEGACY_DINING_KEY = "sf:dining_session";
+
+const LEGACY_KEYS = [
+  LEGACY_TABLE_KEY,
+  LEGACY_CART_KEY,
+  LEGACY_CONSUMED_KEY,
+  LEGACY_CLOSED_KEY,
+  LEGACY_DINING_KEY,
+] as const;
+
+type StorageName =
+  | "validated_table"
+  | "cart_items"
+  | "session_consumed"
+  | "session_closed"
+  | "dining_session";
+
+function makeStorageKey(namespace: string, name: StorageName) {
+  const ns = (namespace || "default").trim() || "default";
+  return `sf:${ns}:${name}`;
+}
+
+/**
+ * If a legacy global key exists and its payload belongs to the current
+ * restaurant namespace, migrate it into the namespaced key and delete the
+ * legacy entry. If it belongs to another restaurant, leave it alone so that
+ * restaurant's own tab can migrate it. Runs once per CartProvider mount.
+ */
+function migrateLegacyStorage(namespace: string) {
+  if (typeof window === "undefined") return;
+  const ls = window.localStorage;
+  try {
+    const legacyTableRaw = ls.getItem(LEGACY_TABLE_KEY);
+    if (legacyTableRaw) {
+      let ownedByUs = false;
+      try {
+        const parsed = JSON.parse(legacyTableRaw);
+        ownedByUs = typeof parsed?.restaurantId === "string" && parsed.restaurantId === namespace;
+      } catch {}
+      if (ownedByUs) {
+        const scopedTableKey = makeStorageKey(namespace, "validated_table");
+        if (!ls.getItem(scopedTableKey)) ls.setItem(scopedTableKey, legacyTableRaw);
+        const legacyDining = ls.getItem(LEGACY_DINING_KEY);
+        if (legacyDining) {
+          const k = makeStorageKey(namespace, "dining_session");
+          if (!ls.getItem(k)) ls.setItem(k, legacyDining);
+        }
+        const legacyCart = ls.getItem(LEGACY_CART_KEY);
+        if (legacyCart) {
+          const k = makeStorageKey(namespace, "cart_items");
+          if (!ls.getItem(k)) ls.setItem(k, legacyCart);
+        }
+        const legacyConsumed = ls.getItem(LEGACY_CONSUMED_KEY);
+        if (legacyConsumed) {
+          const k = makeStorageKey(namespace, "session_consumed");
+          if (!ls.getItem(k)) ls.setItem(k, legacyConsumed);
+        }
+        for (const k of LEGACY_KEYS) {
+          try { ls.removeItem(k); } catch {}
+        }
+      }
+    }
+    try { window.sessionStorage.removeItem(LEGACY_CLOSED_KEY); } catch {}
+  } catch {}
+}
 
 const INVALID_TABLE_NUMBERS = new Set(["", "n/a", "na", "mesa", "null", "undefined"]);
 export function isValidTableNumber(n: unknown): n is string {
@@ -93,7 +160,7 @@ interface StoredSessionConsumed {
   count: number;
 }
 
-function readStoredConsumption(): StoredSessionConsumed | null {
+function readStoredConsumption(SESSION_CONSUMED_KEY: string): StoredSessionConsumed | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(SESSION_CONSUMED_KEY);
@@ -106,7 +173,13 @@ function readStoredConsumption(): StoredSessionConsumed | null {
   return null;
 }
 
-function readStoredTable(): ValidatedTable | null {
+function readStoredTable(
+  TABLE_STORAGE_KEY: string,
+  DINING_STORAGE_KEY: string,
+  CART_STORAGE_KEY: string,
+  SESSION_CONSUMED_KEY: string,
+  expectedRestaurantId: string,
+): ValidatedTable | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(TABLE_STORAGE_KEY);
@@ -120,6 +193,7 @@ function readStoredTable(): ValidatedTable | null {
       parsed.sessionId.trim() &&
       typeof parsed.restaurantId === "string" &&
       parsed.restaurantId.trim() &&
+      parsed.restaurantId === expectedRestaurantId &&
       isValidTableNumber(parsed.number) &&
       typeof parsed.diningSessionId === "string" &&
       parsed.diningSessionId.trim() &&
@@ -138,7 +212,7 @@ function readStoredTable(): ValidatedTable | null {
   return null;
 }
 
-function readStoredItems(): CartLine[] {
+function readStoredItems(CART_STORAGE_KEY: string): CartLine[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -150,21 +224,40 @@ function readStoredItems(): CartLine[] {
   }
 }
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const [pendingStoredTable] = useState<ValidatedTable | null>(() => readStoredTable());
-  const [items, setItems] = useState<CartLine[]>(() => readStoredItems());
+export function CartProvider({ children, namespace }: { children: ReactNode; namespace: string }) {
+  // All storage keys are scoped to the current restaurant. This isolates
+  // table, cart, dining session and consumption between establishments so
+  // opening restaurant B never restores restaurant A's state.
+  const TABLE_STORAGE_KEY = useMemo(() => makeStorageKey(namespace, "validated_table"), [namespace]);
+  const CART_STORAGE_KEY = useMemo(() => makeStorageKey(namespace, "cart_items"), [namespace]);
+  const SESSION_CONSUMED_KEY = useMemo(() => makeStorageKey(namespace, "session_consumed"), [namespace]);
+  const SESSION_CLOSED_KEY = useMemo(() => makeStorageKey(namespace, "session_closed"), [namespace]);
+  const DINING_STORAGE_KEY = useMemo(() => makeStorageKey(namespace, "dining_session"), [namespace]);
+
+  const [pendingStoredTable] = useState<ValidatedTable | null>(() => {
+    // One-shot migration from pre-namespace globals for the current restaurant.
+    migrateLegacyStorage(namespace);
+    return readStoredTable(
+      makeStorageKey(namespace, "validated_table"),
+      makeStorageKey(namespace, "dining_session"),
+      makeStorageKey(namespace, "cart_items"),
+      makeStorageKey(namespace, "session_consumed"),
+      namespace,
+    );
+  });
+  const [items, setItems] = useState<CartLine[]>(() => readStoredItems(makeStorageKey(namespace, "cart_items")));
   const [isCartOpen, setCartOpen] = useState(false);
   const [validatedTable, setValidatedTableState] = useState<ValidatedTable | null>(null);
   const [sessionHydrating, setSessionHydrating] = useState<boolean>(() => !!pendingStoredTable);
   const [sessionConsumed, setSessionConsumed] = useState<number>(() => {
     const t = pendingStoredTable;
-    const s = readStoredConsumption();
+    const s = readStoredConsumption(makeStorageKey(namespace, "session_consumed"));
     if (t && s && s.token === t.token) return s.total;
     return 0;
   });
   const [sessionOrderCount, setSessionOrderCount] = useState<number>(() => {
     const t = pendingStoredTable;
-    const s = readStoredConsumption();
+    const s = readStoredConsumption(makeStorageKey(namespace, "session_consumed"));
     if (t && s && s.token === t.token) return s.count;
     return 0;
   });
