@@ -73,12 +73,13 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
           // — NEVER the payload's — for all subsequent UPDATEs. FlyControl has
           // been known to send a mismatched restaurant_id.
           // ------------------------------------------------------------------
-          let dsRow: {
+          type DsRow = {
             id: string;
             restaurant_id: string;
             legacy_table_session_id: string | null;
             customer_token: string | null;
-          } | null = null;
+          };
+          let dsRow: DsRow | null = null;
 
           if (diningSessionId) {
             const { data, error } = await supabaseAdmin
@@ -87,7 +88,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               .eq("id", diningSessionId)
               .maybeSingle();
             if (error) console.error("[FC-TABLE-CLOSED] ds lookup by id error:", error);
-            dsRow = (data as typeof dsRow) ?? null;
+            dsRow = (data as DsRow | null) ?? null;
           }
 
           // Fallback 1: customer_token (accept active OR requested_close)
@@ -101,7 +102,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               .limit(1)
               .maybeSingle();
             if (error) console.error("[FC-TABLE-CLOSED] ds lookup by customer_token error:", error);
-            dsRow = (data as typeof dsRow) ?? null;
+            dsRow = (data as DsRow | null) ?? null;
           }
 
           // Fallback 2: legacy session_id
@@ -114,7 +115,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               .limit(1)
               .maybeSingle();
             if (error) console.error("[FC-TABLE-CLOSED] ds lookup by legacy id error:", error);
-            dsRow = (data as typeof dsRow) ?? null;
+            dsRow = (data as DsRow | null) ?? null;
           }
 
           if (!dsRow) {
