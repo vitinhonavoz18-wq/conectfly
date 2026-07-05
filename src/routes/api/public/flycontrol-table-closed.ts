@@ -154,7 +154,6 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
             .from("dining_sessions")
             .update({ status: "closed", closed_at: closedAt })
             .eq("id", resolvedDiningSessionId)
-            .eq("restaurant_id", authoritativeRestaurantId)
             .select("id");
           if (dsUpdateErr) console.error("[FC-TABLE-CLOSED] dining_sessions update error:", dsUpdateErr);
           const diningClosed = dsUpdated?.length ?? 0;
@@ -166,7 +165,6 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               .from("table_sessions")
               .update({ status: "closed", closed_at: closedAt })
               .eq("id", resolvedLegacySessionId)
-              .eq("restaurant_id", authoritativeRestaurantId)
               .select("id");
             if (updateError) console.error("[FC-TABLE-CLOSED] sessions update error:", updateError);
             sessionsUpdated = updatedSessions?.length ?? 0;
@@ -178,7 +176,6 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
             const { data: ackByDining, error: ackErr1 } = await supabaseAdmin
               .from("table_close_requests")
               .update({ status: "acknowledged", acknowledged_at: closedAt })
-              .eq("restaurant_id", authoritativeRestaurantId)
               .eq("dining_session_id", resolvedDiningSessionId)
               .eq("status", "pending")
               .select("id");
@@ -189,7 +186,6 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
               const { data: ackByLegacy, error: ackErr2 } = await supabaseAdmin
                 .from("table_close_requests")
                 .update({ status: "acknowledged", acknowledged_at: closedAt })
-                .eq("restaurant_id", authoritativeRestaurantId)
                 .eq("table_session_id", resolvedLegacySessionId)
                 .eq("status", "pending")
                 .select("id");
