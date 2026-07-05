@@ -353,46 +353,13 @@ export const Route = createFileRoute("/api/public/table-close-request")({
             current_total: inserted.current_total,
           });
 
-          // 6. Mirror the request onto the table session so FlyControl listeners
-          //    that subscribe to `table_sessions` (UPDATE → status='Solicitando
-          //    Fechamento') receive an immediate realtime event. This restores
-          //    the original FL detection path that was being missed when only
-          //    `table_close_requests` was published.
-          if (sessionId) {
-            const { error: updErr } = await supabaseAdmin
-              .from("table_sessions")
-              .update({ status: "Solicitando Fechamento", updated_at: new Date().toISOString() })
-              .eq("id", sessionId)
-              .in("status", ["open"]);
-            if (updErr) log("session status update error", updErr);
-            else log("session marked Solicitando Fechamento", { sessionId });
-
-            const { data: post } = await supabaseAdmin
-              .from("table_sessions")
-              .select("id, status, closed_at, total_amount, updated_at")
-              .eq("id", sessionId)
-              .maybeSingle();
-            log("STEP 5/6 — table_sessions AFTER update (Realtime UPDATE event emitted)", {
-              before: sessionBefore,
-              after: post,
-            });
-          }
-
-          // Mirror onto dining_sessions so the customer's browser Realtime
-          // subscription (filtered by dining_sessions.id) sees the request.
-          if (isUuid(body.dining_session_id)) {
-            const dq = supabaseAdmin
-              .from("dining_sessions")
-              .update({ status: "requested_close", last_activity_at: new Date().toISOString() })
-              .eq("id", body.dining_session_id!)
-              .eq("restaurant_id", body.restaurant_id)
-              .eq("status", "active");
-            const { error: dsUpdErr } = isUuid(body.customer_token)
-              ? await dq.eq("customer_token", body.customer_token!)
-              : await dq;
-            if (dsUpdErr) log("dining_sessions requested_close update error", dsUpdErr);
-            else log("dining_sessions marked requested_close", { dining_session_id: body.dining_session_id });
-          }
+          // Fluxo único: cliente e garçom produzem exatamente o mesmo evento.
+          // Nenhum efeito colateral no `table_sessions` ou `dining_sessions`.
+          // A única fonte de verdade é o INSERT em `table_close_requests`,
+          // idêntico ao que o garçom gera pelo FlyControl. O fechamento
+          // definitivo só chega via webhook `flycontrol-table-closed`, que
+          // então atualiza `dining_sessions.status = 'closed'`.
+          void sessionBefore;
 
           return new Response(
             JSON.stringify({
