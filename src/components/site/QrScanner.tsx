@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
-import { X, Camera, Loader2, AlertCircle } from "lucide-react";
+import { X, Loader2, AlertCircle, Zap, ZapOff } from "lucide-react";
 
 interface Props {
   onScan: (decodedText: string) => void;
   onClose: () => void;
+  identifying?: boolean;
 }
 
-export function QrScanner({ onScan, onClose }: Props) {
+export function QrScanner({ onScan, onClose, identifying = false }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchSupported, setTorchSupported] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannedRef = useRef(false);
   const regionId = "qr-reader";
 
   useEffect(() => {
@@ -20,8 +24,8 @@ export function QrScanner({ onScan, onClose }: Props) {
         scannerRef.current = html5QrCode;
 
         const config = {
-          fps: 5,
-          qrbox: { width: 250, height: 250 },
+          fps: 10,
+          qrbox: { width: 280, height: 280 },
           aspectRatio: 1.0,
         };
 
@@ -29,11 +33,21 @@ export function QrScanner({ onScan, onClose }: Props) {
           { facingMode: "environment" },
           config,
           (decodedText) => {
-             // Apenas log de baixo nível, o componente pai gerencia o debounce/validacao
-             onScan(decodedText);
+            if (scannedRef.current) return;
+            scannedRef.current = true;
+            try {
+              if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+                navigator.vibrate?.(80);
+              }
+            } catch {}
+            onScan(decodedText);
           },
           () => {} // Uncaught error handler (ignoring noise)
         );
+        try {
+          const caps: any = (html5QrCode as any).getRunningTrackCapabilities?.();
+          if (caps && "torch" in caps) setTorchSupported(true);
+        } catch {}
         setIsInitializing(false);
       } catch (err: any) {
         console.error("Failed to start scanner:", err);
@@ -46,72 +60,147 @@ export function QrScanner({ onScan, onClose }: Props) {
 
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.stop().catch(console.error);
+        try {
+          scannerRef.current.stop().catch(() => {});
+        } catch {}
       }
     };
   }, []);
 
+  const toggleTorch = async () => {
+    const inst: any = scannerRef.current;
+    if (!inst) return;
+    try {
+      await inst.applyVideoConstraints({ advanced: [{ torch: !torchOn }] });
+      setTorchOn((v) => !v);
+    } catch (e) {
+      console.warn("torch toggle failed", e);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm flex flex-col gap-6">
-        <div className="flex items-center justify-between text-white">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Camera className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-black uppercase tracking-widest text-sm">Escaneando Mesa</h3>
-              <p className="text-[10px] text-white/60 uppercase tracking-widest">Aponte para o QR Code</p>
-            </div>
-          </div>
-          <button 
-            onClick={onClose}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all"
+    <div className="fixed inset-0 z-[100] bg-black overflow-hidden">
+      {/* Camera fills the entire viewport */}
+      <div id={regionId} className="absolute inset-0 w-full h-full [&_video]:!w-full [&_video]:!h-full [&_video]:!object-cover" />
+
+      {/* Dark overlay with a transparent square cutout in the middle */}
+      {!error && (
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(transparent 0, transparent 0), rgba(0,0,0,0.55)",
+            WebkitMaskImage:
+              "linear-gradient(#000,#000), linear-gradient(#000,#000)",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60" />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent"
+            style={{
+              width: "min(78vw, 340px)",
+              height: "min(78vw, 340px)",
+              boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)",
+              borderRadius: "24px",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Reading frame with green corners + scan line */}
+      {!error && !isInitializing && (
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ width: "min(78vw, 340px)", height: "min(78vw, 340px)" }}
+        >
+          {/* Four rounded green corners */}
+          <span className="absolute top-0 left-0 w-10 h-10 border-t-[3px] border-l-[3px] rounded-tl-2xl" style={{ borderColor: "#22C55E" }} />
+          <span className="absolute top-0 right-0 w-10 h-10 border-t-[3px] border-r-[3px] rounded-tr-2xl" style={{ borderColor: "#22C55E" }} />
+          <span className="absolute bottom-0 left-0 w-10 h-10 border-b-[3px] border-l-[3px] rounded-bl-2xl" style={{ borderColor: "#22C55E" }} />
+          <span className="absolute bottom-0 right-0 w-10 h-10 border-b-[3px] border-r-[3px] rounded-br-2xl" style={{ borderColor: "#22C55E" }} />
+
+          {/* Scanning line */}
+          <div className="absolute inset-x-4 top-0 h-[2px] rounded-full qr-scanline" />
+        </div>
+      )}
+
+      {/* Top controls */}
+      <div className="absolute top-0 inset-x-0 pt-[max(env(safe-area-inset-top),1rem)] px-5 flex items-center justify-between z-10">
+        <button
+          onClick={onClose}
+          aria-label="Fechar"
+          className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white active:scale-95 transition"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {torchSupported ? (
+          <button
+            onClick={toggleTorch}
+            aria-label="Flash"
+            className={`h-11 w-11 rounded-full backdrop-blur-md flex items-center justify-center transition active:scale-95 ${
+              torchOn ? "bg-white text-black" : "bg-black/50 text-white"
+            }`}
           >
-            <X className="h-5 w-5" />
+            {torchOn ? <Zap className="h-5 w-5" /> : <ZapOff className="h-5 w-5" />}
           </button>
-        </div>
+        ) : (
+          <div className="h-11 w-11" />
+        )}
+      </div>
 
-        <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden border-2 border-primary/30 shadow-[0_0_50px_rgba(var(--site-primary-rgb),0.2)] bg-white/5">
-          <div id={regionId} className="w-full h-full" />
-          
-          {isInitializing && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-xs font-black uppercase tracking-widest text-white/60">Iniciando Câmera...</p>
-            </div>
-          )}
-
-          {error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 p-8 text-center gap-4">
-              <AlertCircle className="h-12 w-12 text-destructive" />
-              <p className="text-sm font-medium text-white">{error}</p>
-              <button 
-                onClick={onClose}
-                className="btn-premium px-8 py-3 rounded-xl uppercase text-xs tracking-widest w-full"
-              >
-                Voltar
-              </button>
-            </div>
-          )}
-
-          {!isInitializing && !error && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border-2 border-primary rounded-3xl animate-pulse" />
-              <div className="absolute top-0 left-0 right-0 h-1/4 bg-black/40" />
-              <div className="absolute bottom-0 left-0 right-0 h-1/4 bg-black/40" />
-              <div className="absolute top-1/4 bottom-1/4 left-0 w-[calc(50%-128px)] bg-black/40" />
-              <div className="absolute top-1/4 bottom-1/4 right-0 w-[calc(50%-128px)] bg-black/40" />
-            </div>
-          )}
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs text-white/40 font-medium">
-            O QR Code geralmente está colado<br />no centro ou canto da mesa.
+      {/* Bottom hint */}
+      {!error && (
+        <div className="absolute inset-x-0 bottom-0 pb-[max(env(safe-area-inset-bottom),2rem)] flex justify-center z-10">
+          <p className="text-white/85 text-sm font-medium text-center px-8">
+            Aponte a câmera para o QR Code da mesa
           </p>
         </div>
-      </div>
+      )}
+
+      {/* Initializing */}
+      {isInitializing && !error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 gap-3 z-20">
+          <Loader2 className="h-8 w-8 animate-spin text-white" />
+          <p className="text-xs text-white/70">Iniciando câmera…</p>
+        </div>
+      )}
+
+      {/* Identifying overlay */}
+      {identifying && !error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm gap-4 z-30">
+          <Loader2 className="h-10 w-10 animate-spin" style={{ color: "#22C55E" }} />
+          <p className="text-white text-base font-semibold">Identificando mesa…</p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 p-8 text-center gap-4 z-30">
+          <AlertCircle className="h-12 w-12 text-red-500" />
+          <p className="text-sm text-white max-w-xs">{error}</p>
+          <button
+            onClick={onClose}
+            className="mt-2 px-8 py-3 rounded-full bg-white text-black text-sm font-semibold active:scale-95 transition"
+          >
+            Voltar
+          </button>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes qr-scan {
+          0% { transform: translateY(0); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(calc(min(78vw, 340px) - 4px)); opacity: 0; }
+        }
+        .qr-scanline {
+          background: linear-gradient(90deg, transparent, #22C55E, transparent);
+          box-shadow: 0 0 12px #22C55E, 0 0 24px rgba(34,197,94,0.6);
+          animation: qr-scan 2.2s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }
