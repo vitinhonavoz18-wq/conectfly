@@ -61,16 +61,17 @@ export function TableQrScanButton({ restaurant, className }: Props) {
 
   const handleScan = async (text: string) => {
     if (!text || validating) return;
-    setScanning(false);
 
     if (sessionClosed) clearSessionClosed();
 
     const { restaurant_slug, table_token, table_number } = extractTableQrData(text, restaurant.slug);
     if (!table_token) {
+      setScanning(false);
       toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
       return;
     }
     if (!isValidTableNumber(table_number)) {
+      setScanning(false);
       toast.error("Número da mesa não identificado. Escaneie novamente.", { id: "qr-error" });
       return;
     }
@@ -103,6 +104,7 @@ export function TableQrScanButton({ restaurant, className }: Props) {
       toast.error("Falha ao sincronizar mesa. Procure um atendente.", { id: "qr-error" });
     } finally {
       setValidating(false);
+      setScanning(false);
     }
   };
 
@@ -124,7 +126,13 @@ export function TableQrScanButton({ restaurant, className }: Props) {
         </button>
       )}
 
-      {scanning && <QrScanner onScan={handleScan} onClose={() => setScanning(false)} />}
+      {scanning && (
+        <QrScanner
+          onScan={handleScan}
+          onClose={() => setScanning(false)}
+          identifying={validating}
+        />
+      )}
     </div>
   );
 }
