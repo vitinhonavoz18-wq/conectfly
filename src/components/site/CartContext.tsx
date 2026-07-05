@@ -519,10 +519,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         (payload) => {
           const next = (payload.new ?? {}) as { status?: string | null; closed_at?: string | null };
           const status = (next.status ?? "").toString().trim().toLowerCase();
-          // requested_close = customer asked to close; waiting for FL operator
-          // to confirm. Only a real `closed` (or closed_at) tears down.
-          const stillActive =
-            (status === "active" || status === "requested_close") && !next.closed_at;
+          // Regra estrita: apenas `status === 'active'` mantém a sessão viva.
+          // Qualquer outro estado (incluindo `requested_close`) encerra
+          // imediatamente a sessão do cliente.
+          const stillActive = status === "active" && !next.closed_at;
           if (!stillActive) {
             const traceId = newTraceId("realtime");
             traceLog(traceId, "STEP 9 — Realtime UPDATE → terminateSession", { dining_session_id: dsid, next });
