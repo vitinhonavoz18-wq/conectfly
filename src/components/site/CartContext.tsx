@@ -322,7 +322,7 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
     } catch {}
     // When the table changes (or is cleared), reset accumulated consumption
     // unless the same token is being re-applied (refresh restoration).
-    const stored = readStoredConsumption();
+    const stored = readStoredConsumption(SESSION_CONSUMED_KEY);
     if (!table) {
       setSessionConsumed(0);
       setSessionOrderCount(0);
@@ -529,7 +529,7 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
       if (cancelled) return;
       if (active) {
         setValidatedTableState(pendingStoredTable);
-        const stored = readStoredConsumption();
+        const stored = readStoredConsumption(SESSION_CONSUMED_KEY);
         if (stored && stored.token === pendingStoredTable.token) {
           setSessionConsumed(stored.total);
           setSessionOrderCount(stored.count);
