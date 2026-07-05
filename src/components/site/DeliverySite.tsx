@@ -13,7 +13,7 @@ export function DeliverySite({ data }: { data: SiteData }) {
       secondaryColor={r.secondary_color}
       template={template}
     >
-      <CartProvider>
+      <CartProvider namespace={r.id || r.slug || "default"}>
         <TemplateRenderer data={data} />
       </CartProvider>
     </SiteThemeWrapper>
