@@ -339,7 +339,7 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           terminateClosedSession({ silent });
           return false;
         }
-        if (!sessionResult.session_id) {
+        if (!sessionResult.session_id || !sessionResult.dining_session_id || !sessionResult.customer_token) {
           if (!silent) {
             toast.error("Sessão da mesa não foi confirmada. Escaneie novamente o QR Code.", { id: "qr-error", duration: 6000 });
           }
@@ -350,6 +350,8 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
           number: resolvedNumber,
           token: cleanToken,
           sessionId: sessionResult.session_id,
+          diningSessionId: sessionResult.dining_session_id,
+          customerToken: sessionResult.customer_token,
           restaurantId: restaurant?.id ?? null,
         };
 
