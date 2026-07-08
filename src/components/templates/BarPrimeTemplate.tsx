@@ -9,8 +9,6 @@ import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { newTraceId, traceGroup, traceGroupEnd, traceLog, traceError } from "@/lib/site/closeDebug";
-import { requestTableClose as svcRequestTableClose } from "@/services/tableSessionService";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount } = useCart();
@@ -48,68 +46,80 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   // confirms the closure and the `/api/public/flycontrol-table-closed`
   // webhook flips the local session to `closed`. The CartContext poller
   // (see check-table-session) is the only path that calls terminateSession.
+  // Pure request generator. Builds the payload EXCLUSIVELY from the active
+  // dining session (validatedTable) and sends a single POST. No side effects
+  // on success — the customer waits for FlyControl to confirm closure.
   const requestTableClose = async () => {
     if (!validatedTable || isRequestingClose) return;
-    const traceId = newTraceId("close");
-    const t0 = performance.now();
-    traceGroup(traceId, "STEP 1 — click on 'Fechar Mesa'");
-    traceLog(traceId, "click context", {
-      restaurant_id: (r as any).id,
-      restaurant_slug: (r as any).slug,
-      validatedTable,
-      totalItems,
-      totalPrice,
-      sessionConsumed,
-      sessionOrderCount,
-    });
-    traceGroupEnd();
-    setIsRequestingClose(true);
-    const payload = {
-      restaurant_id: (r as any).id,
-      table_number: validatedTable.number,
-      table_token: validatedTable.token,
-      table_session_id: validatedTable.sessionId ?? null,
-      dining_session_id: validatedTable.diningSessionId ?? null,
-      customer_token: validatedTable.customerToken ?? null,
-      customer_name: (validatedTable as any).customerName ?? null,
-    };
-    traceGroup(traceId, "STEP 2/3 — tableSessionService.requestTableClose()");
-    traceLog(traceId, "request payload (exact JSON)", payload);
-    traceGroupEnd();
-    try {
-      const result = await svcRequestTableClose({
-        restaurant_id: payload.restaurant_id,
-        table_number: payload.table_number ?? null,
-        table_token: payload.table_token ?? null,
-        table_session_id: payload.table_session_id,
-        dining_session_id: payload.dining_session_id,
-        customer_token: payload.customer_token,
-        customer_name: payload.customer_name,
-        traceId,
+
+    const ds = validatedTable;
+    const restaurant_id = ds.restaurantId;
+    const table_number = ds.number;
+    const dining_session_id = ds.diningSessionId;
+    const customer_token = ds.customerToken;
+
+    if (!restaurant_id || !table_number || !dining_session_id || !customer_token) {
+      console.error("[TABLE CLOSE] Sessão ativa incompleta — request abortado", {
+        restaurant_id,
+        table_number,
+        dining_session_id,
+        customer_token,
       });
-      const elapsed = Math.round(performance.now() - t0);
-      traceGroup(traceId, `STEP 4 — backend response (status=${result.status}, ${elapsed}ms)`);
-      traceLog(traceId, "response body", result.raw ?? result);
-      traceGroupEnd();
-      if (!result.success) {
-        traceError(traceId, "STEP 10 — flow stopped: backend rejected request", { status: result.status, body: result.raw });
+      setCloseModal({
+        open: true,
+        error: "Sessão da mesa incompleta. Escaneie o QR Code novamente.",
+      });
+      return;
+    }
+
+    const body = {
+      restaurant_id,
+      table_number,
+      table_token: ds.token,
+      table_session_id: ds.sessionId ?? null,
+      dining_session_id,
+      customer_token,
+      customer_name: (ds as any).customerName ?? null,
+    };
+
+    const url = "/api/public/table-close-request";
+
+    setIsRequestingClose(true);
+    try {
+      console.group("TABLE CLOSE REQUEST");
+      console.log("URL", url);
+      console.log("METHOD", "POST");
+      console.log("BODY", body);
+      console.groupEnd();
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+
+      console.group("TABLE CLOSE RESPONSE");
+      console.log(res.status);
+      console.log(json);
+      console.groupEnd();
+
+      if (!res.ok || (json as any)?.success === false) {
         setCloseModal({
           open: true,
           error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
         });
       } else {
-        traceLog(traceId, "STEP 7 — UI received success; awaiting realtime closure via poll", result.raw);
-        setCloseModal({ open: true, duplicate: !!result.duplicate });
+        setCloseModal({ open: true, duplicate: !!(json as any)?.duplicate });
       }
     } catch (e) {
-      traceError(traceId, "STEP 10 — flow stopped: network error", e);
+      console.error("[TABLE CLOSE] network error", e);
       setCloseModal({
         open: true,
         error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
       });
     } finally {
       setIsRequestingClose(false);
-      traceLog(traceId, "click handler finished", { elapsed_ms: Math.round(performance.now() - t0) });
     }
   };
 
