@@ -11,7 +11,7 @@ import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ArrowUp } 
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
-  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount } = useCart();
+  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount, terminateSession } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
@@ -99,7 +99,17 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       console.log("Body", json);
       console.groupEnd();
 
-      if (!res.ok || (json as any)?.success === false) {
+      const code = (json as any)?.code;
+      if (res.status === 404 || code === "not_found" || code === "not_active" || code === "unauthorized") {
+        // Stale local dining session — server has no matching active row.
+        // Force the customer to re-scan the QR to mint a fresh session.
+        console.warn("[TABLE CLOSE] stale dining session — terminating local state", { code, status: res.status });
+        try { terminateSession?.({ silent: true }); } catch {}
+        setCloseModal({
+          open: true,
+          error: "Sua sessão da mesa expirou. Escaneie o QR Code novamente para continuar.",
+        });
+      } else if (!res.ok || (json as any)?.success === false) {
         setCloseModal({
           open: true,
           error: "Não foi possível contatar o sistema do restaurante. Procure um atendente.",
