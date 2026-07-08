@@ -53,15 +53,11 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     if (!validatedTable || isRequestingClose) return;
 
     const ds = validatedTable;
-    const restaurant_id = ds.restaurantId;
-    const table_number = ds.number;
     const dining_session_id = ds.diningSessionId;
     const customer_token = ds.customerToken;
 
-    if (!restaurant_id || !table_number || !dining_session_id || !customer_token) {
+    if (!dining_session_id || !customer_token) {
       console.error("[TABLE CLOSE] Sessão ativa incompleta — request abortado", {
-        restaurant_id,
-        table_number,
         dining_session_id,
         customer_token,
       });
@@ -73,23 +69,22 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     }
 
     const body = {
-      restaurant_id,
-      table_number,
-      table_token: ds.token,
-      table_session_id: ds.sessionId ?? null,
       dining_session_id,
       customer_token,
+      table_token: ds.token ?? null,
       customer_name: (ds as any).customerName ?? null,
     };
 
-    const url = "/api/public/table-close-request";
+    const url = "/api/public/request-close-table";
 
     setIsRequestingClose(true);
     try {
-      console.group("TABLE CLOSE REQUEST");
+      console.group("============================== TABLE CLOSE REQUEST ==============================");
       console.log("URL", url);
       console.log("METHOD", "POST");
-      console.log("BODY", body);
+      console.log("PAYLOAD", body);
+      console.log("Dining Session ID", dining_session_id);
+      console.log("Customer Token", customer_token);
       console.groupEnd();
 
       const res = await fetch(url, {
@@ -99,9 +94,9 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       });
       const json = await res.json().catch(() => ({}));
 
-      console.group("TABLE CLOSE RESPONSE");
-      console.log(res.status);
-      console.log(json);
+      console.group("============================== TABLE CLOSE RESPONSE ==============================");
+      console.log("Status", res.status);
+      console.log("Body", json);
       console.groupEnd();
 
       if (!res.ok || (json as any)?.success === false) {
