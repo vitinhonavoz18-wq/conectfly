@@ -22,7 +22,7 @@ const isUuid = (v: unknown): v is string => typeof v === "string" && UUID_RE.tes
  *   4. Local `table_sessions` is best-effort: a missing session is logged and
  *      the request is still created (deduped via `uniq_tcr_pending_per_table`).
  */
-export const Route = createFileRoute("/api/public/table-close-request")({
+export const Route = createFileRoute("/api/public/request-close-table")({
   server: {
     handlers: {
       OPTIONS: async ({ request }) => preflightResponse(request, CORS_OPTS),
