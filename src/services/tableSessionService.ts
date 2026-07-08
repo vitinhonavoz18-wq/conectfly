@@ -145,20 +145,14 @@ export async function requestTableClose(
 ): Promise<RequestTableCloseResult> {
   const { traceId, ...body } = params;
   try {
-    const res = await fetch(`${BASE_URL}/table-close-request`, {
+    const res = await fetch(`${BASE_URL}/request-close-table`, {
       method: "POST",
       headers: buildHeaders(traceId),
       body: JSON.stringify({
-        restaurant_id: body.restaurant_id,
-        table_number: body.table_number,
-        table_token: body.table_token,
-        table_session_id: body.table_session_id ?? null,
         dining_session_id: body.dining_session_id ?? null,
         customer_token: body.customer_token ?? null,
+        table_token: body.table_token ?? null,
         customer_name: body.customer_name ?? null,
-        table_id: body.table_id ?? null,
-        source: body.source ?? "customer_ui",
-        timestamp: new Date().toISOString(),
       }),
     });
     const data = await readJson(res);
