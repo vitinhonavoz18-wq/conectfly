@@ -108,6 +108,7 @@ export type Database = {
         Row: {
           badge: string | null
           created_at: string
+          external_id: string | null
           group_id: string
           id: string
           is_active: boolean | null
@@ -122,6 +123,7 @@ export type Database = {
         Insert: {
           badge?: string | null
           created_at?: string
+          external_id?: string | null
           group_id: string
           id?: string
           is_active?: boolean | null
@@ -136,6 +138,7 @@ export type Database = {
         Update: {
           badge?: string | null
           created_at?: string
+          external_id?: string | null
           group_id?: string
           id?: string
           is_active?: boolean | null
@@ -174,6 +177,7 @@ export type Database = {
       delivery_zones: {
         Row: {
           created_at: string
+          external_id: string | null
           fee: number
           id: string
           neighborhood: string
@@ -183,6 +187,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          external_id?: string | null
           fee?: number
           id?: string
           neighborhood: string
@@ -192,6 +197,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          external_id?: string | null
           fee?: number
           id?: string
           neighborhood?: string
@@ -340,6 +346,7 @@ export type Database = {
           allow_cart_addition: boolean | null
           created_at: string
           description: string | null
+          external_id: string | null
           icon: string | null
           id: string
           image_url: string | null
@@ -359,6 +366,7 @@ export type Database = {
           allow_cart_addition?: boolean | null
           created_at?: string
           description?: string | null
+          external_id?: string | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -378,6 +386,7 @@ export type Database = {
           allow_cart_addition?: boolean | null
           created_at?: string
           description?: string | null
+          external_id?: string | null
           icon?: string | null
           id?: string
           image_url?: string | null
@@ -415,6 +424,7 @@ export type Database = {
           category_id: string
           created_at: string
           description: string | null
+          external_id: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -431,6 +441,7 @@ export type Database = {
           category_id: string
           created_at?: string
           description?: string | null
+          external_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -447,6 +458,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           description?: string | null
+          external_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -728,6 +740,7 @@ export type Database = {
           category: string | null
           created_at: string | null
           description: string | null
+          external_id: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -744,6 +757,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          external_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -760,6 +774,7 @@ export type Database = {
           category?: string | null
           created_at?: string | null
           description?: string | null
+          external_id?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -797,6 +812,7 @@ export type Database = {
       pizzeria_pizza_sizes: {
         Row: {
           created_at: string
+          external_id: string | null
           id: string
           is_active: boolean
           max_flavors: number
@@ -809,6 +825,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          external_id?: string | null
           id?: string
           is_active?: boolean
           max_flavors?: number
@@ -821,6 +838,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          external_id?: string | null
           id?: string
           is_active?: boolean
           max_flavors?: number
