@@ -134,14 +134,23 @@ export const Route = createFileRoute("/api/public/request-close-table")({
             orphanIds.push(row.id);
             continue;
           }
-          // Both ids set but not our session — check if the referenced dining
-          // session still exists and is active. If not, treat as orphan.
-          const { data: refDs } = await supabaseAdmin
-            .from("dining_sessions")
-            .select("id, status")
-            .eq("id", row.dining_session_id)
-            .maybeSingle();
-          if (!refDs || refDs.status !== "active") orphanIds.push(row.id);
+          // Both ids set but not our session — orphan if either referenced
+          // session is no longer live.
+          const [{ data: refDs }, { data: refTs }] = await Promise.all([
+            supabaseAdmin
+              .from("dining_sessions")
+              .select("id, status")
+              .eq("id", row.dining_session_id)
+              .maybeSingle(),
+            supabaseAdmin
+              .from("table_sessions")
+              .select("id, status")
+              .eq("id", row.table_session_id)
+              .maybeSingle(),
+          ]);
+          const diningLive = refDs && (refDs.status === "active" || refDs.status === "requested_close");
+          const tableLive = refTs && refTs.status === "open";
+          if (!diningLive || !tableLive) orphanIds.push(row.id);
         }
         if (orphanIds.length > 0) {
           const { error: ackErr } = await supabaseAdmin
