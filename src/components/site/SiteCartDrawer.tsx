@@ -367,7 +367,6 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
         // Detectar fechamento remoto da mesa (operador finalizou no FlyControl).
         const rawMsg = (sessionResult.message || "").toString().toLowerCase();
         const closedByOperator =
-          sessionResult.closed === true ||
           /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
         if (closedByOperator) {
           terminateClosedSession({ silent });
