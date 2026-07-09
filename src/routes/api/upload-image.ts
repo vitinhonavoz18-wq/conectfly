@@ -81,7 +81,7 @@ export const Route = createFileRoute("/api/upload-image")({
 
         // 1. Auth via API key -> restaurant
         const auth = await validateApiKey(request);
-        if ("error" in auth) return json({ success: false, error: auth.error }, auth.status, cors);
+        if ("error" in auth) return json({ success: false, error: auth.error }, auth.status ?? 401, cors);
         const restaurant = auth.restaurant;
 
         // 2. Parse multipart
