@@ -78,13 +78,14 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
             restaurant_id: string;
             legacy_table_session_id: string | null;
             customer_token: string | null;
+            table_id: string | null;
           };
           let dsRow: DsRow | null = null;
 
           if (diningSessionId) {
             const { data, error } = await supabaseAdmin
               .from("dining_sessions")
-              .select("id, restaurant_id, legacy_table_session_id, customer_token")
+              .select("id, restaurant_id, legacy_table_session_id, customer_token, table_id")
               .eq("id", diningSessionId)
               .maybeSingle();
             if (error) console.error("[FC-TABLE-CLOSED] ds lookup by id error:", error);
@@ -95,7 +96,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
           if (!dsRow && customerToken) {
             const { data, error } = await supabaseAdmin
               .from("dining_sessions")
-              .select("id, restaurant_id, legacy_table_session_id, customer_token")
+              .select("id, restaurant_id, legacy_table_session_id, customer_token, table_id")
               .eq("customer_token", customerToken)
               .in("status", ["active", "requested_close"])
               .order("opened_at", { ascending: false })
