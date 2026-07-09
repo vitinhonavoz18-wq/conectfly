@@ -117,6 +117,40 @@ export const Route = createFileRoute("/api/public/request-close-table")({
           );
         }
 
+        // 3b. Auto-acknowledge orphan pending rows for this table that belong
+        // to a different / missing session. Otherwise the partial unique index
+        // `uniq_tcr_pending_per_table` (table_id WHERE status='pending' AND
+        // table_session_id IS NULL) would block the INSERT below with a
+        // duplicate-key error and the customer would be stuck forever.
+        const { data: orphans } = await supabaseAdmin
+          .from("table_close_requests")
+          .select("id, dining_session_id, table_session_id")
+          .eq("table_id", tableId)
+          .eq("status", "pending");
+        const orphanIds: string[] = [];
+        for (const row of orphans ?? []) {
+          if (row.dining_session_id === ds.id) continue; // belongs to active session
+          if (!row.dining_session_id || !row.table_session_id) {
+            orphanIds.push(row.id);
+            continue;
+          }
+          // Both ids set but not our session — check if the referenced dining
+          // session still exists and is active. If not, treat as orphan.
+          const { data: refDs } = await supabaseAdmin
+            .from("dining_sessions")
+            .select("id, status")
+            .eq("id", row.dining_session_id)
+            .maybeSingle();
+          if (!refDs || refDs.status !== "active") orphanIds.push(row.id);
+        }
+        if (orphanIds.length > 0) {
+          const { error: ackErr } = await supabaseAdmin
+            .from("table_close_requests")
+            .update({ status: "acknowledged", acknowledged_at: new Date().toISOString() })
+            .in("id", orphanIds);
+          if (ackErr) console.warn("[request-close-table] orphan ack failed", ackErr);
+        }
+
         // 4. Insert the pending request. FlyControl receives it via Realtime.
         const { data: inserted, error: insErr } = await supabaseAdmin
           .from("table_close_requests")
