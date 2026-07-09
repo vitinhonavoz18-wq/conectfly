@@ -64,7 +64,15 @@ interface CartCtx {
     restaurant_slug?: string | null;
     customer_name?: string | null;
     customer_phone?: string | null;
-  }) => Promise<{ success: boolean; closed?: boolean; already_open?: boolean; session_id?: string | null; message?: string }>;
+  }) => Promise<{
+    success: boolean;
+    closed?: boolean;
+    already_open?: boolean;
+    session_id?: string | null;
+    dining_session_id?: string | null;
+    customer_token?: string | null;
+    message?: string;
+  }>;
 }
 
 const Ctx = createContext<CartCtx | null>(null);
@@ -315,6 +323,11 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
           table_number: table.number,
           session_status: "active",
         }));
+        console.log("VALIDATED_TABLE_STORAGE_WRITE", {
+          key: TABLE_STORAGE_KEY,
+          value: table,
+          dining_session_id: table.diningSessionId,
+        });
       } else {
         window.localStorage.removeItem(TABLE_STORAGE_KEY);
         window.localStorage.removeItem(DINING_STORAGE_KEY);
@@ -491,6 +504,8 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
           success: false,
           closed: !!result.closed,
           session_id: result.session_id ?? null,
+          dining_session_id: result.dining_session_id ?? null,
+          customer_token: result.customer_token ?? null,
           message: result.message,
         };
       }
@@ -509,6 +524,8 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
         success: true,
         already_open: !!result.already_open,
         session_id: result.session_id,
+        dining_session_id: result.dining_session_id,
+        customer_token: result.customer_token,
       };
     } catch (err: any) {
       console.error("VALIDATE_AND_OPEN_TABLE_ERROR", err);

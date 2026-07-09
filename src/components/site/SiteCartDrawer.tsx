@@ -3,7 +3,7 @@ import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, Sh
 import { useCart, isValidTableNumber } from "./CartContext";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl, openTableSession, type OpenTableSessionPayload } from "@/lib/site/flycontrol";
+import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: Props) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, sessionHydrating, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession } = useCart();
+  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, sessionHydrating, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession, validateAndOpenTable } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -313,57 +313,34 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
     setIsOpeningTableSession(true);
 
     try {
-      // 1. Tentar abrir a sessão imediatamente
-      const sessionPayload: OpenTableSessionPayload = {
-        type: "open_table_session",
-        restaurant_slug: targetSlug,
-        order_type: "table",
-        service_mode: "mesa",
+      console.log("NO_ORDER_CREATED_ON_SCAN");
+      const sessionResult = await validateAndOpenTable({
+        restaurant,
         table_number: resolvedNumber,
         table_token: cleanToken,
+        restaurant_slug: targetSlug,
         customer_name: name || undefined,
         customer_phone: phone || undefined,
-        opened_from: "qrcode_scan",
-        opened_at: new Date().toISOString()
-      };
-
-      console.log("NO_ORDER_CREATED_ON_SCAN");
-      const sessionResult = await openTableSession(restaurant, sessionPayload);
+      });
 
       console.log("OPEN_TABLE_SESSION_RESPONSE", sessionResult);
 
       if (sessionResult.success) {
-        // Defensive: if FlyControl reports the session as closed even with
-        // success=true, treat it as closed.
-        if (sessionResult.closed) {
-          terminateClosedSession({ silent });
-          return false;
-        }
         if (!sessionResult.session_id || !sessionResult.dining_session_id || !sessionResult.customer_token) {
           if (!silent) {
             toast.error("Sessão da mesa não foi confirmada. Escaneie novamente o QR Code.", { id: "qr-error", duration: 6000 });
           }
           return false;
         }
-        const tableData = {
-          id: "flycontrol-table",
-          number: resolvedNumber,
-          token: cleanToken,
-          sessionId: sessionResult.session_id,
-          diningSessionId: sessionResult.dining_session_id,
-          customerToken: sessionResult.customer_token,
-          restaurantId: restaurant?.id ?? null,
-        };
 
-        setValidatedTable(tableData);
         setTableId("flycontrol-table");
-        setTableNumber(tableData.number);
-        setTableToken(token);
+        setTableNumber(resolvedNumber);
+        setTableToken(cleanToken);
         setTableSessionId(sessionResult.session_id || null);
         
         // Atualizar travas e IDs
         setTableSessionOpened(true);
-        setLastOpenedTableToken(token);
+        setLastOpenedTableToken(cleanToken);
         setCurrentTableSessionId(sessionResult.session_id || null);
         
         if (sessionResult.session_id) {
@@ -374,19 +351,22 @@ export function SiteCartDrawer({ open, onClose, whatsappNumber, restaurantName, 
 
         if (!silent) {
           if (sessionResult.already_open) {
-            toast.success(`Mesa ${tableData.number} já está aberta.`, { id: "qr-success" });
+            toast.success(`Mesa ${resolvedNumber} já está aberta.`, { id: "qr-success" });
           } else {
-            toast.success(`Mesa ${tableData.number} aberta com sucesso!`, { id: "qr-success" });
+            toast.success(`Mesa ${resolvedNumber} aberta com sucesso!`, { id: "qr-success" });
           }
         }
         
         setIsScanning(false);
         return true;
       } else {
+        if (sessionResult.closed) {
+          terminateClosedSession({ silent });
+          return false;
+        }
         // Detectar fechamento remoto da mesa (operador finalizou no FlyControl).
         const rawMsg = (sessionResult.message || "").toString().toLowerCase();
         const closedByOperator =
-          sessionResult.closed === true ||
           /closed|fechad|finaliz|encerr|ended|expired|not[_ -]?found|inexist/.test(rawMsg);
         if (closedByOperator) {
           terminateClosedSession({ silent });
