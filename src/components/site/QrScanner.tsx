@@ -85,22 +85,13 @@ export function QrScanner({ onScan, onClose, identifying = false }: Props) {
 
       {/* Dark overlay with a transparent square cutout in the middle */}
       {!error && (
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(transparent 0, transparent 0), rgba(0,0,0,0.55)",
-            WebkitMaskImage:
-              "linear-gradient(#000,#000), linear-gradient(#000,#000)",
-          }}
-        >
-          <div className="absolute inset-0 bg-black/60" />
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-transparent"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             style={{
               width: "min(78vw, 340px)",
               height: "min(78vw, 340px)",
-              boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)",
+              boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
               borderRadius: "24px",
             }}
           />
