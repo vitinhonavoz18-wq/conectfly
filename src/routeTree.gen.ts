@@ -14,6 +14,7 @@ import { Route as DebugHostRouteImport } from './routes/debug-host'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as ApiUploadImageRouteImport } from './routes/api/upload-image'
 import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as ApiPublicRequestCloseTableRouteImport } from './routes/api/public/request-close-table'
@@ -49,6 +50,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiUploadImageRoute = ApiUploadImageRouteImport.update({
+  id: '/api/upload-image',
+  path: '/api/upload-image',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMenuSyncRoute = ApiMenuSyncRouteImport.update({
   id: '/api/menu-sync',
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
+  '/api/upload-image': typeof ApiUploadImageRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
+  '/api/upload-image': typeof ApiUploadImageRoute
   '/': typeof AuthenticatedIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
+  '/api/upload-image': typeof ApiUploadImageRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/debug-host'
     | '/login'
     | '/api/menu-sync'
+    | '/api/upload-image'
     | '/edit/$id'
     | '/export/$id'
     | '/api/menu-sync/$'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/debug-host'
     | '/login'
     | '/api/menu-sync'
+    | '/api/upload-image'
     | '/'
     | '/edit/$id'
     | '/export/$id'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/debug-host'
     | '/login'
     | '/api/menu-sync'
+    | '/api/upload-image'
     | '/_authenticated/'
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
@@ -226,6 +238,7 @@ export interface RootRouteChildren {
   DebugHostRoute: typeof DebugHostRoute
   LoginRoute: typeof LoginRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
+  ApiUploadImageRoute: typeof ApiUploadImageRoute
   ApiPublicCheckTableSessionRoute: typeof ApiPublicCheckTableSessionRoute
   ApiPublicFlycontrolTableClosedRoute: typeof ApiPublicFlycontrolTableClosedRoute
   ApiPublicOpenTableSessionRoute: typeof ApiPublicOpenTableSessionRoute
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/upload-image': {
+      id: '/api/upload-image'
+      path: '/api/upload-image'
+      fullPath: '/api/upload-image'
+      preLoaderRoute: typeof ApiUploadImageRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/menu-sync': {
       id: '/api/menu-sync'
@@ -386,6 +406,7 @@ const rootRouteChildren: RootRouteChildren = {
   DebugHostRoute: DebugHostRoute,
   LoginRoute: LoginRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
+  ApiUploadImageRoute: ApiUploadImageRoute,
   ApiPublicCheckTableSessionRoute: ApiPublicCheckTableSessionRoute,
   ApiPublicFlycontrolTableClosedRoute: ApiPublicFlycontrolTableClosedRoute,
   ApiPublicOpenTableSessionRoute: ApiPublicOpenTableSessionRoute,
