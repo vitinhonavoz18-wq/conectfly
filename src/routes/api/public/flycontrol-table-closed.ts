@@ -78,13 +78,14 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
             restaurant_id: string;
             legacy_table_session_id: string | null;
             customer_token: string | null;
+            table_id: string | null;
           };
           let dsRow: DsRow | null = null;
 
           if (diningSessionId) {
             const { data, error } = await supabaseAdmin
               .from("dining_sessions")
-              .select("id, restaurant_id, legacy_table_session_id, customer_token")
+              .select("id, restaurant_id, legacy_table_session_id, customer_token, table_id")
               .eq("id", diningSessionId)
               .maybeSingle();
             if (error) console.error("[FC-TABLE-CLOSED] ds lookup by id error:", error);
@@ -95,7 +96,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
           if (!dsRow && customerToken) {
             const { data, error } = await supabaseAdmin
               .from("dining_sessions")
-              .select("id, restaurant_id, legacy_table_session_id, customer_token")
+              .select("id, restaurant_id, legacy_table_session_id, customer_token, table_id")
               .eq("customer_token", customerToken)
               .in("status", ["active", "requested_close"])
               .order("opened_at", { ascending: false })
@@ -109,7 +110,7 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
           if (!dsRow && sessionId) {
             const { data, error } = await supabaseAdmin
               .from("dining_sessions")
-              .select("id, restaurant_id, legacy_table_session_id, customer_token")
+              .select("id, restaurant_id, legacy_table_session_id, customer_token, table_id")
               .eq("legacy_table_session_id", sessionId)
               .order("opened_at", { ascending: false })
               .limit(1)
@@ -191,6 +192,22 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
                 .select("id");
               if (ackErr2) console.error("[FC-TABLE-CLOSED] close_requests (legacy) update error:", ackErr2);
               closeRequestsUpdated += ackByLegacy?.length ?? 0;
+            }
+
+            // Fallback: legacy orphan rows whose session ids are NULL or refer
+            // to sessions that no longer match. Only runs when the session-based
+            // lookups above matched nothing — prevents stale pending rows from
+            // permanently blocking future close requests via
+            // uniq_tcr_pending_per_table.
+            if (closeRequestsUpdated === 0 && dsRow.table_id) {
+              const { data: ackByTable, error: ackErr3 } = await supabaseAdmin
+                .from("table_close_requests")
+                .update({ status: "acknowledged", acknowledged_at: closedAt })
+                .eq("table_id", dsRow.table_id)
+                .eq("status", "pending")
+                .select("id");
+              if (ackErr3) console.error("[FC-TABLE-CLOSED] close_requests (table fallback) update error:", ackErr3);
+              closeRequestsUpdated += ackByTable?.length ?? 0;
             }
           }
 
