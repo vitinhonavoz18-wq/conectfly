@@ -128,8 +128,19 @@ export const DEFAULT_DELIVERY_ZONES: { neighborhood: string; fee: number }[] = [
   { neighborhood: "VILAS DO ATLÂNTICO", fee: 35 }, { neighborhood: "VITÓRIA", fee: 40 },
 ];
 
-export async function seedDefaultDeliveryZones(restaurantId: string): Promise<void> {
-  const { data: existing } = await supabase
+/**
+ * Client-agnostic seed. Works with either the browser Supabase client
+ * (`@/integrations/supabase/client`) or the server admin client
+ * (`@/integrations/supabase/client.server`). The caller decides.
+ *
+ * Typed as `any` on purpose so we can accept both clients without pulling
+ * server-only modules into browser bundles.
+ */
+export async function seedDefaultDeliveryZonesWithClient(
+  client: any,
+  restaurantId: string,
+): Promise<void> {
+  const { data: existing } = await client
     .from("delivery_zones")
     .select("id")
     .eq("restaurant_id", restaurantId)
@@ -141,7 +152,11 @@ export async function seedDefaultDeliveryZones(restaurantId: string): Promise<vo
     fee: z.fee,
     sort_order: i,
   }));
-  await supabase.from("delivery_zones").insert(rows);
+  await client.from("delivery_zones").insert(rows);
+}
+
+export async function seedDefaultDeliveryZones(restaurantId: string): Promise<void> {
+  return seedDefaultDeliveryZonesWithClient(supabase, restaurantId);
 }
 
 /**
@@ -151,11 +166,12 @@ export async function seedDefaultDeliveryZones(restaurantId: string): Promise<vo
  */
 import { supabase } from "@/integrations/supabase/client";
 
-export async function seedDefaultMenu(
+export async function seedDefaultMenuWithClient(
+  client: any,
   restaurantId: string,
   options: { force?: boolean } = {},
 ): Promise<{ inserted: boolean; reason?: string }> {
-  const { data: existing, error: exErr } = await supabase
+  const { data: existing, error: exErr } = await client
     .from("menu_categories")
     .select("id")
     .eq("restaurant_id", restaurantId)
@@ -165,13 +181,13 @@ export async function seedDefaultMenu(
   if (existing && existing.length > 0) {
     if (!options.force) return { inserted: false, reason: "already-has-menu" };
     // force: limpa categorias e itens antes
-    await supabase.from("menu_items").delete().eq("restaurant_id", restaurantId);
-    await supabase.from("menu_categories").delete().eq("restaurant_id", restaurantId);
+    await client.from("menu_items").delete().eq("restaurant_id", restaurantId);
+    await client.from("menu_categories").delete().eq("restaurant_id", restaurantId);
   }
 
   for (let ci = 0; ci < DEFAULT_MENU.length; ci++) {
     const cat = DEFAULT_MENU[ci];
-    const { data: catRow, error: catErr } = await supabase
+    const { data: catRow, error: catErr } = await client
       .from("menu_categories")
       .insert({
         restaurant_id: restaurantId,
@@ -201,7 +217,7 @@ export async function seedDefaultMenu(
           is_active: true,
           sort_order: idx,
         }));
-        const { error: bevErr } = await supabase.from("pizzeria_beverages").insert(beverageRows);
+        const { error: bevErr } = await client.from("pizzeria_beverages").insert(beverageRows);
         if (bevErr) console.error("[seedDefaultMenu] Erro ao criar bebidas padrão:", bevErr);
       } else {
         // Inserir na tabela genérica de itens
@@ -216,7 +232,7 @@ export async function seedDefaultMenu(
           sort_order: idx,
           is_active: true,
         }));
-        const { error: itemErr } = await supabase.from("menu_items").insert(rows);
+        const { error: itemErr } = await client.from("menu_items").insert(rows);
         if (itemErr) console.error(`[seedDefaultMenu] Erro ao criar itens para ${cat.name}:`, itemErr);
       }
     }
@@ -232,10 +248,17 @@ export async function seedDefaultMenu(
         is_active: true,
         sort_order: idx,
       }));
-      const { error: sizeErr } = await supabase.from("pizzeria_pizza_sizes").insert(sizeRows);
+      const { error: sizeErr } = await client.from("pizzeria_pizza_sizes").insert(sizeRows);
       if (sizeErr) console.error("[seedDefaultMenu] Erro ao criar tamanhos de pizza padrão:", sizeErr);
     }
   }
 
   return { inserted: true };
+}
+
+export async function seedDefaultMenu(
+  restaurantId: string,
+  options: { force?: boolean } = {},
+): Promise<{ inserted: boolean; reason?: string }> {
+  return seedDefaultMenuWithClient(supabase, restaurantId, options);
 }
