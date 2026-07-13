@@ -1,0 +1,2 @@
+ALTER TABLE public.restaurants ADD COLUMN IF NOT EXISTS flycontrol_id TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS restaurants_flycontrol_id_key ON public.restaurants (flycontrol_id) WHERE flycontrol_id IS NOT NULL;
