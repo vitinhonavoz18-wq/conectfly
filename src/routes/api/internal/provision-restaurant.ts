@@ -241,6 +241,12 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           selected_template,
           published: true,
           owner_id: null,
+          created_by:
+            typeof body?.created_by === "string" && body.created_by.trim()
+              ? body.created_by.trim()
+              : "flycontrol",
+          provisioned_at: new Date().toISOString(),
+          provision_version: 1,
         };
         // owner_name is accepted in the payload for logging/traceability
         // but is not persisted (no such column on restaurants).
