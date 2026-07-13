@@ -923,6 +923,7 @@ export type Database = {
           city: string | null
           continue_opening_whatsapp: boolean | null
           created_at: string
+          created_by: string
           custom_subdomain: string | null
           delivery_enabled: boolean | null
           delivery_settings: Json | null
@@ -949,6 +950,8 @@ export type Database = {
           owner_id: string | null
           pickup_enabled: boolean | null
           primary_color: string
+          provision_version: number
+          provisioned_at: string | null
           published: boolean
           secondary_color: string
           selected_template: string
@@ -972,6 +975,7 @@ export type Database = {
           city?: string | null
           continue_opening_whatsapp?: boolean | null
           created_at?: string
+          created_by?: string
           custom_subdomain?: string | null
           delivery_enabled?: boolean | null
           delivery_settings?: Json | null
@@ -998,6 +1002,8 @@ export type Database = {
           owner_id?: string | null
           pickup_enabled?: boolean | null
           primary_color?: string
+          provision_version?: number
+          provisioned_at?: string | null
           published?: boolean
           secondary_color?: string
           selected_template?: string
@@ -1021,6 +1027,7 @@ export type Database = {
           city?: string | null
           continue_opening_whatsapp?: boolean | null
           created_at?: string
+          created_by?: string
           custom_subdomain?: string | null
           delivery_enabled?: boolean | null
           delivery_settings?: Json | null
@@ -1047,6 +1054,8 @@ export type Database = {
           owner_id?: string | null
           pickup_enabled?: boolean | null
           primary_color?: string
+          provision_version?: number
+          provisioned_at?: string | null
           published?: boolean
           secondary_color?: string
           selected_template?: string
