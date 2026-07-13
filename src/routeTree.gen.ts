@@ -22,6 +22,7 @@ import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/publ
 import { Route as ApiPublicFlycontrolTableClosedRouteImport } from './routes/api/public/flycontrol-table-closed'
 import { Route as ApiPublicCheckTableSessionRouteImport } from './routes/api/public/check-table-session'
 import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
+import { Route as ApiInternalProvisionRestaurantRouteImport } from './routes/api/internal/provision-restaurant'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
 import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api.public.pizzerias.$slug.menu-sync'
@@ -95,6 +96,12 @@ const ApiMenuSyncSplatRoute = ApiMenuSyncSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => ApiMenuSyncRoute,
 } as any)
+const ApiInternalProvisionRestaurantRoute =
+  ApiInternalProvisionRestaurantRouteImport.update({
+    id: '/api/internal/provision-restaurant',
+    path: '/api/internal/provision-restaurant',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
   id: '/export/$id',
   path: '/export/$id',
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/api/upload-image': typeof ApiUploadImageRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/internal/provision-restaurant': typeof ApiInternalProvisionRestaurantRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/internal/provision-restaurant': typeof ApiInternalProvisionRestaurantRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
@@ -165,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
+  '/api/internal/provision-restaurant': typeof ApiInternalProvisionRestaurantRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/api/upload-image'
     | '/edit/$id'
     | '/export/$id'
+    | '/api/internal/provision-restaurant'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
     | '/api/public/flycontrol-table-closed'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/'
     | '/edit/$id'
     | '/export/$id'
+    | '/api/internal/provision-restaurant'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
     | '/api/public/flycontrol-table-closed'
@@ -222,6 +234,7 @@ export interface FileRouteTypes {
     | '/_authenticated/'
     | '/_authenticated/edit/$id'
     | '/_authenticated/export/$id'
+    | '/api/internal/provision-restaurant'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
     | '/api/public/flycontrol-table-closed'
@@ -239,6 +252,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiUploadImageRoute: typeof ApiUploadImageRoute
+  ApiInternalProvisionRestaurantRoute: typeof ApiInternalProvisionRestaurantRoute
   ApiPublicCheckTableSessionRoute: typeof ApiPublicCheckTableSessionRoute
   ApiPublicFlycontrolTableClosedRoute: typeof ApiPublicFlycontrolTableClosedRoute
   ApiPublicOpenTableSessionRoute: typeof ApiPublicOpenTableSessionRoute
@@ -341,6 +355,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMenuSyncSplatRouteImport
       parentRoute: typeof ApiMenuSyncRoute
     }
+    '/api/internal/provision-restaurant': {
+      id: '/api/internal/provision-restaurant'
+      path: '/api/internal/provision-restaurant'
+      fullPath: '/api/internal/provision-restaurant'
+      preLoaderRoute: typeof ApiInternalProvisionRestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/export/$id': {
       id: '/_authenticated/export/$id'
       path: '/export/$id'
@@ -407,6 +428,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiUploadImageRoute: ApiUploadImageRoute,
+  ApiInternalProvisionRestaurantRoute: ApiInternalProvisionRestaurantRoute,
   ApiPublicCheckTableSessionRoute: ApiPublicCheckTableSessionRoute,
   ApiPublicFlycontrolTableClosedRoute: ApiPublicFlycontrolTableClosedRoute,
   ApiPublicOpenTableSessionRoute: ApiPublicOpenTableSessionRoute,
