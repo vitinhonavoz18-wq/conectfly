@@ -242,9 +242,8 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           published: true,
           owner_id: null,
         };
-        if (typeof body?.owner_name === "string" && body.owner_name.trim()) {
-          insertPayload.owner_name = body.owner_name.trim();
-        }
+        // owner_name is accepted in the payload for logging/traceability
+        // but is not persisted (no such column on restaurants).
 
         const { data: created, error: insErr } = await supabaseAdmin
           .from("restaurants")
