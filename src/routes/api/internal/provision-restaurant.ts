@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
 import {
-  DEFAULT_MENU,
-  DEFAULT_DELIVERY_ZONES,
+  seedDefaultMenuWithClient,
+  seedDefaultDeliveryZonesWithClient,
 } from "@/lib/site/defaultMenu";
 
 const corsHeaders = {
@@ -57,94 +57,6 @@ async function ensureUniqueSubdomain(base: string): Promise<string> {
     sub = `${base}${Math.random().toString(36).slice(2, 6)}`;
   }
   return `${base}${Date.now()}`;
-}
-
-async function seedMenuAdmin(restaurantId: string) {
-  const { data: existing } = await supabaseAdmin
-    .from("menu_categories")
-    .select("id")
-    .eq("restaurant_id", restaurantId)
-    .limit(1);
-  if (existing && existing.length > 0) return;
-
-  for (let ci = 0; ci < DEFAULT_MENU.length; ci++) {
-    const cat = DEFAULT_MENU[ci];
-    const { data: catRow, error: catErr } = await supabaseAdmin
-      .from("menu_categories")
-      .insert({
-        restaurant_id: restaurantId,
-        name: cat.name,
-        icon: cat.icon,
-        is_pizza: cat.is_pizza,
-        pizza_sizes: cat.pizza_sizes as never,
-        sort_order: ci,
-        is_active: true,
-      })
-      .select()
-      .single();
-    if (catErr || !catRow) {
-      console.error("[provision] category insert failed", cat.name, catErr);
-      continue;
-    }
-
-    const isBeverageCat =
-      cat.name.toLowerCase() === "bebidas" || cat.name.toLowerCase() === "bebida";
-
-    if (cat.flavors.length > 0) {
-      if (isBeverageCat) {
-        const rows = cat.flavors.map((f, idx) => ({
-          pizzeria_id: restaurantId,
-          name: f.name,
-          price: f.name.includes("Lata") ? 6 : f.name.includes("2L") ? 14 : 8,
-          is_active: true,
-          sort_order: idx,
-        }));
-        await supabaseAdmin.from("pizzeria_beverages").insert(rows);
-      } else {
-        const rows = cat.flavors.map((f, idx) => ({
-          restaurant_id: restaurantId,
-          category_id: catRow.id,
-          name: f.name,
-          description: f.description,
-          price: 0,
-          is_special: f.is_special,
-          special_extra: f.special_extra,
-          sort_order: idx,
-          is_active: true,
-        }));
-        await supabaseAdmin.from("menu_items").insert(rows);
-      }
-    }
-
-    if (cat.is_pizza && cat.pizza_sizes) {
-      const sizeRows = cat.pizza_sizes.map((s, idx) => ({
-        pizzeria_id: restaurantId,
-        name: s.label,
-        price: s.price,
-        max_flavors: s.max_flavors,
-        slices: s.slices || 0,
-        is_active: true,
-        sort_order: idx,
-      }));
-      await supabaseAdmin.from("pizzeria_pizza_sizes").insert(sizeRows);
-    }
-  }
-}
-
-async function seedDeliveryZonesAdmin(restaurantId: string) {
-  const { data: existing } = await supabaseAdmin
-    .from("delivery_zones")
-    .select("id")
-    .eq("restaurant_id", restaurantId)
-    .limit(1);
-  if (existing && existing.length > 0) return;
-  const rows = DEFAULT_DELIVERY_ZONES.map((z, i) => ({
-    restaurant_id: restaurantId,
-    neighborhood: z.neighborhood,
-    fee: z.fee,
-    sort_order: i,
-  }));
-  await supabaseAdmin.from("delivery_zones").insert(rows);
 }
 
 export const Route = createFileRoute("/api/internal/provision-restaurant")({
@@ -268,8 +180,8 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
         }
 
         try {
-          await seedMenuAdmin(created.id);
-          await seedDeliveryZonesAdmin(created.id);
+          await seedDefaultMenuWithClient(supabaseAdmin, created.id);
+          await seedDefaultDeliveryZonesWithClient(supabaseAdmin, created.id);
         } catch (e) {
           console.warn("[provision] seed error", e);
         }
