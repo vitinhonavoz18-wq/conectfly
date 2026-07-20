@@ -9,28 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as DebugHostRouteImport } from './routes/debug-host'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as SlugRouteImport } from './routes/$slug'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as DebugHostRouteImport } from './routes/debug-host'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
-import { Route as ApiUploadImageRouteImport } from './routes/api/upload-image'
 import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
-import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
-import { Route as ApiPublicRequestCloseTableRouteImport } from './routes/api/public/request-close-table'
-import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/public/open-table-session'
-import { Route as ApiPublicFlycontrolTableClosedRouteImport } from './routes/api/public/flycontrol-table-closed'
-import { Route as ApiPublicCheckTableSessionRouteImport } from './routes/api/public/check-table-session'
-import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
-import { Route as ApiInternalProvisionRestaurantRouteImport } from './routes/api/internal/provision-restaurant'
-import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
+import { Route as ApiUploadImageRouteImport } from './routes/api/upload-image'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
-import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api.public.pizzerias.$slug.menu-sync'
+import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
+import { Route as ApiInternalProvisionRestaurantRouteImport } from './routes/api/internal/provision-restaurant'
+import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
+import { Route as ApiPublicCheckTableSessionRouteImport } from './routes/api/public/check-table-session'
+import { Route as ApiPublicFlycontrolTableClosedRouteImport } from './routes/api/public/flycontrol-table-closed'
+import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/public/open-table-session'
+import { Route as ApiPublicRequestCloseTableRouteImport } from './routes/api/public/request-close-table'
+import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as ApiPublicMenuSyncSlugTokenRouteImport } from './routes/api.public.menu-sync.$slug.$token'
+import { Route as ApiPublicPizzeriasSlugMenuSyncRouteImport } from './routes/api.public.pizzerias.$slug.menu-sync'
 
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const SlugRoute = SlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DebugHostRoute = DebugHostRouteImport.update({
@@ -38,13 +42,9 @@ const DebugHostRoute = DebugHostRouteImport.update({
   path: '/debug-host',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SlugRoute = SlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -52,31 +52,41 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const ApiUploadImageRoute = ApiUploadImageRouteImport.update({
-  id: '/api/upload-image',
-  path: '/api/upload-image',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiMenuSyncRoute = ApiMenuSyncRouteImport.update({
   id: '/api/menu-sync',
   path: '/api/menu-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicSubmitOrderRoute = ApiPublicSubmitOrderRouteImport.update({
-  id: '/api/public/submit-order',
-  path: '/api/public/submit-order',
+const ApiUploadImageRoute = ApiUploadImageRouteImport.update({
+  id: '/api/upload-image',
+  path: '/api/upload-image',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicRequestCloseTableRoute =
-  ApiPublicRequestCloseTableRouteImport.update({
-    id: '/api/public/request-close-table',
-    path: '/api/public/request-close-table',
+const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
+  id: '/edit/$id',
+  path: '/edit/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
+  id: '/export/$id',
+  path: '/export/$id',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const ApiInternalProvisionRestaurantRoute =
+  ApiInternalProvisionRestaurantRouteImport.update({
+    id: '/api/internal/provision-restaurant',
+    path: '/api/internal/provision-restaurant',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicOpenTableSessionRoute =
-  ApiPublicOpenTableSessionRouteImport.update({
-    id: '/api/public/open-table-session',
-    path: '/api/public/open-table-session',
+const ApiMenuSyncSplatRoute = ApiMenuSyncSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => ApiMenuSyncRoute,
+} as any)
+const ApiPublicCheckTableSessionRoute =
+  ApiPublicCheckTableSessionRouteImport.update({
+    id: '/api/public/check-table-session',
+    path: '/api/public/check-table-session',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicFlycontrolTableClosedRoute =
@@ -85,43 +95,33 @@ const ApiPublicFlycontrolTableClosedRoute =
     path: '/api/public/flycontrol-table-closed',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicCheckTableSessionRoute =
-  ApiPublicCheckTableSessionRouteImport.update({
-    id: '/api/public/check-table-session',
-    path: '/api/public/check-table-session',
+const ApiPublicOpenTableSessionRoute =
+  ApiPublicOpenTableSessionRouteImport.update({
+    id: '/api/public/open-table-session',
+    path: '/api/public/open-table-session',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiMenuSyncSplatRoute = ApiMenuSyncSplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => ApiMenuSyncRoute,
-} as any)
-const ApiInternalProvisionRestaurantRoute =
-  ApiInternalProvisionRestaurantRouteImport.update({
-    id: '/api/internal/provision-restaurant',
-    path: '/api/internal/provision-restaurant',
+const ApiPublicRequestCloseTableRoute =
+  ApiPublicRequestCloseTableRouteImport.update({
+    id: '/api/public/request-close-table',
+    path: '/api/public/request-close-table',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedExportIdRoute = AuthenticatedExportIdRouteImport.update({
-  id: '/export/$id',
-  path: '/export/$id',
-  getParentRoute: () => AuthenticatedRoute,
+const ApiPublicSubmitOrderRoute = ApiPublicSubmitOrderRouteImport.update({
+  id: '/api/public/submit-order',
+  path: '/api/public/submit-order',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
-  id: '/edit/$id',
-  path: '/edit/$id',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const ApiPublicPizzeriasSlugMenuSyncRoute =
-  ApiPublicPizzeriasSlugMenuSyncRouteImport.update({
-    id: '/api/public/pizzerias/$slug/menu-sync',
-    path: '/api/public/pizzerias/$slug/menu-sync',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicMenuSyncSlugTokenRoute =
   ApiPublicMenuSyncSlugTokenRouteImport.update({
     id: '/api/public/menu-sync/$slug/$token',
     path: '/api/public/menu-sync/$slug/$token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPizzeriasSlugMenuSyncRoute =
+  ApiPublicPizzeriasSlugMenuSyncRouteImport.update({
+    id: '/api/public/pizzerias/$slug/menu-sync',
+    path: '/api/public/pizzerias/$slug/menu-sync',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -264,18 +264,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/debug-host': {
-      id: '/debug-host'
-      path: '/debug-host'
-      fullPath: '/debug-host'
-      preLoaderRoute: typeof DebugHostRouteImport
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
+      preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -285,11 +278,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$slug': {
-      id: '/$slug'
-      path: '/$slug'
-      fullPath: '/$slug'
-      preLoaderRoute: typeof SlugRouteImport
+    '/debug-host': {
+      id: '/debug-host'
+      path: '/debug-host'
+      fullPath: '/debug-host'
+      preLoaderRoute: typeof DebugHostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -299,13 +299,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/api/upload-image': {
-      id: '/api/upload-image'
-      path: '/api/upload-image'
-      fullPath: '/api/upload-image'
-      preLoaderRoute: typeof ApiUploadImageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/menu-sync': {
       id: '/api/menu-sync'
       path: '/api/menu-sync'
@@ -313,39 +306,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMenuSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/submit-order': {
-      id: '/api/public/submit-order'
-      path: '/api/public/submit-order'
-      fullPath: '/api/public/submit-order'
-      preLoaderRoute: typeof ApiPublicSubmitOrderRouteImport
+    '/api/upload-image': {
+      id: '/api/upload-image'
+      path: '/api/upload-image'
+      fullPath: '/api/upload-image'
+      preLoaderRoute: typeof ApiUploadImageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/request-close-table': {
-      id: '/api/public/request-close-table'
-      path: '/api/public/request-close-table'
-      fullPath: '/api/public/request-close-table'
-      preLoaderRoute: typeof ApiPublicRequestCloseTableRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/edit/$id': {
+      id: '/_authenticated/edit/$id'
+      path: '/edit/$id'
+      fullPath: '/edit/$id'
+      preLoaderRoute: typeof AuthenticatedEditIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/api/public/open-table-session': {
-      id: '/api/public/open-table-session'
-      path: '/api/public/open-table-session'
-      fullPath: '/api/public/open-table-session'
-      preLoaderRoute: typeof ApiPublicOpenTableSessionRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/export/$id': {
+      id: '/_authenticated/export/$id'
+      path: '/export/$id'
+      fullPath: '/export/$id'
+      preLoaderRoute: typeof AuthenticatedExportIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
-    '/api/public/flycontrol-table-closed': {
-      id: '/api/public/flycontrol-table-closed'
-      path: '/api/public/flycontrol-table-closed'
-      fullPath: '/api/public/flycontrol-table-closed'
-      preLoaderRoute: typeof ApiPublicFlycontrolTableClosedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/check-table-session': {
-      id: '/api/public/check-table-session'
-      path: '/api/public/check-table-session'
-      fullPath: '/api/public/check-table-session'
-      preLoaderRoute: typeof ApiPublicCheckTableSessionRouteImport
+    '/api/internal/provision-restaurant': {
+      id: '/api/internal/provision-restaurant'
+      path: '/api/internal/provision-restaurant'
+      fullPath: '/api/internal/provision-restaurant'
+      preLoaderRoute: typeof ApiInternalProvisionRestaurantRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/menu-sync/$': {
@@ -355,32 +341,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMenuSyncSplatRouteImport
       parentRoute: typeof ApiMenuSyncRoute
     }
-    '/api/internal/provision-restaurant': {
-      id: '/api/internal/provision-restaurant'
-      path: '/api/internal/provision-restaurant'
-      fullPath: '/api/internal/provision-restaurant'
-      preLoaderRoute: typeof ApiInternalProvisionRestaurantRouteImport
+    '/api/public/check-table-session': {
+      id: '/api/public/check-table-session'
+      path: '/api/public/check-table-session'
+      fullPath: '/api/public/check-table-session'
+      preLoaderRoute: typeof ApiPublicCheckTableSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/export/$id': {
-      id: '/_authenticated/export/$id'
-      path: '/export/$id'
-      fullPath: '/export/$id'
-      preLoaderRoute: typeof AuthenticatedExportIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/api/public/flycontrol-table-closed': {
+      id: '/api/public/flycontrol-table-closed'
+      path: '/api/public/flycontrol-table-closed'
+      fullPath: '/api/public/flycontrol-table-closed'
+      preLoaderRoute: typeof ApiPublicFlycontrolTableClosedRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/edit/$id': {
-      id: '/_authenticated/edit/$id'
-      path: '/edit/$id'
-      fullPath: '/edit/$id'
-      preLoaderRoute: typeof AuthenticatedEditIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/api/public/open-table-session': {
+      id: '/api/public/open-table-session'
+      path: '/api/public/open-table-session'
+      fullPath: '/api/public/open-table-session'
+      preLoaderRoute: typeof ApiPublicOpenTableSessionRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/api/public/pizzerias/$slug/menu-sync': {
-      id: '/api/public/pizzerias/$slug/menu-sync'
-      path: '/api/public/pizzerias/$slug/menu-sync'
-      fullPath: '/api/public/pizzerias/$slug/menu-sync'
-      preLoaderRoute: typeof ApiPublicPizzeriasSlugMenuSyncRouteImport
+    '/api/public/request-close-table': {
+      id: '/api/public/request-close-table'
+      path: '/api/public/request-close-table'
+      fullPath: '/api/public/request-close-table'
+      preLoaderRoute: typeof ApiPublicRequestCloseTableRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/submit-order': {
+      id: '/api/public/submit-order'
+      path: '/api/public/submit-order'
+      fullPath: '/api/public/submit-order'
+      preLoaderRoute: typeof ApiPublicSubmitOrderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/menu-sync/$slug/$token': {
@@ -388,6 +381,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/menu-sync/$slug/$token'
       fullPath: '/api/public/menu-sync/$slug/$token'
       preLoaderRoute: typeof ApiPublicMenuSyncSlugTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/pizzerias/$slug/menu-sync': {
+      id: '/api/public/pizzerias/$slug/menu-sync'
+      path: '/api/public/pizzerias/$slug/menu-sync'
+      fullPath: '/api/public/pizzerias/$slug/menu-sync'
+      preLoaderRoute: typeof ApiPublicPizzeriasSlugMenuSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
