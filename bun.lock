@@ -308,7 +308,7 @@
 
     "@lovable.dev/vite-plugin-hmr-gate": ["@lovable.dev/vite-plugin-hmr-gate@1.1.4", "", { "peerDependencies": { "vite": ">=5.0.0 <9.0.0" } }, "sha512-Ss3eg7J654binHgTWP01XbWPkdctVnHvCcMvDz0j3MFCIvQH6N4XZcYhikmMGass/5vy5hZus/bpBWuDMnPpyw=="],
 
-    "@lovable.dev/vite-tanstack-config": ["@lovable.dev/vite-tanstack-config@2.7.6", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@lovable.dev/vite-tanstack-config/-/vite-tanstack-config-2.7.6.tgz", { "dependencies": { "@lovable.dev/vite-plugin-dev-server-bridge": "^1.1.1", "@lovable.dev/vite-plugin-hmr-gate": "^1.1.3", "@tanstack/devtools-vite": "^0.8.1", "lightningcss": "^1.30.0" }, "peerDependencies": { "@tailwindcss/vite": ">=4.0.0", "@tanstack/react-start": ">=1.100.0", "@vitejs/plugin-react": ">=4.0.0", "nitro": ">=3.0.260603-beta", "vite": ">=5.0.0 <9.0.0", "vite-tsconfig-paths": ">=6.0.0" }, "optionalPeers": ["nitro"] }, "sha512-OxmPom+MWV54Itezoapqa/T6zN8oSHap4kHG7mse4iiCMGGD+E4qa+q1SctacU6wEDkJiqJHhYPG+QEsSY3IUw=="],
+    "@lovable.dev/vite-tanstack-config": ["@lovable.dev/vite-tanstack-config@2.7.6", "", { "dependencies": { "@lovable.dev/vite-plugin-dev-server-bridge": "^1.1.1", "@lovable.dev/vite-plugin-hmr-gate": "^1.1.3", "@tanstack/devtools-vite": "^0.8.1", "lightningcss": "^1.30.0" }, "peerDependencies": { "@tailwindcss/vite": ">=4.0.0", "@tanstack/react-start": ">=1.100.0", "@vitejs/plugin-react": ">=4.0.0", "nitro": ">=3.0.260603-beta", "vite": ">=5.0.0 <9.0.0", "vite-tsconfig-paths": ">=6.0.0" }, "optionalPeers": ["nitro"] }, "sha512-OxmPom+MWV54Itezoapqa/T6zN8oSHap4kHG7mse4iiCMGGD+E4qa+q1SctacU6wEDkJiqJHhYPG+QEsSY3IUw=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.6", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-ZLv/JdUfkvOy9eCnnBaGfiO+XimbjebAeO+MRQqD/B+FR1tnRN0tpKSJHRbE8sFfS6aqsXZ67TQjfwfsxULVbg=="],
 
@@ -1251,6 +1251,8 @@
     "@tailwindcss/oxide-wasm32-wasi/@tybys/wasm-util": ["@tybys/wasm-util@0.10.3", "", { "dependencies": { "tslib": "^2.4.0" }, "bundled": true }, "sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg=="],
 
     "@tailwindcss/oxide-wasm32-wasi/tslib": ["tslib@2.8.1", "", { "bundled": true }, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
+
+    "@tanstack/devtools-event-bus/ws": ["ws@8.21.1", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-+0NTnW77fFN/DjQi6k/Sq/Yvk4Sgajw7urW8V+asjXnRgDs9gyGkdb7EzgfhA4goXsRIZKE28fzIXBHEzhuiWw=="],
 
     "@tanstack/devtools-vite/chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
 
