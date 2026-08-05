@@ -1,4 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import {
+  SIGNATURE_HEADER,
+  isSignatureRequired,
+  verifyWebhookSignature,
+} from "@/lib/webhookSignature";
 
 const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
@@ -16,7 +21,7 @@ function getCorsHeaders(origin: string | null) {
   if (origin && isLovablePreview) allowOrigin = origin;
   return {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Headers": "content-type, authorization, x-api-key",
+    "Access-Control-Allow-Headers": `content-type, authorization, x-api-key, ${SIGNATURE_HEADER}`,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
@@ -41,7 +46,38 @@ export const Route = createFileRoute("/api/public/flycontrol-table-closed")({
         const origin = request.headers.get("origin");
         const headers = { ...getCorsHeaders(origin), "Content-Type": "application/json" };
         try {
-          const body = (await request.json().catch(() => ({}))) as {
+          // O HMAC cobre o corpo exato recebido, então ele precisa ser lido como
+          // texto antes de qualquer parse — reserializar o JSON mudaria os bytes.
+          const rawBody = await request.text().catch(() => "");
+          const verification = await verifyWebhookSignature(
+            rawBody,
+            request.headers.get(SIGNATURE_HEADER),
+          );
+          const enforcing = isSignatureRequired();
+
+          if (!verification.ok) {
+            console.warn("[FC-TABLE-CLOSED] signature_check_failed", {
+              reason: verification.reason,
+              enforcing,
+            });
+            if (enforcing) {
+              return new Response(
+                JSON.stringify({ success: false, error: "invalid_signature" }),
+                { status: 401, headers },
+              );
+            }
+          } else {
+            console.log("[FC-TABLE-CLOSED] signature_verified", { enforcing });
+          }
+
+          let parsedBody: unknown = {};
+          try {
+            parsedBody = rawBody ? JSON.parse(rawBody) : {};
+          } catch {
+            parsedBody = {};
+          }
+
+          const body = parsedBody as {
             restaurant_id?: string;
             table_number?: string | number | null;
             session_id?: string | null;
