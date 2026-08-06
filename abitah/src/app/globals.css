@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   DESIGN SYSTEM ABITAH
+   Preto (base) · Verde neon (destaque) · Grafite (seções) · Branco (texto)
+   Cores extraídas da logo oficial.
+   ------------------------------------------------------------------------- */
+@theme {
+  --color-ink-950: #050505;
+  --color-ink-900: #0a0a0a;
+  --color-ink-850: #0f0f0f;
+  --color-ink-800: #141414;
+  --color-ink-700: #1c1c1c;
+  --color-ink-600: #242424;
+  --color-ink-500: #2e3532;
+  --color-ink-400: #3d423f;
+
+  --color-neon-300: #7bf58b;
+  --color-neon-400: #4ded62;
+  --color-neon-500: #29e23d;
+  --color-neon-600: #1fa02f;
+  --color-neon-700: #157322;
+
+  --color-smoke-100: #f5f6f5;
+  --color-smoke-200: #d9dcda;
+  --color-smoke-300: #b4b9b6;
+  --color-smoke-400: #8b918d;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), var(--font-inter), ui-sans-serif, sans-serif;
+
+  --radius-card: 0.875rem;
+
+  --shadow-soft: 0 18px 40px -24px rgb(0 0 0 / 0.9);
+  --shadow-neon: 0 0 0 1px rgb(41 226 61 / 0.35), 0 12px 32px -16px rgb(41 226 61 / 0.45);
+
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-marquee: marquee 28s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in oklab, var(--color-ink-600) 100%, transparent);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-ink-950);
+    color: var(--color-smoke-100);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--color-neon-500);
+    color: #000;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-neon-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar discreta */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-ink-900);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-ink-600);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-neon-600);
+  }
+}
+
+@layer components {
+  .container-page {
+    width: 100%;
+    margin-inline: auto;
+    max-width: 84rem;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Título de seção com régua verde, ecoando a logo */
+  .section-rule::after {
+    content: "";
+    display: block;
+    width: 3.5rem;
+    height: 3px;
+    margin-top: 0.75rem;
+    border-radius: 999px;
+    background: var(--color-neon-500);
+  }
+
+  .hairline {
+    border-top: 1px solid var(--color-ink-700);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .grain {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      rgb(255 255 255 / 0.045) 1px,
+      transparent 0
+    );
+    background-size: 4px 4px;
+  }
+
+  .mask-fade-b {
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

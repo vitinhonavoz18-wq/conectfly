@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 320" role="img" aria-label="ABITAH">
+  <title>ABITAH</title>
+  <g fill="none" stroke="#29E23D" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Corpo do B (duas bojos abertos) -->
+    <path d="M120 26 C182 26 214 52 214 88 C214 120 188 141 152 146 C194 150 224 176 224 212 C224 254 188 288 128 288" />
+    <!-- Espinha vertical do talo -->
+    <path d="M100 30 L100 150" />
+  </g>
+  <g fill="#29E23D">
+    <!-- Ponta superior do trigo -->
+    <path d="M100 18 L84 46 L100 62 L116 46 Z" />
+    <!-- Folhas em chevron -->
+    <path d="M62 52 L100 84 L138 52 L138 70 L100 102 L62 70 Z" />
+    <path d="M62 96 L100 128 L138 96 L138 114 L100 146 L62 114 Z" />
+    <!-- Lâmina inferior alongada -->
+    <path d="M100 132 L76 200 L100 302 L124 200 Z" />
+  </g>
+</svg>
