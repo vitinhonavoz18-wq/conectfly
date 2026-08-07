@@ -8,6 +8,24 @@ export function getPizzeriaPublicUrl(slug: string, _subdomain?: string | null): 
   return `${base}/${slug}`;
 }
 
+/**
+ * Endereço que o FlyControl usa para puxar o cardápio deste restaurante.
+ *
+ * Quem monta é o SiteCreatorFly, e não o FlyControl: o formato da rota é
+ * decisão daqui, e deixar o outro lado adivinhá-lo foi o que obrigou o cliente
+ * a colar essa URL à mão no painel.
+ *
+ * Precisa acompanhar a rota /api/public/menu-sync/$slug/$token.
+ */
+export function getMenuSyncEndpoint(
+  slug: string | null | undefined,
+  menuSyncToken: string | null | undefined,
+): string | null {
+  if (!slug || !menuSyncToken) return null;
+  const base = PUBLIC_SITE_URL.replace(/\/$/, "");
+  return `${base}/api/public/menu-sync/${slug}/${menuSyncToken}`;
+}
+
 export function formatDateTime(date?: string | Date): string {
   const d = date ? new Date(date) : new Date();
   return d.toLocaleString("pt-BR", {

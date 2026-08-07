@@ -1,6 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
+import {
+  slugify,
+  subdomainify,
+  getPizzeriaPublicUrl,
+  getMenuSyncEndpoint,
+} from "@/lib/site/format";
 import {
   seedDefaultMenuWithClient,
   seedDefaultDeliveryZonesWithClient,
@@ -106,9 +111,17 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           .maybeSingle();
 
         if (existing) {
+          console.log(
+            "[provision] already provisioned, returning existing",
+            "flycontrol_id:", flycontrol_id,
+            "restaurant_id:", existing.id,
+          );
           return json({
             success: true,
             already_exists: true,
+            // Alias: o FlyControl histórico lê `already_existed`. Mandar os
+            // dois evita depender de qual versão está publicada do outro lado.
+            already_existed: true,
             restaurant_id: existing.id,
             flycontrol_id: existing.flycontrol_id,
             slug: existing.slug,
@@ -116,6 +129,12 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
             public_url: getPizzeriaPublicUrl(
               existing.slug,
               existing.custom_subdomain,
+            ),
+            // Quem conhece o formato da rota de sincronização é este lado.
+            // Devolvê-lo pronto elimina a configuração manual no FlyControl.
+            sync_endpoint: getMenuSyncEndpoint(
+              existing.slug,
+              existing.menu_sync_token,
             ),
             flycontrol_api_key: existing.flycontrol_api_key,
             menu_sync_token: existing.menu_sync_token,
@@ -171,6 +190,42 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           )
           .single();
 
+        // Duas chamadas simultâneas passam juntas pela verificação acima e
+        // ambas tentam inserir. O índice único em flycontrol_id derruba a
+        // segunda com 23505 — e isso é sucesso, não falha: o tenant existe.
+        // Sem este ramo, um clique duplo marcaria o provisionamento como
+        // quebrado no FlyControl mesmo com o restaurante criado aqui.
+        if ((insErr as { code?: string } | null)?.code === "23505") {
+          const { data: raced } = await supabaseAdmin
+            .from("restaurants")
+            .select(
+              "id, flycontrol_id, slug, custom_subdomain, flycontrol_api_key, menu_sync_token",
+            )
+            .eq("flycontrol_id", flycontrol_id)
+            .maybeSingle();
+
+          if (raced) {
+            console.log(
+              "[provision] corrida resolvida pelo índice único",
+              "flycontrol_id:", flycontrol_id,
+              "restaurant_id:", raced.id,
+            );
+            return json({
+              success: true,
+              already_exists: true,
+              already_existed: true,
+              restaurant_id: raced.id,
+              flycontrol_id: raced.flycontrol_id,
+              slug: raced.slug,
+              custom_subdomain: raced.custom_subdomain,
+              public_url: getPizzeriaPublicUrl(raced.slug, raced.custom_subdomain),
+              sync_endpoint: getMenuSyncEndpoint(raced.slug, raced.menu_sync_token),
+              flycontrol_api_key: raced.flycontrol_api_key,
+              menu_sync_token: raced.menu_sync_token,
+            });
+          }
+        }
+
         if (insErr || !created) {
           console.error("[provision] insert failed", insErr);
           return json(
@@ -186,8 +241,17 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           console.warn("[provision] seed error", e);
         }
 
+        console.log(
+          "[provision] created",
+          "flycontrol_id:", created.flycontrol_id,
+          "restaurant_id:", created.id,
+          "slug:", created.slug,
+        );
+
         return json({
           success: true,
+          already_exists: false,
+          already_existed: false,
           restaurant_id: created.id,
           flycontrol_id: created.flycontrol_id,
           slug: created.slug,
@@ -195,6 +259,10 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           public_url: getPizzeriaPublicUrl(
             created.slug,
             created.custom_subdomain,
+          ),
+          sync_endpoint: getMenuSyncEndpoint(
+            created.slug,
+            created.menu_sync_token,
           ),
           flycontrol_api_key: created.flycontrol_api_key,
           menu_sync_token: created.menu_sync_token,
