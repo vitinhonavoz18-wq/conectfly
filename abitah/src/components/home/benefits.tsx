@@ -1,4 +1,4 @@
-import { BadgeCheck, Headset, ShieldCheck, Truck } from "lucide-react";
+import { BadgeCheck, Headphones, ShieldCheck, Truck } from "lucide-react";
 import { Reveal } from "@/components/ui/reveal";
 
 const benefits = [
@@ -18,28 +18,27 @@ const benefits = [
     description: "Postagem rápida e código de rastreio em todos os pedidos.",
   },
   {
-    icon: Headset,
+    icon: Headphones,
     title: "Atendimento rápido",
     description: "Time real no WhatsApp para ajudar na escolha do tamanho.",
   },
 ];
 
+/** Faixa de confiança logo abaixo do hero. */
 export function Benefits() {
   return (
-    <section className="border-y border-ink-700 bg-ink-900">
-      <ul className="container-page grid gap-px py-2 sm:grid-cols-2 lg:grid-cols-4">
+    <section className="border-y border-white/7 bg-ink-900">
+      <ul className="container-page grid divide-y divide-white/6 sm:grid-cols-2 sm:divide-y-0 lg:grid-cols-4">
         {benefits.map((benefit, index) => (
           <Reveal
             as="li"
             key={benefit.title}
             delay={index * 70}
-            className="flex items-start gap-3.5 px-1 py-5 sm:px-5"
+            className="flex items-start gap-4 py-7 sm:px-6 lg:border-l lg:border-white/6 lg:first:border-l-0"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neon-500/25 bg-neon-500/8 text-neon-500">
-              <benefit.icon className="h-5 w-5" aria-hidden />
-            </span>
+            <benefit.icon className="mt-0.5 h-5 w-5 shrink-0 text-neon-500" aria-hidden />
             <div>
-              <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-white">
+              <h3 className="font-display text-[13px] font-bold uppercase tracking-[0.12em] text-smoke-100">
                 {benefit.title}
               </h3>
               <p className="mt-1.5 text-xs leading-relaxed text-smoke-400">{benefit.description}</p>

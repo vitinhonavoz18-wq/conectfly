@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Inter } from "next/font/google";
+import { Anton, Barlow_Condensed, Inter, Permanent_Marker } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartDrawer } from "@/components/layout/cart-drawer";
@@ -15,10 +15,27 @@ const inter = Inter({
   display: "swap",
 });
 
-const archivo = Archivo({
+/* Condensada — títulos e interface editorial */
+const condensed = Barlow_Condensed({
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
-  variable: "--font-archivo",
+  weight: ["500", "600", "700"],
+  variable: "--font-condensed",
+  display: "swap",
+});
+
+/* Pôster — apenas a tipografia gigante do hero */
+const anton = Anton({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-anton",
+  display: "swap",
+});
+
+/* Manuscrita — reservada aos elementos de campanha do hero */
+const brush = Permanent_Marker({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-script-brush",
   display: "swap",
 });
 
@@ -62,7 +79,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#050505",
+  themeColor: "#020403",
   width: "device-width",
   initialScale: 1,
   colorScheme: "dark",
@@ -70,7 +87,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${archivo.variable}`}>
+    <html
+      lang="pt-BR"
+      className={`${inter.variable} ${condensed.variable} ${anton.variable} ${brush.variable}`}
+    >
       <body className="flex min-h-dvh flex-col antialiased">
         <Providers>
           <a

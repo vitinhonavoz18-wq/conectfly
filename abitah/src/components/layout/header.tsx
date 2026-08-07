@@ -59,8 +59,8 @@ export function Header() {
       className={cn(
         "sticky top-0 z-60 w-full border-b transition-all duration-300",
         scrolled
-          ? "border-ink-700 bg-ink-950/92 backdrop-blur-md"
-          : "border-transparent bg-ink-950",
+          ? "border-white/7 bg-ink-950/85 backdrop-blur-xl"
+          : "border-transparent bg-transparent",
       )}
     >
       <div className="container-page flex h-16 items-center justify-between gap-3 lg:h-20">
@@ -70,7 +70,7 @@ export function Header() {
             onClick={() => setMenuOpen(true)}
             aria-label="Abrir menu"
             aria-expanded={menuOpen}
-            className="-ml-2 rounded-md p-2 text-smoke-200 transition-colors hover:text-neon-400 lg:hidden"
+            className="-ml-2 rounded-md p-2 text-white/75 transition-colors hover:text-white lg:hidden"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -87,14 +87,14 @@ export function Header() {
                   <Link
                     href={item.href}
                     className={cn(
-                      "relative rounded-md px-3 py-2 text-[11px] font-bold uppercase tracking-[0.14em] transition-colors",
-                      active ? "text-neon-400" : "text-smoke-200 hover:text-white",
+                      "relative rounded-md px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.09em] transition-colors",
+                      active ? "text-neon-500" : "text-white/58 hover:text-white",
                     )}
                   >
                     {item.label}
                     <span
                       className={cn(
-                        "absolute inset-x-3 -bottom-0.5 h-0.5 origin-left rounded-full bg-neon-500 transition-transform duration-300",
+                        "absolute inset-x-3 -bottom-0.5 h-px origin-left rounded-full bg-neon-500 transition-transform duration-300",
                         active ? "scale-x-100" : "scale-x-0",
                       )}
                     />
@@ -120,7 +120,7 @@ export function Header() {
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar produtos"
-                className="h-10 w-48 rounded-lg border border-ink-600 bg-ink-900 pl-9 pr-3 text-sm text-white placeholder:text-smoke-400 transition-all focus:w-60 focus:border-neon-500 focus:outline-none"
+                className="h-[42px] w-[175px] rounded-[10px] border border-white/9 bg-white/[0.025] pl-9 pr-3 text-sm text-white placeholder:text-[#777D78] transition-all focus:w-[215px] focus:border-neon-500/60 focus:outline-none"
               />
             </div>
           </form>
@@ -130,7 +130,7 @@ export function Header() {
             onClick={() => setSearchOpen((value) => !value)}
             aria-label="Buscar"
             aria-expanded={searchOpen}
-            className="rounded-md p-2.5 text-smoke-200 transition-colors hover:text-neon-400 xl:hidden"
+            className="rounded-md p-2.5 text-white/70 transition-colors hover:text-white xl:hidden"
           >
             <Search className="h-5 w-5" />
           </button>
@@ -138,7 +138,7 @@ export function Header() {
           <Link
             href={accountHref}
             aria-label="Minha conta"
-            className="rounded-md p-2.5 text-smoke-200 transition-colors hover:text-neon-400"
+            className="rounded-md p-2.5 text-white/70 transition-colors hover:text-white"
           >
             <User className="h-5 w-5" />
           </Link>
@@ -147,11 +147,11 @@ export function Header() {
             type="button"
             onClick={openCart}
             aria-label={`Carrinho com ${count} ${count === 1 ? "item" : "itens"}`}
-            className="relative rounded-md p-2.5 text-smoke-200 transition-colors hover:text-neon-400"
+            className="relative rounded-md p-2.5 text-white/70 transition-colors hover:text-white"
           >
             <ShoppingBag className="h-5 w-5" />
             {hydrated && count > 0 ? (
-              <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-neon-500 px-1 text-[10px] font-bold text-ink-950">
+              <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-neon-500 px-1 text-[10px] font-bold text-[#031006]">
                 {count > 99 ? "99+" : count}
               </span>
             ) : null}
@@ -161,7 +161,7 @@ export function Header() {
 
       {/* Busca mobile */}
       {searchOpen ? (
-        <div className="border-t border-ink-700 bg-ink-900 px-4 py-3 xl:hidden">
+        <div className="border-t border-white/7 bg-ink-950/95 px-4 py-3 backdrop-blur-xl xl:hidden">
           <form onSubmit={submitSearch} className="container-page flex gap-2 px-0">
             <label htmlFor="mobile-search" className="sr-only">
               Buscar produtos
@@ -172,11 +172,11 @@ export function Header() {
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="O que você procura?"
-              className="h-11 flex-1 rounded-lg border border-ink-600 bg-ink-850 px-3.5 text-sm text-white placeholder:text-smoke-400 focus:border-neon-500 focus:outline-none"
+              className="h-11 flex-1 rounded-lg border border-white/9 bg-white/[0.03] px-3.5 text-sm text-white placeholder:text-smoke-400 focus:border-neon-500 focus:outline-none"
             />
             <button
               type="submit"
-              className="rounded-lg bg-neon-500 px-4 text-xs font-bold uppercase text-ink-950"
+              className="rounded-lg bg-neon-500 px-4 text-xs font-bold uppercase text-[#031006]"
             >
               Buscar
             </button>
@@ -202,11 +202,11 @@ export function Header() {
         <nav
           aria-label="Menu"
           className={cn(
-            "absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col border-r border-ink-700 bg-ink-900 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+            "absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col border-r border-white/7 bg-ink-900 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
             menuOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <div className="flex items-center justify-between border-b border-ink-700 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-white/7 px-5 py-4">
             <LogoLink width={170} height={39} className="h-7" />
             <button
               type="button"
@@ -223,7 +223,7 @@ export function Header() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex items-center justify-between rounded-lg px-3 py-3.5 text-sm font-bold uppercase tracking-wide text-smoke-100 transition-colors hover:bg-white/5 hover:text-neon-400"
+                  className="flex items-center justify-between rounded-lg px-3 py-4 font-display text-base font-semibold uppercase tracking-[0.06em] text-smoke-100 transition-colors hover:bg-white/5 hover:text-neon-400"
                 >
                   {item.label}
                 </Link>
@@ -231,10 +231,10 @@ export function Header() {
             ))}
           </ul>
 
-          <div className="border-t border-ink-700 p-4">
+          <div className="border-t border-white/7 p-4">
             <Link
               href={accountHref}
-              className="flex items-center gap-2 rounded-lg bg-ink-800 px-4 py-3 text-sm font-semibold text-smoke-100 hover:text-neon-400"
+              className="flex items-center gap-2 rounded-lg bg-white/5 px-4 py-3.5 text-sm font-semibold text-smoke-100 transition-colors hover:text-neon-400"
             >
               <User className="h-4 w-4" />
               {user ? "Minha conta" : "Entrar / Criar conta"}

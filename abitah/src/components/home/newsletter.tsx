@@ -51,13 +51,13 @@ export function Newsletter() {
       />
       <div className="container-page py-16 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-neon-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-neon-500">
             Newsletter
           </p>
-          <h2 className="mt-3 text-2xl font-black uppercase leading-tight text-white sm:text-3xl">
+          <h2 className="mt-4 font-display text-3xl font-bold uppercase leading-[1] tracking-wide text-smoke-100 sm:text-4xl">
             {siteConfig.institutional.newsletterHeadline}
           </h2>
-          <p className="mt-4 text-sm text-smoke-300">
+          <p className="mt-5 text-sm text-smoke-400">
             Sem spam. Apenas lançamentos, drops limitados e condições exclusivas da comunidade.
           </p>
         </div>

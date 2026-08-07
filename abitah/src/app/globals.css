@@ -1,43 +1,53 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   DESIGN SYSTEM ABITAH
-   Preto (base) · Verde neon (destaque) · Grafite (seções) · Branco (texto)
-   Cores extraídas da logo oficial.
+   DESIGN SYSTEM ABITAH — direção editorial premium
+   Preto (75–85% da composição) · Verde ABITAH como acento · Branco e cinza
+   nos conteúdos secundários. Paleta oficial da marca.
    ------------------------------------------------------------------------- */
 @theme {
-  --color-ink-950: #050505;
-  --color-ink-900: #0a0a0a;
-  --color-ink-850: #0f0f0f;
-  --color-ink-800: #141414;
-  --color-ink-700: #1c1c1c;
-  --color-ink-600: #242424;
-  --color-ink-500: #2e3532;
-  --color-ink-400: #3d423f;
+  /* Pretos ------------------------------------------------------------- */
+  --color-ink-950: #020403; /* base absoluta */
+  --color-ink-900: #050706; /* seções alternadas */
+  --color-ink-850: #070a08; /* superfícies */
+  --color-ink-800: #0d110e; /* cards */
+  --color-ink-700: #101512; /* cards elevados */
+  --color-ink-600: #171d19; /* bordas fortes */
+  --color-ink-500: #2a312c; /* bordas suaves / divisores */
+  --color-ink-400: #3a423c;
 
-  --color-neon-300: #7bf58b;
-  --color-neon-400: #4ded62;
-  --color-neon-500: #29e23d;
-  --color-neon-600: #1fa02f;
-  --color-neon-700: #157322;
+  /* Verde ABITAH ------------------------------------------------------- */
+  --color-neon-300: #5ff276;
+  --color-neon-400: #28f048; /* destaque */
+  --color-neon-500: #20e83f; /* principal */
+  --color-neon-600: #0c8f27; /* escuro */
+  --color-neon-700: #086a1c;
 
-  --color-smoke-100: #f5f6f5;
-  --color-smoke-200: #d9dcda;
-  --color-smoke-300: #b4b9b6;
-  --color-smoke-400: #8b918d;
+  /* Neutros ------------------------------------------------------------ */
+  --color-smoke-100: #f5f7f5;
+  --color-smoke-200: #cacfca;
+  --color-smoke-300: #9da49e;
+  --color-smoke-400: #858b86;
+  --color-smoke-500: #555b56;
 
+  /* Tipografia --------------------------------------------------------- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-display: var(--font-condensed), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-poster: var(--font-anton), var(--font-condensed), Impact, sans-serif;
+  --font-script: var(--font-script-brush), var(--font-inter), cursive;
 
   --radius-card: 0.875rem;
+  --radius-shell: 3rem;
 
   --shadow-soft: 0 18px 40px -24px rgb(0 0 0 / 0.9);
-  --shadow-neon: 0 0 0 1px rgb(41 226 61 / 0.35), 0 12px 32px -16px rgb(41 226 61 / 0.45);
+  --shadow-neon: 0 0 0 1px rgb(32 232 63 / 0.28), 0 18px 40px -22px rgb(32 232 63 / 0.35);
+  --shadow-shell: 0 45px 110px rgb(0 0 0 / 0.7);
 
   --animate-fade-up: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-marquee: marquee 28s linear infinite;
 }
 
+/* --------------------------------- keyframes ----------------------------- */
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -58,9 +68,66 @@
   }
 }
 
+/* Entrada da tipografia gigante do hero */
+@keyframes poster-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 0.82;
+    transform: none;
+  }
+}
+
+/* Revelação do produto principal */
+@keyframes product-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(35px) scale(0.91);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Flutuação contínua e discreta do produto */
+@keyframes product-float {
+  0%,
+  100% {
+    transform: translateY(-8px) rotate(-0.7deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(0.7deg);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-26px) rotate(var(--tilt, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(var(--tilt, 0deg));
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(26px) rotate(var(--tilt, 0deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) rotate(var(--tilt, 0deg));
+  }
+}
+
 @layer base {
   * {
-    border-color: color-mix(in oklab, var(--color-ink-600) 100%, transparent);
+    border-color: var(--color-ink-600);
   }
 
   html {
@@ -82,13 +149,13 @@
   h3,
   h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0.005em;
     text-wrap: balance;
   }
 
   ::selection {
     background: var(--color-neon-500);
-    color: #000;
+    color: #031006;
   }
 
   :focus-visible {
@@ -97,7 +164,6 @@
     border-radius: 4px;
   }
 
-  /* Scrollbar discreta */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -119,18 +185,18 @@
     width: 100%;
     margin-inline: auto;
     max-width: 84rem;
-    padding-inline: 1rem;
+    padding-inline: 1.25rem;
   }
 
   @media (min-width: 640px) {
     .container-page {
-      padding-inline: 1.5rem;
+      padding-inline: 2rem;
     }
   }
 
   @media (min-width: 1280px) {
     .container-page {
-      padding-inline: 2rem;
+      padding-inline: 2.5rem;
     }
   }
 
@@ -138,15 +204,36 @@
   .section-rule::after {
     content: "";
     display: block;
-    width: 3.5rem;
-    height: 3px;
-    margin-top: 0.75rem;
+    width: 3rem;
+    height: 2px;
+    margin-top: 0.85rem;
     border-radius: 999px;
     background: var(--color-neon-500);
   }
 
   .hairline {
-    border-top: 1px solid var(--color-ink-700);
+    border-top: 1px solid var(--color-ink-600);
+  }
+
+  /* Moldura do hero editorial */
+  .hero-shell {
+    background-image:
+      radial-gradient(circle at 12% 52%, rgb(18 120 39 / 0.085), transparent 30%),
+      radial-gradient(circle at 74% 72%, rgb(32 232 63 / 0.045), transparent 32%),
+      linear-gradient(120deg, #050806 0%, #030403 50%, #080b09 100%);
+    box-shadow:
+      var(--shadow-shell),
+      inset 0 1px 1px rgb(255 255 255 / 0.035),
+      inset 0 -1px 0 rgb(32 232 63 / 0.05);
+  }
+
+  /* Vinheta que aprofunda as bordas da composição */
+  .hero-vignette::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 45%, rgb(0 0 0 / 0.55) 100%);
   }
 }
 
@@ -155,17 +242,48 @@
     text-wrap: balance;
   }
 
+  /* Textura sutil de grão — evita o aspecto "chapado" do preto puro */
   .grain {
-    background-image: radial-gradient(
-      circle at 1px 1px,
-      rgb(255 255 255 / 0.045) 1px,
-      transparent 0
-    );
+    background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.045) 1px, transparent 0);
     background-size: 4px 4px;
+  }
+
+  .noise-overlay {
+    background-image: radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.5) 0.5px, transparent 0);
+    background-size: 3px 3px;
+    opacity: 0.025;
   }
 
   .mask-fade-b {
     mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+
+  /* Tipografia-pôster do hero */
+  .poster-type {
+    font-family: var(--font-poster);
+    font-weight: 400;
+    line-height: 0.8;
+    letter-spacing: -0.055em;
+    background-image: linear-gradient(180deg, #292d2a 0%, #141714 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .script-type {
+    font-family: var(--font-script);
+    font-weight: 400;
+  }
+
+  .animate-product-float {
+    animation: product-float 5.5s ease-in-out infinite;
+  }
+}
+
+/* O parallax só existe em ponteiro fino (mouse). Em toque, tudo fica estático. */
+@media (pointer: coarse) {
+  .parallax-layer {
+    transform: none !important;
   }
 }
 
@@ -177,5 +295,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .parallax-layer {
+    transform: none !important;
   }
 }

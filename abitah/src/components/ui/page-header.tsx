@@ -16,7 +16,7 @@ export function PageHeader({
   children?: ReactNode;
 }) {
   return (
-    <header className="border-b border-ink-700 bg-ink-900">
+    <header className="border-b border-white/7 bg-ink-900">
       <div className="container-page py-10 lg:py-14">
         {breadcrumbs.length ? (
           <nav aria-label="Trilha de navegação" className="mb-5">
@@ -43,17 +43,17 @@ export function PageHeader({
         ) : null}
 
         {eyebrow ? (
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.28em] text-neon-500">
+          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.28em] text-neon-500">
             {eyebrow}
           </p>
         ) : null}
 
-        <h1 className="text-3xl font-black uppercase leading-tight text-white sm:text-4xl lg:text-5xl">
+        <h1 className="font-display text-4xl font-bold uppercase leading-[0.98] tracking-wide text-smoke-100 sm:text-5xl lg:text-[3.6rem]">
           {title}
         </h1>
 
         {description ? (
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-smoke-300">{description}</p>
+          <p className="mt-5 max-w-2xl text-sm leading-relaxed text-smoke-400">{description}</p>
         ) : null}
 
         {children}

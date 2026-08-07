@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils";
 type Tone = "neon" | "dark" | "outline" | "danger" | "muted";
 
 const tones: Record<Tone, string> = {
-  neon: "bg-neon-500 text-ink-950",
-  dark: "bg-ink-950/85 text-smoke-100 backdrop-blur-sm",
-  outline: "border border-neon-500/50 text-neon-400",
+  neon: "bg-neon-500 text-[#031006]",
+  dark: "border border-white/12 bg-ink-950/85 text-smoke-100 backdrop-blur-sm",
+  outline: "border border-neon-500/45 text-neon-400",
   danger: "bg-red-500 text-white",
   muted: "bg-ink-700 text-smoke-300",
 };

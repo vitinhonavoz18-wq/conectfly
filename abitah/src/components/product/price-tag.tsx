@@ -32,7 +32,7 @@ export function PriceTag({
         ) : null}
         <span
           className={cn(
-            "font-extrabold tracking-tight text-white",
+            "font-semibold tracking-tight text-smoke-100",
             size === "sm" && "text-base",
             size === "md" && "text-lg",
             size === "lg" && "text-3xl",
@@ -41,7 +41,7 @@ export function PriceTag({
           {formatCurrency(current)}
         </span>
         {discount ? (
-          <span className="rounded-md bg-neon-500 px-1.5 py-0.5 text-[10px] font-bold text-ink-950">
+          <span className="rounded bg-neon-500 px-1.5 py-0.5 text-[10px] font-bold text-[#031006]">
             -{discount}%
           </span>
         ) : null}

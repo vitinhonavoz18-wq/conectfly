@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Hero } from "@/components/home/hero";
 import { Benefits } from "@/components/home/benefits";
+import { BrandStats } from "@/components/home/brand-stats";
 import { CategoryCards } from "@/components/home/category-cards";
 import { CommunityBanner } from "@/components/home/community-banner";
 import { Newsletter } from "@/components/home/newsletter";
@@ -28,6 +29,19 @@ export default async function HomePage() {
     <>
       <Hero />
       <Benefits />
+      <BrandStats />
+
+      <Section tone="graphite">
+        <div className="container-page">
+          <SectionHeading
+            eyebrow="Recém-chegados"
+            title="Últimos lançamentos"
+            description="As peças mais novas da coleção, direto do nosso desenvolvimento."
+            action={{ label: "Ver todos os lançamentos", href: "/lancamentos" }}
+          />
+          <ProductGrid products={novidades} priorityCount={2} />
+        </div>
+      </Section>
 
       <Section tone="black" id="categorias">
         <div className="container-page">
@@ -42,18 +56,6 @@ export default async function HomePage() {
       </Section>
 
       <Section tone="graphite">
-        <div className="container-page">
-          <SectionHeading
-            eyebrow="Recém-chegados"
-            title="Últimos lançamentos"
-            description="As peças mais novas da coleção, direto do nosso desenvolvimento."
-            action={{ label: "Ver todos os lançamentos", href: "/lancamentos" }}
-          />
-          <ProductGrid products={novidades} priorityCount={2} />
-        </div>
-      </Section>
-
-      <Section tone="black">
         <div className="container-page">
           <SectionHeading
             eyebrow="Escolha da comunidade"

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ShoppingBag } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { MediaFrame } from "@/components/ui/media-frame";
 import { PriceTag } from "@/components/product/price-tag";
 import { FavoriteButton } from "@/components/product/favorite-button";
@@ -13,6 +12,7 @@ import { useToast } from "@/components/ui/toast";
 import { cn, effectivePrice, unique } from "@/lib/utils";
 import type { Product } from "@/types/catalog";
 
+/** Card de vitrine — imagem grande, moldura discreta e ações no hover. */
 export function ProductCard({
   product,
   className,
@@ -67,13 +67,8 @@ export function ProductCard({
 
   return (
     <>
-      <article
-        className={cn(
-          "group relative flex flex-col overflow-hidden rounded-card border border-ink-700 bg-ink-900 transition-all duration-300 hover:-translate-y-1 hover:border-neon-500/45 hover:shadow-neon",
-          className,
-        )}
-      >
-        <div className="relative">
+      <article className={cn("group relative flex flex-col", className)}>
+        <div className="relative overflow-hidden rounded-[14px] border border-white/6 bg-ink-850 transition-colors duration-300 group-hover:border-white/12">
           <Link
             href={`/produto/${product.slug}`}
             className="block"
@@ -82,8 +77,8 @@ export function ProductCard({
             <MediaFrame
               src={primaryImage?.url}
               alt={product.name}
-              className="aspect-3/4 w-full rounded-none"
-              imageClassName="transition-transform duration-700 group-hover:scale-105"
+              className="aspect-4/5 w-full rounded-none"
+              imageClassName="transition-transform duration-[900ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.06]"
               sizes={sizes}
               priority={priority}
             />
@@ -95,44 +90,56 @@ export function ProductCard({
                 sizes={sizes}
               />
             ) : null}
+            <span className="absolute inset-0 z-0 md:hidden" aria-hidden />
           </Link>
 
           <div className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-1.5">
-            {product.salePrice ? <Badge tone="neon">Promoção</Badge> : null}
-            {product.isNew ? <Badge tone="dark">Lançamento</Badge> : null}
-            {!inStock ? <Badge tone="muted">Esgotado</Badge> : null}
+            {product.salePrice ? (
+              <span className="rounded bg-neon-500 px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#031006]">
+                Promoção
+              </span>
+            ) : null}
+            {product.isNew ? (
+              <span className="rounded border border-white/12 bg-ink-950/85 px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-smoke-100 backdrop-blur-sm">
+                Lançamento
+              </span>
+            ) : null}
+            {!inStock ? (
+              <span className="rounded bg-ink-700 px-2 py-1 text-[9px] font-extrabold uppercase tracking-[0.14em] text-smoke-300">
+                Esgotado
+              </span>
+            ) : null}
           </div>
 
           <FavoriteButton
             productId={product.id}
             productName={product.name}
-            className="absolute right-3 top-3"
+            className="absolute right-3 top-3 opacity-0 transition-opacity duration-300 focus-visible:opacity-100 group-hover:opacity-100 max-md:opacity-100"
           />
 
           <button
             type="button"
             onClick={handleAddToCart}
             disabled={!inStock}
-            className="absolute inset-x-3 bottom-3 flex h-11 translate-y-3 items-center justify-center gap-2 rounded-lg bg-neon-500 text-[11px] font-bold uppercase tracking-[0.14em] text-ink-950 opacity-0 transition-all duration-300 hover:bg-neon-400 focus-visible:translate-y-0 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:bg-ink-600 disabled:text-smoke-400 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100"
+            className="absolute inset-x-3 bottom-3 flex h-11 translate-y-2 items-center justify-center gap-2 rounded-lg bg-neon-500 text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#031006] opacity-0 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-neon-400 focus-visible:translate-y-0 focus-visible:opacity-100 disabled:cursor-not-allowed disabled:bg-ink-700 disabled:text-smoke-400 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden />
             {inStock ? "Adicionar ao carrinho" : "Indisponível"}
           </button>
         </div>
 
-        <div className="flex flex-1 flex-col gap-2.5 p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-neon-500">
+        <div className="flex flex-1 flex-col gap-2 pt-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neon-500">
             {product.categoryName}
           </p>
 
-          <h3 className="text-sm font-bold leading-snug text-white">
-            <Link href={`/produto/${product.slug}`} className="hover:text-neon-400">
-              <span className="absolute inset-0 z-0 md:hidden" aria-hidden />
+          <h3 className="font-sans text-sm font-semibold leading-snug text-smoke-100">
+            <Link href={`/produto/${product.slug}`} className="transition-colors hover:text-neon-400">
               {product.name}
             </Link>
           </h3>
 
-          <PriceTag price={product.price} salePrice={product.salePrice} className="mt-auto" />
+          <PriceTag price={product.price} salePrice={product.salePrice} className="mt-auto pt-1" />
 
           {colors.length > 1 ? (
             <div className="flex items-center gap-1.5 pt-1">
@@ -140,7 +147,7 @@ export function ProductCard({
                 <span
                   key={color.name}
                   title={color.name}
-                  className="h-3.5 w-3.5 rounded-full ring-1 ring-white/15"
+                  className="h-3 w-3 rounded-full ring-1 ring-white/15"
                   style={{ backgroundColor: color.hex }}
                 />
               ))}

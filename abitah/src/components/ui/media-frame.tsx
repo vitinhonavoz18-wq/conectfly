@@ -50,9 +50,9 @@ export function MediaFrame({
         <div
           role="img"
           aria-label={`${alt} — imagem ainda não cadastrada`}
-          className="grain absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_50%_0%,#1c1c1c,#0a0a0a_70%)] text-center"
+          className="grain absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[radial-gradient(circle_at_50%_0%,#141a16,#070a08_70%)] text-center"
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-ink-600 bg-ink-900 text-neon-500">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/8 bg-ink-900 text-neon-500">
             <ImagePlus className="h-5 w-5" aria-hidden />
           </span>
           <span className="px-3 text-[10px] font-bold uppercase tracking-[0.22em] text-smoke-400">

@@ -33,6 +33,31 @@ export const siteConfig = {
     mark: "/brand/abitah-mark.svg",
   },
 
+  /**
+   * Hero editorial da página inicial.
+   * Basta soltar o arquivo do produto (PNG/WEBP com fundo transparente,
+   * mínimo 1600x1600) em /public/products/ com este nome. Enquanto o arquivo
+   * não existir, o hero mostra um placeholder com a mesma proporção.
+   */
+  hero: {
+    productImage: "/products/hero-product.png",
+    eyebrow: "Coleção oficial da academia",
+    title: "FEITO PARA QUEM VAI ALÉM.",
+    description:
+      "Roupas e acessórios oficiais para quem transforma treino em estilo de vida.",
+    collection: {
+      eyebrow: "Nova coleção",
+      name: "Linha Performance 2026",
+      description: "Performance, conforto e identidade dentro e fora da academia.",
+      href: "/lancamentos",
+    },
+    stats: [
+      { value: "+2.400", label: "Alunos vestindo" },
+      { value: "100%", label: "Produção nacional" },
+      { value: "4,9", label: "Avaliação média" },
+    ],
+  },
+
   contact: {
     /**
      * WhatsApp em formato internacional, apenas dígitos: 55 + DDD + número.
