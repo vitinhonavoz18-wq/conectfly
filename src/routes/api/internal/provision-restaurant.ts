@@ -101,14 +101,36 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           return json({ success: false, error: "name required" }, 400);
         }
 
+        // Endereço do FlyControl para onde esta loja envia os pedidos. Vem de
+        // quem provisiona, que sabe o próprio endereço — evita configurar isso
+        // à mão em cada loja.
+        const flycontrol_base_url = String(body?.flycontrol_base_url ?? "").trim();
+
         // Idempotency: return existing record for this flycontrol_id
         const { data: existing } = await supabaseAdmin
           .from("restaurants")
           .select(
-            "id, flycontrol_id, slug, custom_subdomain, flycontrol_api_key, menu_sync_token",
+            "id, flycontrol_id, slug, custom_subdomain, flycontrol_api_key, menu_sync_token, flycontrol_enabled, flycontrol_base_url",
           )
           .eq("flycontrol_id", flycontrol_id)
           .maybeSingle();
+
+        if (existing) {
+          // Conserta lojas provisionadas antes desta correção: elas nasceram
+          // com flycontrol_enabled = false (o padrão da coluna) e sem saber
+          // para onde mandar pedido, o que fazia o carrinho recusar a compra
+          // com "esta loja não está conectada ao painel".
+          const reparo: { flycontrol_enabled?: boolean; flycontrol_base_url?: string } = {};
+          if (!existing.flycontrol_enabled) reparo.flycontrol_enabled = true;
+          if (flycontrol_base_url && !existing.flycontrol_base_url) {
+            reparo.flycontrol_base_url = flycontrol_base_url;
+          }
+
+          if (Object.keys(reparo).length > 0) {
+            console.log("[provision] reparando vínculo de", existing.id, Object.keys(reparo));
+            await supabaseAdmin.from("restaurants").update(reparo).eq("id", existing.id);
+          }
+        }
 
         if (existing) {
           console.log(
@@ -171,6 +193,11 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           business_type,
           selected_template,
           published: true,
+          // Uma loja criada PELO FlyControl já nasce ligada a ele. A coluna
+          // tem padrão `false`, e não preenchê-la fazia o carrinho recusar
+          // todo pedido com "esta loja não está conectada ao painel".
+          flycontrol_enabled: true,
+          ...(flycontrol_base_url ? { flycontrol_base_url } : {}),
           owner_id: null,
           created_by:
             typeof body?.created_by === "string" && body.created_by.trim()
