@@ -28,15 +28,18 @@ export type VerifyFailureReason =
 export type VerifyResult = { ok: true } | { ok: false; reason: VerifyFailureReason };
 
 /**
- * Enquanto `FL_WEBHOOK_REQUIRE_SIGNATURE` não for ligado, requisições sem
- * assinatura (ou com assinatura inválida) continuam sendo processadas e o
- * resultado da verificação vai apenas para o log. Isso permite implantar o
- * FlyControl assinando antes de passar a exigir, sem derrubar o fechamento
- * de comanda no meio da migração.
+ * A assinatura é exigida por padrão: o FlyControl já assina toda chamada
+ * (`FL_WEBHOOK_SECRET` configurado nos dois projetos), então uma requisição
+ * sem assinatura válida não é o FlyControl — é rejeitada com 401.
+ *
+ * `FL_WEBHOOK_REQUIRE_SIGNATURE=false` (ou `0`) continua disponível como
+ * válvula de emergência: liga o modo antigo (loga mas processa mesmo assim),
+ * sem precisar de um novo deploy, caso a assinatura pare de bater em produção
+ * por algum motivo inesperado.
  */
 export function isSignatureRequired(): boolean {
   const raw = (process.env.FL_WEBHOOK_REQUIRE_SIGNATURE || "").trim().toLowerCase();
-  return raw === "true" || raw === "1";
+  return raw !== "false" && raw !== "0";
 }
 
 function parseSignatureHeader(value: string): { timestamp: number; signature: string } | null {
