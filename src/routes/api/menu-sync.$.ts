@@ -15,25 +15,80 @@ const isUuid = (v: any) => typeof v === "string" && UUID_RE.test(v);
 type ResourceCfg = { table: string; ownerField: "restaurant_id" | "pizzeria_id" };
 
 const RESOURCES: Record<string, ResourceCfg> = {
-  product:         { table: "menu_items",           ownerField: "restaurant_id" },
-  border:          { table: "menu_items",           ownerField: "restaurant_id" },
-  additional:      { table: "menu_items",           ownerField: "restaurant_id" },
-  category:        { table: "menu_categories",      ownerField: "restaurant_id" },
-  beverage:        { table: "pizzeria_beverages",   ownerField: "pizzeria_id"  },
-  combo:           { table: "combos",               ownerField: "restaurant_id" },
-  "delivery-zone": { table: "delivery_zones",       ownerField: "restaurant_id" },
-  "pizza-size":    { table: "pizzeria_pizza_sizes", ownerField: "pizzeria_id"  },
+  product: { table: "menu_items", ownerField: "restaurant_id" },
+  border: { table: "menu_items", ownerField: "restaurant_id" },
+  additional: { table: "menu_items", ownerField: "restaurant_id" },
+  category: { table: "menu_categories", ownerField: "restaurant_id" },
+  beverage: { table: "pizzeria_beverages", ownerField: "pizzeria_id" },
+  combo: { table: "combos", ownerField: "restaurant_id" },
+  "delivery-zone": { table: "delivery_zones", ownerField: "restaurant_id" },
+  "pizza-size": { table: "pizzeria_pizza_sizes", ownerField: "pizzeria_id" },
 };
 
 const RESTAURANT_WRITABLE = new Set([
-  "name","tagline","description","whatsapp_number","whatsapp_display","address",
-  "hours","city","logo_url","hero_image_url","primary_color","secondary_color",
-  "published","hero_media_type","hero_video_url","whatsapp_enabled","show_item_images",
-  "selected_template","business_type","theme_settings","site_settings",
-  "checkout_settings","delivery_settings","seo_settings","order_flow_mode",
-  "continue_opening_whatsapp","allow_dual_send",
-  "delivery_enabled","pickup_enabled","table_enabled",
+  "name",
+  "tagline",
+  "description",
+  "whatsapp_number",
+  "whatsapp_display",
+  "address",
+  "hours",
+  "city",
+  "logo_url",
+  "hero_image_url",
+  "primary_color",
+  "secondary_color",
+  "published",
+  "hero_media_type",
+  "hero_video_url",
+  "whatsapp_enabled",
+  "show_item_images",
+  "selected_template",
+  "business_type",
+  "theme_settings",
+  "site_settings",
+  "checkout_settings",
+  "delivery_settings",
+  "seo_settings",
+  "order_flow_mode",
+  "continue_opening_whatsapp",
+  "allow_dual_send",
+  "delivery_enabled",
+  "pickup_enabled",
+  "table_enabled",
 ]);
+
+// Colunas JSONB de configuração — um UPDATE comum SUBSTITUI a coluna
+// inteira, não mescla. Um chamador que só conhece uma parte das chaves
+// (ex.: o FlyControl mandando apenas `entry_mode` dentro de `site_settings`)
+// apagaria silenciosamente qualquer outra chave já salva ali por outro
+// caminho (o próprio editor do SiteCreatorFly, por exemplo). Por isso estas
+// colunas são sempre mescladas com o valor atual antes de gravar.
+const JSONB_SETTINGS_FIELDS = [
+  "theme_settings",
+  "site_settings",
+  "checkout_settings",
+  "delivery_settings",
+  "seo_settings",
+] as const;
+
+async function mergeJsonbSettings(restaurantId: string, patch: Record<string, any>) {
+  const keysToMerge = JSONB_SETTINGS_FIELDS.filter((k) => k in patch);
+  if (keysToMerge.length === 0) return patch;
+
+  const { data: current } = await supabaseAdmin
+    .from("restaurants")
+    .select(keysToMerge.join(","))
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  const merged = { ...patch };
+  for (const key of keysToMerge) {
+    const existing = (current as Record<string, any> | null)?.[key];
+    merged[key] = { ...(existing && typeof existing === "object" ? existing : {}), ...patch[key] };
+  }
+  return merged;
+}
 
 async function resolveCategoryId(raw: any, restaurantId: string) {
   if (raw === undefined) return undefined;
@@ -60,9 +115,18 @@ async function resolveRecordId(identifier: string, cfg: ResourceCfg, restaurantI
 
 const mapFields = (body: any, type: string) => {
   const data = { ...body };
-  if ("active" in data) { data.is_active = data.active; delete data.active; }
-  if ("highlight" in data) { data.is_highlighted = data.highlight; delete data.highlight; }
-  if (type === "combo" && "description" in data) { data.badge = data.description; delete data.description; }
+  if ("active" in data) {
+    data.is_active = data.active;
+    delete data.active;
+  }
+  if ("highlight" in data) {
+    data.is_highlighted = data.highlight;
+    delete data.highlight;
+  }
+  if (type === "combo" && "description" in data) {
+    data.badge = data.description;
+    delete data.description;
+  }
   delete data.id;
   delete data.restaurant_id;
   delete data.pizzeria_id;
@@ -84,7 +148,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
         if (auth.error || !auth.restaurant) {
-          return json({ success: false, error: auth.error || "Unauthorized" }, auth.status || 401, corsHeaders);
+          return json(
+            { success: false, error: auth.error || "Unauthorized" },
+            auth.status || 401,
+            corsHeaders,
+          );
         }
         const restaurant = auth.restaurant;
         const splat = (params._splat || "").split("/").filter(Boolean);
@@ -95,7 +163,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
 
         try {
           if (type === "restaurant") {
-            return json({ success: false, error: "restaurant does not support POST; use PATCH" }, 405, corsHeaders);
+            return json(
+              { success: false, error: "restaurant does not support POST; use PATCH" },
+              405,
+              corsHeaders,
+            );
           }
           const cfg = RESOURCES[type];
           if (!cfg) return json({ success: false, error: "Invalid path" }, 400, corsHeaders);
@@ -105,7 +177,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
           if (cfg.table === "menu_items" && "category_id" in mappedData) {
             const resolved = await resolveCategoryId(mappedData.category_id, restaurant.id!);
             if (mappedData.category_id && !resolved) {
-              return json({ success: false, error: `category_id not found: ${mappedData.category_id}` }, 400, corsHeaders);
+              return json(
+                { success: false, error: `category_id not found: ${mappedData.category_id}` },
+                400,
+                corsHeaders,
+              );
             }
             mappedData.category_id = resolved;
           }
@@ -129,7 +205,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
         if (auth.error || !auth.restaurant) {
-          return json({ success: false, error: auth.error || "Unauthorized" }, auth.status || 401, corsHeaders);
+          return json(
+            { success: false, error: auth.error || "Unauthorized" },
+            auth.status || 401,
+            corsHeaders,
+          );
         }
         const restaurant = auth.restaurant;
         const splat = (params._splat || "").split("/").filter(Boolean);
@@ -141,15 +221,24 @@ export const Route = createFileRoute("/api/menu-sync/$")({
 
         try {
           if (type === "restaurant") {
-            const patch: any = {};
+            let patch: any = {};
             for (const [k, v] of Object.entries(body)) {
               if (RESTAURANT_WRITABLE.has(k)) patch[k] = v;
             }
             if (Object.keys(patch).length === 0) {
-              return json({ success: false, error: "No writable fields provided" }, 400, corsHeaders);
+              return json(
+                { success: false, error: "No writable fields provided" },
+                400,
+                corsHeaders,
+              );
             }
+            patch = await mergeJsonbSettings(restaurant.id!, patch);
             const { data: result, error } = await supabaseAdmin
-              .from("restaurants").update(patch).eq("id", restaurant.id!).select().maybeSingle();
+              .from("restaurants")
+              .update(patch)
+              .eq("id", restaurant.id!)
+              .select()
+              .maybeSingle();
             if (error) throw error;
             return json({ success: true, data: result }, 200, corsHeaders);
           }
@@ -159,13 +248,22 @@ export const Route = createFileRoute("/api/menu-sync/$")({
           if (!rawId) return json({ success: false, error: "ID is required" }, 400, corsHeaders);
 
           const internalId = await resolveRecordId(rawId, cfg, restaurant.id!);
-          if (!internalId) return json({ success: false, error: "Record not found or unauthorized" }, 404, corsHeaders);
+          if (!internalId)
+            return json(
+              { success: false, error: "Record not found or unauthorized" },
+              404,
+              corsHeaders,
+            );
 
           const mappedData = mapFields(body, type);
           if (cfg.table === "menu_items" && "category_id" in mappedData) {
             const resolved = await resolveCategoryId(mappedData.category_id, restaurant.id!);
             if (mappedData.category_id && !resolved) {
-              return json({ success: false, error: `category_id not found: ${mappedData.category_id}` }, 400, corsHeaders);
+              return json(
+                { success: false, error: `category_id not found: ${mappedData.category_id}` },
+                400,
+                corsHeaders,
+              );
             }
             mappedData.category_id = resolved;
           }
@@ -178,7 +276,12 @@ export const Route = createFileRoute("/api/menu-sync/$")({
             .maybeSingle();
 
           if (error) throw error;
-          if (!result) return json({ success: false, error: "Record not found or unauthorized" }, 404, corsHeaders);
+          if (!result)
+            return json(
+              { success: false, error: "Record not found or unauthorized" },
+              404,
+              corsHeaders,
+            );
           return json({ success: true, data: result }, 200, corsHeaders);
         } catch (err: any) {
           console.error(`[menu-sync] PUT ${type}/${rawId} error:`, err);
@@ -190,7 +293,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
         if (auth.error || !auth.restaurant) {
-          return json({ success: false, error: auth.error || "Unauthorized" }, auth.status || 401, corsHeaders);
+          return json(
+            { success: false, error: auth.error || "Unauthorized" },
+            auth.status || 401,
+            corsHeaders,
+          );
         }
         const restaurant = auth.restaurant;
         const splat = (params._splat || "").split("/").filter(Boolean);
@@ -199,7 +306,9 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         const action = splat[2];
         const body = await request.json();
 
-        console.log(`[menu-sync] PATCH ${type}/${rawId ?? "(self)"}/${action || ""} for ${restaurant.slug}`);
+        console.log(
+          `[menu-sync] PATCH ${type}/${rawId ?? "(self)"}/${action || ""} for ${restaurant.slug}`,
+        );
 
         try {
           if (type === "restaurant") {
@@ -213,10 +322,19 @@ export const Route = createFileRoute("/api/menu-sync/$")({
               }
             }
             if (Object.keys(patch).length === 0) {
-              return json({ success: false, error: "No writable fields provided" }, 400, corsHeaders);
+              return json(
+                { success: false, error: "No writable fields provided" },
+                400,
+                corsHeaders,
+              );
             }
+            patch = await mergeJsonbSettings(restaurant.id!, patch);
             const { data: result, error } = await supabaseAdmin
-              .from("restaurants").update(patch).eq("id", restaurant.id!).select().maybeSingle();
+              .from("restaurants")
+              .update(patch)
+              .eq("id", restaurant.id!)
+              .select()
+              .maybeSingle();
             if (error) throw error;
             return json({ success: true, data: result }, 200, corsHeaders);
           }
@@ -226,7 +344,12 @@ export const Route = createFileRoute("/api/menu-sync/$")({
           if (!rawId) return json({ success: false, error: "ID is required" }, 400, corsHeaders);
 
           const internalId = await resolveRecordId(rawId, cfg, restaurant.id!);
-          if (!internalId) return json({ success: false, error: "Record not found or unauthorized" }, 404, corsHeaders);
+          if (!internalId)
+            return json(
+              { success: false, error: "Record not found or unauthorized" },
+              404,
+              corsHeaders,
+            );
 
           let updateData = mapFields(body, type);
           if (action === "status") {
@@ -234,7 +357,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
           } else if (cfg.table === "menu_items" && "category_id" in updateData) {
             const resolved = await resolveCategoryId(updateData.category_id, restaurant.id!);
             if (updateData.category_id && !resolved) {
-              return json({ success: false, error: `category_id not found: ${updateData.category_id}` }, 400, corsHeaders);
+              return json(
+                { success: false, error: `category_id not found: ${updateData.category_id}` },
+                400,
+                corsHeaders,
+              );
             }
             updateData.category_id = resolved;
           }
@@ -247,7 +374,12 @@ export const Route = createFileRoute("/api/menu-sync/$")({
             .maybeSingle();
 
           if (error) throw error;
-          if (!result) return json({ success: false, error: "Record not found or unauthorized" }, 404, corsHeaders);
+          if (!result)
+            return json(
+              { success: false, error: "Record not found or unauthorized" },
+              404,
+              corsHeaders,
+            );
           return json({ success: true, data: result }, 200, corsHeaders);
         } catch (err: any) {
           console.error(`[menu-sync] PATCH ${type}/${rawId} error:`, err);
@@ -259,7 +391,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
         const corsHeaders = getCorsHeaders(request);
         const auth = await validateApiKey(request);
         if (auth.error || !auth.restaurant) {
-          return json({ success: false, error: auth.error || "Unauthorized" }, auth.status || 401, corsHeaders);
+          return json(
+            { success: false, error: auth.error || "Unauthorized" },
+            auth.status || 401,
+            corsHeaders,
+          );
         }
         const restaurant = auth.restaurant;
         const splat = (params._splat || "").split("/").filter(Boolean);
@@ -270,14 +406,23 @@ export const Route = createFileRoute("/api/menu-sync/$")({
 
         try {
           if (type === "restaurant") {
-            return json({ success: false, error: "restaurant does not support DELETE" }, 405, corsHeaders);
+            return json(
+              { success: false, error: "restaurant does not support DELETE" },
+              405,
+              corsHeaders,
+            );
           }
           const cfg = RESOURCES[type];
           if (!cfg) return json({ success: false, error: "Invalid type" }, 400, corsHeaders);
           if (!rawId) return json({ success: false, error: "ID is required" }, 400, corsHeaders);
 
           const internalId = await resolveRecordId(rawId, cfg, restaurant.id!);
-          if (!internalId) return json({ success: false, error: "Record not found or unauthorized" }, 404, corsHeaders);
+          if (!internalId)
+            return json(
+              { success: false, error: "Record not found or unauthorized" },
+              404,
+              corsHeaders,
+            );
 
           const { error } = await (supabaseAdmin.from(cfg.table as any) as any)
             .delete()
