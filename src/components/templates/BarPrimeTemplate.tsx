@@ -1,5 +1,4 @@
 import { useCart } from "../site/CartContext";
-import { SiteHeader } from "../site/SiteHeader";
 import { SiteBrandLogo } from "../site/SiteBrandLogo";
 import { TableQrScanButton } from "../site/TableQrScanButton";
 import { SiteMenuSection } from "../site/SiteMenuSection";
@@ -11,11 +10,25 @@ import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ArrowUp } 
 import { useEffect, useState } from "react";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
-  const { isCartOpen, setCartOpen, validatedTable, totalItems, totalPrice, items, sessionConsumed, sessionOrderCount, terminateSession } = useCart();
+  const {
+    isCartOpen,
+    setCartOpen,
+    validatedTable,
+    totalItems,
+    totalPrice,
+    items,
+    sessionConsumed,
+    sessionOrderCount,
+    terminateSession,
+  } = useCart();
   const r = data.restaurant;
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [isRequestingClose, setIsRequestingClose] = useState(false);
-  const [closeModal, setCloseModal] = useState<{ open: boolean; duplicate?: boolean; error?: string } | null>(null);
+  const [closeModal, setCloseModal] = useState<{
+    open: boolean;
+    duplicate?: boolean;
+    error?: string;
+  } | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [closeWarningOpen, setCloseWarningOpen] = useState(false);
@@ -79,7 +92,9 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
 
     setIsRequestingClose(true);
     try {
-      console.group("============================== TABLE CLOSE REQUEST ==============================");
+      console.group(
+        "============================== TABLE CLOSE REQUEST ==============================",
+      );
       console.log("URL", url);
       console.log("METHOD", "POST");
       console.log("PAYLOAD", body);
@@ -94,17 +109,29 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
       });
       const json = await res.json().catch(() => ({}));
 
-      console.group("============================== TABLE CLOSE RESPONSE ==============================");
+      console.group(
+        "============================== TABLE CLOSE RESPONSE ==============================",
+      );
       console.log("Status", res.status);
       console.log("Body", json);
       console.groupEnd();
 
       const code = (json as any)?.code;
-      if (res.status === 404 || code === "not_found" || code === "not_active" || code === "unauthorized") {
+      if (
+        res.status === 404 ||
+        code === "not_found" ||
+        code === "not_active" ||
+        code === "unauthorized"
+      ) {
         // Stale local dining session — server has no matching active row.
         // Force the customer to re-scan the QR to mint a fresh session.
-        console.warn("[TABLE CLOSE] stale dining session — terminating local state", { code, status: res.status });
-        try { terminateSession?.({ silent: true }); } catch {}
+        console.warn("[TABLE CLOSE] stale dining session — terminating local state", {
+          code,
+          status: res.status,
+        });
+        try {
+          terminateSession?.({ silent: true });
+        } catch {}
         setCloseModal({
           open: true,
           error: "Sua sessão da mesa expirou. Escaneie o QR Code novamente para continuar.",
@@ -143,13 +170,14 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     );
   };
 
-  const allCategories = data.categories.filter(c => c.show_on_public_site !== false);
+  const allCategories = data.categories.filter((c) => c.show_on_public_site !== false);
   const beverageCategories = allCategories.filter(isBeverage);
-  const foodCategories = allCategories.filter(c => !isBeverage(c) && !c.is_pizza);
-  
-  // Dynamic categories for the quick nav, excluding beverages as they have their own section
-  const navCategories = allCategories.filter(c => c.items && c.items.length > 0 && !isBeverage(c));
+  const foodCategories = allCategories.filter((c) => !isBeverage(c) && !c.is_pizza);
 
+  // Dynamic categories for the quick nav, excluding beverages as they have their own section
+  const navCategories = allCategories.filter(
+    (c) => c.items && c.items.length > 0 && !isBeverage(c),
+  );
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const entryMode = r.site_settings?.entry_mode || "navigation";
@@ -157,14 +185,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra font-sans">
-      <SiteHeader 
-        name={r.name} 
-        logoUrl={r.logo_url} 
-        onOpenCart={() => setCartOpen(true)} 
-        showCartButton={r.site_settings?.show_cart_button !== false}
-      />
-      
-      {/* Floating cart is now rendered globally by TemplateRenderer
+      {/* Floating cart is rendered globally by TemplateRenderer
           via <FloatingCartButton />. Do not re-add it per template. */}
 
       <main>
@@ -192,51 +213,52 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
               {validatedTable ? "Peça direto da sua mesa" : r.name}
             </h1>
             <p className="text-sm sm:text-xl text-[hsl(var(--site-muted-fg))] max-w-2xl font-medium italic opacity-90">
-              {r.tagline || "Bebidas geladas, petiscos e combos em poucos cliques. Escolha, peça e acompanhe sua comanda."}
+              {r.tagline ||
+                "Bebidas geladas, petiscos e combos em poucos cliques. Escolha, peça e acompanhe sua comanda."}
             </p>
           </div>
         </div>
 
         {/* Categories Horizontal Nav */}
         {entryMode !== "cards" && (
-        <div className="sticky top-16 sm:top-20 z-30 bg-[hsl(var(--site-bg)/0.8)] backdrop-blur-md border-b border-[hsl(var(--site-border))] py-3 overflow-x-auto scrollbar-hide">
-          <div className="max-w-6xl mx-auto px-4 flex gap-2">
-            <button
-              onClick={() => {
-                setActiveCategory("all");
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${
-                activeCategory === "all" 
-                  ? "bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-lg" 
-                  : "bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))] border border-[hsl(var(--site-border))]"
-              }`}
-            >
-              Todos
-            </button>
-            {navCategories.map(cat => (
+          <div className="sticky top-16 sm:top-20 z-30 bg-[hsl(var(--site-bg)/0.8)] backdrop-blur-md border-b border-[hsl(var(--site-border))] py-3 overflow-x-auto scrollbar-hide">
+            <div className="max-w-6xl mx-auto px-4 flex gap-2">
               <button
-                key={cat.id}
                 onClick={() => {
-                  setActiveCategory(cat.id);
-                  const el = document.getElementById(`category-${cat.id}`);
-                  if (el) {
-                    const offset = 140;
-                    const pos = el.getBoundingClientRect().top + window.pageYOffset - offset;
-                    window.scrollTo({ top: pos, behavior: 'smooth' });
-                  }
+                  setActiveCategory("all");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
                 className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${
-                  activeCategory === cat.id 
-                    ? "bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-lg" 
+                  activeCategory === "all"
+                    ? "bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-lg"
                     : "bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))] border border-[hsl(var(--site-border))]"
                 }`}
               >
-                {cat.icon} {cat.name}
+                Todos
               </button>
-            ))}
+              {navCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setActiveCategory(cat.id);
+                    const el = document.getElementById(`category-${cat.id}`);
+                    if (el) {
+                      const offset = 140;
+                      const pos = el.getBoundingClientRect().top + window.pageYOffset - offset;
+                      window.scrollTo({ top: pos, behavior: "smooth" });
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all ${
+                    activeCategory === cat.id
+                      ? "bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] shadow-lg"
+                      : "bg-[hsl(var(--site-card))] text-[hsl(var(--site-muted-fg))] border border-[hsl(var(--site-border))]"
+                  }`}
+                >
+                  {cat.icon} {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
         )}
 
         {/* Menu Sections */}
@@ -249,32 +271,38 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
             beverageCatalogs={data.beverageCatalogs}
           />
         ) : (
-        <div className="max-w-6xl mx-auto px-4 py-8 space-y-12 sm:space-y-20">
-          {navCategories.map(cat => (
-            <section key={cat.id} id={`category-${cat.id}`} className="scroll-mt-32">
-              <div className="flex items-center gap-4 mb-6 sm:mb-10">
-                <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter text-[hsl(var(--site-fg))] flex items-center gap-3">
-                  <span className="text-[hsl(var(--site-primary))]">{cat.icon || <Star className="h-6 w-6" />}</span>
-                  {cat.name}
-                </h2>
-                <div className="h-px flex-1 bg-gradient-to-r from-[hsl(var(--site-border))] to-transparent" />
-              </div>
+          <div className="max-w-6xl mx-auto px-4 py-8 space-y-12 sm:space-y-20">
+            {navCategories.map((cat) => (
+              <section key={cat.id} id={`category-${cat.id}`} className="scroll-mt-32">
+                <div className="flex items-center gap-4 mb-6 sm:mb-10">
+                  <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tighter text-[hsl(var(--site-fg))] flex items-center gap-3">
+                    <span className="text-[hsl(var(--site-primary))]">
+                      {cat.icon || <Star className="h-6 w-6" />}
+                    </span>
+                    {cat.name}
+                  </h2>
+                  <div className="h-px flex-1 bg-gradient-to-r from-[hsl(var(--site-border))] to-transparent" />
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
-                {cat.items.map(item => (
-                  <BarPrimeItemCard key={item.id} item={item} restaurant={r} />
-                ))}
-              </div>
-            </section>
-          ))}
-          
-          {/* Fallback for Beverages if not in categories or explicitly requested */}
-          {beveragesVisible && data.beverages && data.beverages.length > 0 && (
-             <section id="bebidas-legacy" className="py-12">
-                <SiteBeverageSection beverages={data.beverages} catalogs={data.beverageCatalogs} restaurant={r} />
-             </section>
-          )}
-        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+                  {cat.items.map((item) => (
+                    <BarPrimeItemCard key={item.id} item={item} restaurant={r} />
+                  ))}
+                </div>
+              </section>
+            ))}
+
+            {/* Fallback for Beverages if not in categories or explicitly requested */}
+            {beveragesVisible && data.beverages && data.beverages.length > 0 && (
+              <section id="bebidas-legacy" className="py-12">
+                <SiteBeverageSection
+                  beverages={data.beverages}
+                  catalogs={data.beverageCatalogs}
+                  restaurant={r}
+                />
+              </section>
+            )}
+          </div>
         )}
 
         {/* Table Closing Request Button */}
@@ -287,7 +315,10 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
                     Mesa {validatedTable.number}
                   </div>
                   <div className="text-xs text-[hsl(var(--site-muted-fg))] mt-1">
-                    Pedidos realizados: <span className="font-bold text-[hsl(var(--site-fg))]">{sessionOrderCount}</span>
+                    Pedidos realizados:{" "}
+                    <span className="font-bold text-[hsl(var(--site-fg))]">
+                      {sessionOrderCount}
+                    </span>
                   </div>
                 </div>
                 <div className="text-right">
@@ -295,7 +326,9 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
                     Total da Mesa
                   </div>
                   <div className="text-2xl font-black tracking-tighter text-[hsl(var(--site-fg))]">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sessionConsumed + totalPrice)}
+                    {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+                      sessionConsumed + totalPrice,
+                    )}
                   </div>
                   {totalPrice > 0 && sessionConsumed > 0 && (
                     <div className="text-[10px] text-[hsl(var(--site-muted-fg))] mt-0.5">
@@ -305,7 +338,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
                 </div>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setConfirmClose(true)}
               disabled={isRequestingClose}
               className="px-10 py-5 rounded-full bg-destructive text-destructive-foreground font-black text-lg uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all border-4 border-destructive/20 disabled:opacity-60 disabled:cursor-not-allowed"
@@ -362,21 +395,29 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
           >
             {closeModal.error ? (
               <>
-                <h3 className="text-xl font-black uppercase tracking-wide mb-3">Não foi possível enviar</h3>
+                <h3 className="text-xl font-black uppercase tracking-wide mb-3">
+                  Não foi possível enviar
+                </h3>
                 <p className="text-sm text-neutral-600">{closeModal.error}</p>
               </>
             ) : closeModal.duplicate ? (
               <>
-                <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação já enviada</h3>
+                <h3 className="text-xl font-black uppercase tracking-wide mb-3">
+                  Solicitação já enviada
+                </h3>
                 <p className="text-sm text-neutral-600">
-                  Já existe uma solicitação de fechamento em andamento. Aguarde o atendente concluir o pagamento — sua mesa será encerrada automaticamente.
+                  Já existe uma solicitação de fechamento em andamento. Aguarde o atendente concluir
+                  o pagamento — sua mesa será encerrada automaticamente.
                 </p>
               </>
             ) : (
               <>
-                <h3 className="text-xl font-black uppercase tracking-wide mb-3">Solicitação enviada</h3>
+                <h3 className="text-xl font-black uppercase tracking-wide mb-3">
+                  Solicitação enviada
+                </h3>
                 <p className="text-sm text-neutral-600">
-                  Sua solicitação foi enviada ao restaurante. Aguarde o atendente concluir o pagamento — sua mesa será encerrada automaticamente assim que ele confirmar.
+                  Sua solicitação foi enviada ao restaurante. Aguarde o atendente concluir o
+                  pagamento — sua mesa será encerrada automaticamente assim que ele confirmar.
                 </p>
               </>
             )}
@@ -401,7 +442,9 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
             className="bg-white text-neutral-900 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-black uppercase tracking-wide mb-2">Fechar a sessão da mesa?</h3>
+            <h3 className="text-xl font-black uppercase tracking-wide mb-2">
+              Fechar a sessão da mesa?
+            </h3>
             <p className="text-sm text-neutral-600 mb-2">
               Deseja realmente solicitar o fechamento da Mesa {validatedTable.number}?
             </p>
@@ -444,9 +487,12 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
             className="bg-white text-neutral-900 rounded-2xl max-w-md w-full p-8 text-center shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-black uppercase tracking-wide mb-3">Ainda aguardando confirmação</h3>
+            <h3 className="text-xl font-black uppercase tracking-wide mb-3">
+              Ainda aguardando confirmação
+            </h3>
             <p className="text-sm text-neutral-600">
-              We are still waiting for the restaurant to confirm the closure. Sua mesa permanece ativa e a verificação continua acontecendo automaticamente.
+              We are still waiting for the restaurant to confirm the closure. Sua mesa permanece
+              ativa e a verificação continua acontecendo automaticamente.
             </p>
             <div className="mt-6 flex gap-3 justify-center">
               <button
@@ -471,19 +517,22 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   );
 }
 
-function BarPrimeItemCard({ item, restaurant }: { item: any, restaurant: any }) {
+function BarPrimeItemCard({ item, restaurant }: { item: any; restaurant: any }) {
   const { addLine, items, updateQty } = useCart();
   const [isAdding, setIsAdding] = useState(false);
-  const qtyInCart = items.find(i => i.itemId === item.id)?.quantity || 0;
+  const qtyInCart = items.find((i) => i.itemId === item.id)?.quantity || 0;
 
   const handleAdd = () => {
     setIsAdding(true);
-    addLine({
-      itemId: item.id,
-      name: item.name,
-      description: item.description ?? "",
-      unitPrice: item.price,
-    }, 1);
+    addLine(
+      {
+        itemId: item.id,
+        name: item.name,
+        description: item.description ?? "",
+        unitPrice: item.price,
+      },
+      1,
+    );
     setTimeout(() => setIsAdding(false), 800);
   };
 
@@ -491,13 +540,16 @@ function BarPrimeItemCard({ item, restaurant }: { item: any, restaurant: any }) 
     updateQty(item.id, undefined, newQty);
   };
 
-  const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price);
+  const formattedPrice = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(item.price);
 
   return (
     <div className="bg-[hsl(var(--site-card))] rounded-2xl sm:rounded-3xl border border-[hsl(var(--site-border))] overflow-hidden flex flex-row sm:flex-col group hover:border-[hsl(var(--site-primary)/0.6)] transition-all duration-500 shadow-xl relative h-full min-h-[140px] sm:min-h-0">
       {/* Premium Dark Overlay on Hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.05)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-      
+
       {/* Product Image */}
       {(restaurant?.show_item_images ?? true) && item.image_url ? (
         <div className="w-[110px] xs:w-[130px] sm:w-full aspect-square sm:aspect-video overflow-hidden relative shrink-0">
@@ -530,14 +582,16 @@ function BarPrimeItemCard({ item, restaurant }: { item: any, restaurant: any }) 
         <div className="mt-2 sm:mt-4 flex items-center justify-between gap-2">
           {qtyInCart > 0 ? (
             <div className="flex items-center gap-2 sm:gap-3 bg-[hsl(var(--site-muted))] p-0.5 sm:p-1 rounded-xl sm:rounded-2xl border border-[hsl(var(--site-border))] shadow-inner">
-              <button 
+              <button
                 onClick={() => handleUpdateQty(qtyInCart - 1)}
                 className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center bg-[hsl(var(--site-card))] rounded-lg sm:rounded-xl text-[hsl(var(--site-fg))] hover:bg-[hsl(var(--site-primary)/0.1)] active:scale-90 transition-all border border-[hsl(var(--site-border))]"
               >
                 <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
               </button>
-              <span className="font-black text-sm sm:text-lg min-w-[16px] text-center">{qtyInCart}</span>
-              <button 
+              <span className="font-black text-sm sm:text-lg min-w-[16px] text-center">
+                {qtyInCart}
+              </span>
+              <button
                 onClick={() => handleUpdateQty(qtyInCart + 1)}
                 className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center bg-[hsl(var(--site-primary))] rounded-lg sm:rounded-xl text-[hsl(var(--site-primary-fg))] active:scale-90 transition-all shadow-lg"
               >
@@ -562,9 +616,9 @@ function BarPrimeItemCard({ item, restaurant }: { item: any, restaurant: any }) 
           )}
 
           <div className="shrink-0">
-             <span className="text-[hsl(var(--site-primary))] font-black text-sm sm:text-xl tracking-tighter">
-                {formattedPrice}
-             </span>
+            <span className="text-[hsl(var(--site-primary))] font-black text-sm sm:text-xl tracking-tighter">
+              {formattedPrice}
+            </span>
           </div>
         </div>
       </div>
