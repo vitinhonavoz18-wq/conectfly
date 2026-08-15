@@ -90,6 +90,62 @@ async function mergeJsonbSettings(restaurantId: string, patch: Record<string, an
   return merged;
 }
 
+/**
+ * Bordas e adicionais moram na mesma tabela dos itens do cardápio
+ * (`menu_items`), e essa tabela exige uma categoria — não existe item solto.
+ *
+ * O FlyControl não conhece essa regra: lá "Bordas & Adicionais" é uma tela
+ * própria, sem categoria nenhuma. Sem tradução no meio do caminho, o item
+ * chegava aqui sem categoria e o banco recusava — como tentar guardar um
+ * prato no cardápio sem dizer em qual página ele entra.
+ *
+ * Então a categoria é criada aqui, uma única vez por restaurante. Os nomes
+ * aceitos são os mesmos que os modelos de site já reconhecem (ver `isBordas`
+ * nos templates), para não criar uma categoria duplicada quando o dono já
+ * tem uma "Bordas" feita à mão no editor.
+ */
+const EXTRA_CATEGORY: Record<string, { create: string; icon: string; accept: string[] }> = {
+  border: {
+    create: "BORDAS RECHEADAS",
+    icon: "🥖",
+    accept: ["BORDAS RECHEADAS", "BORDA RECHEADA", "BORDAS", "BORDA"],
+  },
+  additional: {
+    create: "ADICIONAIS",
+    icon: "➕",
+    accept: ["ADICIONAIS", "ADICIONAL", "COMPLEMENTOS", "COMPLEMENTO"],
+  },
+};
+
+async function ensureExtraCategory(type: string, restaurantId: string): Promise<string | null> {
+  const spec = EXTRA_CATEGORY[type];
+  if (!spec) return null;
+
+  const { data: existing } = await supabaseAdmin
+    .from("menu_categories")
+    .select("id, name")
+    .eq("restaurant_id", restaurantId);
+
+  const rows = (existing ?? []) as Array<{ id: string; name: string | null }>;
+  const found = rows.find((c) => spec.accept.includes((c.name ?? "").trim().toUpperCase()));
+  if (found) return found.id;
+
+  const { data: created, error } = await supabaseAdmin
+    .from("menu_categories")
+    .insert({
+      restaurant_id: restaurantId,
+      name: spec.create,
+      icon: spec.icon,
+      is_pizza: false,
+      sort_order: (existing?.length ?? 0) + 1,
+    })
+    .select("id")
+    .single();
+
+  if (error) throw error;
+  return created?.id ?? null;
+}
+
 async function resolveCategoryId(raw: any, restaurantId: string) {
   if (raw === undefined) return undefined;
   if (raw === null || raw === "") return null;
@@ -127,6 +183,10 @@ const mapFields = (body: any, type: string) => {
     data.badge = data.description;
     delete data.description;
   }
+  // `extra_type` só existe no FlyControl, para separar borda de adicional na
+  // tela dele. Aqui essa separação já virou a categoria de destino, e a
+  // coluna não existe nesta tabela — deixá-la passar derruba a gravação.
+  delete data.extra_type;
   delete data.id;
   delete data.restaurant_id;
   delete data.pizzeria_id;
@@ -184,6 +244,13 @@ export const Route = createFileRoute("/api/menu-sync/$")({
               );
             }
             mappedData.category_id = resolved;
+          }
+
+          // Borda e adicional chegam sem categoria: ela é decidida aqui, e
+          // não por quem chamou. Vale também quando veio um `category_id`
+          // vazio, que a checagem acima transforma em nulo.
+          if (cfg.table === "menu_items" && !mappedData.category_id && EXTRA_CATEGORY[type]) {
+            mappedData.category_id = await ensureExtraCategory(type, restaurant.id!);
           }
 
           const dataWithOwnership: any = { ...mappedData, [cfg.ownerField]: restaurant.id };
@@ -266,6 +333,13 @@ export const Route = createFileRoute("/api/menu-sync/$")({
               );
             }
             mappedData.category_id = resolved;
+            // Numa edição, apagar a categoria deixaria o item órfão e o banco
+            // recusaria a gravação inteira. Se sumiu, recai na categoria
+            // padrão do tipo em vez de derrubar a edição.
+            if (!mappedData.category_id && EXTRA_CATEGORY[type]) {
+              mappedData.category_id = await ensureExtraCategory(type, restaurant.id!);
+            }
+            if (!mappedData.category_id) delete mappedData.category_id;
           }
 
           const { data: result, error } = await (supabaseAdmin.from(cfg.table as any) as any)
