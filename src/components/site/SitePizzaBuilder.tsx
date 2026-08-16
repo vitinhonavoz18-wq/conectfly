@@ -9,6 +9,7 @@ import { SiteBeverageSection } from "./SiteBeverageSection";
     category: MenuCategoryRow & { items: MenuItemRow[] };
     restaurant?: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
     beverages?: BeverageRow[];
     beverageCatalogs?: BeverageCatalogRow[];
   }
@@ -78,18 +79,22 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-  export function SitePizzaBuilder({ category, restaurant, bordasCategory, beverages, beverageCatalogs }: Props) {
+  export function SitePizzaBuilder({ category, restaurant, bordasCategory, adicionaisCategory, beverages, beverageCatalogs }: Props) {
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
    const [selectedFlavors, setSelectedFlavors] = useState<string[]>([]);
     const [selectedBorderId, setSelectedBorderId] = useState<string | null>(null);
+    // Adicional e escolha multipla: o cliente pode querer bacon E cheddar na
+    // mesma pizza. Borda continua sendo uma so - nao existe pizza com duas.
+    const [selectedAdicionais, setSelectedAdicionais] = useState<string[]>([]);
     
   const [confirm, setConfirm] = useState<string | null>(null);
   const [scrollMessage, setScrollMessage] = useState<string | null>(null);
   const [lastCompletedCount, setLastCompletedCount] = useState<number>(0);
 
   const bordasRef = useRef<HTMLDivElement>(null);
+  const adicionaisRef = useRef<HTMLDivElement>(null);
   
   const summaryRef = useRef<HTMLDivElement>(null);
 
@@ -109,7 +114,12 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
 
       if (bordasCategory && bordasCategory.items.length > 0) {
         targetRef = bordasRef;
-        message = "Agora escolha seu adicional ✨";
+        message = "Agora escolha sua borda ✨";
+      } else if (adicionaisCategory && adicionaisCategory.items.length > 0) {
+        // Sem bordas cadastradas, o proximo passo e o de adicionais - levar
+        // direto para o resumo faria o cliente passar reto por eles.
+        targetRef = adicionaisRef;
+        message = "Quer turbinar com algum adicional? ✨";
       } else {
 
         targetRef = summaryRef;
@@ -136,7 +146,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       // Reset lastCompletedCount if flavors are removed
       setLastCompletedCount(0);
     }
-  }, [isSelectionComplete, selectedFlavors.length, maxFlavors, bordasCategory, lastCompletedCount]);
+  }, [isSelectionComplete, selectedFlavors.length, maxFlavors, bordasCategory, adicionaisCategory, lastCompletedCount]);
 
 
   const { flavorMap, classicFlavors, specialFlavors } = useMemo(() => {
@@ -168,8 +178,20 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
      : null;
     const borderPrice = selectedBorder?.price ?? 0;
 
-  
-    const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice;
+    const selectedExtras = selectedAdicionais
+      .map((id) => adicionaisCategory?.items.find((a) => a.id === id))
+      .filter(Boolean) as MenuItemRow[];
+    const adicionaisPrice = selectedExtras.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+
+    const finalPrice = (size?.price ?? 0) + specialExtras + borderPrice + adicionaisPrice;
+
+    // Numeracao das etapas calculada, e nao escrita a mao: uma loja sem
+    // bordas cadastradas mostraria "1, 2, 4" e pareceria uma etapa perdida.
+    const hasBordas = !!(bordasCategory && bordasCategory.items.length > 0);
+    const hasAdicionais = !!(adicionaisCategory && adicionaisCategory.items.length > 0);
+    const bordasStepNumber = 3;
+    const adicionaisStepNumber = hasBordas ? 4 : 3;
+    const beveragesStepNumber = 3 + (hasBordas ? 1 : 0) + (hasAdicionais ? 1 : 0);
   const specialNames = selectedItems.filter((it) => it.is_special).map((it) => it.name);
 
   const toggleFlavor = (id: string) => {
@@ -206,13 +228,26 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       if (selectedBorder) {
         descParts.push(`Borda: ${selectedBorder.name} (+${formatBRL(selectedBorder.price)})`);
       }
+      if (selectedExtras.length > 0) {
+        descParts.push(
+          `Adicionais (+${formatBRL(adicionaisPrice)}): ${selectedExtras.map((a) => a.name).join(", ")}`,
+        );
+      }
 
      // 1. Add Pizza
      addLine({
-       itemId: `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+       // Borda e adicionais entram na identidade da linha: o carrinho junta
+       // linhas de mesmo identificador, entao sem isso uma pizza com bacon e
+       // a mesma pizza sem bacon virariam duas unidades do preco da primeira
+       // - o cliente pagaria o valor errado.
+       itemId: [
+         `pizza-${category.id}-${size.label}-${selectedFlavors.join("_")}`,
+         selectedBorderId ? `b:${selectedBorderId}` : "",
+         selectedAdicionais.length > 0 ? `a:${[...selectedAdicionais].sort().join("_")}` : "",
+       ].filter(Boolean).join("-"),
        name: `Pizza ${size.label}`,
        description: descParts.join(" • "),
-       unitPrice: (size?.price ?? 0) + specialExtras + borderPrice,
+       unitPrice: (size?.price ?? 0) + specialExtras + borderPrice + adicionaisPrice,
        sizeLabel: size.label,
        flavors: flavorNames,
        specialFlavors: specialNames,
@@ -223,6 +258,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       setConfirm(`Adicionado ao carrinho!`);
       setSelectedFlavors([]);
       setSelectedBorderId(null);
+      setSelectedAdicionais([]);
       
       if (shouldOpenCart) setCartOpen(true);
 
@@ -371,7 +407,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       {bordasCategory && bordasCategory.items.length > 0 && (
         <div className="space-y-3" ref={bordasRef}>
           <div className="flex items-baseline justify-between">
-            <h4 className="text-base sm:text-lg font-bold">3. Escolha um adicional (opcional)</h4>
+            <h4 className="text-base sm:text-lg font-bold">{bordasStepNumber}. Escolha a borda (opcional)</h4>
             {scrollMessage && scrollMessage.includes("escolha") && (
               <span className="text-[10px] sm:text-xs font-bold text-[hsl(var(--site-primary))] animate-bounce">
                 {scrollMessage}
@@ -421,12 +457,56 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
         </div>
       )}
 
-      {/* Step 4 — Beverages */}
+      {/* Adicionais — escolha múltipla, diferente da borda */}
+      {hasAdicionais && (
+        <div className="space-y-3" ref={adicionaisRef}>
+          <div className="flex items-baseline justify-between">
+            <h4 className="text-base sm:text-lg font-bold">{adicionaisStepNumber}. Adicionais (opcional)</h4>
+            {selectedExtras.length > 0 && (
+              <span className="text-[10px] sm:text-xs font-bold text-[hsl(var(--site-secondary))]">
+                +{formatBRL(adicionaisPrice)}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-[hsl(var(--site-muted-fg))]">Pode escolher mais de um.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+            {adicionaisCategory!.items.map((a) => {
+              const active = selectedAdicionais.includes(a.id);
+              return (
+                <button
+                  key={a.id}
+                  aria-pressed={active}
+                  onClick={() =>
+                    setSelectedAdicionais((cur) =>
+                      cur.includes(a.id) ? cur.filter((x) => x !== a.id) : [...cur, a.id],
+                    )
+                  }
+                  className={`relative rounded-2xl sm:rounded-3xl border p-3 sm:p-5 text-left transition-all duration-300 transform ${
+                    active
+                      ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.05)] shadow-[0_10px_30px_hsl(var(--site-primary)/0.1)] ring-2 ring-[hsl(var(--site-primary)/0.2)]"
+                      : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]"
+                  }`}
+                >
+                  {active && (
+                    <span className="absolute top-2 right-2 sm:top-3 sm:right-3 h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] inline-flex items-center justify-center">
+                      <Check className="h-2.5 sm:h-3 w-2.5 sm:w-3" />
+                    </span>
+                  )}
+                  <p className="font-extrabold text-sm sm:text-base text-[hsl(var(--site-fg))] leading-tight">{a.name}</p>
+                  <p className="text-[hsl(var(--site-secondary))] font-black text-sm sm:text-base mt-0.5">+{formatBRL(a.price)}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Beverages */}
       {beverages && beverages.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-baseline justify-between">
             <h4 className="text-base sm:text-lg font-bold flex items-center gap-2">
-              4. Acompanhamentos <GlassWater className="h-4 w-4 text-[hsl(var(--site-primary))]" />
+              {beveragesStepNumber}. Acompanhamentos <GlassWater className="h-4 w-4 text-[hsl(var(--site-primary))]" />
             </h4>
           </div>
           <div className="bg-[hsl(var(--site-muted))] rounded-[1.5rem] sm:rounded-[2.5rem] p-4 sm:p-8">
@@ -478,8 +558,14 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
                 )}
                 {selectedBorder && (
                   <li className="flex justify-between items-center border-b border-[hsl(var(--site-border))] pb-1.5 sm:pb-2 text-[hsl(var(--site-secondary))]">
-                    <span className="font-medium">Adicional: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
+                    <span className="font-medium">Borda: <strong className="font-extrabold">{selectedBorder.name}</strong></span>
                     <span className="font-extrabold">+{formatBRL(selectedBorder.price)}</span>
+                  </li>
+                )}
+                {selectedExtras.length > 0 && (
+                  <li className="flex justify-between items-center gap-3 border-b border-[hsl(var(--site-border))] pb-1.5 sm:pb-2 text-[hsl(var(--site-secondary))]">
+                    <span className="font-medium">Adicionais: <strong className="font-extrabold">{selectedExtras.map((a) => a.name).join(", ")}</strong></span>
+                    <span className="font-extrabold whitespace-nowrap">+{formatBRL(adicionaisPrice)}</span>
                   </li>
                 )}
             </ul>

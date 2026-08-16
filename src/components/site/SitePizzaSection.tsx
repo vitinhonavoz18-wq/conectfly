@@ -7,12 +7,13 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
     categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
     restaurant: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
     beverages: BeverageRow[];
     beverageCatalogs?: BeverageCatalogRow[];
 
   }
   
-  export function SitePizzaSection({ categories, restaurant, bordasCategory, beverages, beverageCatalogs }: Props) {
+  export function SitePizzaSection({ categories, restaurant, bordasCategory, adicionaisCategory, beverages, beverageCatalogs }: Props) {
   const pizzaCats = categories.filter(
     (c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0,
   );
@@ -78,6 +79,7 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
             category={active} 
             restaurant={restaurant} 
             bordasCategory={bordasCategory} 
+            adicionaisCategory={adicionaisCategory}
             beverages={beverages}
             beverageCatalogs={beverageCatalogs}
           />

@@ -10,12 +10,13 @@ interface Props {
   categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
   entryMode?: "navigation" | "direct" | "cards";
+  adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
   beverages?: BeverageRow[];
   beverageCatalogs?: BeverageCatalogRow[];
 }
 
  
-export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", beverages, beverageCatalogs }: Props) {
+export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", adicionaisCategory, beverages, beverageCatalogs }: Props) {
   const [active, setActive] = useState<string | null>(null);
   const [activeBevCatalog, setActiveBevCatalog] = useState<string | null>(null);
   const BEV_ID = "__beverages__";
@@ -294,7 +295,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 site-stagger">
                   {selectedCat.items.map((it) => (
                     <div key={it.id} className="h-full">
-                      <SiteMenuItemCard item={it} restaurant={restaurant} />
+                      <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
                     </div>
                   ))}
                 </div>
@@ -382,7 +383,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 site-stagger h-full">
                   {cat.items.map((it) => (
                     <div key={it.id} className="h-full">
-                      <SiteMenuItemCard item={it} restaurant={restaurant} />
+                      <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
                     </div>
                   ))}
                 </div>
@@ -447,7 +448,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
                       {cat.items.map((it) => (
                         <div key={it.id} className="h-full">
-                          <SiteMenuItemCard item={it} restaurant={restaurant} />
+                          <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
                         </div>
                       ))}
                     </div>
@@ -495,7 +496,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
                       {current?.items.map((it) => (
                         <div key={it.id} className="h-full">
-                          <SiteMenuItemCard item={it} restaurant={restaurant} />
+                          <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
                         </div>
                       ))}
                     </div>

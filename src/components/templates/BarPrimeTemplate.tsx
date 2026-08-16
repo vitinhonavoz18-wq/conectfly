@@ -8,6 +8,7 @@ import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
+import { isAdicionaisCategory } from "@/lib/site/categoryKinds";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const {
@@ -170,7 +171,14 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     );
   };
 
-  const allCategories = data.categories.filter((c) => c.show_on_public_site !== false);
+  // Adicionais deixaram de ser uma seção do cardápio: agora aparecem como
+  // escolha dentro de cada produto. Bordas seguem como seção AQUI de
+  // propósito — este modelo não tem montador de pizza, então escondê-las as
+  // deixaria sem nenhum lugar para aparecer.
+  const allCategories = data.categories.filter(
+    (c) => c.show_on_public_site !== false && !isAdicionaisCategory(c),
+  );
+  const adicionaisCategory = data.categories.find(isAdicionaisCategory);
   const beverageCategories = allCategories.filter(isBeverage);
   const foodCategories = allCategories.filter((c) => !isBeverage(c) && !c.is_pizza);
 
@@ -265,6 +273,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         {entryMode === "cards" ? (
           <SiteMenuSection
             categories={cardsCategories as any}
+            adicionaisCategory={adicionaisCategory}
             restaurant={r}
             entryMode="cards"
             beverages={data.beverages ?? []}

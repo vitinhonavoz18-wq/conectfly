@@ -1,15 +1,24 @@
 import { useState } from "react";
 import { Plus, ImageIcon, Check } from "lucide-react";
-import type { MenuItemRow, Size, RestaurantRow } from "@/lib/site/types";
+import type { MenuItemRow, MenuCategoryRow, Size, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 
-export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, restaurant?: RestaurantRow }) {
+export function SiteMenuItemCard({ item, restaurant, adicionaisCategory }: { item: MenuItemRow, restaurant?: RestaurantRow, adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] } }) {
   const { addLine } = useCart();
   const sizes: Size[] = item.sizes && item.sizes.length > 0 ? item.sizes : [];
   const [selected, setSelected] = useState<Size | null>(sizes[0] ?? null);
 
-  const price = selected ? selected.price : item.price;
+  const extras = adicionaisCategory?.items ?? [];
+  const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
+  // Fechado por padrão: o card é pequeno, e abrir a lista de adicionais em
+  // todo produto empurraria o botão de pedir para fora da tela no celular.
+  const [showExtras, setShowExtras] = useState(false);
+
+  const chosenExtras = extras.filter((e) => selectedExtraIds.includes(e.id));
+  const extrasPrice = chosenExtras.reduce((sum, e) => sum + (Number(e.price) || 0), 0);
+
+  const price = (selected ? selected.price : item.price) + extrasPrice;
   const showConsult = !selected && item.price === 0;
 
   const [isAdding, setIsAdding] = useState(false);
@@ -17,12 +26,24 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
   const handleAdd = () => {
     setIsAdding(true);
     addLine({
-      itemId: item.id,
+      // Os adicionais entram na identidade da linha porque o carrinho junta
+      // linhas iguais: sem isso, um lanche com bacon e o mesmo lanche sem
+      // bacon virariam duas unidades pelo preço do primeiro.
+      itemId: selectedExtraIds.length > 0
+        ? `${item.id}-a:${[...selectedExtraIds].sort().join("_")}`
+        : item.id,
       name: item.name,
-      description: item.description ?? "",
+      description: [
+        item.description ?? "",
+        chosenExtras.length > 0
+          ? `Adicionais (+${formatBRL(extrasPrice)}): ${chosenExtras.map((e) => e.name).join(", ")}`
+          : "",
+      ].filter(Boolean).join(" • "),
       unitPrice: price,
       sizeLabel: selected?.label,
     });
+    setSelectedExtraIds([]);
+    setShowExtras(false);
     setTimeout(() => setIsAdding(false), 1000);
   };
 
@@ -87,6 +108,48 @@ export function SiteMenuItemCard({ item, restaurant }: { item: MenuItemRow, rest
                   {s.label}
                 </button>
               ))}
+            </div>
+          )}
+          {extras.length > 0 && !showConsult && (
+            <div className={sizes.length === 0 ? 'mt-auto' : ''}>
+              <button
+                type="button"
+                onClick={() => setShowExtras((v) => !v)}
+                aria-expanded={showExtras}
+                className="w-full flex items-center justify-between gap-2 py-1.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-[hsl(var(--site-primary))]"
+              >
+                <span>+ Adicionais{chosenExtras.length > 0 && ` (${chosenExtras.length})`}</span>
+                <span className="text-[hsl(var(--site-muted-fg))] normal-case tracking-normal font-bold">
+                  {showExtras ? "fechar" : "ver"}
+                </span>
+              </button>
+              {showExtras && (
+                <div className="flex flex-wrap gap-1 sm:gap-1.5 pb-1">
+                  {extras.map((e) => {
+                    const active = selectedExtraIds.includes(e.id);
+                    return (
+                      <button
+                        key={e.id}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() =>
+                          setSelectedExtraIds((cur) =>
+                            cur.includes(e.id) ? cur.filter((x) => x !== e.id) : [...cur, e.id],
+                          )
+                        }
+                        className={`px-2 sm:px-2.5 py-1 text-[8px] sm:text-[10px] font-bold rounded-lg border transition-all ${
+                          active
+                            ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.12)] text-[hsl(var(--site-primary))]"
+                            : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))] hover:border-[hsl(var(--site-primary)/0.4)]"
+                        }`}
+                      >
+                        {active && <Check className="inline h-2.5 w-2.5 mr-0.5" />}
+                        {e.name} +{formatBRL(e.price)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
           <button
