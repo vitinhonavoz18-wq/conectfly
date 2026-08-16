@@ -3,6 +3,10 @@
 import { AuthProvider } from "@/hooks/useAuth";
 import { useEffect } from "react";
 import { checkSubdomainRedirect } from "@/lib/utils/hostname";
+import {
+  getPublicSupabaseConfig,
+  setPublicSupabaseConfig,
+} from "@/integrations/supabase/publicConfig";
 
 import appCss from "../styles.css?url";
 
@@ -29,6 +33,10 @@ function NotFoundComponent() {
 }
 
 export const Route = createRootRoute({
+  // Roda no servidor ao montar a página e viaja junto com o HTML, então o
+  // navegador já recebe o endereço e a chave do Supabase prontos — sem
+  // depender do que estava configurado na máquina que compilou o site.
+  loader: () => getPublicSupabaseConfig(),
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -77,6 +85,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+   // Antes de qualquer tela: guarda o que o servidor mandou. É uma escrita em
+   // memória, não estado do React — roda aqui, no corpo do componente raiz,
+   // porque o cliente do Supabase só é montado no primeiro uso, que sempre
+   // acontece depois deste ponto.
+   setPublicSupabaseConfig(Route.useLoaderData());
+
    useEffect(() => {
      checkSubdomainRedirect();
      // Log inicial para depuração de roteamento (Regra 10)
