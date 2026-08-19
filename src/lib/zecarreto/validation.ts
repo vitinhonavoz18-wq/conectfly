@@ -136,6 +136,21 @@ export const stopsListSchema = z
     });
   });
 
+/**
+ * Adicionais escolhidos: só o CÓDIGO e a quantidade.
+ * O preço nunca vem da tela — quem sabe quanto custa é o cadastro.
+ */
+export const addonSelectionSchema = z.object({
+  code: z.string().min(2).max(40),
+  quantity: z.number().int().min(1).max(50).default(1),
+});
+
+/** Itens que o cliente marcou ("geladeira", "10 caixas"). */
+export const itemSelectionSchema = z.object({
+  code: z.string().min(2).max(40),
+  quantity: z.number().int().min(1).max(200).default(1),
+});
+
 export const quoteRequestSchema = z
   .object({
     category_id: uuidSchema,
@@ -144,6 +159,8 @@ export const quoteRequestSchema = z
     scheduled_for: z.string().datetime({ offset: true }).optional(),
     helpers_count: z.number().int().min(0).max(6).default(0),
     stops: stopsListSchema,
+    addons: z.array(addonSelectionSchema).max(12).default([]),
+    items: z.array(itemSelectionSchema).max(40).default([]),
     /** Quando o app já sabe a rota (mapa), manda pronta. Senão calculamos. */
     distance_meters: z.number().int().min(0).max(2_000_000).optional(),
     duration_seconds: z.number().int().min(0).max(86_400).optional(),
@@ -169,11 +186,38 @@ export const createRideSchema = quoteRequestSchema.and(
   z.object({
     quote_id: uuidSchema.optional(),
     cargo_description: z.string().max(1000).optional(),
+    items_description: z.string().max(1000).optional(),
     notes: z.string().max(1000).optional(),
-    cargo_photos: z.array(z.string().url()).max(10).optional(),
+    cargo_photos: z.array(z.string().max(500)).max(10).optional(),
     idempotency_key: z.string().min(8).max(120).optional(),
   }),
 );
+
+/** "Não sei qual escolher": manda os itens, recebe a sugestão. */
+export const recommendationRequestSchema = z.object({
+  items: z.array(itemSelectionSchema).min(1, "Marque pelo menos um item.").max(40),
+});
+
+export const addonUpsertSchema = z.object({
+  id: uuidSchema.optional(),
+  code: z
+    .string()
+    .min(2)
+    .max(40)
+    .regex(/^[a-z0-9_]+$/, "Use apenas letras minúsculas, números e _."),
+  name: z.string().min(2).max(80),
+  description: z.string().max(300).optional(),
+  region_id: uuidSchema.nullable().optional(),
+  category_id: uuidSchema.nullable().optional(),
+  pricing_mode: z.enum(["fixed", "per_unit", "per_floor", "percent"]),
+  amount_cents: z.number().int().min(0).max(1_000_000).default(0),
+  percent: z.number().min(0).max(100).default(0),
+  max_quantity: z.number().int().min(1).max(50).default(1),
+  requires_quantity: z.boolean().default(false),
+  icon: z.string().max(40).optional(),
+  sort_order: z.number().int().min(0).max(999).default(0),
+  active: z.boolean().default(true),
+});
 
 export const rideTransitionSchema = z.object({
   to: z.enum(ZC_RIDE_STATUSES),
@@ -305,6 +349,12 @@ export const tariffUpsertSchema = z.object({
   price_per_km_cents: z.number().int().min(0),
   price_per_minute_cents: z.number().int().min(0),
   minimum_fare_cents: z.number().int().min(0),
+  included_km: z.number().min(0).max(500).default(0),
+  service_fee_cents: z.number().int().min(0).max(100_000).default(0),
+  service_fee_pct: z.number().min(0).max(100).default(0),
+  toll_policy: z.enum(["none", "fixed", "route"]).default("none"),
+  toll_fixed_cents: z.number().int().min(0).max(100_000).default(0),
+  toll_applies_above_km: z.number().min(0).max(1000).default(0),
   extra_stop_cents: z.number().int().min(0).default(0),
   helper_cents: z.number().int().min(0).default(0),
   waiting_per_minute_cents: z.number().int().min(0).default(0),

@@ -15,6 +15,8 @@ export interface RouteEstimate {
   distanceMeters: number;
   durationSeconds: number;
   provider: string;
+  /** Pedágio da rota, quando o provedor souber informar. */
+  tollCents?: number;
 }
 
 export interface RouteProvider {

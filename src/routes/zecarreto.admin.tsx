@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { FileText, Loader2, ShieldCheck, Truck, User } from "lucide-react";
 import { toast } from "sonner";
@@ -170,6 +170,19 @@ function AdminPage() {
       back={{ to: "/zecarreto", label: "Início" }}
       action={<ShieldCheck className="h-5 w-5 text-neutral-400" />}
     >
+      <Link
+        to="/zecarreto/admin/precos"
+        className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 hover:border-neutral-300"
+      >
+        <span className="flex-1">
+          <span className="block font-semibold">Preços e adicionais</span>
+          <span className="block text-sm text-neutral-600">
+            Tarifas por categoria, ajudantes, escada, pedágio e taxas.
+          </span>
+        </span>
+        <span className="text-neutral-400">→</span>
+      </Link>
+
       <div className="flex gap-2">
         <Button
           variant={tab === "motoristas" ? "default" : "outline"}

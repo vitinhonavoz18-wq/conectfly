@@ -22,6 +22,7 @@ import { Route as ZecarretoContaRouteImport } from './routes/zecarreto.conta'
 import { Route as ZecarretoEnderecosRouteImport } from './routes/zecarreto.enderecos'
 import { Route as ZecarretoEntrarRouteImport } from './routes/zecarreto.entrar'
 import { Route as ZecarretoMotoristaRouteImport } from './routes/zecarreto.motorista'
+import { Route as ZecarretoPedirRouteImport } from './routes/zecarreto.pedir'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated.edit.$id'
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as ApiInternalDeprovisionRestaurantRouteImport } from './routes/api/internal/deprovision-restaurant'
@@ -33,13 +34,18 @@ import { Route as ApiPublicOpenTableSessionRouteImport } from './routes/api/publ
 import { Route as ApiPublicRequestCloseTableRouteImport } from './routes/api/public/request-close-table'
 import { Route as ApiPublicSubmitOrderRouteImport } from './routes/api/public/submit-order'
 import { Route as ApiZecarretoCatalogRouteImport } from './routes/api/zecarreto/catalog'
+import { Route as ApiZecarretoGeocodeRouteImport } from './routes/api/zecarreto/geocode'
 import { Route as ApiZecarretoNotificationsRouteImport } from './routes/api/zecarreto/notifications'
 import { Route as ApiZecarretoOffersRouteImport } from './routes/api/zecarreto/offers'
 import { Route as ApiZecarretoPayoutsRouteImport } from './routes/api/zecarreto/payouts'
 import { Route as ApiZecarretoQuotesRouteImport } from './routes/api/zecarreto/quotes'
+import { Route as ApiZecarretoRecommendRouteImport } from './routes/api/zecarreto/recommend'
 import { Route as ApiZecarretoRidesRouteImport } from './routes/api/zecarreto/rides'
 import { Route as ApiZecarretoWalletRouteImport } from './routes/api/zecarreto/wallet'
+import { Route as ZecarretoAdminPrecosRouteImport } from './routes/zecarreto.admin.precos'
 import { Route as ZecarretoMotoristaVeiculosRouteImport } from './routes/zecarreto.motorista.veiculos'
+import { Route as ZecarretoPedidoRideIdRouteImport } from './routes/zecarreto.pedido.$rideId'
+import { Route as ApiZecarretoAdminAddonsRouteImport } from './routes/api/zecarreto/admin.addons'
 import { Route as ApiZecarretoAdminDocumentsRouteImport } from './routes/api/zecarreto/admin.documents'
 import { Route as ApiZecarretoAdminDriversRouteImport } from './routes/api/zecarreto/admin.drivers'
 import { Route as ApiZecarretoAdminHistoryRouteImport } from './routes/api/zecarreto/admin.history'
@@ -145,6 +151,11 @@ const ZecarretoMotoristaRoute = ZecarretoMotoristaRouteImport.update({
   path: '/zecarreto/motorista',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZecarretoPedirRoute = ZecarretoPedirRouteImport.update({
+  id: '/zecarreto/pedir',
+  path: '/zecarreto/pedir',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEditIdRoute = AuthenticatedEditIdRouteImport.update({
   id: '/edit/$id',
   path: '/edit/$id',
@@ -206,6 +217,11 @@ const ApiZecarretoCatalogRoute = ApiZecarretoCatalogRouteImport.update({
   path: '/api/zecarreto/catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiZecarretoGeocodeRoute = ApiZecarretoGeocodeRouteImport.update({
+  id: '/api/zecarreto/geocode',
+  path: '/api/zecarreto/geocode',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiZecarretoNotificationsRoute =
   ApiZecarretoNotificationsRouteImport.update({
     id: '/api/zecarreto/notifications',
@@ -227,6 +243,11 @@ const ApiZecarretoQuotesRoute = ApiZecarretoQuotesRouteImport.update({
   path: '/api/zecarreto/quotes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiZecarretoRecommendRoute = ApiZecarretoRecommendRouteImport.update({
+  id: '/api/zecarreto/recommend',
+  path: '/api/zecarreto/recommend',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiZecarretoRidesRoute = ApiZecarretoRidesRouteImport.update({
   id: '/api/zecarreto/rides',
   path: '/api/zecarreto/rides',
@@ -237,12 +258,27 @@ const ApiZecarretoWalletRoute = ApiZecarretoWalletRouteImport.update({
   path: '/api/zecarreto/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZecarretoAdminPrecosRoute = ZecarretoAdminPrecosRouteImport.update({
+  id: '/precos',
+  path: '/precos',
+  getParentRoute: () => ZecarretoAdminRoute,
+} as any)
 const ZecarretoMotoristaVeiculosRoute =
   ZecarretoMotoristaVeiculosRouteImport.update({
     id: '/veiculos',
     path: '/veiculos',
     getParentRoute: () => ZecarretoMotoristaRoute,
   } as any)
+const ZecarretoPedidoRideIdRoute = ZecarretoPedidoRideIdRouteImport.update({
+  id: '/zecarreto/pedido/$rideId',
+  path: '/zecarreto/pedido/$rideId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiZecarretoAdminAddonsRoute = ApiZecarretoAdminAddonsRouteImport.update({
+  id: '/api/zecarreto/admin/addons',
+  path: '/api/zecarreto/admin/addons',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiZecarretoAdminDocumentsRoute =
   ApiZecarretoAdminDocumentsRouteImport.update({
     id: '/api/zecarreto/admin/documents',
@@ -484,11 +520,12 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/api/upload-image': typeof ApiUploadImageRoute
-  '/zecarreto/admin': typeof ZecarretoAdminRoute
+  '/zecarreto/admin': typeof ZecarretoAdminRouteWithChildren
   '/zecarreto/conta': typeof ZecarretoContaRoute
   '/zecarreto/enderecos': typeof ZecarretoEnderecosRoute
   '/zecarreto/entrar': typeof ZecarretoEntrarRoute
   '/zecarreto/motorista': typeof ZecarretoMotoristaRouteWithChildren
+  '/zecarreto/pedir': typeof ZecarretoPedirRoute
   '/zecarreto/': typeof ZecarretoIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/export/$id': typeof AuthenticatedExportIdRoute
@@ -501,13 +538,18 @@ export interface FileRoutesByFullPath {
   '/api/public/request-close-table': typeof ApiPublicRequestCloseTableRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/zecarreto/catalog': typeof ApiZecarretoCatalogRoute
+  '/api/zecarreto/geocode': typeof ApiZecarretoGeocodeRoute
   '/api/zecarreto/notifications': typeof ApiZecarretoNotificationsRoute
   '/api/zecarreto/offers': typeof ApiZecarretoOffersRouteWithChildren
   '/api/zecarreto/payouts': typeof ApiZecarretoPayoutsRoute
   '/api/zecarreto/quotes': typeof ApiZecarretoQuotesRoute
+  '/api/zecarreto/recommend': typeof ApiZecarretoRecommendRoute
   '/api/zecarreto/rides': typeof ApiZecarretoRidesRouteWithChildren
   '/api/zecarreto/wallet': typeof ApiZecarretoWalletRoute
+  '/zecarreto/admin/precos': typeof ZecarretoAdminPrecosRoute
   '/zecarreto/motorista/veiculos': typeof ZecarretoMotoristaVeiculosRoute
+  '/zecarreto/pedido/$rideId': typeof ZecarretoPedidoRideIdRoute
+  '/api/zecarreto/admin/addons': typeof ApiZecarretoAdminAddonsRoute
   '/api/zecarreto/admin/documents': typeof ApiZecarretoAdminDocumentsRouteWithChildren
   '/api/zecarreto/admin/drivers': typeof ApiZecarretoAdminDriversRouteWithChildren
   '/api/zecarreto/admin/history': typeof ApiZecarretoAdminHistoryRoute
@@ -555,11 +597,12 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/api/upload-image': typeof ApiUploadImageRoute
-  '/zecarreto/admin': typeof ZecarretoAdminRoute
+  '/zecarreto/admin': typeof ZecarretoAdminRouteWithChildren
   '/zecarreto/conta': typeof ZecarretoContaRoute
   '/zecarreto/enderecos': typeof ZecarretoEnderecosRoute
   '/zecarreto/entrar': typeof ZecarretoEntrarRoute
   '/zecarreto/motorista': typeof ZecarretoMotoristaRouteWithChildren
+  '/zecarreto/pedir': typeof ZecarretoPedirRoute
   '/': typeof AuthenticatedIndexRoute
   '/zecarreto': typeof ZecarretoIndexRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
@@ -573,13 +616,18 @@ export interface FileRoutesByTo {
   '/api/public/request-close-table': typeof ApiPublicRequestCloseTableRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/zecarreto/catalog': typeof ApiZecarretoCatalogRoute
+  '/api/zecarreto/geocode': typeof ApiZecarretoGeocodeRoute
   '/api/zecarreto/notifications': typeof ApiZecarretoNotificationsRoute
   '/api/zecarreto/offers': typeof ApiZecarretoOffersRouteWithChildren
   '/api/zecarreto/payouts': typeof ApiZecarretoPayoutsRoute
   '/api/zecarreto/quotes': typeof ApiZecarretoQuotesRoute
+  '/api/zecarreto/recommend': typeof ApiZecarretoRecommendRoute
   '/api/zecarreto/rides': typeof ApiZecarretoRidesRouteWithChildren
   '/api/zecarreto/wallet': typeof ApiZecarretoWalletRoute
+  '/zecarreto/admin/precos': typeof ZecarretoAdminPrecosRoute
   '/zecarreto/motorista/veiculos': typeof ZecarretoMotoristaVeiculosRoute
+  '/zecarreto/pedido/$rideId': typeof ZecarretoPedidoRideIdRoute
+  '/api/zecarreto/admin/addons': typeof ApiZecarretoAdminAddonsRoute
   '/api/zecarreto/admin/documents': typeof ApiZecarretoAdminDocumentsRouteWithChildren
   '/api/zecarreto/admin/drivers': typeof ApiZecarretoAdminDriversRouteWithChildren
   '/api/zecarreto/admin/history': typeof ApiZecarretoAdminHistoryRoute
@@ -629,11 +677,12 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/api/upload-image': typeof ApiUploadImageRoute
-  '/zecarreto/admin': typeof ZecarretoAdminRoute
+  '/zecarreto/admin': typeof ZecarretoAdminRouteWithChildren
   '/zecarreto/conta': typeof ZecarretoContaRoute
   '/zecarreto/enderecos': typeof ZecarretoEnderecosRoute
   '/zecarreto/entrar': typeof ZecarretoEntrarRoute
   '/zecarreto/motorista': typeof ZecarretoMotoristaRouteWithChildren
+  '/zecarreto/pedir': typeof ZecarretoPedirRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/zecarreto/': typeof ZecarretoIndexRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
@@ -647,13 +696,18 @@ export interface FileRoutesById {
   '/api/public/request-close-table': typeof ApiPublicRequestCloseTableRoute
   '/api/public/submit-order': typeof ApiPublicSubmitOrderRoute
   '/api/zecarreto/catalog': typeof ApiZecarretoCatalogRoute
+  '/api/zecarreto/geocode': typeof ApiZecarretoGeocodeRoute
   '/api/zecarreto/notifications': typeof ApiZecarretoNotificationsRoute
   '/api/zecarreto/offers': typeof ApiZecarretoOffersRouteWithChildren
   '/api/zecarreto/payouts': typeof ApiZecarretoPayoutsRoute
   '/api/zecarreto/quotes': typeof ApiZecarretoQuotesRoute
+  '/api/zecarreto/recommend': typeof ApiZecarretoRecommendRoute
   '/api/zecarreto/rides': typeof ApiZecarretoRidesRouteWithChildren
   '/api/zecarreto/wallet': typeof ApiZecarretoWalletRoute
+  '/zecarreto/admin/precos': typeof ZecarretoAdminPrecosRoute
   '/zecarreto/motorista/veiculos': typeof ZecarretoMotoristaVeiculosRoute
+  '/zecarreto/pedido/$rideId': typeof ZecarretoPedidoRideIdRoute
+  '/api/zecarreto/admin/addons': typeof ApiZecarretoAdminAddonsRoute
   '/api/zecarreto/admin/documents': typeof ApiZecarretoAdminDocumentsRouteWithChildren
   '/api/zecarreto/admin/drivers': typeof ApiZecarretoAdminDriversRouteWithChildren
   '/api/zecarreto/admin/history': typeof ApiZecarretoAdminHistoryRoute
@@ -709,6 +763,7 @@ export interface FileRouteTypes {
     | '/zecarreto/enderecos'
     | '/zecarreto/entrar'
     | '/zecarreto/motorista'
+    | '/zecarreto/pedir'
     | '/zecarreto/'
     | '/edit/$id'
     | '/export/$id'
@@ -721,13 +776,18 @@ export interface FileRouteTypes {
     | '/api/public/request-close-table'
     | '/api/public/submit-order'
     | '/api/zecarreto/catalog'
+    | '/api/zecarreto/geocode'
     | '/api/zecarreto/notifications'
     | '/api/zecarreto/offers'
     | '/api/zecarreto/payouts'
     | '/api/zecarreto/quotes'
+    | '/api/zecarreto/recommend'
     | '/api/zecarreto/rides'
     | '/api/zecarreto/wallet'
+    | '/zecarreto/admin/precos'
     | '/zecarreto/motorista/veiculos'
+    | '/zecarreto/pedido/$rideId'
+    | '/api/zecarreto/admin/addons'
     | '/api/zecarreto/admin/documents'
     | '/api/zecarreto/admin/drivers'
     | '/api/zecarreto/admin/history'
@@ -780,6 +840,7 @@ export interface FileRouteTypes {
     | '/zecarreto/enderecos'
     | '/zecarreto/entrar'
     | '/zecarreto/motorista'
+    | '/zecarreto/pedir'
     | '/'
     | '/zecarreto'
     | '/edit/$id'
@@ -793,13 +854,18 @@ export interface FileRouteTypes {
     | '/api/public/request-close-table'
     | '/api/public/submit-order'
     | '/api/zecarreto/catalog'
+    | '/api/zecarreto/geocode'
     | '/api/zecarreto/notifications'
     | '/api/zecarreto/offers'
     | '/api/zecarreto/payouts'
     | '/api/zecarreto/quotes'
+    | '/api/zecarreto/recommend'
     | '/api/zecarreto/rides'
     | '/api/zecarreto/wallet'
+    | '/zecarreto/admin/precos'
     | '/zecarreto/motorista/veiculos'
+    | '/zecarreto/pedido/$rideId'
+    | '/api/zecarreto/admin/addons'
     | '/api/zecarreto/admin/documents'
     | '/api/zecarreto/admin/drivers'
     | '/api/zecarreto/admin/history'
@@ -853,6 +919,7 @@ export interface FileRouteTypes {
     | '/zecarreto/enderecos'
     | '/zecarreto/entrar'
     | '/zecarreto/motorista'
+    | '/zecarreto/pedir'
     | '/_authenticated/'
     | '/zecarreto/'
     | '/_authenticated/edit/$id'
@@ -866,13 +933,18 @@ export interface FileRouteTypes {
     | '/api/public/request-close-table'
     | '/api/public/submit-order'
     | '/api/zecarreto/catalog'
+    | '/api/zecarreto/geocode'
     | '/api/zecarreto/notifications'
     | '/api/zecarreto/offers'
     | '/api/zecarreto/payouts'
     | '/api/zecarreto/quotes'
+    | '/api/zecarreto/recommend'
     | '/api/zecarreto/rides'
     | '/api/zecarreto/wallet'
+    | '/zecarreto/admin/precos'
     | '/zecarreto/motorista/veiculos'
+    | '/zecarreto/pedido/$rideId'
+    | '/api/zecarreto/admin/addons'
     | '/api/zecarreto/admin/documents'
     | '/api/zecarreto/admin/drivers'
     | '/api/zecarreto/admin/history'
@@ -922,11 +994,12 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiUploadImageRoute: typeof ApiUploadImageRoute
-  ZecarretoAdminRoute: typeof ZecarretoAdminRoute
+  ZecarretoAdminRoute: typeof ZecarretoAdminRouteWithChildren
   ZecarretoContaRoute: typeof ZecarretoContaRoute
   ZecarretoEnderecosRoute: typeof ZecarretoEnderecosRoute
   ZecarretoEntrarRoute: typeof ZecarretoEntrarRoute
   ZecarretoMotoristaRoute: typeof ZecarretoMotoristaRouteWithChildren
+  ZecarretoPedirRoute: typeof ZecarretoPedirRoute
   ZecarretoIndexRoute: typeof ZecarretoIndexRoute
   ApiInternalDeprovisionRestaurantRoute: typeof ApiInternalDeprovisionRestaurantRoute
   ApiInternalProvisionRestaurantRoute: typeof ApiInternalProvisionRestaurantRoute
@@ -936,12 +1009,16 @@ export interface RootRouteChildren {
   ApiPublicRequestCloseTableRoute: typeof ApiPublicRequestCloseTableRoute
   ApiPublicSubmitOrderRoute: typeof ApiPublicSubmitOrderRoute
   ApiZecarretoCatalogRoute: typeof ApiZecarretoCatalogRoute
+  ApiZecarretoGeocodeRoute: typeof ApiZecarretoGeocodeRoute
   ApiZecarretoNotificationsRoute: typeof ApiZecarretoNotificationsRoute
   ApiZecarretoOffersRoute: typeof ApiZecarretoOffersRouteWithChildren
   ApiZecarretoPayoutsRoute: typeof ApiZecarretoPayoutsRoute
   ApiZecarretoQuotesRoute: typeof ApiZecarretoQuotesRoute
+  ApiZecarretoRecommendRoute: typeof ApiZecarretoRecommendRoute
   ApiZecarretoRidesRoute: typeof ApiZecarretoRidesRouteWithChildren
   ApiZecarretoWalletRoute: typeof ApiZecarretoWalletRoute
+  ZecarretoPedidoRideIdRoute: typeof ZecarretoPedidoRideIdRoute
+  ApiZecarretoAdminAddonsRoute: typeof ApiZecarretoAdminAddonsRoute
   ApiZecarretoAdminDocumentsRoute: typeof ApiZecarretoAdminDocumentsRouteWithChildren
   ApiZecarretoAdminDriversRoute: typeof ApiZecarretoAdminDriversRouteWithChildren
   ApiZecarretoAdminHistoryRoute: typeof ApiZecarretoAdminHistoryRoute
@@ -1058,6 +1135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZecarretoMotoristaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/zecarreto/pedir': {
+      id: '/zecarreto/pedir'
+      path: '/zecarreto/pedir'
+      fullPath: '/zecarreto/pedir'
+      preLoaderRoute: typeof ZecarretoPedirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/edit/$id': {
       id: '/_authenticated/edit/$id'
       path: '/edit/$id'
@@ -1135,6 +1219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiZecarretoCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/zecarreto/geocode': {
+      id: '/api/zecarreto/geocode'
+      path: '/api/zecarreto/geocode'
+      fullPath: '/api/zecarreto/geocode'
+      preLoaderRoute: typeof ApiZecarretoGeocodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/zecarreto/notifications': {
       id: '/api/zecarreto/notifications'
       path: '/api/zecarreto/notifications'
@@ -1163,6 +1254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiZecarretoQuotesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/zecarreto/recommend': {
+      id: '/api/zecarreto/recommend'
+      path: '/api/zecarreto/recommend'
+      fullPath: '/api/zecarreto/recommend'
+      preLoaderRoute: typeof ApiZecarretoRecommendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/zecarreto/rides': {
       id: '/api/zecarreto/rides'
       path: '/api/zecarreto/rides'
@@ -1177,12 +1275,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiZecarretoWalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/zecarreto/admin/precos': {
+      id: '/zecarreto/admin/precos'
+      path: '/precos'
+      fullPath: '/zecarreto/admin/precos'
+      preLoaderRoute: typeof ZecarretoAdminPrecosRouteImport
+      parentRoute: typeof ZecarretoAdminRoute
+    }
     '/zecarreto/motorista/veiculos': {
       id: '/zecarreto/motorista/veiculos'
       path: '/veiculos'
       fullPath: '/zecarreto/motorista/veiculos'
       preLoaderRoute: typeof ZecarretoMotoristaVeiculosRouteImport
       parentRoute: typeof ZecarretoMotoristaRoute
+    }
+    '/zecarreto/pedido/$rideId': {
+      id: '/zecarreto/pedido/$rideId'
+      path: '/zecarreto/pedido/$rideId'
+      fullPath: '/zecarreto/pedido/$rideId'
+      preLoaderRoute: typeof ZecarretoPedidoRideIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/zecarreto/admin/addons': {
+      id: '/api/zecarreto/admin/addons'
+      path: '/api/zecarreto/admin/addons'
+      fullPath: '/api/zecarreto/admin/addons'
+      preLoaderRoute: typeof ApiZecarretoAdminAddonsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/zecarreto/admin/documents': {
       id: '/api/zecarreto/admin/documents'
@@ -1495,6 +1614,18 @@ const ApiMenuSyncRouteWithChildren = ApiMenuSyncRoute._addFileChildren(
   ApiMenuSyncRouteChildren,
 )
 
+interface ZecarretoAdminRouteChildren {
+  ZecarretoAdminPrecosRoute: typeof ZecarretoAdminPrecosRoute
+}
+
+const ZecarretoAdminRouteChildren: ZecarretoAdminRouteChildren = {
+  ZecarretoAdminPrecosRoute: ZecarretoAdminPrecosRoute,
+}
+
+const ZecarretoAdminRouteWithChildren = ZecarretoAdminRoute._addFileChildren(
+  ZecarretoAdminRouteChildren,
+)
+
 interface ZecarretoMotoristaRouteChildren {
   ZecarretoMotoristaVeiculosRoute: typeof ZecarretoMotoristaVeiculosRoute
 }
@@ -1686,11 +1817,12 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiUploadImageRoute: ApiUploadImageRoute,
-  ZecarretoAdminRoute: ZecarretoAdminRoute,
+  ZecarretoAdminRoute: ZecarretoAdminRouteWithChildren,
   ZecarretoContaRoute: ZecarretoContaRoute,
   ZecarretoEnderecosRoute: ZecarretoEnderecosRoute,
   ZecarretoEntrarRoute: ZecarretoEntrarRoute,
   ZecarretoMotoristaRoute: ZecarretoMotoristaRouteWithChildren,
+  ZecarretoPedirRoute: ZecarretoPedirRoute,
   ZecarretoIndexRoute: ZecarretoIndexRoute,
   ApiInternalDeprovisionRestaurantRoute: ApiInternalDeprovisionRestaurantRoute,
   ApiInternalProvisionRestaurantRoute: ApiInternalProvisionRestaurantRoute,
@@ -1700,12 +1832,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicRequestCloseTableRoute: ApiPublicRequestCloseTableRoute,
   ApiPublicSubmitOrderRoute: ApiPublicSubmitOrderRoute,
   ApiZecarretoCatalogRoute: ApiZecarretoCatalogRoute,
+  ApiZecarretoGeocodeRoute: ApiZecarretoGeocodeRoute,
   ApiZecarretoNotificationsRoute: ApiZecarretoNotificationsRoute,
   ApiZecarretoOffersRoute: ApiZecarretoOffersRouteWithChildren,
   ApiZecarretoPayoutsRoute: ApiZecarretoPayoutsRoute,
   ApiZecarretoQuotesRoute: ApiZecarretoQuotesRoute,
+  ApiZecarretoRecommendRoute: ApiZecarretoRecommendRoute,
   ApiZecarretoRidesRoute: ApiZecarretoRidesRouteWithChildren,
   ApiZecarretoWalletRoute: ApiZecarretoWalletRoute,
+  ZecarretoPedidoRideIdRoute: ZecarretoPedidoRideIdRoute,
+  ApiZecarretoAdminAddonsRoute: ApiZecarretoAdminAddonsRoute,
   ApiZecarretoAdminDocumentsRoute: ApiZecarretoAdminDocumentsRouteWithChildren,
   ApiZecarretoAdminDriversRoute: ApiZecarretoAdminDriversRouteWithChildren,
   ApiZecarretoAdminHistoryRoute: ApiZecarretoAdminHistoryRoute,

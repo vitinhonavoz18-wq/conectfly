@@ -1,5 +1,9 @@
 # ZÉ CARRETO — Fase 1 (fundação)
 
+> **Fase 3 (pedido e preço) concluída** — home com as categorias, pedido em
+> 5 passos com mapa, motor de tarifas configurável e snapshot financeiro.
+> Ver [FASE-3-pedido-e-preco.md](./FASE-3-pedido-e-preco.md).
+>
 > **Fase 2 (cadastros) concluída** — telas de entrada, cadastro de cliente,
 > cadastro do carreteiro, "Meus veículos" e painel de aprovação.
 > Ver [FASE-2-cadastros.md](./FASE-2-cadastros.md).
@@ -182,15 +186,15 @@ Duas travas importantes:
 
 Coisas que **ainda não existem** e precisam entrar:
 
-- ~~**As telas.**~~ Feito na Fase 2: entrada, conta do cliente, endereços,
-  área do carreteiro, "Meus veículos" e painel de aprovação. Falta a tela
-  de PEDIR o carreto (Fase 3).
+- ~~**As telas.**~~ Feito nas Fases 2 e 3: entrada, conta do cliente,
+  endereços, área do carreteiro, "Meus veículos", painel de aprovação,
+  pedido de carreto e preços do admin.
 - **Pagamento de verdade.** Pix automático e cartão. Hoje existe só o
   "provedor manual": a cobrança é registrada e alguém confirma na mão. O
   lugar de plugar o provedor já está pronto e isolado.
-- **Mapa e rota de verdade.** Hoje a distância é calculada em linha reta
-  com um acréscimo de 30% (rua não é régua). Com um serviço de mapas, a
-  estimativa fica exata. O lugar de plugar também já está pronto.
+- **Rota de verdade.** O mapa entrou na Fase 3 (OpenStreetMap), mas a
+  DISTÂNCIA ainda é linha reta + 30% (rua não é régua). Com um serviço de
+  mapas pago, a estimativa fica exata. O lugar de plugar já está pronto.
 - **As rodadas de busca rodando sozinhas.** Hoje a próxima rodada de
   ofertas precisa ser acionada; falta a tarefa automática que roda de
   minuto em minuto.

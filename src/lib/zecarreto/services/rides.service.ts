@@ -17,7 +17,7 @@ import type { ZcCaller } from "../http/auth";
 import { primaryRole } from "../http/auth";
 import type { CreateRideInput } from "../validation";
 import { consumeQuote, markQuoteConsumed, priceRide } from "./pricing.service";
-import { resolveTariff } from "./catalog.service";
+import { getNumberSetting } from "./settings.service";
 import { recordAudit } from "./audit.service";
 import { notify } from "./notifications.service";
 import { creditRideEarnings, reverseRideEarnings } from "./wallet.service";
@@ -67,44 +67,71 @@ export async function createRide(caller: ZcCaller, input: CreateRideInput): Prom
     if (existing) return withStops(existing);
   }
 
-  let priced;
+  await assertScheduleWindow(input);
+  await assertStopsLimit(input.stops.length);
+
+  interface PricedForRide {
+    regionId: string | null;
+    tariffId: string | null;
+    snapshot: Json;
+    lines: unknown;
+    addons: Json;
+    distanceMeters: number;
+    durationSeconds: number;
+    subtotalCents: number;
+    surchargeCents: number;
+    tollCents: number;
+    serviceFeeCents: number;
+    totalCents: number;
+    platformFeeCents: number;
+    driverNetCents: number;
+    currency: string;
+  }
+
+  let priced: PricedForRide;
   let quoteId: string | null = null;
 
   if (input.quote_id) {
+    // Orçamento na mão: o preço é O DO ORÇAMENTO, ponto. Nada é
+    // recalculado — nem se a tabela de preços mudou no meio do caminho.
+    // É o cupom impresso no caixa: enquanto vale, vale aquele valor.
     const quote = await consumeQuote(input.quote_id, caller.profileId);
     quoteId = quote.id;
-    const tariff = await resolveTariff(quote.category_id, quote.region_id);
     priced = {
       regionId: quote.region_id,
-      tariff,
+      tariffId: quote.tariff_id,
+      snapshot: quote.tariff_snapshot,
+      lines: (quote.breakdown as { lines?: unknown[] })?.lines ?? [],
+      addons: quote.addons,
       distanceMeters: quote.distance_meters,
       durationSeconds: quote.duration_seconds,
-      quote: {
-        subtotalCents: quote.subtotal_cents,
-        surchargeCents: quote.surcharge_cents,
-        totalCents: quote.total_cents,
-        platformFeeCents: quote.platform_fee_cents,
-        driverNetCents: quote.driver_net_cents,
-        currency: quote.currency,
-        lines: (quote.breakdown as { lines?: unknown[] })?.lines ?? [],
-      },
+      subtotalCents: quote.subtotal_cents,
+      surchargeCents: quote.surcharge_cents,
+      tollCents: quote.toll_cents,
+      serviceFeeCents: quote.service_fee_cents,
+      totalCents: quote.total_cents,
+      platformFeeCents: quote.platform_fee_cents,
+      driverNetCents: quote.driver_net_cents,
+      currency: quote.currency,
     };
   } else {
     const fresh = await priceRide(input);
     priced = {
       regionId: fresh.regionId,
-      tariff: fresh.tariff,
+      tariffId: fresh.tariff.id,
+      snapshot: fresh.snapshot as unknown as Json,
+      lines: fresh.quote.lines,
+      addons: fresh.quote.addons as unknown as Json,
       distanceMeters: fresh.distanceMeters,
       durationSeconds: fresh.durationSeconds,
-      quote: {
-        subtotalCents: fresh.quote.subtotalCents,
-        surchargeCents: fresh.quote.surchargeCents,
-        totalCents: fresh.quote.totalCents,
-        platformFeeCents: fresh.quote.platformFeeCents,
-        driverNetCents: fresh.quote.driverNetCents,
-        currency: fresh.quote.currency,
-        lines: fresh.quote.lines,
-      },
+      subtotalCents: fresh.quote.subtotalCents,
+      surchargeCents: fresh.quote.surchargeCents,
+      tollCents: fresh.quote.tollCents,
+      serviceFeeCents: fresh.quote.serviceFeeCents,
+      totalCents: fresh.quote.totalCents,
+      platformFeeCents: fresh.quote.platformFeeCents,
+      driverNetCents: fresh.quote.driverNetCents,
+      currency: fresh.quote.currency,
     };
   }
 
@@ -115,7 +142,7 @@ export async function createRide(caller: ZcCaller, input: CreateRideInput): Prom
       customer_profile_id: caller.profileId,
       region_id: priced.regionId,
       category_id: input.category_id,
-      tariff_id: priced.tariff.id,
+      tariff_id: priced.tariffId,
       quote_id: quoteId,
       modality: input.modality,
       scheduled_for: input.scheduled_for ?? null,
@@ -125,13 +152,19 @@ export async function createRide(caller: ZcCaller, input: CreateRideInput): Prom
       notes: input.notes ?? null,
       distance_meters: priced.distanceMeters,
       duration_seconds: priced.durationSeconds,
-      price_breakdown: { lines: priced.quote.lines } as unknown as Json,
-      subtotal_cents: priced.quote.subtotalCents,
-      surcharge_cents: priced.quote.surchargeCents,
-      total_cents: priced.quote.totalCents,
-      platform_fee_cents: priced.quote.platformFeeCents,
-      driver_earnings_cents: priced.quote.driverNetCents,
-      currency: priced.quote.currency,
+      price_breakdown: { lines: priced.lines } as unknown as Json,
+      tariff_snapshot: priced.snapshot,
+      addons: priced.addons,
+      items: (input.items ?? []) as unknown as Json,
+      items_description: input.items_description ?? null,
+      toll_cents: priced.tollCents,
+      service_fee_cents: priced.serviceFeeCents,
+      subtotal_cents: priced.subtotalCents,
+      surcharge_cents: priced.surchargeCents,
+      total_cents: priced.totalCents,
+      platform_fee_cents: priced.platformFeeCents,
+      driver_earnings_cents: priced.driverNetCents,
+      currency: priced.currency,
       requested_at: new Date().toISOString(),
       idempotency_key: input.idempotency_key ?? null,
     })
@@ -504,5 +537,42 @@ async function notifyRideParties(ride: ZcRideRow, status: ZcRideStatus): Promise
         dedupeKey: `${ride.id}:${status}:driver`,
       }).catch((error) => console.error("[ZC] notificação falhou:", error));
     }
+  }
+}
+
+/**
+ * Confere a janela de agendamento.
+ * Agendar para daqui a dez minutos não dá tempo de achar motorista; e
+ * agendar para daqui a um ano não faz sentido — o preço de hoje não vale
+ * para o ano que vem.
+ */
+async function assertScheduleWindow(input: { modality: string; scheduled_for?: string }) {
+  if (input.modality !== "scheduled") return;
+  if (!input.scheduled_for) {
+    throw zcError.validation("Carreto agendado precisa de data e hora.");
+  }
+
+  const [minLeadMinutes, maxLeadDays] = await Promise.all([
+    getNumberSetting("order.min_lead_minutes"),
+    getNumberSetting("order.max_lead_days"),
+  ]);
+
+  const scheduled = new Date(input.scheduled_for).getTime();
+  const now = Date.now();
+
+  if (scheduled < now + minLeadMinutes * 60_000) {
+    throw zcError.validation(
+      `Agende com pelo menos ${minLeadMinutes} minutos de antecedência. Para agora, escolha "imediato".`,
+    );
+  }
+  if (scheduled > now + maxLeadDays * 86_400_000) {
+    throw zcError.validation(`Só dá para agendar com até ${maxLeadDays} dias de antecedência.`);
+  }
+}
+
+async function assertStopsLimit(stopsCount: number) {
+  const maxStops = await getNumberSetting("order.max_stops");
+  if (stopsCount > maxStops) {
+    throw zcError.validation(`Um carreto pode ter no máximo ${maxStops} paradas.`);
   }
 }

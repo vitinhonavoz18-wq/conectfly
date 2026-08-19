@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, MapPin, ShieldCheck, Truck, User } from "lucide-react";
+import { Loader2, MapPin, Package, ShieldCheck, Truck, User } from "lucide-react";
 import { ZcShell } from "@/components/zecarreto/ZcShell";
 import { useZcSession } from "@/components/zecarreto/useZcSession";
 import { zcApi } from "@/lib/zecarreto/client";
@@ -42,6 +42,12 @@ function HubPage() {
       subtitle="O que você quer fazer agora?"
     >
       <div className="grid gap-3">
+        <HubCard
+          to="/zecarreto/pedir"
+          icon={<Package className="h-5 w-5" />}
+          title="Pedir um carreto"
+          description="Escolha o veículo, os endereços e veja o preço na hora."
+        />
         <HubCard
           to="/zecarreto/conta"
           icon={<User className="h-5 w-5" />}

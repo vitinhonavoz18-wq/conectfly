@@ -100,6 +100,7 @@ export type ZcVehicleCategoryRow = Timestamps & {
   description: string | null;
   examples: string | null;
   max_weight_kg: number | null;
+  max_volume_m3: number | null;
   max_length_cm: number | null;
   max_width_cm: number | null;
   max_height_cm: number | null;
@@ -122,6 +123,12 @@ export type ZcTariffRow = Timestamps & {
   price_per_km_cents: number;
   price_per_minute_cents: number;
   minimum_fare_cents: number;
+  included_km: number;
+  service_fee_cents: number;
+  service_fee_pct: number;
+  toll_policy: "none" | "fixed" | "route";
+  toll_fixed_cents: number;
+  toll_applies_above_km: number;
   extra_stop_cents: number;
   helper_cents: number;
   waiting_per_minute_cents: number;
@@ -278,6 +285,11 @@ export type ZcQuoteRow = {
   stops_count: number;
   helpers_count: number;
   breakdown: Json;
+  tariff_snapshot: Json;
+  addons: Json;
+  items: Json;
+  toll_cents: number;
+  service_fee_cents: number;
   subtotal_cents: number;
   surcharge_cents: number;
   total_cents: number;
@@ -310,6 +322,12 @@ export type ZcRideRow = Timestamps & {
   distance_meters: number;
   duration_seconds: number;
   price_breakdown: Json;
+  tariff_snapshot: Json;
+  addons: Json;
+  items: Json;
+  items_description: string | null;
+  toll_cents: number;
+  service_fee_cents: number;
   subtotal_cents: number;
   surcharge_cents: number;
   total_cents: number;
@@ -537,6 +555,40 @@ export type ZcSupportTicketRow = Timestamps & {
   metadata: Json;
 };
 
+export type ZcTariffAddonRow = Timestamps & {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  region_id: string | null;
+  category_id: string | null;
+  pricing_mode: "fixed" | "per_unit" | "per_floor" | "percent";
+  amount_cents: number;
+  percent: number;
+  max_quantity: number;
+  requires_quantity: boolean;
+  icon: string | null;
+  sort_order: number;
+  active: boolean;
+  metadata: Json;
+  deleted_at: string | null;
+};
+
+export type ZcItemPresetRow = Timestamps & {
+  id: string;
+  code: string;
+  name: string;
+  group_name: string;
+  volume_m3: number;
+  weight_kg: number;
+  is_heavy: boolean;
+  needs_two_people: boolean;
+  icon: string | null;
+  sort_order: number;
+  active: boolean;
+  deleted_at: string | null;
+};
+
 export type ZcTermsAcceptanceRow = {
   id: string;
   profile_id: string;
@@ -675,6 +727,8 @@ export type ZecarretoDatabase = {
         ZcTermsAcceptanceRow,
         Insertable<ZcTermsAcceptanceRow, "profile_id" | "audience" | "terms_version">
       >;
+      zc_tariff_addons: Table<ZcTariffAddonRow, Insertable<ZcTariffAddonRow, "code" | "name">>;
+      zc_item_presets: Table<ZcItemPresetRow, Insertable<ZcItemPresetRow, "code" | "name">>;
       zc_record_history: Table<
         ZcRecordHistoryRow,
         Insertable<ZcRecordHistoryRow, "entity_table" | "entity_id" | "field">
