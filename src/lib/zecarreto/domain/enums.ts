@@ -13,7 +13,7 @@ export const ZC_ACCOUNT_STATUSES = ["active", "pending", "suspended", "banned"] 
 export type ZcAccountStatus = (typeof ZC_ACCOUNT_STATUSES)[number];
 
 export const ZC_DRIVER_STATUSES = [
-  "pending_documents",
+  "pending",
   "under_review",
   "approved",
   "rejected",
@@ -35,9 +35,13 @@ export const ZC_DOCUMENT_TYPES = [
   "proof_of_address",
   "criminal_record",
   "bank_proof",
+  "selfie",
   "other",
 ] as const;
 export type ZcDocumentType = (typeof ZC_DOCUMENT_TYPES)[number];
+
+export const ZC_VEHICLE_STATUSES = ["pending", "approved", "rejected", "inactive"] as const;
+export type ZcVehicleStatus = (typeof ZC_VEHICLE_STATUSES)[number];
 
 export const ZC_DOCUMENT_STATUSES = [
   "pending",

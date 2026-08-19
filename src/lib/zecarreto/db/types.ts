@@ -32,6 +32,7 @@ import type {
   ZcTicketStatus,
   ZcTransactionKind,
   ZcTransactionStatus,
+  ZcVehicleStatus,
 } from "../domain/enums";
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
@@ -192,6 +193,11 @@ export type ZcVehicleRow = Timestamps & {
   capacity_kg: number | null;
   body_type: string | null;
   has_tarp: boolean;
+  status: ZcVehicleStatus;
+  rejection_reason: string | null;
+  photos: Json;
+  notes: string | null;
+  reviewed_at: string | null;
   active: boolean;
   verified_at: string | null;
   verified_by: string | null;
@@ -531,6 +537,29 @@ export type ZcSupportTicketRow = Timestamps & {
   metadata: Json;
 };
 
+export type ZcTermsAcceptanceRow = {
+  id: string;
+  profile_id: string;
+  audience: ZcRole;
+  terms_version: string;
+  accepted_at: string;
+  ip: string | null;
+  user_agent: string | null;
+};
+
+export type ZcRecordHistoryRow = {
+  id: number;
+  entity_table: string;
+  entity_id: string;
+  field: string;
+  old_value: string | null;
+  new_value: string | null;
+  is_masked: boolean;
+  changed_by: string | null;
+  reason: string | null;
+  created_at: string;
+};
+
 export type ZcSupportMessageRow = {
   id: string;
   ticket_id: string;
@@ -642,6 +671,14 @@ export type ZecarretoDatabase = {
         ZcSupportMessageRow,
         Insertable<ZcSupportMessageRow, "ticket_id" | "body">
       >;
+      zc_terms_acceptances: Table<
+        ZcTermsAcceptanceRow,
+        Insertable<ZcTermsAcceptanceRow, "profile_id" | "audience" | "terms_version">
+      >;
+      zc_record_history: Table<
+        ZcRecordHistoryRow,
+        Insertable<ZcRecordHistoryRow, "entity_table" | "entity_id" | "field">
+      >;
     };
     Views: Record<string, never>;
     Functions: {
@@ -655,6 +692,10 @@ export type ZecarretoDatabase = {
       };
       zc_has_role: {
         Args: { _user_id: string; _role: ZcRole };
+        Returns: boolean;
+      };
+      zc_driver_can_go_online: {
+        Args: { _driver_id: string };
         Returns: boolean;
       };
       zc_ride_transition_allowed: {

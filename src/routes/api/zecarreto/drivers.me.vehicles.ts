@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { zcHandler, zcOptions } from "@/lib/zecarreto/http/route";
 import { zcError } from "@/lib/zecarreto/errors";
+import { getDriverByProfile } from "@/lib/zecarreto/services/drivers.service";
 import {
-  addVehicle,
-  getDriverByProfile,
-  listVehicles,
-} from "@/lib/zecarreto/services/drivers.service";
-import { vehicleSchema } from "@/lib/zecarreto/validation";
+  createVehicle,
+  listVehiclesWithDocuments,
+} from "@/lib/zecarreto/services/vehicles.service";
+import { vehicleUpsertSchema } from "@/lib/zecarreto/validation";
 
+/** "Meus veículos" — um motorista pode ter quantos precisar. */
 export const Route = createFileRoute("/api/zecarreto/drivers/me/vehicles")({
   server: {
     handlers: {
@@ -17,17 +18,17 @@ export const Route = createFileRoute("/api/zecarreto/drivers/me/vehicles")({
         handler: async ({ caller }) => {
           const driver = await getDriverByProfile(caller.profileId);
           if (!driver) throw zcError.notFound("Cadastro de motorista não encontrado.");
-          return listVehicles(driver.id);
+          return listVehiclesWithDocuments(driver.id);
         },
       }),
       POST: zcHandler({
         roles: ["driver"],
-        schema: vehicleSchema,
+        schema: vehicleUpsertSchema,
         audit: { action: "vehicle.create", entity: "zc_vehicles" },
         handler: async ({ caller, body }) => {
           const driver = await getDriverByProfile(caller.profileId);
           if (!driver) throw zcError.notFound("Cadastro de motorista não encontrado.");
-          return addVehicle(caller, driver.id, body);
+          return createVehicle(caller, driver.id, body);
         },
       }),
     },

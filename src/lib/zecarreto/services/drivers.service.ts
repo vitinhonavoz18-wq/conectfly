@@ -8,15 +8,19 @@
  */
 
 import { zcAdmin } from "../db/client";
-import { fromPostgresError, zcError } from "../errors";
+import { fromPostgresError, zcError, ZcError } from "../errors";
 import type { ZcDriverAvailability, ZcDriverStatus } from "../domain/enums";
 import type { ZcDocumentRow, ZcDriverRow, ZcVehicleRow } from "../db/types";
 import type { ZcCaller } from "../http/auth";
-import type { LocationPingInput, VehicleInput } from "../validation";
-import { getNumberSetting } from "./settings.service";
+import type { LocationPingInput } from "../validation";
+import { driverChecklist } from "../domain/onboarding";
+import { getNumberSetting, getSetting } from "./settings.service";
+import { currentTermsVersion, getProfile, hasAcceptedCurrentTerms } from "./account.service";
+import { listVehiclesWithDocuments } from "./vehicles.service";
 import { recordAudit } from "./audit.service";
 import { notify } from "./notifications.service";
 import { ensureWallet } from "./wallet.service";
+import { createSignedDownload, ZC_BUCKET_DOCUMENTS } from "./storage.service";
 
 export async function getDriverByProfile(profileId: string): Promise<ZcDriverRow | null> {
   const { data, error } = await zcAdmin()
@@ -51,7 +55,7 @@ export async function registerDriver(
       cnh_number: input.cnh_number ?? null,
       cnh_category: input.cnh_category ?? null,
       cnh_expires_at: input.cnh_expires_at ?? null,
-      status: "pending_documents",
+      status: "pending",
     })
     .select()
     .single();
@@ -113,16 +117,19 @@ export async function setAvailability(
   availability: ZcDriverAvailability,
 ): Promise<ZcDriverRow> {
   const db = zcAdmin();
-  const { data: driver } = await db
-    .from("zc_drivers")
-    .select("status")
-    .eq("id", driverId)
-    .maybeSingle();
-  if (!driver) throw zcError.notFound("Motorista não encontrado.");
-  if (availability !== "offline" && driver.status !== "approved") {
-    throw zcError.forbidden(
-      "Seu cadastro precisa estar aprovado para ficar online e receber carretos.",
-    );
+
+  // Ficar online exige cadastro aprovado E veículo aprovado. Quem decide é
+  // o banco (`zc_driver_can_go_online`), então a regra vale mesmo se um dia
+  // alguém chamar isto por outro caminho.
+  if (availability !== "offline") {
+    const { data: allowed, error: checkError } = await db.rpc("zc_driver_can_go_online", {
+      _driver_id: driverId,
+    });
+    if (checkError) throw fromPostgresError(checkError);
+    if (!allowed) {
+      const reason = await describeOnlineBlock(driverId);
+      throw new ZcError("ZC_DRIVER_NOT_APPROVED", reason);
+    }
   }
 
   const { data, error } = await db
@@ -133,11 +140,48 @@ export async function setAvailability(
     })
     .eq("id", driverId)
     .select()
-    .single();
+    .maybeSingle();
   if (error) throw fromPostgresError(error);
+  if (!data) throw zcError.notFound("Motorista não encontrado.");
 
   await db.from("zc_driver_locations").update({ availability }).eq("driver_id", driverId);
   return data;
+}
+
+/** Explica, em português, por que o motorista ainda não pode ficar online. */
+export async function describeOnlineBlock(driverId: string): Promise<string> {
+  const db = zcAdmin();
+  const { data: driver } = await db
+    .from("zc_drivers")
+    .select("status, suspended_until")
+    .eq("id", driverId)
+    .maybeSingle();
+
+  if (!driver) return "Cadastro de motorista não encontrado.";
+  if (driver.status === "pending") {
+    return "Termine o seu cadastro e envie os documentos para análise.";
+  }
+  if (driver.status === "under_review") {
+    return "Seu cadastro está em análise. Assim que for aprovado, você poderá ficar online.";
+  }
+  if (driver.status === "rejected") {
+    return "Seu cadastro não foi aprovado. Corrija o que foi apontado e envie de novo.";
+  }
+  if (driver.status === "suspended") {
+    return "Seu cadastro está suspenso. Fale com o suporte.";
+  }
+
+  const { data: vehicles } = await db
+    .from("zc_vehicles")
+    .select("status")
+    .eq("driver_id", driverId)
+    .is("deleted_at", null);
+
+  if (!vehicles?.length) return "Cadastre um veículo para poder ficar online.";
+  if (!vehicles.some((vehicle) => vehicle.status === "approved")) {
+    return "Nenhum veículo seu está aprovado ainda. Assim que um for aprovado, você poderá ficar online.";
+  }
+  return "Ainda não é possível ficar online. Fale com o suporte.";
 }
 
 /**
@@ -205,38 +249,6 @@ export async function updateDriverLocation(
   return { accepted: true };
 }
 
-export async function addVehicle(
-  caller: ZcCaller,
-  driverId: string,
-  input: VehicleInput,
-): Promise<ZcVehicleRow> {
-  const { data, error } = await zcAdmin()
-    .from("zc_vehicles")
-    .insert({ ...input, driver_id: driverId })
-    .select()
-    .single();
-  if (error) throw fromPostgresError(error);
-
-  // Primeiro veículo vira o veículo em uso.
-  const { data: driver } = await zcAdmin()
-    .from("zc_drivers")
-    .select("current_vehicle_id")
-    .eq("id", driverId)
-    .maybeSingle();
-  if (driver && !driver.current_vehicle_id) {
-    await zcAdmin().from("zc_drivers").update({ current_vehicle_id: data.id }).eq("id", driverId);
-  }
-
-  await recordAudit({
-    caller,
-    action: "vehicle.create",
-    entityTable: "zc_vehicles",
-    entityId: data.id,
-    after: data,
-  });
-  return data;
-}
-
 export async function listVehicles(driverId: string): Promise<ZcVehicleRow[]> {
   const { data, error } = await zcAdmin()
     .from("zc_vehicles")
@@ -289,7 +301,7 @@ export async function submitDocument(
     .from("zc_drivers")
     .update({ status: "under_review" })
     .eq("id", driverId)
-    .eq("status", "pending_documents");
+    .eq("status", "pending");
 
   await recordAudit({
     caller,
@@ -331,6 +343,10 @@ export async function reviewDocument(
   status: ZcDocumentRow["status"],
   rejectionReason?: string,
 ): Promise<ZcDocumentRow> {
+  if (status === "rejected" && !rejectionReason?.trim()) {
+    throw zcError.validation("Informe o motivo — o motorista precisa saber o que reenviar.");
+  }
+
   const { data, error } = await zcAdmin()
     .from("zc_documents")
     .update({
@@ -344,6 +360,25 @@ export async function reviewDocument(
     .maybeSingle();
   if (error) throw fromPostgresError(error);
   if (!data) throw zcError.notFound("Documento não encontrado.");
+
+  // Documento recusado sem aviso é documento que fica parado: o motorista
+  // precisa saber para reenviar.
+  if (status === "rejected" && data.driver_id) {
+    const { data: driver } = await zcAdmin()
+      .from("zc_drivers")
+      .select("profile_id")
+      .eq("id", data.driver_id)
+      .maybeSingle();
+    if (driver) {
+      await notify({
+        profileId: driver.profile_id,
+        type: "document.rejected",
+        title: "Documento não aprovado",
+        body: rejectionReason ?? "Reenvie o documento para continuar.",
+        dedupeKey: `document:${documentId}:rejected:${data.reviewed_at}`,
+      }).catch(() => undefined);
+    }
+  }
 
   await recordAudit({
     caller,
@@ -362,6 +397,12 @@ export async function reviewDriver(
   status: ZcDriverStatus,
   options: { reason?: string; suspendedUntil?: string } = {},
 ): Promise<ZcDriverRow> {
+  if ((status === "rejected" || status === "suspended") && !options.reason?.trim()) {
+    throw zcError.validation(
+      "Informe o motivo — o motorista precisa saber o que corrigir para voltar a rodar.",
+    );
+  }
+
   const db = zcAdmin();
   const patch: Partial<ZcDriverRow> = { status };
   if (status === "approved") {
@@ -436,4 +477,132 @@ export async function listDriversForAdmin(params: {
   const { data, error } = await query;
   if (error) throw fromPostgresError(error);
   return data ?? [];
+}
+
+/**
+ * Retrato completo do motorista — é o que a tela dele carrega de uma vez:
+ * dados pessoais, documentos, veículos, o que falta e se pode ficar online.
+ */
+export async function getDriverSnapshot(caller: ZcCaller) {
+  const db = zcAdmin();
+  const driver = await getDriverByProfile(caller.profileId);
+  const profile = await getProfile(caller.profileId);
+
+  const driverVersion = await currentTermsVersion("driver");
+  const acceptedTerms = await hasAcceptedCurrentTerms(caller.profileId, "driver");
+
+  if (!driver) {
+    return {
+      driver: null,
+      profile,
+      documents: [],
+      vehicles: [],
+      terms: { current_version: driverVersion, accepted: acceptedTerms },
+      checklist: null,
+      canGoOnline: false,
+      onlineBlockReason: "Abra o seu cadastro de motorista para começar.",
+    };
+  }
+
+  const [documents, vehicles, requiredDriverDocs, requiredVehicleDocs, minPhotos] =
+    await Promise.all([
+      listDocuments(driver.id),
+      listVehiclesWithDocuments(driver.id),
+      getSetting<string[]>("onboarding.required_driver_documents", ["cnh", "selfie"]),
+      getSetting<string[]>("onboarding.required_vehicle_documents", ["crlv"]),
+      getNumberSetting("onboarding.min_vehicle_photos"),
+    ]);
+
+  const checklist = driverChecklist({
+    profile: profile ?? {},
+    driver,
+    documents,
+    vehicles,
+    acceptedTerms,
+    requiredDriverDocuments: requiredDriverDocs,
+    requiredVehicleDocuments: requiredVehicleDocs,
+    minVehiclePhotos: minPhotos,
+  });
+
+  const { data: canGoOnline } = await db.rpc("zc_driver_can_go_online", { _driver_id: driver.id });
+
+  return {
+    driver,
+    profile,
+    documents,
+    vehicles,
+    terms: { current_version: driverVersion, accepted: acceptedTerms },
+    checklist,
+    canGoOnline: !!canGoOnline,
+    onlineBlockReason: canGoOnline ? null : await describeOnlineBlock(driver.id),
+  };
+}
+
+/**
+ * O motorista diz "terminei, pode analisar".
+ * Só sai do lugar se o checklist estiver completo — senão a fila do
+ * administrador enche de cadastro pela metade.
+ */
+export async function submitDriverForReview(caller: ZcCaller): Promise<ZcDriverRow> {
+  const snapshot = await getDriverSnapshot(caller);
+  if (!snapshot.driver) throw zcError.notFound("Abra o seu cadastro de motorista primeiro.");
+  if (snapshot.driver.status === "approved") return snapshot.driver;
+  if (snapshot.driver.status === "suspended") {
+    throw zcError.forbidden("Cadastro suspenso. Fale com o suporte.");
+  }
+  if (!snapshot.checklist?.canSubmitForReview) {
+    throw zcError.validation(
+      `Ainda falta: ${snapshot.checklist?.pending.join(", ")}.`,
+      snapshot.checklist?.pending,
+    );
+  }
+
+  const { data, error } = await zcAdmin()
+    .from("zc_drivers")
+    .update({ status: "under_review", rejection_reason: null })
+    .eq("id", snapshot.driver.id)
+    .select()
+    .single();
+  if (error) throw fromPostgresError(error);
+
+  await recordAudit({
+    caller,
+    action: "driver.submit_for_review",
+    entityTable: "zc_drivers",
+    entityId: data.id,
+  });
+  return data;
+}
+
+/**
+ * Fila de documentos esperando análise, já com um link temporário para o
+ * administrador abrir o arquivo. O link vence em minutos — conferir não é
+ * o mesmo que ficar com uma cópia.
+ */
+export async function listDocumentsForAdmin(params: {
+  status?: ZcDocumentRow["status"];
+  limit?: number;
+  offset?: number;
+}) {
+  const limit = params.limit ?? 20;
+  const offset = params.offset ?? 0;
+  let query = zcAdmin()
+    .from("zc_documents")
+    .select("*")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .range(offset, offset + limit - 1);
+  if (params.status) query = query.eq("status", params.status);
+
+  const { data, error } = await query;
+  if (error) throw fromPostgresError(error);
+
+  return Promise.all(
+    (data ?? []).map(async (document) => ({
+      ...document,
+      view_url: await createSignedDownload(ZC_BUCKET_DOCUMENTS, document.storage_path, 300).catch(
+        () => null,
+      ),
+    })),
+  );
 }

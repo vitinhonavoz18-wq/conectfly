@@ -1,5 +1,9 @@
 # ZÉ CARRETO — Fase 1 (fundação)
 
+> **Fase 2 (cadastros) concluída** — telas de entrada, cadastro de cliente,
+> cadastro do carreteiro, "Meus veículos" e painel de aprovação.
+> Ver [FASE-2-cadastros.md](./FASE-2-cadastros.md).
+
 > Este documento é para o **dono do projeto**, não para programador.
 > Ele explica o que foi construído, o que já funciona e o que ainda falta.
 
@@ -178,8 +182,9 @@ Duas travas importantes:
 
 Coisas que **ainda não existem** e precisam entrar:
 
-- **As telas.** Aplicativo do cliente, aplicativo do motorista e painel do
-  administrador. Nada disso foi feito nesta fase.
+- ~~**As telas.**~~ Feito na Fase 2: entrada, conta do cliente, endereços,
+  área do carreteiro, "Meus veículos" e painel de aprovação. Falta a tela
+  de PEDIR o carreto (Fase 3).
 - **Pagamento de verdade.** Pix automático e cartão. Hoje existe só o
   "provedor manual": a cobrança é registrada e alguém confirma na mão. O
   lugar de plugar o provedor já está pronto e isolado.
@@ -194,8 +199,8 @@ Coisas que **ainda não existem** e precisam entrar:
   bancária automática.
 - **Avisos no celular.** As notificações são gravadas e aparecem no app,
   mas ainda não saem como push, SMS ou WhatsApp.
-- **Envio de foto e documento.** Falta o lugar de armazenamento dos
-  arquivos (o sistema já guarda o endereço do arquivo, mas não o arquivo).
+- ~~**Envio de foto e documento.**~~ Feito na Fase 2: dois armários no
+  Supabase Storage, com link temporário e pasta por pessoa.
 
 ---
 

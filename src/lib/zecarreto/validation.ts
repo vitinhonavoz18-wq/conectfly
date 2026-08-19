@@ -9,6 +9,8 @@
 import { z } from "zod";
 import {
   ZC_CANCEL_ACTORS,
+  ZC_ROLES,
+  ZC_VEHICLE_STATUSES,
   ZC_DOCUMENT_TYPES,
   ZC_DRIVER_AVAILABILITIES,
   ZC_NOTIFICATION_CHANNELS,
@@ -231,16 +233,36 @@ export const documentUploadSchema = z.object({
   expires_at: z.string().date().optional(),
 });
 
-export const documentReviewSchema = z.object({
-  status: z.enum(["approved", "rejected", "under_review", "expired"]),
-  rejection_reason: z.string().max(500).optional(),
-});
+export const documentReviewSchema = z
+  .object({
+    status: z.enum(["approved", "rejected", "under_review", "expired"]),
+    rejection_reason: z.string().max(500).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.status === "rejected" && !value.rejection_reason?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["rejection_reason"],
+        message: "Informe o motivo — o motorista precisa saber o que reenviar.",
+      });
+    }
+  });
 
-export const driverReviewSchema = z.object({
-  status: z.enum(["approved", "rejected", "suspended", "under_review"]),
-  reason: z.string().max(500).optional(),
-  suspended_until: z.string().datetime({ offset: true }).optional(),
-});
+export const driverReviewSchema = z
+  .object({
+    status: z.enum(["approved", "rejected", "suspended", "under_review"]),
+    reason: z.string().max(500).optional(),
+    suspended_until: z.string().datetime({ offset: true }).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if ((value.status === "rejected" || value.status === "suspended") && !value.reason?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reason"],
+        message: "Informe o motivo — o motorista precisa saber o que corrigir.",
+      });
+    }
+  });
 
 export const paymentIntentSchema = z.object({
   method: z.enum(ZC_PAYMENT_METHODS),
@@ -307,6 +329,118 @@ export const settingUpdateSchema = z.object({
   key: z.string().min(3).max(80),
   value: z.unknown(),
   description: z.string().max(500).optional(),
+});
+
+// ---------------------------------------------------------------------
+// FASE 2 — cadastros
+// ---------------------------------------------------------------------
+
+export const profileUpdateSchema = z.object({
+  full_name: z
+    .string()
+    .min(3, "Informe seu nome completo.")
+    .max(120)
+    .refine((value) => value.trim().split(/\s+/).length >= 2, {
+      message: "Informe nome e sobrenome.",
+    })
+    .optional(),
+  phone: phoneSchema.optional(),
+  email: z.string().email("E-mail inválido.").max(160).optional(),
+  document_number: documentNumberSchema.optional(),
+  birth_date: z
+    .string()
+    .date()
+    .refine(
+      (value) => {
+        const age = (Date.now() - new Date(value).getTime()) / (365.25 * 24 * 3600 * 1000);
+        return age >= 18 && age < 110;
+      },
+      { message: "É preciso ter 18 anos ou mais." },
+    )
+    .optional(),
+  avatar_url: z.string().url().max(500).nullable().optional(),
+});
+
+export const addressUpsertSchema = addressSchema.extend({
+  label: z.string().max(40).optional(),
+  is_default: z.boolean().optional(),
+});
+
+export const termsAcceptSchema = z.object({
+  audience: z.enum(ZC_ROLES),
+  version: z.string().max(40).optional(),
+});
+
+export const signUploadSchema = z.object({
+  bucket: z.enum(["zc-avatars", "zc-documents"]),
+  purpose: z.string().min(2).max(60),
+  mime_type: z.string().min(3).max(80),
+  size_bytes: z
+    .number()
+    .int()
+    .min(1)
+    .max(50 * 1024 * 1024)
+    .optional(),
+});
+
+/** CNH: 11 dígitos, e a validade não pode estar vencida. */
+export const cnhSchema = z
+  .string()
+  .transform((value) => value.replace(/\D/g, ""))
+  .refine((value) => value.length === 11, { message: "A CNH tem 11 dígitos." });
+
+export const driverOnboardingSchema = z.object({
+  region_id: uuidSchema.nullable().optional(),
+  cnh_number: cnhSchema.optional(),
+  cnh_category: z
+    .string()
+    .max(5)
+    .transform((value) => value.toUpperCase())
+    .refine((value) => /^[A-E]{1,5}$/.test(value), { message: "Categoria da CNH inválida." })
+    .optional(),
+  cnh_expires_at: z
+    .string()
+    .date()
+    .refine((value) => new Date(value).getTime() > Date.now(), {
+      message: "A CNH está vencida. Renove antes de continuar.",
+    })
+    .optional(),
+  pix_key: z.string().min(3).max(140).optional(),
+  pix_key_type: z.enum(["cpf", "cnpj", "email", "phone", "random"]).optional(),
+  bank_account: z
+    .object({
+      bank_name: z.string().max(80).optional(),
+      agency: z.string().max(20).optional(),
+      account: z.string().max(30).optional(),
+      account_type: z.enum(["corrente", "poupanca"]).optional(),
+    })
+    .optional(),
+});
+
+export const vehicleUpsertSchema = vehicleSchema.extend({
+  photos: z.array(z.string().max(500)).max(8).optional(),
+  notes: z.string().max(500).optional(),
+});
+
+export const vehiclePatchSchema = vehicleUpsertSchema.partial();
+
+export const vehicleReviewSchema = z
+  .object({
+    status: z.enum(ZC_VEHICLE_STATUSES),
+    reason: z.string().max(500).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.status !== "approved" && !value.reason?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["reason"],
+        message: "Informe o motivo para o motorista saber o que corrigir.",
+      });
+    }
+  });
+
+export const revealSchema = z.object({
+  reason: z.string().min(5, "Diga por que precisa ver o dado completo.").max(240),
 });
 
 export const paginationSchema = z.object({

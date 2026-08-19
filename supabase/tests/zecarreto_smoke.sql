@@ -51,10 +51,12 @@ begin
   select id into _tariff from public.zc_tariffs where category_id = _category and region_id is null;
 
   insert into public.zc_customers (profile_id) values (_client_user) returning id into _customer;
-  insert into public.zc_drivers (profile_id, region_id, status, availability)
-    values (_driver_user, _region, 'approved', 'online') returning id into _driver;
-  insert into public.zc_drivers (profile_id, region_id, status, availability)
-    values (_driver2_user, _region, 'approved', 'online') returning id into _driver2;
+  -- Motorista nasce fora do ar: só entra na fila depois que o cadastro E o
+  -- veículo estiverem aprovados (regra da Fase 2).
+  insert into public.zc_drivers (profile_id, region_id, status)
+    values (_driver_user, _region, 'approved') returning id into _driver;
+  insert into public.zc_drivers (profile_id, region_id, status)
+    values (_driver2_user, _region, 'approved') returning id into _driver2;
 
   -- carteira criada automaticamente junto do motorista
   select id into _wallet from public.zc_wallets where driver_id = _driver;
@@ -62,7 +64,15 @@ begin
 
   insert into public.zc_vehicles (driver_id, category_id, plate, brand, model, model_year)
     values (_driver, _category, 'ABC1D23', 'Fiat', 'Fiorino', 2020) returning id into _vehicle;
+  update public.zc_vehicles set status = 'approved', verified_at = now() where id = _vehicle;
   update public.zc_drivers set current_vehicle_id = _vehicle where id = _driver;
+  update public.zc_drivers set availability = 'online' where id = _driver;
+
+  -- Motorista sem veículo aprovado não consegue entrar no ar.
+  begin
+    update public.zc_drivers set availability = 'online' where id = _driver2;
+    raise exception 'FALHOU: motorista sem veiculo aprovado ficou online';
+  exception when check_violation then null; end;
 
   -- placa duplicada precisa ser barrada
   begin
