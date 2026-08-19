@@ -3,7 +3,7 @@ import { SiteBrandLogo } from "../site/SiteBrandLogo";
 import { TableQrScanButton } from "../site/TableQrScanButton";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SiteBeverageSection } from "../site/SiteBeverageSection";
-import { SiteCartDrawer } from "../site/SiteCartDrawer";
+import { SiteCheckout } from "../site/checkout/SiteCheckout";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ArrowUp } from "lucide-react";
@@ -384,7 +384,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
         </button>
       )}
 
-      <SiteCartDrawer
+      <SiteCheckout
         open={isCartOpen}
         onClose={() => setCartOpen(false)}
         whatsappNumber={r.whatsapp_number}

@@ -4,7 +4,7 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
-import { SiteCartDrawer } from "../site/SiteCartDrawer";
+import { SiteCheckout } from "../site/checkout/SiteCheckout";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { getPrimaryButtonText } from "@/lib/site/format";
@@ -112,7 +112,7 @@ export function BurgerTemplate({ data }: { data: SiteData }) {
         city={r.city}
       />
 
-      <SiteCartDrawer
+      <SiteCheckout
         open={isCartOpen}
         onClose={() => setCartOpen(false)}
         whatsappNumber={r.whatsapp_number}
