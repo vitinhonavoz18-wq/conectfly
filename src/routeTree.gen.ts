@@ -13,6 +13,7 @@ import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as DebugHostRouteImport } from './routes/debug-host'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PauloFerraroRouteImport } from './routes/paulo-ferraro'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as ApiMenuSyncRouteImport } from './routes/api/menu-sync'
 import { Route as ApiUploadImageRouteImport } from './routes/api/upload-image'
@@ -46,6 +47,11 @@ const DebugHostRoute = DebugHostRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PauloFerraroRoute = PauloFerraroRouteImport.update({
+  id: '/paulo-ferraro',
+  path: '/paulo-ferraro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
+  '/paulo-ferraro': typeof PauloFerraroRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/api/upload-image': typeof ApiUploadImageRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
@@ -156,6 +163,7 @@ export interface FileRoutesByTo {
   '/$slug': typeof SlugRoute
   '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
+  '/paulo-ferraro': typeof PauloFerraroRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/api/upload-image': typeof ApiUploadImageRoute
   '/': typeof AuthenticatedIndexRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/debug-host': typeof DebugHostRoute
   '/login': typeof LoginRoute
+  '/paulo-ferraro': typeof PauloFerraroRoute
   '/api/menu-sync': typeof ApiMenuSyncRouteWithChildren
   '/api/upload-image': typeof ApiUploadImageRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/'
     | '/debug-host'
     | '/login'
+    | '/paulo-ferraro'
     | '/api/menu-sync'
     | '/api/upload-image'
     | '/edit/$id'
@@ -220,6 +230,7 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/debug-host'
     | '/login'
+    | '/paulo-ferraro'
     | '/api/menu-sync'
     | '/api/upload-image'
     | '/'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/debug-host'
     | '/login'
+    | '/paulo-ferraro'
     | '/api/menu-sync'
     | '/api/upload-image'
     | '/_authenticated/'
@@ -263,6 +275,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   DebugHostRoute: typeof DebugHostRoute
   LoginRoute: typeof LoginRoute
+  PauloFerraroRoute: typeof PauloFerraroRoute
   ApiMenuSyncRoute: typeof ApiMenuSyncRouteWithChildren
   ApiUploadImageRoute: typeof ApiUploadImageRoute
   ApiInternalDeprovisionRestaurantRoute: typeof ApiInternalDeprovisionRestaurantRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paulo-ferraro': {
+      id: '/paulo-ferraro'
+      path: '/paulo-ferraro'
+      fullPath: '/paulo-ferraro'
+      preLoaderRoute: typeof PauloFerraroRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/': {
@@ -447,6 +467,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   DebugHostRoute: DebugHostRoute,
   LoginRoute: LoginRoute,
+  PauloFerraroRoute: PauloFerraroRoute,
   ApiMenuSyncRoute: ApiMenuSyncRouteWithChildren,
   ApiUploadImageRoute: ApiUploadImageRoute,
   ApiInternalDeprovisionRestaurantRoute: ApiInternalDeprovisionRestaurantRoute,

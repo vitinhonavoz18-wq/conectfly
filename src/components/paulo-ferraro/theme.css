@@ -1,0 +1,829 @@
+/* =============================================================================
+ * PAULO FERRARO — ADVOGADO
+ * Design system (FASE 1/3)
+ *
+ * Todo o visual do site do advogado nasce deste arquivo: cores, fontes,
+ * espaçamentos, sombras e tempos de animação.
+ *
+ * Tudo aqui vive dentro do escopo `.pf-root`, ou seja: só vale dentro do site
+ * do advogado. O restante do sistema (SiteCreatorFly) continua com o visual
+ * dele, sem nenhuma interferência.
+ *
+ * Superfícies: uma seção pode ser escura (padrão) ou clara. Basta marcar a
+ * seção com `data-pf-surface="light"` — todos os textos, linhas, cartões e
+ * botões dentro dela se ajustam sozinhos.
+ * ========================================================================== */
+
+/* -----------------------------------------------------------------------------
+ * Por que tudo abaixo está dentro de `@layer components`:
+ *
+ * O Tailwind (usado no restante do sistema) organiza suas classes em camadas,
+ * e a camada `utilities` é sempre a última a falar. Sem declarar a camada
+ * aqui, as classes deste arquivo passariam na frente do Tailwind e venceriam
+ * discussões que não deveriam vencer — por exemplo, `.pf-btn` mandando o botão
+ * aparecer justamente quando o utilitário `hidden` mandava escondê-lo no
+ * celular.
+ *
+ * Declarando `components`, este arquivo entra na fila no lugar certo: define o
+ * comportamento padrão dos componentes, e qualquer ajuste pontual feito com
+ * Tailwind continua tendo a palavra final.
+ * -------------------------------------------------------------------------- */
+
+@layer components {
+  .pf-root {
+    /* ---------------------------------------------------------------------
+   * 1. PALETA BRUTA — os pigmentos. Nunca usar direto nos componentes;
+   *    usar sempre os tokens semânticos do bloco 2.
+   * ------------------------------------------------------------------- */
+    --pf-black: oklch(0.125 0.004 285); /* preto profundo */
+    --pf-graphite: oklch(0.171 0.005 285); /* grafite */
+    --pf-charcoal: oklch(0.232 0.006 285); /* cinza chumbo */
+    --pf-slate: oklch(0.33 0.007 285);
+    --pf-steel: oklch(0.5 0.008 285);
+    --pf-smoke: oklch(0.66 0.006 285);
+    --pf-mist: oklch(0.86 0.003 285);
+    --pf-paper: oklch(0.965 0.003 95); /* off-white quente */
+    --pf-white: oklch(1 0 0);
+
+    /* Vinho / bordô — dialoga com a gravata da fotografia. */
+    --pf-bordeaux-deep: oklch(0.3 0.1 17);
+    --pf-bordeaux: oklch(0.415 0.128 17);
+    --pf-bordeaux-bright: oklch(0.52 0.145 18);
+    --pf-bordeaux-soft: oklch(0.63 0.13 19); /* legível como texto no escuro */
+
+    /* Dourado — presença mínima, apenas em fios e detalhes. */
+    --pf-gold: oklch(0.79 0.062 84);
+    --pf-gold-dim: oklch(0.62 0.05 84);
+
+    /* ---------------------------------------------------------------------
+   * 2. TOKENS SEMÂNTICOS — superfície ESCURA (padrão do site)
+   * ------------------------------------------------------------------- */
+    --pf-bg: var(--pf-black);
+    --pf-bg-raised: var(--pf-graphite);
+    --pf-surface: oklch(0.185 0.005 285);
+    --pf-surface-hover: oklch(0.215 0.006 285);
+
+    --pf-fg: var(--pf-paper);
+    --pf-fg-muted: var(--pf-smoke);
+    --pf-fg-subtle: var(--pf-steel);
+
+    --pf-line: oklch(1 0 0 / 10%);
+    --pf-line-strong: oklch(1 0 0 / 20%);
+    --pf-line-gold: oklch(0.79 0.062 84 / 55%);
+
+    --pf-accent: var(--pf-bordeaux);
+    --pf-accent-hover: var(--pf-bordeaux-bright);
+    --pf-accent-fg: var(--pf-paper); /* texto sobre o bordô cheio */
+    --pf-accent-text: var(--pf-bordeaux-soft); /* bordô usado como texto */
+    --pf-accent-veil: oklch(0.415 0.128 17 / 16%);
+
+    --pf-shadow-soft: 0 1px 2px oklch(0 0 0 / 40%);
+    --pf-shadow-card: 0 18px 48px -24px oklch(0 0 0 / 85%);
+    --pf-shadow-raise: 0 28px 70px -30px oklch(0 0 0 / 95%);
+    --pf-shadow-portrait: 0 60px 120px -50px oklch(0 0 0 / 90%);
+
+    /* ---------------------------------------------------------------------
+   * 3. TIPOGRAFIA
+   *    Display: serifada editorial (títulos, nome, números).
+   *    Sans: interface e leitura corrida.
+   * ------------------------------------------------------------------- */
+    --pf-font-display: "Cormorant Garamond", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --pf-font-sans:
+      "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+      Arial, sans-serif;
+
+    --pf-text-display: clamp(2.9rem, 11vw, 6.5rem);
+    --pf-text-h1: clamp(2.4rem, 7vw, 4.25rem);
+    --pf-text-h2: clamp(2rem, 5.2vw, 3.25rem);
+    --pf-text-h3: clamp(1.35rem, 2.6vw, 1.75rem);
+    --pf-text-lead: clamp(1.05rem, 1.6vw, 1.25rem);
+    --pf-text-body: 1rem;
+    --pf-text-sm: 0.9375rem;
+    --pf-text-xs: 0.8125rem;
+    --pf-text-eyebrow: 0.75rem;
+
+    --pf-tracking-eyebrow: 0.26em;
+    --pf-tracking-wide: 0.12em;
+    --pf-tracking-tight: -0.02em;
+
+    /* ---------------------------------------------------------------------
+   * 4. ESPAÇO E FORMA
+   * ------------------------------------------------------------------- */
+    --pf-container: 78rem;
+    --pf-container-narrow: 58rem;
+    --pf-gutter: clamp(1.25rem, 5vw, 3rem);
+    --pf-section-y: clamp(4.5rem, 9.5vw, 8.5rem);
+    --pf-section-y-tight: clamp(3rem, 6vw, 5rem);
+
+    /* Cantos praticamente retos — leitura editorial, não "app". */
+    --pf-radius-xs: 2px;
+    --pf-radius-sm: 3px;
+    --pf-radius: 4px;
+    --pf-radius-lg: 8px;
+
+    --pf-header-h: 5.25rem;
+    --pf-header-h-compact: 4rem;
+
+    /* ---------------------------------------------------------------------
+   * 5. MOVIMENTO — consumido pela FASE 2/3. Trocar o tempo/curva aqui
+   *    reajusta todas as animações do site de uma vez só.
+   * ------------------------------------------------------------------- */
+    --pf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --pf-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --pf-dur-fast: 180ms;
+    --pf-dur: 380ms;
+    --pf-dur-slow: 820ms;
+    --pf-stagger: 90ms;
+
+    /* Camadas */
+    --pf-z-hero-bg: 0;
+    --pf-z-hero-photo: 1;
+    --pf-z-hero-floor: 2;
+    --pf-z-hero-copy: 3;
+    --pf-z-header: 50;
+    --pf-z-menu: 60;
+
+    /* --------------------------------------------------------------------- */
+    background-color: var(--pf-bg);
+    color: var(--pf-fg);
+    font-family: var(--pf-font-sans);
+    font-size: var(--pf-text-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Isola o site do advogado do fundo global do SiteCreatorFly. */
+    isolation: isolate;
+    overflow-x: clip;
+  }
+
+  /* -----------------------------------------------------------------------------
+ * Superfície CLARA — off-white. Mesmos nomes de token, valores invertidos.
+ * -------------------------------------------------------------------------- */
+  .pf-root [data-pf-surface="light"] {
+    --pf-bg: var(--pf-paper);
+    --pf-bg-raised: var(--pf-white);
+    --pf-surface: var(--pf-white);
+    --pf-surface-hover: oklch(0.985 0.002 95);
+
+    --pf-fg: var(--pf-graphite);
+    --pf-fg-muted: oklch(0.45 0.007 285);
+    --pf-fg-subtle: oklch(0.58 0.006 285);
+
+    --pf-line: oklch(0.171 0.005 285 / 12%);
+    --pf-line-strong: oklch(0.171 0.005 285 / 24%);
+    --pf-line-gold: oklch(0.62 0.05 84 / 60%);
+
+    --pf-accent: var(--pf-bordeaux);
+    --pf-accent-hover: var(--pf-bordeaux-deep);
+    --pf-accent-fg: var(--pf-paper);
+    --pf-accent-text: var(--pf-bordeaux);
+    --pf-accent-veil: oklch(0.415 0.128 17 / 8%);
+
+    --pf-shadow-soft: 0 1px 2px oklch(0.171 0.005 285 / 8%);
+    --pf-shadow-card: 0 18px 40px -28px oklch(0.171 0.005 285 / 35%);
+    --pf-shadow-raise: 0 26px 60px -34px oklch(0.171 0.005 285 / 40%);
+
+    background-color: var(--pf-bg);
+    color: var(--pf-fg);
+  }
+
+  /* Superfície grafite — degrau intermediário entre o preto e o off-white. */
+  .pf-root [data-pf-surface="graphite"] {
+    --pf-bg: var(--pf-graphite);
+    --pf-bg-raised: oklch(0.205 0.005 285);
+    --pf-surface: oklch(0.212 0.006 285);
+    --pf-surface-hover: oklch(0.245 0.007 285);
+    background-color: var(--pf-bg);
+    color: var(--pf-fg);
+  }
+
+  /* =============================================================================
+ * ESTRUTURA
+ * ========================================================================== */
+
+  .pf-container {
+    width: 100%;
+    max-width: var(--pf-container);
+    margin-inline: auto;
+    padding-inline: var(--pf-gutter);
+  }
+
+  .pf-container--narrow {
+    max-width: var(--pf-container-narrow);
+  }
+
+  .pf-section {
+    position: relative;
+    padding-block: var(--pf-section-y);
+  }
+
+  .pf-section--tight {
+    padding-block: var(--pf-section-y-tight);
+  }
+
+  /* Fio horizontal com um breve trecho dourado — assinatura discreta. */
+  .pf-rule {
+    position: relative;
+    height: 1px;
+    width: 100%;
+    background-color: var(--pf-line);
+  }
+
+  .pf-rule::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: 0;
+    width: 4.5rem;
+    background-color: var(--pf-line-gold);
+  }
+
+  /* Grade arquitetônica — textura de fundo quase imperceptível. */
+  .pf-grid-texture {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, var(--pf-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--pf-line) 1px, transparent 1px);
+    background-size: clamp(4rem, 8vw, 7rem) clamp(4rem, 8vw, 7rem);
+    opacity: 0.5;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 78%);
+  }
+
+  /* =============================================================================
+ * TIPOGRAFIA
+ * ========================================================================== */
+
+  .pf-display {
+    font-family: var(--pf-font-display);
+    font-size: var(--pf-text-display);
+    font-weight: 500;
+    line-height: 0.94;
+    letter-spacing: var(--pf-tracking-tight);
+    color: var(--pf-fg);
+  }
+
+  .pf-h1 {
+    font-family: var(--pf-font-display);
+    font-size: var(--pf-text-h1);
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: var(--pf-tracking-tight);
+    color: var(--pf-fg);
+  }
+
+  .pf-h2 {
+    font-family: var(--pf-font-display);
+    font-size: var(--pf-text-h2);
+    font-weight: 500;
+    line-height: 1.08;
+    letter-spacing: var(--pf-tracking-tight);
+    color: var(--pf-fg);
+  }
+
+  .pf-h3 {
+    font-family: var(--pf-font-sans);
+    font-size: var(--pf-text-h3);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    color: var(--pf-fg);
+  }
+
+  .pf-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--pf-font-sans);
+    font-size: var(--pf-text-eyebrow);
+    font-weight: 600;
+    letter-spacing: var(--pf-tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--pf-accent-text);
+  }
+
+  .pf-eyebrow::before {
+    content: "";
+    width: 1.75rem;
+    height: 1px;
+    background-color: currentColor;
+    opacity: 0.7;
+  }
+
+  .pf-eyebrow--plain::before {
+    display: none;
+  }
+
+  .pf-lead {
+    font-size: var(--pf-text-lead);
+    line-height: 1.65;
+    color: var(--pf-fg-muted);
+  }
+
+  .pf-body {
+    font-size: var(--pf-text-body);
+    line-height: 1.75;
+    color: var(--pf-fg-muted);
+  }
+
+  .pf-numeral {
+    font-family: var(--pf-font-display);
+    font-variant-numeric: lining-nums tabular-nums;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+
+  /* =============================================================================
+ * BOTÕES
+ * ========================================================================== */
+
+  .pf-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    min-height: 3.25rem;
+    padding: 0.9rem 1.75rem;
+    border: 1px solid transparent;
+    border-radius: var(--pf-radius);
+    font-family: var(--pf-font-sans);
+    font-size: var(--pf-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--pf-tracking-wide);
+    text-transform: uppercase;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background-color var(--pf-dur) var(--pf-ease-out),
+      border-color var(--pf-dur) var(--pf-ease-out),
+      color var(--pf-dur) var(--pf-ease-out),
+      transform var(--pf-dur-fast) var(--pf-ease-out);
+    touch-action: manipulation;
+  }
+
+  .pf-btn:active {
+    transform: translateY(1px);
+  }
+
+  .pf-btn:focus-visible {
+    outline: 2px solid var(--pf-gold);
+    outline-offset: 3px;
+  }
+
+  .pf-btn--primary {
+    background-color: var(--pf-accent);
+    color: var(--pf-accent-fg);
+    box-shadow: var(--pf-shadow-soft);
+  }
+
+  .pf-btn--primary:hover {
+    background-color: var(--pf-accent-hover);
+  }
+
+  .pf-btn--outline {
+    background-color: transparent;
+    border-color: var(--pf-line-strong);
+    color: var(--pf-fg);
+  }
+
+  .pf-btn--outline:hover {
+    border-color: var(--pf-fg);
+    background-color: var(--pf-accent-veil);
+  }
+
+  .pf-btn--ghost {
+    min-height: 2.5rem;
+    padding: 0.5rem 0;
+    background-color: transparent;
+    color: var(--pf-fg-muted);
+  }
+
+  .pf-btn--ghost:hover {
+    color: var(--pf-fg);
+  }
+
+  .pf-btn--sm {
+    min-height: 2.75rem;
+    padding: 0.65rem 1.25rem;
+  }
+
+  .pf-btn[data-pf-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* Link com fio que se estende no hover. */
+  .pf-link {
+    position: relative;
+    color: var(--pf-fg);
+    text-decoration: none;
+    transition: color var(--pf-dur) var(--pf-ease-out);
+  }
+
+  .pf-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -3px;
+    width: 100%;
+    height: 1px;
+    background-color: var(--pf-accent-text);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--pf-dur) var(--pf-ease-out);
+  }
+
+  .pf-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* =============================================================================
+ * CARTÕES
+ * ========================================================================== */
+
+  .pf-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--pf-surface);
+    border: 1px solid var(--pf-line);
+    border-radius: var(--pf-radius);
+    box-shadow: var(--pf-shadow-card);
+    transition:
+      background-color var(--pf-dur) var(--pf-ease-out),
+      border-color var(--pf-dur) var(--pf-ease-out),
+      transform var(--pf-dur) var(--pf-ease-out);
+  }
+
+  .pf-card:hover {
+    background-color: var(--pf-surface-hover);
+    border-color: var(--pf-line-strong);
+  }
+
+  /* Fio bordô que cresce no topo do cartão ao passar o mouse. */
+  .pf-card--accent-top::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    height: 2px;
+    width: 0;
+    background-color: var(--pf-accent);
+    transition: width var(--pf-dur-slow) var(--pf-ease-out);
+  }
+
+  .pf-card--accent-top:hover::before {
+    width: calc(100% + 2px);
+  }
+
+  /* =============================================================================
+ * PLACEHOLDER — dado que o advogado ainda não forneceu.
+ * Precisa ser impossível de confundir com conteúdo real.
+ * ========================================================================== */
+
+  .pf-placeholder {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.15rem 0.55rem;
+    border: 1px dashed var(--pf-line-gold);
+    border-radius: var(--pf-radius-xs);
+    background-color: oklch(0.79 0.062 84 / 8%);
+    color: var(--pf-gold);
+    font-family: var(--pf-font-sans);
+    font-size: var(--pf-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+
+  .pf-placeholder--block {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+  }
+
+  /* =============================================================================
+ * HERO — composição em camadas.
+ *
+ * Cada camada é independente e já carrega um `data-pf-hero-layer`, para a
+ * FASE 2 animar halo, grade, fotografia e base separadamente, sem mexer no
+ * HTML da seção.
+ * ========================================================================== */
+
+  .pf-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 100svh;
+    padding-top: var(--pf-header-h);
+    overflow: hidden;
+    background-color: var(--pf-bg);
+  }
+
+  .pf-hero__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: var(--pf-z-hero-bg);
+    pointer-events: none;
+  }
+
+  /* Halo radial suave atrás da fotografia. */
+  .pf-hero__halo {
+    position: absolute;
+    z-index: var(--pf-z-hero-bg);
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      oklch(0.415 0.128 17 / 34%) 0%,
+      oklch(0.3 0.1 17 / 16%) 42%,
+      transparent 70%
+    );
+    filter: blur(18px);
+    pointer-events: none;
+  }
+
+  /* Arco arquitetônico — vertical, sóbrio, atrás do retrato. */
+  .pf-hero__arc {
+    position: absolute;
+    z-index: var(--pf-z-hero-bg);
+    border: 1px solid var(--pf-line);
+    border-bottom: none;
+    border-radius: 999px 999px 0 0;
+    pointer-events: none;
+  }
+
+  .pf-hero__inner {
+    position: relative;
+    /* Cria a própria camada, acima das texturas de fundo do Hero. */
+    z-index: 1;
+    display: grid;
+    width: 100%;
+    max-width: var(--pf-container);
+    margin-inline: auto;
+    padding-inline: var(--pf-gutter);
+  }
+
+  .pf-hero__copy {
+    position: relative;
+    /* O texto é a última camada: nada da fotografia passa por cima dele. */
+    z-index: var(--pf-z-hero-copy);
+  }
+
+  .pf-hero__stage {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .pf-hero__photo {
+    position: relative;
+    z-index: var(--pf-z-hero-photo);
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(var(--pf-shadow-portrait));
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* Véu que apaga a base da fotografia dentro do fundo. */
+  .pf-hero__floor {
+    position: absolute;
+    inset-inline: -10%;
+    bottom: 0;
+    height: 26%;
+    z-index: var(--pf-z-hero-floor);
+    background: linear-gradient(to top, var(--pf-bg) 14%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* ---- MOBILE: composição própria ------------------------------------------
+ * A fotografia ocupa o topo em tamanho grande e o texto sobe por cima da
+ * altura do peito, protegido por um véu. O rosto nunca é coberto.
+ * ------------------------------------------------------------------------ */
+  @media (max-width: 767px) {
+    .pf-hero__inner {
+      grid-template-areas: "stage" "copy";
+      grid-template-rows: auto auto;
+      padding-bottom: 2.5rem;
+    }
+
+    .pf-hero__stage {
+      grid-area: stage;
+      height: clamp(20rem, 52svh, 28rem);
+    }
+
+    .pf-hero__copy {
+      grid-area: copy;
+      position: relative;
+      margin-top: -3.25rem;
+      text-align: left;
+    }
+
+    .pf-hero__halo {
+      top: 12%;
+      left: 50%;
+      width: 118vw;
+      height: 118vw;
+      transform: translateX(-50%);
+    }
+
+    .pf-hero__arc {
+      top: 14%;
+      left: 50%;
+      width: 74vw;
+      height: 82vw;
+      transform: translateX(-50%);
+    }
+  }
+
+  /* ---- DESKTOP / TABLET ---------------------------------------------------- */
+  @media (min-width: 768px) {
+    .pf-hero {
+      justify-content: center;
+    }
+
+    .pf-hero__inner {
+      grid-template-areas: "copy stage";
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+      align-items: end;
+      gap: clamp(1rem, 3vw, 3rem);
+      min-height: calc(100svh - var(--pf-header-h));
+    }
+
+    .pf-hero__copy {
+      grid-area: copy;
+      align-self: center;
+      padding-bottom: clamp(2rem, 6vh, 5rem);
+      max-width: 34rem;
+    }
+
+    .pf-hero__stage {
+      grid-area: stage;
+      height: min(88svh, 52rem);
+      align-self: end;
+    }
+
+    .pf-hero__halo {
+      bottom: 4%;
+      left: 50%;
+      width: 46rem;
+      height: 46rem;
+      transform: translateX(-50%);
+    }
+
+    .pf-hero__arc {
+      bottom: 0;
+      left: 50%;
+      width: 30rem;
+      height: 42rem;
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .pf-hero__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    }
+  }
+
+  /* =============================================================================
+ * CABEÇALHO
+ * ========================================================================== */
+
+  .pf-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--pf-z-header);
+    height: var(--pf-header-h);
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    background-color: transparent;
+    transition:
+      height var(--pf-dur) var(--pf-ease-out),
+      background-color var(--pf-dur) var(--pf-ease-out),
+      border-color var(--pf-dur) var(--pf-ease-out),
+      backdrop-filter var(--pf-dur) var(--pf-ease-out);
+  }
+
+  /* Estado compacto com vidro fosco, ativado ao rolar a página. */
+  .pf-header[data-pf-scrolled="true"] {
+    height: var(--pf-header-h-compact);
+    background-color: oklch(0.125 0.004 285 / 78%);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    border-bottom-color: var(--pf-line);
+  }
+
+  .pf-nav-link {
+    position: relative;
+    padding-block: 0.35rem;
+    white-space: nowrap;
+    font-size: var(--pf-text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--pf-fg-muted);
+    text-decoration: none;
+    transition: color var(--pf-dur) var(--pf-ease-out);
+  }
+
+  .pf-nav-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1px;
+    width: 100%;
+    background-color: var(--pf-accent-text);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--pf-dur) var(--pf-ease-out);
+  }
+
+  .pf-nav-link:hover {
+    color: var(--pf-fg);
+  }
+
+  .pf-nav-link:hover::after {
+    transform: scaleX(1);
+  }
+
+  /* Menu mobile em tela cheia. */
+  .pf-menu {
+    position: fixed;
+    inset: 0;
+    z-index: var(--pf-z-menu);
+    display: flex;
+    flex-direction: column;
+    background-color: oklch(0.125 0.004 285 / 97%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* =============================================================================
+ * ACESSIBILIDADE E MOVIMENTO
+ * ========================================================================== */
+
+  .pf-root :where(a, button, [role="button"]) {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pf-root ::selection {
+    background-color: var(--pf-accent);
+    color: var(--pf-accent-fg);
+  }
+
+  .pf-skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 100;
+  }
+
+  .pf-skip-link:focus {
+    left: 1rem;
+    top: 1rem;
+    padding: 0.75rem 1rem;
+    background-color: var(--pf-accent);
+    color: var(--pf-accent-fg);
+    border-radius: var(--pf-radius);
+  }
+
+  .pf-root [data-pf-scroll-anchor] {
+    scroll-margin-top: calc(var(--pf-header-h-compact) + 1.5rem);
+  }
+
+  /* Ponto de entrada das animações da FASE 2: cada elemento revelável já sai
+ * marcado com `data-pf-reveal`. Aqui ele apenas existe — nenhum movimento é
+ * aplicado nesta fase. */
+  .pf-root [data-pf-reveal] {
+    --pf-reveal-delay: calc(var(--pf-reveal-index, 0) * var(--pf-stagger));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-root *,
+    .pf-root *::before,
+    .pf-root *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
