@@ -23,9 +23,29 @@
 
 type ModuloImagem = Record<string, string>;
 
-function primeiraImagem(modulos: ModuloImagem): string | null {
-  const caminhos = Object.keys(modulos).sort();
-  return caminhos.length > 0 ? modulos[caminhos[0]] : null;
+/**
+ * Ordem de preferência dos formatos.
+ *
+ * O WebP guarda a mesma foto com uma fração do peso: a fotografia do advogado
+ * tem 1,9 MB em PNG e 271 KB em WebP — sem diferença visível na tela. Em
+ * conexão de celular, é a diferença entre a foto aparecer na hora e a pessoa
+ * olhar para um espaço vazio por alguns segundos.
+ *
+ * O PNG original continua guardado na pasta como matriz: é dele que sai
+ * qualquer versão futura. Ele só não é o arquivo entregue ao visitante — como
+ * o negativo da foto, que fica no arquivo enquanto a cópia vai para a moldura.
+ */
+const PREFERENCIA = [".webp", ".jpg", ".jpeg", ".png"];
+
+function melhorImagem(modulos: ModuloImagem): string | null {
+  const caminhos = Object.keys(modulos);
+  if (caminhos.length === 0) return null;
+
+  for (const extensao of PREFERENCIA) {
+    const achado = caminhos.find((caminho) => caminho.toLowerCase().endsWith(extensao));
+    if (achado) return modulos[achado];
+  }
+  return modulos[caminhos.sort()[0]];
 }
 
 const heroModules = import.meta.glob("../../assets/paulo-ferraro-hero.{png,webp,jpg,jpeg}", {
@@ -49,17 +69,17 @@ const compartilharModules = import.meta.glob("../../assets/paulo-ferraro-og.{jpg
 }) as ModuloImagem;
 
 /** Endereço da fotografia principal do Hero, ou `null` se ainda não foi enviada. */
-export const fotoHero: string | null = primeiraImagem(heroModules);
+export const fotoHero: string | null = melhorImagem(heroModules);
 
 /** Endereço da fotografia da seção "Sobre", ou `null` se ainda não foi enviada. */
-export const fotoSobre: string | null = primeiraImagem(sobreModules);
+export const fotoSobre: string | null = melhorImagem(sobreModules);
 
 /**
  * Imagem de compartilhamento, ou `null` enquanto ela não existir. Sem ela, o
  * site não anuncia imagem nenhuma — melhor um link limpo do que um link com o
  * quadrado cinza de "imagem não encontrada".
  */
-export const imagemCompartilhamento: string | null = primeiraImagem(compartilharModules);
+export const imagemCompartilhamento: string | null = melhorImagem(compartilharModules);
 
 /** Caminhos esperados — exibidos na tela do espaço reservado. */
 export const CAMINHO_FOTO_HERO = "src/assets/paulo-ferraro-hero.png";

@@ -29,6 +29,19 @@ Salve o arquivo dentro da pasta `src/assets/` com um destes nomes exatos:
 exibi-lo. Enquanto ele não estiver lá, aparece uma moldura tracejada dizendo
 qual arquivo falta e onde salvá-lo.
 
+**Sobre o peso das fotos.** A fotografia principal veio com 1,9 MB. Em conexão
+de celular isso é a diferença entre a foto aparecer na hora e a pessoa olhar
+para um espaço vazio por alguns segundos — e é justamente a primeira coisa que
+ela vê. Por isso o site guarda também uma versão leve (`.webp`, 271 KB) e é
+essa que vai para o visitante. Mesma foto, mesmo rosto, mesmo enquadramento:
+muda só a forma de guardar, como uma mala bem arrumada que leva a mesma roupa
+em menos espaço.
+
+O PNG original **continua na pasta**, intocado — é a matriz de onde sai
+qualquer versão futura, como o negativo que fica no arquivo enquanto a cópia
+vai para a moldura. Se enviar uma foto nova, salve o PNG normalmente e me avise
+para eu gerar a versão leve.
+
 A fotografia é usada **exatamente como você enviou** — sem corte no rosto, sem
 filtro, sem redesenho, sem troca por imagem gerada por computador.
 
@@ -247,7 +260,7 @@ volta.
 
 ## 12. O que ainda depende do cliente
 
-- fotografia principal (`src/assets/paulo-ferraro-hero.png`);
+- ~~fotografia principal~~ — recebida e no ar;
 - fotografia da seção Sobre (`src/assets/paulo-ferraro-sobre.jpg`);
 - imagem de compartilhamento 1200x630 (`src/assets/paulo-ferraro-og.jpg`);
 - número da OAB;

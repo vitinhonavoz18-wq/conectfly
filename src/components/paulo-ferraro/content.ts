@@ -69,7 +69,12 @@ export const ctaPrincipal = {
   rotuloCurto: "Contato",
   ancora: "contato",
 };
-export const ctaSecundario = { rotulo: "Conhecer áreas de atuação", ancora: "areas" };
+// "Áreas de atuação" e não "Conhecer áreas de atuação": com a fotografia
+// ocupando o lado direito, a coluna de texto tem 516 px, e os dois botões
+// juntos pediam exatamente esses 516 px — o rótulo longo quebrava em duas
+// linhas em todas as telas de computador. O nome curto é o próprio nome da
+// seção para onde o botão leva.
+export const ctaSecundario = { rotulo: "Áreas de atuação", ancora: "areas" };
 
 /* -------------------------------------------------------------------------- */
 /* HERO                                                                        */

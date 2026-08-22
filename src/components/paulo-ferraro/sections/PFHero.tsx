@@ -132,7 +132,10 @@ export function PFHero() {
             </PFReveal>
 
             <PFReveal animacao="hero" indice={6} className="w-full">
-              <div className="flex w-full flex-col gap-3 pt-2 sm:flex-row sm:items-center">
+              {/* `flex-wrap`: se os dois botões não couberem lado a lado, o segundo
+                  desce inteiro para a linha de baixo. Sem isso eles se espremiam
+                  e o texto é que quebrava — botão com rótulo em duas linhas. */}
+              <div className="flex w-full flex-col gap-3 pt-2 sm:flex-row sm:flex-wrap sm:items-center">
                 <PFButton variante="primary" ancora={ctaPrincipal.ancora}>
                   {ctaPrincipal.rotulo}
                 </PFButton>
