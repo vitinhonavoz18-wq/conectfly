@@ -206,9 +206,8 @@ export function PFHeader() {
                   {String(indice + 1).padStart(2, "0")}
                 </span>
                 <span
-                  className="pf-menu__label text-[var(--pf-fg)]"
+                  className="pf-serif pf-menu__label text-[var(--pf-fg)]"
                   style={{
-                    fontFamily: "var(--pf-font-display)",
                     fontSize: "clamp(1.75rem, 8vw, 2.5rem)",
                     lineHeight: 1.1,
                   }}

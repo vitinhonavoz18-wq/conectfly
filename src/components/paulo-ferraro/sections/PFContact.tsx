@@ -61,9 +61,8 @@ function CanalCard({ canal }: { canal: CanalContato }) {
           <PFPlaceholder campo={NOME_PENDENTE[canal.chave]} />
         ) : (
           <span
-            className="truncate text-[var(--pf-fg)]"
+            className="pf-serif truncate text-[var(--pf-fg)]"
             style={{
-              fontFamily: "var(--pf-font-display)",
               fontSize: "1.35rem",
               lineHeight: 1.25,
             }}
@@ -125,9 +124,8 @@ export function PFContact() {
 
           <PFReveal animacao="fade-up" indice={3}>
             <p
-              className="max-w-[44ch] text-[var(--pf-fg)]"
+              className="pf-serif max-w-[44ch] text-[var(--pf-fg)]"
               style={{
-                fontFamily: "var(--pf-font-display)",
                 fontSize: "1.35rem",
                 lineHeight: 1.35,
               }}

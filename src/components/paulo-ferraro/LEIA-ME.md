@@ -1,4 +1,4 @@
-# Site do advogado Paulo Ferraro — FASES 1 e 2 concluídas
+# Site do advogado Paulo Ferraro — projeto concluído (fases 1, 2 e 3)
 
 Este é o guia prático da pasta. Está escrito para ser entendido **sem saber
 programar**.
@@ -175,6 +175,86 @@ o WhatsApp direto, sem mexer em mais nada.
 
 ---
 
-## 9. O que vem na FASE 3/3
+## 9. Google, WhatsApp e redes sociais (FASE 3)
 
-Auditoria final, refinamento, SEO, performance e entrega. Não foi iniciada.
+**O que o Google vê.** Título, descrição, idioma português do Brasil e uma
+"ficha catalográfica" invisível (dados estruturados) dizendo quem é o
+profissional, o que ele faz e em que cidade atua. É o mesmo texto da página,
+escrito para máquina — o que permite ao Google mostrar um resultado rico em vez
+de um link seco.
+
+**Nada inventado, nem para o Google.** Telefone, e-mail, endereço e OAB só
+entram nessa ficha depois de preenchidos de verdade em `content.ts`. Declarar
+dado falso para buscador é pior do que não declarar: o Google cruza com outras
+fontes e penaliza quando não bate.
+
+**O endereço do site.** Enquanto o domínio não for definido, o site não anuncia
+"endereço oficial" nem imagem de compartilhamento. Apontar para um endereço
+errado é pior do que não apontar para nenhum. Assim que o domínio existir, basta
+preencher `seo.dominio` em `content.ts` — o endereço oficial, o link de
+compartilhamento e a ficha do Google se ajustam sozinhos.
+
+**Uma limpeza importante.** A base do sistema (SiteCreatorFly) anunciava uma
+imagem de compartilhamento própria. Sem correção, mandar o link do advogado no
+WhatsApp mostraria a captura de tela de outro produto — como emprestar o cartão
+de visita do vizinho. Agora, enquanto a imagem definitiva não chega, o link
+aparece limpo: só título e descrição.
+
+**Para a imagem de compartilhamento aparecer**, salve um arquivo de 1200x630 px
+em `src/assets/paulo-ferraro-og.jpg`.
+
+---
+
+## 10. Acessibilidade e desempenho (FASE 3)
+
+**Contraste.** Todos os textos do site foram medidos um a um contra o fundo em
+que aparecem. Sete tons reprovavam na norma de acessibilidade (o mínimo é 4,5
+vezes de diferença entre texto e fundo) e foram corrigidos. Hoje: zero
+reprovações. Isso vale para quem lê no sol, no celular com brilho baixo ou
+enxerga menos.
+
+**Teclado.** Dá para navegar o site inteiro sem mouse. O primeiro Tab oferece
+"Ir para o conteúdo", o menu do celular prende o foco enquanto está aberto, Esc
+fecha, e o foco volta para o botão que abriu.
+
+**Fontes no próprio site.** Antes vinham do servidor do Google — quatro idas e
+vindas antes da primeira palavra aparecer. Agora moram junto com o site, e das
+13 variações que eram baixadas o site usa 3. O site não conversa com nenhum
+servidor externo.
+
+**Velocidade medida em celular intermediário** (com o processador propositalmente
+4x mais lento): a maior imagem da tela aparece em cerca de 1 segundo, e o layout
+não "pula" enquanto carrega.
+
+---
+
+## 11. Sobre a palavra "especialista"
+
+O material enviado dizia "Especialista em Direito Médico". Na publicidade da
+advocacia essa palavra tem sentido específico: o Provimento nº 205/2021 da OAB
+permite anunciar as **áreas de atuação** livremente, mas reserva o título de
+especialista a quem tem a titulação (pós-graduação ou certificação reconhecida).
+
+É como um restaurante: dizer "fazemos massa italiana" é sempre permitido; dizer
+"chef formado na Itália" só vale com o diploma na parede.
+
+Por isso o site usa **"Atuação principal em Direito Médico"** — a forma que vale
+em qualquer caso, sem perder o destaque. Se o Dr. Paulo tiver a titulação, basta
+trocar uma linha (`hero.rotuloDestaque`, em `content.ts`) e o texto original
+volta.
+
+---
+
+## 12. O que ainda depende do cliente
+
+- fotografia principal (`src/assets/paulo-ferraro-hero.png`);
+- fotografia da seção Sobre (`src/assets/paulo-ferraro-sobre.jpg`);
+- imagem de compartilhamento 1200x630 (`src/assets/paulo-ferraro-og.jpg`);
+- número da OAB;
+- WhatsApp, telefone e e-mail;
+- endereço e horário de atendimento;
+- domínio definitivo;
+- links de Política de Privacidade e Termos de Uso.
+
+Tudo isso está marcado no site com a etiqueta dourada "A preencher" e reunido
+em um arquivo só: `content.ts`.

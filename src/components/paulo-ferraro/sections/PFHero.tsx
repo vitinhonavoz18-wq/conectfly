@@ -90,9 +90,8 @@ export function PFHero() {
 
             <PFReveal animacao="hero" indice={3}>
               <p
-                className="max-w-[28ch] text-[var(--pf-fg)]"
+                className="pf-serif max-w-[28ch] text-[var(--pf-fg)]"
                 style={{
-                  fontFamily: "var(--pf-font-display)",
                   fontSize: "clamp(1.25rem, 3.2vw, 1.75rem)",
                   lineHeight: 1.25,
                 }}
@@ -113,12 +112,11 @@ export function PFHero() {
                     textTransform: "uppercase",
                   }}
                 >
-                  Especialista em
+                  {hero.rotuloDestaque}
                 </span>
                 <span
-                  className="text-[var(--pf-fg)]"
+                  className="pf-serif text-[var(--pf-fg)]"
                   style={{
-                    fontFamily: "var(--pf-font-display)",
                     fontSize: "clamp(1.75rem, 4.5vw, 2.5rem)",
                     lineHeight: 1,
                     letterSpacing: "-0.01em",

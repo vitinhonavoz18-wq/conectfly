@@ -15,8 +15,8 @@ export function PFExperience() {
     <PFSection id="experiencia" superficie="dark" aria-labelledby="pf-experiencia-titulo">
       <div className="pf-grid-texture" aria-hidden="true" />
 
-      <div className="pf-container relative grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:col-span-5">
+      <div className="pf-container relative grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div className="lg:col-span-5 lg:py-8">
           <PFSectionHeading
             id="pf-experiencia-titulo"
             eyebrow={experiencia.eyebrow}
@@ -59,9 +59,8 @@ export function PFExperience() {
                   {marco.rotulo}
                 </span>
                 <h3
-                  className="text-[var(--pf-fg)]"
+                  className="pf-serif text-[var(--pf-fg)]"
                   style={{
-                    fontFamily: "var(--pf-font-display)",
                     fontSize: "clamp(1.35rem, 2.4vw, 1.75rem)",
                     lineHeight: 1.2,
                   }}

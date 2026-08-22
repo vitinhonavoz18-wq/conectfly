@@ -29,6 +29,118 @@
  * Tailwind continua tendo a palavra final.
  * -------------------------------------------------------------------------- */
 
+/* =============================================================================
+ * FONTES — servidas pelo próprio site
+ *
+ * Antes, as duas famílias vinham do servidor do Google. Isso custava caro no
+ * abrir da página: o navegador precisava descobrir o endereço do Google, abrir
+ * uma conexão segura, baixar um arquivo de instruções e só então buscar as
+ * letras. Quatro idas e vindas antes da primeira palavra aparecer.
+ *
+ * Agora os arquivos moram junto com o site. É a diferença entre ter a farinha
+ * na despensa e mandar alguém comprar farinha toda vez que for fazer o bolo.
+ *
+ * Também caiu o peso: das 13 variações que vinham do Google, o site usa 3
+ * (a serifada em um peso, a sem-serifa em três). As outras eram baixadas sem
+ * nunca aparecer na tela.
+ *
+ * `font-display: swap` = o texto aparece na hora, com a letra do sistema, e
+ * troca pela definitiva assim que ela chega. Ninguém fica olhando para uma
+ * página em branco esperando uma fonte.
+ * ========================================================================== */
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fontes/cormorant-garamond-500-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fontes/cormorant-garamond-500-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fontes/manrope-400-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fontes/manrope-400-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fontes/manrope-600-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fontes/manrope-600-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fontes/manrope-700-latin-ext.woff2") format("woff2");
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fontes/manrope-700-latin.woff2") format("woff2");
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @layer components {
   .pf-root {
     /* ---------------------------------------------------------------------
@@ -37,11 +149,6 @@
    * ------------------------------------------------------------------- */
     --pf-black: oklch(0.125 0.004 285); /* preto profundo */
     --pf-graphite: oklch(0.171 0.005 285); /* grafite */
-    --pf-charcoal: oklch(0.232 0.006 285); /* cinza chumbo */
-    --pf-slate: oklch(0.33 0.007 285);
-    --pf-steel: oklch(0.5 0.008 285);
-    --pf-smoke: oklch(0.66 0.006 285);
-    --pf-mist: oklch(0.86 0.003 285);
     --pf-paper: oklch(0.965 0.003 95); /* off-white quente */
     --pf-white: oklch(1 0 0);
 
@@ -53,23 +160,29 @@
 
     /* Dourado — presença mínima, apenas em fios e detalhes. */
     --pf-gold: oklch(0.79 0.062 84);
-    --pf-gold-dim: oklch(0.62 0.05 84);
 
     /* ---------------------------------------------------------------------
    * 2. TOKENS SEMÂNTICOS — superfície ESCURA (padrão do site)
    * ------------------------------------------------------------------- */
     --pf-bg: var(--pf-black);
-    --pf-bg-raised: var(--pf-graphite);
     --pf-surface: oklch(0.185 0.005 285);
     --pf-surface-hover: oklch(0.215 0.006 285);
 
+    /* Três níveis de texto. Os valores não são estéticos: são o mínimo que
+     * passa no teste de contraste da norma de acessibilidade (WCAG AA, 4,5:1
+     * para texto comum). O tom mais apagado do site precisa continuar legível
+     * para quem lê no celular, no sol, ou enxerga menos.
+     * Medido: fg 16,8:1 · muted 9,1:1 · subtle 5,2:1 sobre o preto. */
     --pf-fg: var(--pf-paper);
-    --pf-fg-muted: var(--pf-smoke);
-    --pf-fg-subtle: var(--pf-steel);
+    --pf-fg-muted: oklch(0.72 0.006 285);
+    --pf-fg-subtle: oklch(0.645 0.007 285);
 
     --pf-line: oklch(1 0 0 / 10%);
     --pf-line-strong: oklch(1 0 0 / 20%);
     --pf-line-gold: oklch(0.79 0.062 84 / 55%);
+    /* Dourado quando usado como TEXTO (etiquetas de pendência). Muda conforme
+     * a superfície: o dourado claro some no off-white. */
+    --pf-gold-text: var(--pf-gold);
 
     --pf-accent: var(--pf-bordeaux);
     --pf-accent-hover: var(--pf-bordeaux-bright);
@@ -80,7 +193,6 @@
     --pf-shadow-soft: 0 1px 2px oklch(0 0 0 / 40%);
     --pf-shadow-card: 0 18px 48px -24px oklch(0 0 0 / 85%);
     --pf-shadow-raise: 0 28px 70px -30px oklch(0 0 0 / 95%);
-    --pf-shadow-portrait: 0 60px 120px -50px oklch(0 0 0 / 90%);
     /* Sombra do retrato aplicada por filtro (não aceita o 4º valor). */
     --pf-drop-portrait: 0 34px 44px oklch(0 0 0 / 62%);
 
@@ -119,9 +231,7 @@
 
     /* Cantos praticamente retos — leitura editorial, não "app". */
     --pf-radius-xs: 2px;
-    --pf-radius-sm: 3px;
     --pf-radius: 4px;
-    --pf-radius-lg: 8px;
 
     --pf-header-h: 5.25rem;
     --pf-header-h-compact: 4rem;
@@ -131,7 +241,6 @@
    *    reajusta todas as animações do site de uma vez só.
    * ------------------------------------------------------------------- */
     --pf-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --pf-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
     --pf-dur-fast: 180ms;
     --pf-dur: 380ms;
     --pf-dur-slow: 820ms;
@@ -164,17 +273,20 @@
  * -------------------------------------------------------------------------- */
   .pf-root [data-pf-surface="light"] {
     --pf-bg: var(--pf-paper);
-    --pf-bg-raised: var(--pf-white);
     --pf-surface: var(--pf-white);
     --pf-surface-hover: oklch(0.985 0.002 95);
 
     --pf-fg: var(--pf-graphite);
     --pf-fg-muted: oklch(0.45 0.007 285);
-    --pf-fg-subtle: oklch(0.58 0.006 285);
+    /* Escurecido de 0.58 para 0.50: no off-white, o tom anterior batia 4,27:1
+     * e ficava logo abaixo do mínimo da norma. */
+    --pf-fg-subtle: oklch(0.5 0.006 285);
 
     --pf-line: oklch(0.171 0.005 285 / 12%);
     --pf-line-strong: oklch(0.171 0.005 285 / 24%);
     --pf-line-gold: oklch(0.62 0.05 84 / 60%);
+    /* No claro o dourado vira âmbar escuro, senão a etiqueta some no fundo. */
+    --pf-gold-text: oklch(0.46 0.085 75);
 
     --pf-accent: var(--pf-bordeaux);
     --pf-accent-hover: var(--pf-bordeaux-deep);
@@ -193,7 +305,6 @@
   /* Superfície grafite — degrau intermediário entre o preto e o off-white. */
   .pf-root [data-pf-surface="graphite"] {
     --pf-bg: var(--pf-graphite);
-    --pf-bg-raised: oklch(0.205 0.005 285);
     --pf-surface: oklch(0.212 0.006 285);
     --pf-surface-hover: oklch(0.245 0.007 285);
     background-color: var(--pf-bg);
@@ -250,8 +361,12 @@
       linear-gradient(to right, var(--pf-line) 1px, transparent 1px),
       linear-gradient(to bottom, var(--pf-line) 1px, transparent 1px);
     background-size: clamp(4rem, 8vw, 7rem) clamp(4rem, 8vw, 7rem);
-    opacity: 0.5;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 78%);
+    /* Discreta de verdade: a 0,5 dava para ver onde a grade começava e
+     * terminava, e uma textura que se anuncia deixa de ser textura. O
+     * desvanecer também ficou mais longo, para não sobrar canto marcado. */
+    opacity: 0.32;
+    mask-image: radial-gradient(ellipse 90% 75% at 50% 45%, black 0%, transparent 95%);
+    -webkit-mask-image: radial-gradient(ellipse 90% 75% at 50% 45%, black 0%, transparent 95%);
   }
 
   /* =============================================================================
@@ -259,6 +374,7 @@
  * ========================================================================== */
 
   .pf-display {
+    text-wrap: balance;
     font-family: var(--pf-font-display);
     font-size: var(--pf-text-display);
     font-weight: 500;
@@ -268,6 +384,7 @@
   }
 
   .pf-h1 {
+    text-wrap: balance;
     font-family: var(--pf-font-display);
     font-size: var(--pf-text-h1);
     font-weight: 500;
@@ -277,15 +394,19 @@
   }
 
   .pf-h2 {
+    text-wrap: balance;
     font-family: var(--pf-font-display);
     font-size: var(--pf-text-h2);
     font-weight: 500;
-    line-height: 1.08;
+    /* 1.12 e não 1.08: em português os acentos sobem muito (Experiência,
+     * Ações, órgão) e encostavam na linha de cima quando o título quebrava. */
+    line-height: 1.12;
     letter-spacing: var(--pf-tracking-tight);
     color: var(--pf-fg);
   }
 
   .pf-h3 {
+    text-wrap: balance;
     font-family: var(--pf-font-sans);
     font-size: var(--pf-text-h3);
     font-weight: 600;
@@ -319,15 +440,39 @@
   }
 
   .pf-lead {
+    /* `pretty` = o navegador reserva pelo menos duas palavras para a última
+     * linha. Sem isso, um parágrafo termina com uma palavra solta embaixo —
+     * o "texto órfão", que faz o bloco parecer torto sem ninguém saber
+     * explicar por quê. */
+    text-wrap: pretty;
     font-size: var(--pf-text-lead);
     line-height: 1.65;
     color: var(--pf-fg-muted);
   }
 
   .pf-body {
+    text-wrap: pretty;
     font-size: var(--pf-text-body);
     line-height: 1.75;
     color: var(--pf-fg-muted);
+  }
+
+  /* Serifada do site, em um peso só.
+   *
+   * Antes, metade dos lugares pedia a serifada sem dizer o peso (e vinha 400)
+   * e a outra metade pedia 500. Duas espessuras da mesma letra na mesma página
+   * é o tipo de detalhe que ninguém sabe apontar, mas que faz o conjunto
+   * parecer montado às pressas.
+   *
+   * Com um peso só: aparência consistente e um arquivo de fonte a menos para
+   * o visitante baixar (36 KB). */
+  .pf-serif {
+    font-family: var(--pf-font-display);
+    font-weight: 500;
+    /* Mesma regra dos títulos: distribui as linhas em vez de largar uma
+     * palavra sozinha no fim. Em texto de uma linha só, não faz efeito
+     * nenhum. */
+    text-wrap: balance;
   }
 
   .pf-numeral {
@@ -506,8 +651,8 @@
     padding: 0.15rem 0.55rem;
     border: 1px dashed var(--pf-line-gold);
     border-radius: var(--pf-radius-xs);
-    background-color: oklch(0.79 0.062 84 / 8%);
-    color: var(--pf-gold);
+    background-color: oklch(0.79 0.062 84 / 10%);
+    color: var(--pf-gold-text);
     font-family: var(--pf-font-sans);
     font-size: var(--pf-text-xs);
     font-weight: 600;

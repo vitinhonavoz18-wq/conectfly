@@ -36,9 +36,8 @@ export function PFPracticeAreas() {
               className="group flex h-full flex-col justify-between gap-6 border border-dashed border-[var(--pf-line-strong)] p-7 transition-colors duration-500 hover:border-[var(--pf-accent)] hover:bg-[var(--pf-accent-veil)] sm:p-8"
             >
               <span
-                className="text-[var(--pf-fg)]"
+                className="pf-serif text-[var(--pf-fg)]"
                 style={{
-                  fontFamily: "var(--pf-font-display)",
                   fontSize: "1.5rem",
                   lineHeight: 1.2,
                 }}

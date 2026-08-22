@@ -18,8 +18,7 @@
 /** Marca um dado que o advogado ainda não forneceu. */
 export const PENDENTE = "__PENDENTE__" as const;
 
-export type Pendente = typeof PENDENTE;
-export type CampoTexto = string | Pendente;
+export type CampoTexto = string | typeof PENDENTE;
 
 export function isPendente(valor: CampoTexto | undefined | null): boolean {
   return valor === PENDENTE || valor === undefined || valor === null || valor === "";
@@ -33,7 +32,7 @@ export const perfil = {
   nome: "Paulo Ferraro",
   nomeCurto: "Ferraro",
   titulo: "Advogado",
-  especialidade: "Direito Médico",
+  areaPrincipal: "Direito Médico",
   anosAtuacao: 7,
   /** Aparece no rodapé e no cabeçalho de identidade profissional. */
   oab: PENDENTE as CampoTexto,
@@ -79,8 +78,28 @@ export const ctaSecundario = { rotulo: "Conhecer áreas de atuação", ancora: "
 export const hero = {
   identificacao: "Paulo Ferraro · Advogado",
   nome: "Paulo Ferraro",
-  headline: "Advocacia especializada e atuação jurídica estratégica.",
+  headline: "Advocacia técnica e atuação jurídica estratégica.",
   destaque: "Direito Médico",
+
+  /**
+   * ATENÇÃO — LEIA ANTES DE MUDAR ESTA LINHA.
+   *
+   * O material enviado dizia "Especialista em Direito Médico". A palavra
+   * "especialista", na publicidade da advocacia, tem um sentido específico: o
+   * Provimento nº 205/2021 do Conselho Federal da OAB permite anunciar as
+   * ÁREAS DE ATUAÇÃO livremente, mas reserva o título de especialista a quem
+   * possui a titulação correspondente (pós-graduação ou certificação
+   * reconhecida na área).
+   *
+   * É a mesma lógica de um restaurante: dizer "fazemos massa italiana" é
+   * sempre permitido; dizer "chef formado na Itália" só vale com o diploma na
+   * parede.
+   *
+   * Por isso o padrão aqui é a forma que vale em qualquer caso. Se o Dr. Paulo
+   * possuir a titulação, basta trocar esta linha por "Especialista em" e o
+   * site volta ao texto original — nada mais precisa mudar.
+   */
+  rotuloDestaque: "Atuação principal em",
   descricao:
     "Atuação técnica em responsabilidade civil médica. Cada caso é analisado a partir da " +
     "documentação, e o cliente acompanha cada etapa em linguagem que entende.",
@@ -465,4 +484,36 @@ export const seo = {
     "Paulo Ferraro, advogado com 7 anos de atuação e destaque em Direito Médico: erro " +
     "médico, erro de diagnóstico, dano estético e responsabilidade civil médica. Também " +
     "atende Direito Previdenciário, do Consumidor, Cível, de Família e de Trânsito.",
+
+  /**
+   * Endereço definitivo do site (ex.: "https://pauloferraro.adv.br").
+   *
+   * Enquanto estiver PENDENTE, o site deixa de anunciar duas coisas: o
+   * "endereço oficial" da página e a imagem de compartilhamento. É proposital
+   * — apontar para um endereço errado é pior do que não apontar para nenhum,
+   * porque o Google passa a considerar a página como cópia de um lugar que não
+   * existe.
+   *
+   * Assim que o domínio for definido, basta trocar aqui: o endereço oficial, o
+   * link de compartilhamento e os dados do Google se ajustam sozinhos.
+   */
+  dominio: PENDENTE as CampoTexto,
+
+  /** Nome do arquivo de imagem para compartilhamento (1200x630 px). */
+  caminhoImagemCompartilhamento: "src/assets/paulo-ferraro-og.jpg",
+} as const;
+
+/* -------------------------------------------------------------------------- */
+/* CIDADE DE ATUAÇÃO                                                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Salvador aparece porque é onde fica a Prefeitura cuja JARI/SEMOB o advogado
+ * coordena — informação que ele mesmo forneceu. Não é o endereço do escritório,
+ * que continua pendente e não foi inventado em lugar nenhum.
+ */
+export const cidade = {
+  nome: "Salvador",
+  estado: "BA",
+  pais: "BR",
 } as const;

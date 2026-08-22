@@ -55,9 +55,8 @@ export function PFAbout() {
               </span>
               <span className="flex flex-col pb-1">
                 <span
-                  className="text-[var(--pf-fg)]"
+                  className="pf-serif text-[var(--pf-fg)]"
                   style={{
-                    fontFamily: "var(--pf-font-display)",
                     fontSize: "1.35rem",
                     lineHeight: 1,
                   }}
@@ -133,9 +132,8 @@ export function PFAbout() {
           <PFReveal animacao="fade" indice={3}>
             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--pf-line)] pt-6">
               <span
-                className="text-[var(--pf-fg)]"
+                className="pf-serif text-[var(--pf-fg)]"
                 style={{
-                  fontFamily: "var(--pf-font-display)",
                   fontSize: "1.25rem",
                   letterSpacing: "0.01em",
                 }}

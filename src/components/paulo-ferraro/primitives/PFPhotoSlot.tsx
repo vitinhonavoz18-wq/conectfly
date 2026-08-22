@@ -60,12 +60,16 @@ export function PFPhotoSlot({
       role="img"
       aria-label={`${descricao} — imagem ainda não enviada`}
     >
-      <ImageOff size={28} strokeWidth={1.2} className="text-[var(--pf-gold)]" aria-hidden="true" />
+      <ImageOff
+        size={28}
+        strokeWidth={1.2}
+        className="text-[var(--pf-gold-text)]"
+        aria-hidden="true"
+      />
       <div className="flex flex-col gap-1.5">
         <span
-          className="text-[var(--pf-fg)]"
+          className="pf-serif text-[var(--pf-fg)]"
           style={{
-            fontFamily: "var(--pf-font-display)",
             fontSize: "1.25rem",
             lineHeight: 1.2,
           }}
@@ -76,7 +80,7 @@ export function PFPhotoSlot({
           Salve o arquivo em
         </span>
         <code
-          className="mx-auto inline-block border border-[var(--pf-line)] bg-[var(--pf-bg)] px-2 py-1 text-[var(--pf-gold)]"
+          className="mx-auto inline-block border border-[var(--pf-line)] bg-[var(--pf-bg)] px-2 py-1 text-[var(--pf-gold-text)]"
           style={{ fontSize: "0.75rem" }}
         >
           {caminhoEsperado}

@@ -20,7 +20,9 @@ export function PFFooter() {
       className="border-t border-[var(--pf-line)] bg-[var(--pf-bg)]"
       aria-label="Rodapé"
     >
-      <div className="pf-container flex flex-col gap-10 py-14">
+      {/* Folga extra embaixo no celular: é onde mora o botão flutuante de
+          contato, e sem esse respiro ele encostava na última linha do rodapé. */}
+      <div className="pf-container flex flex-col gap-10 pt-14 pb-28 lg:pb-14">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           {/* Identidade */}
           <div className="flex flex-col gap-5 md:col-span-5">
@@ -153,7 +155,7 @@ export function PFFooter() {
               className="text-[var(--pf-fg-subtle)]"
               style={{ fontSize: "var(--pf-text-xs)", letterSpacing: "0.06em" }}
             >
-              {perfil.titulo} · {perfil.especialidade}
+              {perfil.titulo} · {perfil.areaPrincipal}
             </span>
           </div>
         </div>

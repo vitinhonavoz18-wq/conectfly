@@ -8,6 +8,8 @@
  *   src/assets/paulo-ferraro-hero.png    → fotografia principal (PNG recortado,
  *                                          fundo transparente, Full HD)
  *   src/assets/paulo-ferraro-sobre.jpg   → segunda fotografia (seção "Sobre")
+ *   src/assets/paulo-ferraro-og.jpg      → imagem de compartilhamento em redes
+ *                                          sociais (1200x630 px)
  *
  * Nada mais precisa ser alterado: o site encontra o arquivo sozinho, gera as
  * versões otimizadas e passa a exibi-lo. Enquanto o arquivo não existir, o site
@@ -38,11 +40,26 @@ const sobreModules = import.meta.glob("../../assets/paulo-ferraro-sobre.{png,web
   import: "default",
 }) as ModuloImagem;
 
+// Imagem que aparece quando alguém compartilha o link no WhatsApp, no
+// Instagram, no LinkedIn ou no Facebook. Formato recomendado: 1200x630 px.
+const compartilharModules = import.meta.glob("../../assets/paulo-ferraro-og.{jpg,jpeg,png,webp}", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as ModuloImagem;
+
 /** Endereço da fotografia principal do Hero, ou `null` se ainda não foi enviada. */
 export const fotoHero: string | null = primeiraImagem(heroModules);
 
 /** Endereço da fotografia da seção "Sobre", ou `null` se ainda não foi enviada. */
 export const fotoSobre: string | null = primeiraImagem(sobreModules);
+
+/**
+ * Imagem de compartilhamento, ou `null` enquanto ela não existir. Sem ela, o
+ * site não anuncia imagem nenhuma — melhor um link limpo do que um link com o
+ * quadrado cinza de "imagem não encontrada".
+ */
+export const imagemCompartilhamento: string | null = primeiraImagem(compartilharModules);
 
 /** Caminhos esperados — exibidos na tela do espaço reservado. */
 export const CAMINHO_FOTO_HERO = "src/assets/paulo-ferraro-hero.png";

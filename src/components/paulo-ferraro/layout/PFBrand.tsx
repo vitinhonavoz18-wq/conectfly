@@ -25,9 +25,8 @@ export function PFBrand({ compacta = false, className }: PFBrandProps) {
       />
       <span className="flex flex-col leading-none">
         <span
-          className="pf-numeral text-[var(--pf-fg)]"
+          className="pf-serif pf-numeral text-[var(--pf-fg)]"
           style={{
-            fontFamily: "var(--pf-font-display)",
             fontSize: compacta ? "1.125rem" : "1.35rem",
             letterSpacing: "0.02em",
             whiteSpace: "nowrap",
@@ -37,9 +36,11 @@ export function PFBrand({ compacta = false, className }: PFBrandProps) {
           {perfil.nome}
         </span>
         <span
-          className="text-[var(--pf-fg-subtle)]"
+          className="text-[var(--pf-fg-muted)]"
           style={{
-            fontSize: "0.5625rem",
+            /* Era 9px. Abaixo de 10px a palavra vira mancha em tela de
+             * celular — e ainda reprovava no teste de contraste. */
+            fontSize: "0.625rem",
             fontWeight: 600,
             letterSpacing: "var(--pf-tracking-eyebrow)",
             textTransform: "uppercase",

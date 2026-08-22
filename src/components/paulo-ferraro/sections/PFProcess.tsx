@@ -23,7 +23,11 @@ export function PFProcess() {
           alinhamento="center"
         />
 
-        <ol className="grid grid-cols-1 gap-px border border-[var(--pf-line)] bg-[var(--pf-line)] md:grid-cols-3">
+        {/* Três colunas só a partir de 1024 px. Em tablet de 768 px cada coluna
+            ficava com 230 px: o título quebrava em quatro linhas e o texto virava
+            uma fita estreita. Melhor uma coluna larga e legível do que três
+            espremidas. */}
+        <ol className="grid grid-cols-1 gap-px border border-[var(--pf-line)] bg-[var(--pf-line)] lg:grid-cols-3">
           {atendimento.etapas.map((etapa, indice) => (
             <PFReveal
               key={etapa.numero}

@@ -29,9 +29,8 @@ export function PFAuthorityStrip() {
               className="flex flex-col gap-2 border-t border-[var(--pf-line)] py-6 first:border-t-0 sm:border-t-0 sm:border-l sm:px-6 sm:first:border-l-0 sm:first:pl-0 lg:py-2"
             >
               <dt
-                className="text-[var(--pf-fg)]"
+                className="pf-serif text-[var(--pf-fg)]"
                 style={{
-                  fontFamily: "var(--pf-font-display)",
                   fontSize: "clamp(1.5rem, 2.6vw, 2rem)",
                   lineHeight: 1.1,
                   letterSpacing: "-0.01em",
