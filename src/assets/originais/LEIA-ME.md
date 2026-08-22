@@ -15,6 +15,15 @@ Se o original ficasse na pasta de entrega, ele seria copiado para o servidor a
 cada publicação sem nunca ser baixado por ninguém: peso morto em toda subida do
 site.
 
+## O que está guardado aqui
+
+- `paulo-ferraro-hero.png` — fotografia principal (1,9 MB)
+- `paulo-ferraro-logo.png` — logo oficial (606 KB)
+
+Da logo saíram duas coisas: a versão leve para uso no site
+(`src/assets/paulo-ferraro-logo.webp`, 175 KB, com a margem vazia recortada) e
+a paleta de bronze do site inteiro, lida diretamente dos pixels do monograma.
+
 ## Ao enviar uma foto nova
 
 1. salve o arquivo original em `src/assets/` com o nome de sempre

@@ -62,7 +62,7 @@ export function PFMedicalLaw() {
                   {ctaPrincipal.rotulo}
                 </PFButton>
                 <p
-                  className="max-w-[44ch] border-l border-[var(--pf-line-gold)] pl-4 text-[var(--pf-fg-subtle)]"
+                  className="max-w-[44ch] border-l border-[var(--pf-line-accent)] pl-4 text-[var(--pf-fg-subtle)]"
                   style={{ fontSize: "var(--pf-text-xs)", lineHeight: 1.6 }}
                 >
                   {direitoMedico.nota}

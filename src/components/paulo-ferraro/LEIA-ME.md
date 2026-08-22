@@ -241,6 +241,38 @@ não "pula" enquanto carrega.
 
 ---
 
+## 11. A cor da marca: bronze
+
+O site usa o **bronze da logo oficial**. Os tons não foram escolhidos a olho: o
+monograma PF da logo foi lido pixel a pixel, e a escala do site é exatamente a
+que a logo usa — do escuro da sombra ao brilho do topo do relevo.
+
+| Onde                       | Tom         | Código de tinta |
+| -------------------------- | ----------- | --------------- |
+| sombra, brilhos de fundo   | mais escuro | `#5f2f0b`       |
+| bronze como texto no claro | escuro      | `#8a5a22`       |
+| botão nas seções claras    | médio       | `#b97b44`       |
+| **a cor da marca**         | **bronze**  | **`#d79c57`**   |
+| destaque, foco do teclado  | brilho      | `#efb66c`       |
+
+**Por que o tom muda conforme o fundo.** O mesmo bronze que brilha no preto
+some no off-white — como caneta amarela que se lê no papel escuro e desaparece
+no branco. Por isso cada superfície tem seu tom: no preto o bronze da marca
+(6,95 vezes de diferença para o fundo), no off-white o bronze escuro (5,36
+vezes). Ambos acima do mínimo da norma de acessibilidade.
+
+**O botão nas seções claras usa o tom médio**, não o da marca: o bronze claro
+sobre papel dá só 2,18 — a borda do botão sumiria contra a página.
+
+**O dourado antigo foi absorvido.** Antes existiam duas cores quentes (bordô e
+dourado) que faziam papéis parecidos. Agora é uma família só, usada em
+claridades diferentes: fios finos, ícones, números, botões. Uma cor bem usada
+soa mais cara do que duas se acotovelando.
+
+Mudar tudo é mexer em cinco linhas de `theme.css`, no bloco **BRONZE**.
+
+---
+
 ## 11. Sobre a palavra "especialista"
 
 O material enviado dizia "Especialista em Direito Médico". Na publicidade da

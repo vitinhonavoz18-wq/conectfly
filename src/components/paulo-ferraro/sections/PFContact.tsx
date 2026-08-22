@@ -157,7 +157,7 @@ export function PFContact() {
               )}
 
               <p
-                className="mt-2 max-w-[46ch] border-l border-[var(--pf-line-gold)] pl-4 text-[var(--pf-fg-subtle)]"
+                className="mt-2 max-w-[46ch] border-l border-[var(--pf-line-accent)] pl-4 text-[var(--pf-fg-subtle)]"
                 style={{ fontSize: "var(--pf-text-xs)", lineHeight: 1.7 }}
               >
                 {contato.nota}

@@ -19,7 +19,7 @@ export function PFCta() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(80% 120% at 50% 100%, oklch(0.3 0.1 17 / 55%) 0%, transparent 68%)",
+            "radial-gradient(80% 120% at 50% 100%, oklch(0.363 0.084 52 / 48%) 0%, transparent 68%)",
         }}
       />
       <div className="pf-grid-texture" aria-hidden="true" />

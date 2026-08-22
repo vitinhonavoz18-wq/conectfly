@@ -43,7 +43,7 @@ export function PFExperience() {
               {/* Marcador losango — discreto, sem clichê de linha do tempo. */}
               <span
                 aria-hidden="true"
-                className="absolute top-2 -left-[4.5px] h-2.5 w-2.5 rotate-45 border border-[var(--pf-line-gold)] bg-[var(--pf-bg)]"
+                className="absolute top-2 -left-[4.5px] h-2.5 w-2.5 rotate-45 border border-[var(--pf-line-accent)] bg-[var(--pf-bg)]"
               />
 
               <div className="flex flex-col gap-2">

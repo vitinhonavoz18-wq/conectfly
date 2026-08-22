@@ -53,7 +53,7 @@ export function PFPhotoSlot({
   return (
     <div
       className={cn(
-        "flex h-full w-full flex-col items-center justify-center gap-4 border border-dashed border-[var(--pf-line-gold)] bg-[var(--pf-accent-veil)] p-6 text-center",
+        "flex h-full w-full flex-col items-center justify-center gap-4 border border-dashed border-[var(--pf-line-accent)] bg-[var(--pf-accent-veil)] p-6 text-center",
         className,
       )}
       data-pf-placeholder="fotografia"
@@ -63,7 +63,7 @@ export function PFPhotoSlot({
       <ImageOff
         size={28}
         strokeWidth={1.2}
-        className="text-[var(--pf-gold-text)]"
+        className="text-[var(--pf-accent-soft)]"
         aria-hidden="true"
       />
       <div className="flex flex-col gap-1.5">
@@ -80,7 +80,7 @@ export function PFPhotoSlot({
           Salve o arquivo em
         </span>
         <code
-          className="mx-auto inline-block border border-[var(--pf-line)] bg-[var(--pf-bg)] px-2 py-1 text-[var(--pf-gold-text)]"
+          className="mx-auto inline-block border border-[var(--pf-line)] bg-[var(--pf-bg)] px-2 py-1 text-[var(--pf-accent-soft)]"
           style={{ fontSize: "0.75rem" }}
         >
           {caminhoEsperado}

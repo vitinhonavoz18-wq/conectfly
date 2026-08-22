@@ -153,7 +153,7 @@ export function PFHeader() {
               ref={botaoAbrirRef}
               type="button"
               onClick={() => setMenuAberto(true)}
-              className="flex h-11 w-11 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-fg)] transition-colors duration-200 hover:border-[var(--pf-line-gold)] hover:bg-[var(--pf-accent-veil)] lg:hidden"
+              className="flex h-11 w-11 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-fg)] transition-colors duration-200 hover:border-[var(--pf-line-accent)] hover:bg-[var(--pf-accent-veil)] lg:hidden"
               aria-label="Abrir menu"
               aria-expanded={menuAberto}
               aria-controls="pf-menu-mobile"
@@ -178,7 +178,7 @@ export function PFHeader() {
             <button
               type="button"
               onClick={fecharMenu}
-              className="flex h-11 w-11 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-fg)] transition-colors duration-200 hover:border-[var(--pf-line-gold)]"
+              className="flex h-11 w-11 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-fg)] transition-colors duration-200 hover:border-[var(--pf-line-accent)]"
               aria-label="Fechar menu"
             >
               <X size={20} strokeWidth={1.4} aria-hidden="true" />

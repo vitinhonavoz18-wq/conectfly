@@ -152,14 +152,23 @@
     --pf-paper: oklch(0.965 0.003 95); /* off-white quente */
     --pf-white: oklch(1 0 0);
 
-    /* Vinho / bordô — dialoga com a gravata da fotografia. */
-    --pf-bordeaux-deep: oklch(0.3 0.1 17);
-    --pf-bordeaux: oklch(0.415 0.128 17);
-    --pf-bordeaux-bright: oklch(0.52 0.145 18);
-    --pf-bordeaux-soft: oklch(0.63 0.13 19); /* legível como texto no escuro */
-
-    /* Dourado — presença mínima, apenas em fios e detalhes. */
-    --pf-gold: oklch(0.79 0.062 84);
+    /* -------------------------------------------------------------------
+     * BRONZE — a cor da marca, tirada da logo oficial.
+     *
+     * Os cinco tons não foram escolhidos "a olho": o monograma PF da logo foi
+     * lido pixel a pixel e estes são os tons que ele realmente usa, do escuro
+     * da sombra ao brilho do topo do relevo. Assim o site e a logo falam a
+     * mesma língua de cor, em vez de duas cores parecidas que brigam.
+     *
+     * Equivalência em código de tinta:
+     *   sombra #5f2f0b · escuro #8a5a22 · médio #b97b44
+     *   MARCA  #d79c57 · brilho #efb66c
+     * ------------------------------------------------------------------- */
+    --pf-bronze-deep: oklch(0.363 0.084 52);
+    --pf-bronze-dark: oklch(0.51 0.095 67);
+    --pf-bronze-mid: oklch(0.636 0.105 61);
+    --pf-bronze: oklch(0.736 0.111 69);
+    --pf-bronze-bright: oklch(0.813 0.113 72);
 
     /* ---------------------------------------------------------------------
    * 2. TOKENS SEMÂNTICOS — superfície ESCURA (padrão do site)
@@ -179,16 +188,18 @@
 
     --pf-line: oklch(1 0 0 / 10%);
     --pf-line-strong: oklch(1 0 0 / 20%);
-    --pf-line-gold: oklch(0.79 0.062 84 / 55%);
-    /* Dourado quando usado como TEXTO (etiquetas de pendência). Muda conforme
-     * a superfície: o dourado claro some no off-white. */
-    --pf-gold-text: var(--pf-gold);
+    --pf-line-accent: oklch(0.736 0.111 69 / 45%);
 
-    --pf-accent: var(--pf-bordeaux);
-    --pf-accent-hover: var(--pf-bordeaux-bright);
-    --pf-accent-fg: var(--pf-paper); /* texto sobre o bordô cheio */
-    --pf-accent-text: var(--pf-bordeaux-soft); /* bordô usado como texto */
-    --pf-accent-veil: oklch(0.415 0.128 17 / 16%);
+    /* O bronze muda de tom conforme o fundo: no preto ele pode ser claro, no
+     * off-white precisa escurecer, senão some. Medido: bronze da marca sobre o
+     * preto dá 6,95:1; o bronze escuro sobre o papel dá 5,36:1 — ambos acima
+     * do mínimo da norma de acessibilidade. */
+    --pf-accent: var(--pf-bronze); /* preenchimento do botão */
+    --pf-accent-hover: var(--pf-bronze-bright);
+    --pf-accent-fg: var(--pf-black); /* texto ESCURO sobre o bronze */
+    --pf-accent-text: var(--pf-bronze); /* bronze usado como texto */
+    --pf-accent-soft: var(--pf-bronze-bright); /* etiquetas de pendência */
+    --pf-accent-veil: oklch(0.363 0.084 52 / 22%);
 
     --pf-shadow-soft: 0 1px 2px oklch(0 0 0 / 40%);
     --pf-shadow-card: 0 18px 48px -24px oklch(0 0 0 / 85%);
@@ -284,15 +295,18 @@
 
     --pf-line: oklch(0.171 0.005 285 / 12%);
     --pf-line-strong: oklch(0.171 0.005 285 / 24%);
-    --pf-line-gold: oklch(0.62 0.05 84 / 60%);
-    /* No claro o dourado vira âmbar escuro, senão a etiqueta some no fundo. */
-    --pf-gold-text: oklch(0.46 0.085 75);
+    --pf-line-accent: oklch(0.51 0.095 67 / 55%);
 
-    --pf-accent: var(--pf-bordeaux);
-    --pf-accent-hover: var(--pf-bordeaux-deep);
-    --pf-accent-fg: var(--pf-paper);
-    --pf-accent-text: var(--pf-bordeaux);
-    --pf-accent-veil: oklch(0.415 0.128 17 / 8%);
+    /* No off-white o bronze da marca escurece. O botão usa o tom médio: o
+     * bronze claro sobre papel dá 2,18:1 e a borda do botão sumiria contra a
+     * página — o médio dá 3,20:1, que é o mínimo da norma para a forma de um
+     * elemento, e mantém 4,73:1 com o texto escuro em cima dele. */
+    --pf-accent: var(--pf-bronze-mid);
+    --pf-accent-hover: var(--pf-bronze);
+    --pf-accent-fg: var(--pf-black);
+    --pf-accent-text: var(--pf-bronze-dark);
+    --pf-accent-soft: var(--pf-bronze-dark);
+    --pf-accent-veil: oklch(0.51 0.095 67 / 10%);
 
     --pf-shadow-soft: 0 1px 2px oklch(0.171 0.005 285 / 8%);
     --pf-shadow-card: 0 18px 40px -28px oklch(0.171 0.005 285 / 35%);
@@ -349,7 +363,7 @@
     inset-block: 0;
     left: 0;
     width: 4.5rem;
-    background-color: var(--pf-line-gold);
+    background-color: var(--pf-line-accent);
   }
 
   /* Grade arquitetônica — textura de fundo quase imperceptível. */
@@ -521,7 +535,7 @@
   }
 
   .pf-btn:focus-visible {
-    outline: 2px solid var(--pf-gold);
+    outline: 2px solid var(--pf-bronze-bright);
     outline-offset: 3px;
   }
 
@@ -649,10 +663,10 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.15rem 0.55rem;
-    border: 1px dashed var(--pf-line-gold);
+    border: 1px dashed var(--pf-line-accent);
     border-radius: var(--pf-radius-xs);
-    background-color: oklch(0.79 0.062 84 / 10%);
-    color: var(--pf-gold-text);
+    background-color: oklch(0.736 0.111 69 / 12%);
+    color: var(--pf-accent-soft);
     font-family: var(--pf-font-sans);
     font-size: var(--pf-text-xs);
     font-weight: 600;
@@ -722,8 +736,8 @@
     border-radius: 50%;
     background: radial-gradient(
       circle,
-      oklch(0.415 0.128 17 / 34%) 0%,
-      oklch(0.3 0.1 17 / 16%) 42%,
+      oklch(0.45 0.1 55 / 30%) 0%,
+      oklch(0.363 0.084 52 / 15%) 42%,
       transparent 70%
     );
     filter: blur(18px);
@@ -980,7 +994,7 @@
     background-color: var(--pf-black);
     background-image: radial-gradient(
       120% 60% at 50% 104%,
-      oklch(0.3 0.1 17 / 45%) 0%,
+      oklch(0.363 0.084 52 / 38%) 0%,
       transparent 70%
     );
   }
@@ -1035,7 +1049,7 @@
 
   /* Fio, sublinhado e realce de foco — valem para todos, com ou sem animação. */
   .pf-root :focus-visible {
-    outline: 2px solid var(--pf-gold);
+    outline: 2px solid var(--pf-bronze-bright);
     outline-offset: 3px;
     border-radius: var(--pf-radius-xs);
   }
@@ -1288,7 +1302,7 @@
     .pf-btn--primary:hover {
       transform: translateY(-2px);
       box-shadow:
-        0 10px 26px -12px oklch(0.415 0.128 17 / 70%),
+        0 10px 26px -12px oklch(0.736 0.111 69 / 45%),
         var(--pf-shadow-soft);
     }
 
@@ -1339,7 +1353,7 @@
 
     .group:hover .pf-icon-box {
       background-color: var(--pf-accent-veil);
-      border-color: var(--pf-line-gold);
+      border-color: var(--pf-line-accent);
     }
 
     /* Item da lista de Direito Médico. */
@@ -1365,7 +1379,7 @@
     }
 
     .pf-topic:hover .pf-topic__number {
-      color: var(--pf-gold);
+      color: var(--pf-accent-soft);
     }
   }
 
@@ -1408,7 +1422,7 @@
 
   .pf-nav-link[data-pf-active="true"]::after {
     transform: scaleX(1);
-    background-color: var(--pf-gold);
+    background-color: var(--pf-accent-soft);
   }
 
   /* ===========================================================================
@@ -1426,7 +1440,7 @@
     align-items: center;
     gap: 0.625rem;
     padding: 0.85rem 1.15rem;
-    border: 1px solid var(--pf-line-gold);
+    border: 1px solid var(--pf-line-accent);
     border-radius: 999px;
     background-color: oklch(0.125 0.004 285 / 97%);
     color: var(--pf-paper);
