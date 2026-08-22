@@ -32,7 +32,15 @@ export function PFAbout() {
                 aria-hidden="true"
                 className="absolute -bottom-4 -left-4 h-full w-full border border-[var(--pf-accent)] opacity-40"
               />
-              <div className="relative aspect-[4/5] w-full overflow-hidden bg-[var(--pf-surface)]">
+              {/* A proporção 3/4 é a da própria fotografia: assim ela entra
+                  inteira, sem nenhum corte na cabeça nem nos braços.
+
+                  O painel é escuro mesmo numa seção clara. A fotografia veio
+                  recortada, sem fundo — sobre o off-white, um terno preto
+                  recortado pareceria uma figura colada com cola bastão. Sobre o
+                  grafite com um leve brilho de bronze, vira o que ela é: um
+                  retrato de estúdio, e ainda ecoa a primeira tela do site. */}
+              <div className="pf-portrait-panel relative aspect-[3/4] w-full overflow-hidden">
                 <PFPhotoSlot
                   src={fotoSobre}
                   alt={sobre.fotoAlt}

@@ -7,7 +7,9 @@
  *
  *   src/assets/paulo-ferraro-hero.png    → fotografia principal (PNG recortado,
  *                                          fundo transparente, Full HD)
- *   src/assets/paulo-ferraro-sobre.jpg   → segunda fotografia (seção "Sobre")
+ *   src/assets/paulo-ferraro-sobre.png   → segunda fotografia (seção "Sobre"),
+ *                                          também recortada, sem fundo
+ *   src/assets/paulo-ferraro-logo.png    → logo oficial
  *   src/assets/paulo-ferraro-og.jpg      → imagem de compartilhamento em redes
  *                                          sociais (1200x630 px)
  *
@@ -60,6 +62,32 @@ const sobreModules = import.meta.glob("../../assets/paulo-ferraro-sobre.{png,web
   import: "default",
 }) as ModuloImagem;
 
+/**
+ * LOGO OFICIAL — a assinatura que aparece no cabeçalho, no menu e no rodapé.
+ *
+ * O arquivo em uso é a versão reduzida da logo: monograma + barra + "PAULO
+ * FERRARO", sem o fio e sem a linha miúda "ADVOCACIA E CONSULTORIA JURÍDICA".
+ *
+ * O motivo é de leitura, não de gosto. A logo inteira tem 4,3 vezes mais
+ * largura do que altura. Numa barra de cabeçalho de 46 px de altura, aquela
+ * linha miúda fica com 5 px — a mesma coisa que imprimir o endereço do
+ * restaurante em letra de bula no rodapé do cardápio: está lá, mas ninguém lê,
+ * e o que aparece é uma mancha cinza embaixo do nome.
+ *
+ * Então a frase saiu da imagem e virou texto de verdade no rodapé (veja
+ * `perfil.descritor`). Nada se perdeu: a informação continua no site, agora
+ * legível em qualquer tamanho e encontrável pelo Google.
+ *
+ * A logo completa, com a linha miúda, está guardada em
+ * `src/assets/originais/paulo-ferraro-logo-completa.webp` — é a versão para
+ * cartão de visita, papel timbrado e perfil de rede social.
+ */
+const logoModules = import.meta.glob("../../assets/paulo-ferraro-logo.{webp,png,jpg,jpeg}", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as ModuloImagem;
+
 // Imagem que aparece quando alguém compartilha o link no WhatsApp, no
 // Instagram, no LinkedIn ou no Facebook. Formato recomendado: 1200x630 px.
 const compartilharModules = import.meta.glob("../../assets/paulo-ferraro-og.{jpg,jpeg,png,webp}", {
@@ -75,6 +103,23 @@ export const fotoHero: string | null = melhorImagem(heroModules);
 export const fotoSobre: string | null = melhorImagem(sobreModules);
 
 /**
+ * Endereço da logo, ou `null` se o arquivo sumir da pasta. Nesse caso o site
+ * volta sozinho a escrever o nome em letra serifada, como fazia antes de a
+ * logo chegar — o cabeçalho nunca fica sem assinatura.
+ */
+export const logoMarca: string | null = melhorImagem(logoModules);
+
+/**
+ * Tamanho real do arquivo da logo, em pixels.
+ *
+ * Vai escrito na página para o navegador reservar o espaço certo antes de a
+ * imagem chegar. Sem isso, o cabeçalho "pula" no momento em que a logo carrega
+ * — como uma mesa que anda de lugar depois que o garçom já sentou o cliente.
+ */
+export const LOGO_LARGURA = 660;
+export const LOGO_ALTURA = 152;
+
+/**
  * Imagem de compartilhamento, ou `null` enquanto ela não existir. Sem ela, o
  * site não anuncia imagem nenhuma — melhor um link limpo do que um link com o
  * quadrado cinza de "imagem não encontrada".
@@ -83,4 +128,4 @@ export const imagemCompartilhamento: string | null = melhorImagem(compartilharMo
 
 /** Caminhos esperados — exibidos na tela do espaço reservado. */
 export const CAMINHO_FOTO_HERO = "src/assets/paulo-ferraro-hero.png";
-export const CAMINHO_FOTO_SOBRE = "src/assets/paulo-ferraro-sobre.jpg";
+export const CAMINHO_FOTO_SOBRE = "src/assets/paulo-ferraro-sobre.png";

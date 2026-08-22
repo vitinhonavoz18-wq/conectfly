@@ -1,3 +1,4 @@
+import { logoMarca } from "./assets";
 import { areas, cidade, contato, direitoMedico, isPendente, perfil, seo } from "./content";
 
 /**
@@ -44,7 +45,10 @@ export function dadosEstruturados(): string {
   const escritorio: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "LegalService",
-    name: `${perfil.nome} — ${perfil.titulo}`,
+    // O nome que está escrito na logo oficial, e não um nome de fantasia
+    // inventado aqui.
+    name: `${perfil.nome} — ${perfil.descritor}`,
+    alternateName: perfil.nome,
     description: seo.descricao,
     // Apenas "provider": dizer "founder" afirmaria que ele fundou o
     // escritório, e isso não foi informado.
@@ -63,6 +67,12 @@ export function dadosEstruturados(): string {
   if (base) escritorio.url = base;
   if (telefone && !isPendente(telefone.valor)) escritorio.telephone = telefone.valor;
   if (email && !isPendente(email.valor)) escritorio.email = email.valor;
+
+  // A logo é o que o Google usa para desenhar o quadrinho do escritório no
+  // resultado de busca. Só entra na ficha quando o domínio já existe: o
+  // endereço da imagem precisa ser completo ("https://...") para o buscador
+  // conseguir baixá-la — um caminho solto não leva a lugar nenhum.
+  if (base && logoMarca) escritorio.logo = `${base}${logoMarca}`;
 
   return JSON.stringify(escritorio);
 }

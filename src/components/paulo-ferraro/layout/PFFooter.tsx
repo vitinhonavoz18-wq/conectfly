@@ -26,7 +26,9 @@ export function PFFooter() {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
           {/* Identidade */}
           <div className="flex flex-col gap-5 md:col-span-5">
-            <PFBrand />
+            {/* Aqui a logo vem acompanhada da linha "Advocacia e Consultoria
+                Jurídica" — no rodapé sobra altura para ela ser lida. */}
+            <PFBrand comDescritor />
             <p className="pf-body max-w-[44ch]" style={{ fontSize: "var(--pf-text-sm)" }}>
               {rodape.descricao}
             </p>

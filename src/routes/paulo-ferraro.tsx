@@ -7,7 +7,12 @@ import { dadosEstruturados, urlAbsoluta } from "@/components/paulo-ferraro/seo";
 // Folha de estilo exclusiva do site do advogado. Ela carrega só nesta página:
 // quem abre o painel do SiteCreatorFly não baixa nada disso.
 import pfCss from "@/components/paulo-ferraro/theme.css?url";
-import favicon from "@/assets/paulo-ferraro-favicon.svg?url";
+
+// Ícone da aba do navegador: o monograma PF recortado da logo oficial, sobre o
+// grafite do site. Antes era um "F" que eu havia desenhado à mão, enquanto a
+// logo não existia — agora é a marca de verdade.
+import favicon from "@/assets/paulo-ferraro-icone.png?url";
+import iconeApple from "@/assets/paulo-ferraro-icone-apple.png?url";
 
 /**
  * Endereço do site: /paulo-ferraro
@@ -41,7 +46,8 @@ export const Route = createFileRoute("/paulo-ferraro")({
       { name: "geo.placename", content: cidade.nome },
 
       // Open Graph — usado por WhatsApp, Facebook, Instagram e LinkedIn.
-      { property: "og:site_name", content: `${perfil.nome} — ${perfil.titulo}` },
+      // Nome que aparece em cima do link compartilhado, tirado da própria logo.
+      { property: "og:site_name", content: `${perfil.nome} — ${perfil.descritor}` },
       { property: "og:title", content: seo.titulo },
       { property: "og:description", content: seo.descricao },
       { property: "og:type", content: "website" },
@@ -75,7 +81,9 @@ export const Route = createFileRoute("/paulo-ferraro")({
     ],
     links: [
       { rel: "stylesheet", href: pfCss },
-      { rel: "icon", type: "image/svg+xml", href: favicon },
+      { rel: "icon", type: "image/png", href: favicon },
+      // Usado quando alguém salva o site na tela de início do celular.
+      { rel: "apple-touch-icon", sizes: "180x180", href: iconeApple },
 
       // Endereço oficial da página. Só é declarado quando o domínio existe:
       // apontar para um endereço errado é pior do que não apontar para nenhum.

@@ -1,26 +1,69 @@
 import { cn } from "@/lib/utils";
+import { LOGO_ALTURA, LOGO_LARGURA, logoMarca } from "../assets";
 import { perfil } from "../content";
 
 interface PFBrandProps {
-  /** Versão reduzida — usada no cabeçalho compacto. */
+  /** Versão reduzida — usada no cabeçalho depois que a página rola. */
   compacta?: boolean;
+  /**
+   * Mostra "Advocacia e Consultoria Jurídica" embaixo da logo. Só faz sentido
+   * onde sobra altura: no rodapé, não na barra de cima.
+   */
+  comDescritor?: boolean;
   className?: string;
 }
 
 /**
- * Assinatura do escritório: o nome em serifada, com um fio bordô à esquerda e
- * a palavra "Advogado" em letra pequena e espaçada.
+ * Assinatura do escritório: a logo oficial.
  *
- * Faz o papel de logotipo enquanto não existir uma marca desenhada. Quando o
- * logotipo chegar, só este componente muda — o cabeçalho e o rodapé continuam
- * iguais.
+ * O que aparece é o monograma PF, a barra e o nome "PAULO FERRARO" — a mesma
+ * logo que o cliente enviou, sem redesenho, só sem a linha miúda de baixo, que
+ * no tamanho do cabeçalho não se lê (a explicação inteira está em `assets.ts`).
+ *
+ * Essa linha não sumiu do site: no rodapé ela aparece como texto de verdade,
+ * logo abaixo da logo.
+ *
+ * Se o arquivo da logo sumir da pasta, o componente volta a escrever o nome em
+ * letra serifada com o fio de bronze ao lado, como era antes de a logo chegar.
+ * É o pneu estepe: ninguém quer usar, mas o carro não fica parado.
  */
-export function PFBrand({ compacta = false, className }: PFBrandProps) {
+export function PFBrand({ compacta = false, comDescritor = false, className }: PFBrandProps) {
+  const marca = logoMarca ? (
+    <img
+      src={logoMarca}
+      alt={`${perfil.nome} — ${perfil.descritor}`}
+      width={LOGO_LARGURA}
+      height={LOGO_ALTURA}
+      className="pf-brand__logo"
+      data-pf-compacta={compacta}
+      decoding="async"
+    />
+  ) : (
+    <MarcaEscrita compacta={compacta} />
+  );
+
+  if (!comDescritor) {
+    return <span className={cn("flex items-center", className)}>{marca}</span>;
+  }
+
   return (
-    <span className={cn("flex items-center gap-3", className)}>
+    <span className={cn("flex flex-col items-start gap-2.5", className)}>
+      {marca}
+      <span className="pf-brand__descritor">{perfil.descritor}</span>
+    </span>
+  );
+}
+
+/**
+ * Plano B, usado só se o arquivo da logo não estiver na pasta: o nome em
+ * serifada com um fio de bronze à esquerda e a palavra "Advogado" embaixo.
+ */
+function MarcaEscrita({ compacta }: { compacta: boolean }) {
+  return (
+    <span className="flex items-center gap-3">
       <span
         aria-hidden="true"
-        className="h-8 w-px shrink-0 bg-[var(--pf-accent)] transition-all duration-500"
+        className="w-px shrink-0 bg-[var(--pf-accent)] transition-all duration-500"
         style={{ height: compacta ? "1.5rem" : "2rem" }}
       />
       <span className="flex flex-col leading-none">

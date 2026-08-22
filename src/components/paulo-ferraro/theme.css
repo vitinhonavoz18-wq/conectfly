@@ -893,6 +893,70 @@
   }
 
   /* =============================================================================
+ * PAINEL DE RETRATO
+ * ========================================================================== */
+
+  /* Fundo do retrato da seção "Sobre".
+   *
+   * Grafite fixo, e não a cor da seção: a fotografia é recortada (sem fundo),
+   * e é este painel que faz o papel do fundo do estúdio. O brilho de bronze no
+   * alto é o mesmo recurso do fotógrafo que joga uma luz atrás da cabeça para
+   * a pessoa descolar da parede. */
+  .pf-portrait-panel {
+    background-color: var(--pf-black);
+    background-image: radial-gradient(
+      78% 52% at 50% 10%,
+      oklch(0.363 0.084 52 / 45%) 0%,
+      transparent 72%
+    );
+  }
+
+  /* =============================================================================
+ * MARCA (LOGO)
+ * ========================================================================== */
+
+  /* A altura manda; a largura vem sozinha, na proporção do arquivo.
+   *
+   * O `height` é declarado aqui e não no atributo da imagem porque o cabeçalho
+   * encolhe quando a página rola: a logo acompanha o movimento com a mesma
+   * suavidade da barra, em vez de saltar de um tamanho para o outro. */
+  .pf-brand__logo {
+    display: block;
+    height: 2.9rem;
+    width: auto;
+    flex-shrink: 0;
+    transition: height var(--pf-dur) var(--pf-ease-out);
+  }
+
+  .pf-brand__logo[data-pf-compacta="true"] {
+    height: 2.15rem;
+  }
+
+  /* Em tela de celular estreita (320-400 px) a logo de 46 px de altura fica com
+   * 201 px de largura e encosta no botão do menu. Aqui ela cede um pouco. */
+  @media (max-width: 24.999rem) {
+    .pf-brand__logo {
+      height: 2.4rem;
+    }
+
+    .pf-brand__logo[data-pf-compacta="true"] {
+      height: 1.9rem;
+    }
+  }
+
+  /* "ADVOCACIA E CONSULTORIA JURÍDICA" — a linha que vem escrita na logo
+   * oficial, aqui como texto de verdade. Mesma cor e mesmo espaçamento entre
+   * letras do desenho original, mas nítida em qualquer tamanho de tela. */
+  .pf-brand__descritor {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--pf-tracking-eyebrow);
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--pf-accent-text);
+  }
+
+  /* =============================================================================
  * CABEÇALHO
  * ========================================================================== */
 

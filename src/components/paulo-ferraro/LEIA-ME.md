@@ -20,10 +20,11 @@ separadas. Mexer num não estraga o outro.
 
 Salve o arquivo dentro da pasta `src/assets/` com um destes nomes exatos:
 
-| Arquivo                              | Onde aparece                | Formato ideal                        |
-| ------------------------------------ | --------------------------- | ------------------------------------ |
-| `src/assets/paulo-ferraro-hero.png`  | fotografia principal (topo) | PNG recortado, fundo transparente    |
-| `src/assets/paulo-ferraro-sobre.jpg` | seção "Sobre"               | JPG ou PNG, retrato em pé (vertical) |
+| Arquivo                              | Onde aparece                | Formato ideal                     |
+| ------------------------------------ | --------------------------- | --------------------------------- |
+| `src/assets/paulo-ferraro-hero.png`  | fotografia principal (topo) | PNG recortado, fundo transparente |
+| `src/assets/paulo-ferraro-sobre.png` | seção "Sobre"               | PNG recortado, retrato em pé      |
+| `src/assets/paulo-ferraro-logo.png`  | cabeçalho, menu e rodapé    | PNG com fundo transparente        |
 
 **Nada mais precisa ser feito.** O site encontra o arquivo sozinho e passa a
 exibi-lo. Enquanto ele não estiver lá, aparece uma moldura tracejada dizendo
@@ -35,7 +36,8 @@ para um espaço vazio por alguns segundos — e é justamente a primeira coisa q
 ela vê. Por isso o site guarda também uma versão leve (`.webp`, 271 KB) e é
 essa que vai para o visitante. Mesma foto, mesmo rosto, mesmo enquadramento:
 muda só a forma de guardar, como uma mala bem arrumada que leva a mesma roupa
-em menos espaço.
+em menos espaço. A segunda fotografia, a de terno preto, fez o mesmo caminho:
+1,2 MB em PNG, 77 KB na versão que vai para a tela.
 
 O PNG original **continua na pasta**, intocado — é a matriz de onde sai
 qualquer versão futura, como o negativo que fica no arquivo enquanto a cópia
@@ -273,7 +275,44 @@ Mudar tudo é mexer em cinco linhas de `theme.css`, no bloco **BRONZE**.
 
 ---
 
-## 11. Sobre a palavra "especialista"
+## 12. A logo no site
+
+O cabeçalho, o menu do celular e o rodapé mostram **a logo oficial** — o
+monograma PF, a barra e "PAULO FERRARO". Antes ali estava o nome escrito em
+letra serifada, um desenho meu enquanto a logo não existia. Agora é a marca de
+verdade, e o ícone da aba do navegador também: o PF, não mais o "F" que eu havia
+desenhado.
+
+**Por que a linha de baixo não está na imagem.** A logo completa tem, embaixo do
+nome, a frase "ADVOCACIA E CONSULTORIA JURÍDICA" em letra bem pequena. A logo
+inteira é 4,3 vezes mais larga do que alta: numa barra de cabeçalho de 46
+pixels de altura, aquela frase fica com **5 pixels** — a altura de um grão de
+arroz. Não se lê; vira uma mancha cinza embaixo do nome.
+
+É o mesmo problema do cardápio que traz o endereço do restaurante em letra de
+bula no rodapé: está lá, mas ninguém consegue ler, e o que sobra é sujeira na
+página.
+
+**A frase não se perdeu.** Ela saiu da imagem e virou **texto de verdade** no
+rodapé, logo abaixo da logo, em bronze e com as letras espaçadas — igual ao
+desenho original, só que nítida em qualquer tamanho de tela. E texto de verdade
+tem duas vantagens que imagem não tem: o Google lê, e o leitor de tela de quem
+enxerga pouco também.
+
+Ela entrou ainda em dois lugares invisíveis, mas importantes:
+
+- no **nome que aparece em cima do link** quando alguém manda o site no
+  WhatsApp: agora "Paulo Ferraro — Advocacia e Consultoria Jurídica";
+- na **ficha que o site entrega ao Google**, como nome do escritório.
+
+**A logo completa continua guardada** em
+`src/assets/originais/paulo-ferraro-logo-completa.webp`, com a frase desenhada.
+É a versão para cartão de visita, papel timbrado e foto de perfil de rede
+social — lá sobra espaço e a linha de baixo se lê.
+
+---
+
+## 13. Sobre a palavra "especialista"
 
 O material enviado dizia "Especialista em Direito Médico". Na publicidade da
 advocacia essa palavra tem sentido específico: o Provimento nº 205/2021 da OAB
@@ -290,10 +329,11 @@ volta.
 
 ---
 
-## 12. O que ainda depende do cliente
+## 14. O que ainda depende do cliente
 
 - ~~fotografia principal~~ — recebida e no ar;
-- fotografia da seção Sobre (`src/assets/paulo-ferraro-sobre.jpg`);
+- ~~fotografia da seção Sobre~~ — recebida e no ar;
+- ~~logo oficial~~ — recebida, no ar no cabeçalho, no menu e no rodapé;
 - imagem de compartilhamento 1200x630 (`src/assets/paulo-ferraro-og.jpg`);
 - número da OAB;
 - WhatsApp, telefone e e-mail;

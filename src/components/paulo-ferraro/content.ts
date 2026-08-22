@@ -32,6 +32,17 @@ export const perfil = {
   nome: "Paulo Ferraro",
   nomeCurto: "Ferraro",
   titulo: "Advogado",
+  /**
+   * Linha que vem escrita na própria logo oficial, embaixo do nome:
+   * "ADVOCACIA E CONSULTORIA JURÍDICA".
+   *
+   * Não foi inventada aqui — foi lida do arquivo que o cliente enviou. Ela
+   * aparece no rodapé como texto de verdade (e não como parte da imagem),
+   * porque em tamanho pequeno a letra desenhada dentro da logo vira borrão,
+   * enquanto o texto continua nítido em qualquer tela e ainda é lido pelo
+   * Google e pelos leitores de tela.
+   */
+  descritor: "Advocacia e Consultoria Jurídica",
   areaPrincipal: "Direito Médico",
   anosAtuacao: 7,
   /** Aparece no rodapé e no cabeçalho de identidade profissional. */
@@ -166,7 +177,9 @@ export const sobre = {
     },
   ],
   /** Texto alternativo da segunda fotografia (seção Sobre). */
-  fotoAlt: "Retrato profissional do advogado Paulo Ferraro",
+  fotoAlt:
+    "Paulo Ferraro, advogado, em retrato de corpo parcial: terno preto, camisa branca, " +
+    "gravata roxa e braços cruzados",
   assinatura: "Paulo Ferraro · Advogado",
 } as const;
 

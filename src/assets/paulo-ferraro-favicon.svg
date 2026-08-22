@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Paulo Ferraro, advogado">
-  <rect width="64" height="64" rx="10" fill="#1E1E21"/>
-  <rect x="12" y="14" width="3" height="30" fill="#D79C57"/>
-  <text x="36" y="43" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
-        font-size="34" fill="#F4F1EC">F</text>
-  <rect x="20" y="49" width="26" height="2" fill="#B97B44"/>
-</svg>
