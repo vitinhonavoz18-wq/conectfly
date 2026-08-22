@@ -39,7 +39,7 @@ function CanalCard({ canal }: { canal: CanalContato }) {
     <>
       <span
         aria-hidden="true"
-        className="flex h-11 w-11 shrink-0 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-accent-text)]"
+        className="pf-icon-box flex h-11 w-11 shrink-0 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-accent-text)]"
       >
         <Icone size={19} strokeWidth={1.3} />
       </span>
@@ -82,7 +82,7 @@ function CanalCard({ canal }: { canal: CanalContato }) {
           size={16}
           strokeWidth={1.6}
           aria-hidden="true"
-          className="ml-auto shrink-0 text-[var(--pf-fg-subtle)] transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+          className="pf-icon-shift ml-auto shrink-0 text-[var(--pf-fg-subtle)]"
         />
       ) : null}
     </>
@@ -123,7 +123,20 @@ export function PFContact() {
             chamada={contato.chamada}
           />
 
-          <PFReveal animacao="fade" indice={3}>
+          <PFReveal animacao="fade-up" indice={3}>
+            <p
+              className="max-w-[44ch] text-[var(--pf-fg)]"
+              style={{
+                fontFamily: "var(--pf-font-display)",
+                fontSize: "1.35rem",
+                lineHeight: 1.35,
+              }}
+            >
+              {contato.resumo}
+            </p>
+          </PFReveal>
+
+          <PFReveal animacao="fade" indice={4}>
             <div className="flex flex-col gap-3 border-t border-[var(--pf-line)] pt-6">
               <span className="flex items-center gap-2.5 text-[var(--pf-fg-subtle)]">
                 <Clock size={15} strokeWidth={1.4} aria-hidden="true" />

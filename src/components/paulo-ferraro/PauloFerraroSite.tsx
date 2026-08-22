@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import { useRevealOnScroll } from "./hooks/useRevealOnScroll";
+import { PFFloatingContact } from "./layout/PFFloatingContact";
 import { PFFooter } from "./layout/PFFooter";
 import { PFHeader } from "./layout/PFHeader";
 import { PFAbout } from "./sections/PFAbout";
@@ -24,14 +27,30 @@ import { PFProcess } from "./sections/PFProcess";
  * O ritmo de fundo alterna de propósito (preto → grafite → off-white → preto),
  * do mesmo jeito que uma revista alterna páginas escuras e claras para a
  * leitura não cansar.
+ *
+ * Um único vigia (`useRevealOnScroll`) cuida da entrada de todos os blocos do
+ * site. Um porteiro para a portaria inteira, não um porteiro por porta.
  */
 export function PauloFerraroSite() {
+  const raiz = useRef<HTMLDivElement>(null);
+  useRevealOnScroll(raiz);
+
   return (
     // `lang` marca a página como português do Brasil: é o que faz o leitor de
     // tela pronunciar "responsabilidade" em vez de tentar ler em inglês. Fica
     // aqui, e não na base do sistema, para não alterar o painel do
     // SiteCreatorFly.
-    <div className="pf-root" lang="pt-BR">
+    <div className="pf-root" lang="pt-BR" ref={raiz}>
+      {/* Rede de segurança: se o JavaScript não rodar, nada fica escondido
+          esperando uma animação que nunca virá. */}
+      <noscript>
+        <style>
+          {
+            "[data-pf-reveal]{opacity:1!important;transform:none!important;clip-path:none!important}"
+          }
+        </style>
+      </noscript>
+
       <a href="#conteudo" className="pf-skip-link">
         Ir para o conteúdo
       </a>
@@ -51,6 +70,7 @@ export function PauloFerraroSite() {
       </main>
 
       <PFFooter />
+      <PFFloatingContact />
     </div>
   );
 }

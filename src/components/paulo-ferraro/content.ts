@@ -48,18 +48,28 @@ export const perfil = {
 export interface ItemNav {
   rotulo: string;
   ancora: string;
+  /**
+   * Versão curta, usada só na barra de cima do computador. O menu do celular
+   * e o rodapé continuam com o nome por extenso, porque lá sobra espaço.
+   */
+  curto?: string;
 }
 
 export const navegacao: ItemNav[] = [
   { rotulo: "Início", ancora: "inicio" },
   { rotulo: "Sobre", ancora: "sobre" },
   { rotulo: "Direito Médico", ancora: "direito-medico" },
-  { rotulo: "Áreas de atuação", ancora: "areas" },
+  { rotulo: "Áreas de atuação", ancora: "areas", curto: "Áreas" },
   { rotulo: "Experiência", ancora: "experiencia" },
   { rotulo: "Contato", ancora: "contato" },
 ];
 
-export const ctaPrincipal = { rotulo: "Falar com o advogado", ancora: "contato" };
+export const ctaPrincipal = {
+  rotulo: "Fale com Paulo Ferraro",
+  /** Em telas médias o botão do cabeçalho usa esta versão. */
+  rotuloCurto: "Contato",
+  ancora: "contato",
+};
 export const ctaSecundario = { rotulo: "Conhecer áreas de atuação", ancora: "areas" };
 
 /* -------------------------------------------------------------------------- */
@@ -72,8 +82,8 @@ export const hero = {
   headline: "Advocacia especializada e atuação jurídica estratégica.",
   destaque: "Direito Médico",
   descricao:
-    "Atuação técnica em responsabilidade civil médica, com análise criteriosa de cada caso " +
-    "e acompanhamento próximo do cliente do primeiro contato ao desfecho do processo.",
+    "Atuação técnica em responsabilidade civil médica. Cada caso é analisado a partir da " +
+    "documentação, e o cliente acompanha cada etapa em linguagem que entende.",
   /**
    * Texto alternativo da fotografia (lido por leitores de tela e exibido se a
    * imagem não carregar).
@@ -105,17 +115,31 @@ export const sobre = {
   eyebrow: "Sobre",
   titulo: "Sete anos de prática jurídica orientada por ética, técnica e responsabilidade.",
   paragrafos: [
-    "Paulo Ferraro é advogado com sete anos de atuação profissional, dedicados a " +
-      "acompanhar pessoas em momentos que costumam ser delicados: quando um tratamento " +
-      "de saúde não segue o curso esperado, quando um direito é negado ou quando uma " +
-      "decisão administrativa precisa ser revista.",
-    "Sua área de maior destaque é o Direito Médico, com atuação em casos que envolvem " +
-      "erro médico, erro de diagnóstico, dano estético e responsabilidade civil médica. " +
-      "Cada caso é analisado a partir da documentação, do histórico clínico e do que a " +
-      "legislação e a jurisprudência efetivamente permitem sustentar.",
-    "O trabalho combina rigor técnico e proximidade humana: o cliente entende o que está " +
-      "sendo discutido, quais são os caminhos possíveis e em que etapa o processo se " +
-      "encontra, sem promessas e sem linguagem que ele não compreenda.",
+    "Paulo Ferraro acompanha pessoas em momentos delicados: quando um tratamento de saúde " +
+      "não segue o curso esperado, quando um direito é negado ou quando uma decisão " +
+      "administrativa precisa ser revista.",
+    "Sua área de maior destaque é o Direito Médico. Cada caso é examinado a partir da " +
+      "documentação, do histórico clínico e do que a legislação e a jurisprudência " +
+      "efetivamente permitem sustentar.",
+    "O cliente entende o que está sendo discutido, quais caminhos existem e em que etapa o " +
+      "processo se encontra — sem promessas e sem termos que ele não compreenda.",
+  ],
+  /** Número em destaque ao lado da fotografia. */
+  destaque: { valor: "07", unidade: "anos", rotulo: "de atuação profissional" },
+  /** Os três princípios que a própria apresentação do advogado enuncia. */
+  pilares: [
+    {
+      titulo: "Ética",
+      descricao: "Conduta orientada pelo Código de Ética e Disciplina da advocacia.",
+    },
+    {
+      titulo: "Técnica",
+      descricao: "Análise fundamentada em documentação, legislação e jurisprudência.",
+    },
+    {
+      titulo: "Responsabilidade",
+      descricao: "Clareza sobre os caminhos possíveis e sobre os limites de cada um.",
+    },
   ],
   /** Texto alternativo da segunda fotografia (seção Sobre). */
   fotoAlt: "Retrato profissional do advogado Paulo Ferraro",
@@ -139,9 +163,9 @@ export const direitoMedico = {
     "Responsabilidade civil médica analisada com critério técnico, documentação e " +
     "acompanhamento próximo de quem passou pela situação.",
   introducao:
-    "Nem todo resultado indesejado em um tratamento configura erro, e nem todo erro é " +
-    "juridicamente indenizável. O primeiro passo é sempre entender o que aconteceu, reunir " +
-    "a documentação e avaliar tecnicamente se existe fundamento para uma ação.",
+    "Nem todo resultado indesejado configura erro, e nem todo erro é juridicamente " +
+    "indenizável. O primeiro passo é entender o que aconteceu, reunir a documentação e " +
+    "avaliar se existe fundamento técnico para uma ação.",
   temas: [
     {
       numero: "01",
@@ -303,8 +327,8 @@ export const atendimento = {
   eyebrow: "Como funciona",
   titulo: "Do primeiro contato à orientação",
   chamada:
-    "Um caminho simples e sem compromisso de contratação. O objetivo do primeiro contato " +
-    "é entender a situação e indicar os próximos passos.",
+    "Três etapas, sem compromisso de contratação. O objetivo do primeiro contato é " +
+    "entender a situação e indicar os próximos passos.",
   etapas: [
     {
       numero: "01",
@@ -362,6 +386,8 @@ export const contato = {
   chamada:
     "Escolha o canal de sua preferência. O retorno é feito pessoalmente pelo advogado, " +
     "dentro do horário de atendimento.",
+  /** Frase curta acima dos canais, para leitura de relance no celular. */
+  resumo: "Descreva a situação. A partir daí, o caminho jurídico é explicado com clareza.",
   canais: [
     {
       chave: "whatsapp",

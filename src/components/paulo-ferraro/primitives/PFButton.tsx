@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { scrollToAnchor } from "../navigation";
 
@@ -16,6 +16,7 @@ interface PFButtonProps {
   /** Quando verdadeiro, o botão aparece mas não é clicável (dado ainda pendente). */
   desabilitado?: boolean;
   className?: string;
+  style?: CSSProperties;
   onClick?: () => void;
   "aria-label"?: string;
 }
@@ -33,6 +34,7 @@ export function PFButton({
   href,
   desabilitado = false,
   className,
+  style,
   onClick,
   ...rest
 }: PFButtonProps) {
@@ -47,7 +49,13 @@ export function PFButton({
 
   if (desabilitado) {
     return (
-      <span className={classes} data-pf-disabled="true" aria-disabled="true" {...rest}>
+      <span
+        className={classes}
+        style={style}
+        data-pf-disabled="true"
+        aria-disabled="true"
+        {...rest}
+      >
         {children}
       </span>
     );
@@ -58,6 +66,7 @@ export function PFButton({
       <a
         href={`#${ancora}`}
         className={classes}
+        style={style}
         onClick={(evento) => {
           evento.preventDefault();
           onClick?.();
@@ -79,6 +88,7 @@ export function PFButton({
       <a
         href={href}
         className={classes}
+        style={style}
         target={externo ? "_blank" : undefined}
         rel={externo ? "noopener noreferrer" : undefined}
         onClick={onClick}
@@ -90,7 +100,7 @@ export function PFButton({
   }
 
   return (
-    <button type="button" className={classes} onClick={onClick} {...rest}>
+    <button type="button" className={classes} style={style} onClick={onClick} {...rest}>
       {children}
     </button>
   );

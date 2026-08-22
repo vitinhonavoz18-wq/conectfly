@@ -34,7 +34,7 @@ export function PFMedicalLaw() {
               <span className="pf-eyebrow">{direitoMedico.eyebrow}</span>
             </PFReveal>
 
-            <PFReveal animacao="fade-up" indice={1}>
+            <PFReveal animacao="text-clip" indice={1}>
               <h2
                 id="pf-medico-titulo"
                 className="pf-h1"
@@ -78,11 +78,11 @@ export function PFMedicalLaw() {
             <PFReveal
               key={tema.numero}
               as="li"
-              animacao="fade-up"
+              animacao="fade-right"
               indice={indice}
-              className="group border-t border-[var(--pf-line)] last:border-b"
+              className="pf-topic group relative border-t border-[var(--pf-line)] last:border-b"
             >
-              <article className="relative flex gap-5 py-7 transition-colors duration-500 sm:gap-8 sm:py-9">
+              <article className="relative flex gap-5 px-3 py-7 sm:gap-8 sm:px-4 sm:py-9">
                 {/* Fio bordô que cresce ao passar o mouse sobre o item. */}
                 <span
                   aria-hidden="true"
@@ -91,14 +91,14 @@ export function PFMedicalLaw() {
 
                 <span
                   aria-hidden="true"
-                  className="pf-numeral shrink-0 text-[var(--pf-accent-text)] transition-colors duration-500"
+                  className="pf-numeral pf-topic__number shrink-0 text-[var(--pf-accent-text)]"
                   style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", lineHeight: 1.1 }}
                 >
                   {tema.numero}
                 </span>
 
                 <div className="flex flex-col gap-2.5">
-                  <h3 className="pf-h3">{tema.titulo}</h3>
+                  <h3 className="pf-h3 pf-topic__title">{tema.titulo}</h3>
                   <p className="pf-body max-w-[56ch]">{tema.descricao}</p>
                 </div>
               </article>

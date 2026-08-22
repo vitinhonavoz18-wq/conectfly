@@ -25,7 +25,7 @@ export function PFPracticeAreas() {
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {areas.lista.map((area, indice) => (
-            <PFReveal key={area.titulo} animacao="fade-up" indice={indice} className="h-full">
+            <PFReveal key={area.titulo} animacao="zoom" indice={indice} className="h-full">
               <PFPracticeAreaCard area={area} />
             </PFReveal>
           ))}
@@ -62,7 +62,7 @@ export function PFPracticeAreas() {
                   size={16}
                   strokeWidth={1.6}
                   aria-hidden="true"
-                  className="transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  className="pf-icon-shift"
                 />
               </span>
             </a>

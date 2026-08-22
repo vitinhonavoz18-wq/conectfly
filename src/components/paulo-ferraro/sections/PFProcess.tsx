@@ -28,7 +28,7 @@ export function PFProcess() {
             <PFReveal
               key={etapa.numero}
               as="li"
-              animacao="fade-up"
+              animacao="mask-up"
               indice={indice}
               className="flex flex-col gap-4 bg-[var(--pf-bg)] p-8 sm:p-10"
             >

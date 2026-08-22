@@ -69,7 +69,7 @@ export function PFFooter() {
                 <li key={item.ancora}>
                   <a
                     href={`#${item.ancora}`}
-                    className="pf-link text-[var(--pf-fg-muted)]"
+                    className="pf-link inline-block py-1.5 text-[var(--pf-fg-muted)]"
                     style={{ fontSize: "var(--pf-text-sm)" }}
                     onClick={(evento) => {
                       evento.preventDefault();
@@ -112,7 +112,7 @@ export function PFFooter() {
                   ) : (
                     <a
                       href={link.href}
-                      className="pf-link text-[var(--pf-fg-muted)]"
+                      className="pf-link inline-block py-1.5 text-[var(--pf-fg-muted)]"
                       style={{ fontSize: "var(--pf-text-sm)" }}
                     >
                       {link.rotulo}

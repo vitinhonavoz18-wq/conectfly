@@ -29,10 +29,10 @@ export function PFPracticeAreaCard({ area }: PFPracticeAreaCardProps) {
   const Icone = ICONES[area.icone];
 
   return (
-    <article className="pf-card pf-card--accent-top h-full gap-5 overflow-hidden p-7 sm:p-8">
+    <article className="pf-card pf-card--accent-top group h-full gap-5 overflow-hidden p-7 sm:p-8">
       <span
         aria-hidden="true"
-        className="flex h-11 w-11 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-accent-text)]"
+        className="pf-icon-box flex h-11 w-11 items-center justify-center border border-[var(--pf-line)] text-[var(--pf-accent-text)]"
       >
         <Icone size={20} strokeWidth={1.3} />
       </span>

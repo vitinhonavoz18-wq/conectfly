@@ -47,7 +47,7 @@ export function PFSectionHeading({
         </PFReveal>
       ) : null}
 
-      <PFReveal animacao="fade-up" indice={1}>
+      <PFReveal animacao="text-clip" indice={1}>
         <Titulo
           id={id}
           className={cn(nivel === 2 ? "pf-h2" : "pf-h3", "max-w-[22ch]", {

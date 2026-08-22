@@ -29,7 +29,7 @@ export function PFCta() {
           <span className="pf-eyebrow pf-eyebrow--plain">{ctaInstitucional.eyebrow}</span>
         </PFReveal>
 
-        <PFReveal animacao="fade-up" indice={1}>
+        <PFReveal animacao="text-clip" indice={1}>
           <h2 id="pf-cta-titulo" className="pf-h2 mx-auto max-w-[20ch]">
             {ctaInstitucional.titulo}
           </h2>

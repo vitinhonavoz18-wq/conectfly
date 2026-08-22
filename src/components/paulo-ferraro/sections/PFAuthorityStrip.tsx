@@ -24,7 +24,7 @@ export function PFAuthorityStrip() {
           {credenciais.map((item, indice) => (
             <PFReveal
               key={item.valor}
-              animacao="fade-up"
+              animacao="zoom"
               indice={indice}
               className="flex flex-col gap-2 border-t border-[var(--pf-line)] py-6 first:border-t-0 sm:border-t-0 sm:border-l sm:px-6 sm:first:border-l-0 sm:first:pl-0 lg:py-2"
             >

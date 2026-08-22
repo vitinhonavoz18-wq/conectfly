@@ -81,6 +81,8 @@
     --pf-shadow-card: 0 18px 48px -24px oklch(0 0 0 / 85%);
     --pf-shadow-raise: 0 28px 70px -30px oklch(0 0 0 / 95%);
     --pf-shadow-portrait: 0 60px 120px -50px oklch(0 0 0 / 90%);
+    /* Sombra do retrato aplicada por filtro (não aceita o 4º valor). */
+    --pf-drop-portrait: 0 34px 44px oklch(0 0 0 / 62%);
 
     /* ---------------------------------------------------------------------
    * 3. TIPOGRAFIA
@@ -356,7 +358,11 @@
     text-align: center;
     text-decoration: none;
     cursor: pointer;
-    white-space: nowrap;
+    /* Em telas de 320 px o rótulo "Conhecer áreas de atuação" não cabe em uma
+     * linha. Deixá-lo quebrar é melhor do que empurrar a coluna inteira para
+     * fora da tela — que era o que acontecia. */
+    white-space: normal;
+    text-wrap: balance;
     transition:
       background-color var(--pf-dur) var(--pf-ease-out),
       border-color var(--pf-dur) var(--pf-ease-out),
@@ -409,6 +415,13 @@
   .pf-btn--sm {
     min-height: 2.75rem;
     padding: 0.65rem 1.25rem;
+  }
+
+  @media (max-width: 380px) {
+    .pf-btn {
+      padding-inline: 1.15rem;
+      letter-spacing: 0.08em;
+    }
   }
 
   .pf-btn[data-pf-disabled="true"] {
@@ -536,6 +549,27 @@
     pointer-events: none;
   }
 
+  /* Casca de cada camada do Hero. É ela que recebe o parallax; o conteúdo
+   * dentro dela cuida da própria entrada. Separar os dois evita que um
+   * movimento sobrescreva o outro — duas mãos, dois trabalhos. */
+  .pf-hero__layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .pf-hero__layer--photo {
+    position: relative;
+    inset: auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    z-index: var(--pf-z-hero-photo);
+    pointer-events: none;
+  }
+
   /* Halo radial suave atrás da fotografia. */
   .pf-hero__halo {
     position: absolute;
@@ -593,7 +627,7 @@
     height: 100%;
     object-fit: contain;
     object-position: bottom center;
-    filter: drop-shadow(var(--pf-shadow-portrait));
+    filter: drop-shadow(var(--pf-drop-portrait));
     user-select: none;
     -webkit-user-drag: none;
   }
@@ -721,13 +755,31 @@
       backdrop-filter var(--pf-dur) var(--pf-ease-out);
   }
 
-  /* Estado compacto com vidro fosco, ativado ao rolar a página. */
+  /* Estado compacto, ativado ao rolar a página.
+   *
+   * O vidro fosco é um luxo, não uma necessidade: alguns navegadores e
+   * celulares em modo de economia simplesmente não desenham esse efeito. Sem
+   * um plano B, o cabeçalho ficaria quase transparente justamente sobre as
+   * seções claras — nome branco sobre fundo branco.
+   *
+   * Por isso o padrão é fundo quase sólido, que funciona em qualquer aparelho,
+   * e o vidro fosco só entra onde o navegador garante que sabe desenhá-lo. */
   .pf-header[data-pf-scrolled="true"] {
     height: var(--pf-header-h-compact);
-    background-color: oklch(0.125 0.004 285 / 78%);
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background-color: oklch(0.125 0.004 285 / 96%);
     border-bottom-color: var(--pf-line);
+  }
+
+  @supports ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    .pf-header[data-pf-scrolled="true"] {
+      /* 88%, e não 70%: alguns navegadores dizem que sabem desenhar o vidro
+       * fosco e depois não desenham. Com esta opacidade o cabeçalho continua
+       * legível sobre as seções claras mesmo nesse caso, e o efeito de vidro
+       * segue visível onde ele realmente funciona. */
+      background-color: oklch(0.125 0.004 285 / 88%);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+    }
   }
 
   .pf-nav-link {
@@ -765,15 +817,27 @@
   }
 
   /* Menu mobile em tela cheia. */
+  /* Menu de tela cheia do celular.
+   *
+   * O fundo é opaco de propósito. Deixar o Hero aparecendo por baixo dava um
+   * efeito bonito em teoria e um texto fantasma atrás dos itens na prática —
+   * e o desfoque de fundo, que resolveria isso, é justamente o recurso que
+   * alguns aparelhos e navegadores desligam para economizar bateria. Com
+   * fundo sólido, o menu se lê igual em qualquer celular.
+   *
+   * O brilho bordô no pé da tela mantém a profundidade sem custar leitura. */
   .pf-menu {
     position: fixed;
     inset: 0;
     z-index: var(--pf-z-menu);
     display: flex;
     flex-direction: column;
-    background-color: oklch(0.125 0.004 285 / 97%);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background-color: var(--pf-black);
+    background-image: radial-gradient(
+      120% 60% at 50% 104%,
+      oklch(0.3 0.1 17 / 45%) 0%,
+      transparent 70%
+    );
   }
 
   /* =============================================================================
@@ -809,12 +873,514 @@
     scroll-margin-top: calc(var(--pf-header-h-compact) + 1.5rem);
   }
 
-  /* Ponto de entrada das animações da FASE 2: cada elemento revelável já sai
- * marcado com `data-pf-reveal`. Aqui ele apenas existe — nenhum movimento é
- * aplicado nesta fase. */
-  .pf-root [data-pf-reveal] {
-    --pf-reveal-delay: calc(var(--pf-reveal-index, 0) * var(--pf-stagger));
+  /* ===========================================================================
+   * MOVIMENTO — FASE 2/3
+   *
+   * Regra de ouro: só animamos `transform`, `opacity`, `clip-path` e `filter`.
+   * São as quatro coisas que a placa de vídeo desenha sozinha, sem obrigar o
+   * navegador a recalcular o tamanho e a posição de tudo na tela a cada quadro.
+   * Animar largura, altura ou margem faria o oposto — é a diferença entre
+   * deslizar um prato pela mesa e remontar a mesa inteira a cada centímetro.
+   *
+   * Tudo aqui está dentro de `prefers-reduced-motion: no-preference`. Quem
+   * desativou animações no celular ou no computador simplesmente não recebe
+   * nenhuma destas regras: vê a página inteira, parada e completa, sem nada
+   * escondido esperando entrar.
+   * ======================================================================== */
+
+  /* Fio, sublinhado e realce de foco — valem para todos, com ou sem animação. */
+  .pf-root :focus-visible {
+    outline: 2px solid var(--pf-gold);
+    outline-offset: 3px;
+    border-radius: var(--pf-radius-xs);
   }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* -----------------------------------------------------------------------
+     * 1. REVELAÇÃO POR ROLAGEM
+     *
+     * Cada bloco nasce marcado com `data-pf-reveal`. Um único observador em
+     * JavaScript avisa quando o bloco entra na tela, trocando
+     * `data-pf-visible` para "true" — e é o CSS que faz o movimento.
+     *
+     * Um observador só, para a página inteira: em vez de perguntar "já
+     * apareceu?" a cada pixel rolado, o navegador avisa quando acontece. É a
+     * diferença entre olhar o relógio o tempo todo e usar um despertador.
+     * --------------------------------------------------------------------- */
+    .pf-root [data-pf-reveal] {
+      --pf-reveal-delay: calc(var(--pf-reveal-index, 0) * var(--pf-stagger));
+      transition:
+        opacity var(--pf-dur-slow) var(--pf-ease-out) var(--pf-reveal-delay),
+        transform var(--pf-dur-slow) var(--pf-ease-out) var(--pf-reveal-delay),
+        clip-path var(--pf-dur-slow) var(--pf-ease-out) var(--pf-reveal-delay);
+    }
+
+    /* Estado de espera (genérico). */
+    .pf-root [data-pf-reveal][data-pf-visible="false"] {
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    /* Variações — para o site não parecer uma demonstração de animações,
+     * cada tipo de conteúdo entra de um jeito. */
+    .pf-root [data-pf-reveal="fade-up"][data-pf-visible="false"] {
+      transform: translate3d(0, 28px, 0);
+    }
+
+    .pf-root [data-pf-reveal="fade-right"][data-pf-visible="false"] {
+      transform: translate3d(-24px, 0, 0);
+    }
+
+    /* Fio que se estende da esquerda para a direita. */
+    .pf-root [data-pf-reveal="line"][data-pf-visible="false"] {
+      opacity: 1;
+      transform: scaleX(0);
+      transform-origin: left center;
+    }
+
+    /* Máscara que sobe: usada em fotografias e molduras. */
+    .pf-root [data-pf-reveal="mask-up"][data-pf-visible="false"] {
+      opacity: 1;
+      clip-path: inset(100% 0 0 0);
+      transform: translate3d(0, 18px, 0);
+    }
+
+    /* Título que emerge de baixo, como letra saindo do papel. */
+    .pf-root [data-pf-reveal="text-clip"][data-pf-visible="false"] {
+      opacity: 1;
+      clip-path: inset(100% 0 -0.25em 0);
+      transform: translate3d(0, 0.28em, 0);
+    }
+
+    .pf-root [data-pf-reveal="zoom"][data-pf-visible="false"] {
+      transform: scale(0.965);
+    }
+
+    /* Já revelado: solta a memória reservada para a animação. */
+    .pf-root [data-pf-reveal][data-pf-visible="true"] {
+      will-change: auto;
+    }
+
+    /* -----------------------------------------------------------------------
+     * 2. ENTRADA DO HERO — a composição cinematográfica de abertura
+     *
+     * A ordem foi pensada como a abertura de um filme: primeiro a luz da
+     * sala, depois o cenário, então o protagonista sobe em cena e, por
+     * último, os letreiros. Nada disso depende de JavaScript — começa no
+     * primeiro quadro que o navegador desenha.
+     *
+     * Linha do tempo (em segundos):
+     *   0,00  fundo e grade aparecem
+     *   0,10  halo de luz floresce atrás da silhueta
+     *   0,18  arco arquitetônico se levanta
+     *   0,26  fotografia é revelada de baixo para cima
+     *   0,30  textos entram em sequência, um a cada 0,085 s
+     *   ~1,55 fim
+     * --------------------------------------------------------------------- */
+    @keyframes pf-hero-backdrop {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes pf-hero-halo {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
+      }
+    }
+
+    @keyframes pf-hero-arc {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) scaleY(0.72);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) scaleY(1);
+      }
+    }
+
+    /* O reveal do advogado: a máscara sobe enquanto a imagem se assenta.
+     * O desfoque começa mínimo (6px) e some — é o que dá a sensação de
+     * lente focando, sem borrar o rosto em momento algum. */
+    @keyframes pf-hero-photo {
+      from {
+        opacity: 0;
+        clip-path: inset(100% 0 0 0);
+        transform: translate3d(0, 46px, 0) scale(1.035);
+        filter: blur(6px) drop-shadow(var(--pf-drop-portrait));
+      }
+      55% {
+        opacity: 1;
+      }
+      to {
+        opacity: 1;
+        clip-path: inset(0 0 0 0);
+        transform: translate3d(0, 0, 0) scale(1);
+        filter: blur(0) drop-shadow(var(--pf-drop-portrait));
+      }
+    }
+
+    @keyframes pf-hero-floor {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes pf-hero-text {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    .pf-hero__backdrop {
+      animation: pf-hero-backdrop 700ms var(--pf-ease-out) both;
+    }
+
+    .pf-hero__halo {
+      animation: pf-hero-halo 1100ms var(--pf-ease-out) 100ms both;
+    }
+
+    .pf-hero__arc {
+      transform-origin: bottom center;
+      animation: pf-hero-arc 900ms var(--pf-ease-out) 180ms both;
+    }
+
+    .pf-hero__photo,
+    .pf-hero__photo-fallback {
+      will-change: transform, opacity, clip-path, filter;
+      animation: pf-hero-photo 1150ms var(--pf-ease-out) 260ms both;
+    }
+
+    .pf-hero__floor {
+      animation: pf-hero-floor 700ms var(--pf-ease-out) 620ms both;
+    }
+
+    /* Textos do Hero: mesma marcação dos outros blocos, mas entram pelo
+     * relógio da abertura, não pela rolagem. */
+    .pf-root [data-pf-reveal="hero"] {
+      animation: pf-hero-text 620ms var(--pf-ease-out) both;
+      animation-delay: calc(300ms + var(--pf-reveal-index, 0) * 85ms);
+    }
+
+    /* -----------------------------------------------------------------------
+     * 3. PARALLAX — profundidade, não malabarismo
+     *
+     * As camadas de fundo do Hero andam alguns pixels mais devagar que a
+     * página. É o efeito da paisagem vista do carro: o poste passa rápido, a
+     * montanha ao fundo quase não se move — e é isso que dá a sensação de
+     * profundidade.
+     *
+     * Feito com animação ligada à rolagem, um recurso do próprio navegador:
+     * não existe código nosso rodando a cada movimento do dedo. Onde o
+     * navegador ainda não souber fazer isso, o site simplesmente fica sem o
+     * parallax — nada quebra.
+     * --------------------------------------------------------------------- */
+    @supports (animation-timeline: scroll()) {
+      @keyframes pf-parallax {
+        to {
+          transform: translate3d(0, var(--pf-parallax-shift, 40px), 0);
+        }
+      }
+
+      .pf-hero__layer {
+        will-change: transform;
+        animation: pf-parallax linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 100svh;
+      }
+
+      .pf-hero__layer--grid {
+        --pf-parallax-shift: 64px;
+      }
+
+      .pf-hero__layer--halo {
+        --pf-parallax-shift: 42px;
+      }
+
+      .pf-hero__layer--arc {
+        --pf-parallax-shift: 26px;
+      }
+
+      /* Fotografia: movimento mínimo, quase imperceptível. */
+      .pf-hero__layer--photo {
+        --pf-parallax-shift: 12px;
+      }
+    }
+
+    /* -----------------------------------------------------------------------
+     * 4. MICROINTERAÇÕES
+     *
+     * Tudo entre 180 ms e 350 ms: rápido o bastante para parecer resposta do
+     * objeto ao toque, lento o bastante para o olho perceber. Nada pisca,
+     * nada brilha como letreiro.
+     * --------------------------------------------------------------------- */
+    .pf-btn {
+      transition:
+        background-color 240ms var(--pf-ease-out),
+        border-color 240ms var(--pf-ease-out),
+        color 240ms var(--pf-ease-out),
+        box-shadow 280ms var(--pf-ease-out),
+        transform 200ms var(--pf-ease-out);
+    }
+
+    .pf-btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 10px 26px -12px oklch(0.415 0.128 17 / 70%),
+        var(--pf-shadow-soft);
+    }
+
+    .pf-btn--outline:hover {
+      transform: translateY(-2px);
+    }
+
+    .pf-btn:active {
+      transform: translateY(0);
+      transition-duration: 90ms;
+    }
+
+    /* Seta que avança um passo quando o botão é apontado. */
+    .pf-btn [data-pf-arrow],
+    .pf-icon-shift {
+      transition: transform 240ms var(--pf-ease-out);
+    }
+
+    .pf-btn:hover [data-pf-arrow],
+    .group:hover .pf-icon-shift {
+      transform: translate3d(3px, -3px, 0);
+    }
+
+    .pf-btn--ghost:hover [data-pf-arrow] {
+      transform: translate3d(0, 3px, 0);
+    }
+
+    /* Cartões: sobem alguns pixels e ganham contorno. */
+    .pf-card {
+      transition:
+        background-color 260ms var(--pf-ease-out),
+        border-color 260ms var(--pf-ease-out),
+        box-shadow 300ms var(--pf-ease-out),
+        transform 260ms var(--pf-ease-out);
+    }
+
+    .pf-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--pf-shadow-raise);
+    }
+
+    .pf-icon-box {
+      transition:
+        background-color 240ms var(--pf-ease-out),
+        border-color 240ms var(--pf-ease-out),
+        color 240ms var(--pf-ease-out);
+    }
+
+    .group:hover .pf-icon-box {
+      background-color: var(--pf-accent-veil);
+      border-color: var(--pf-line-gold);
+    }
+
+    /* Item da lista de Direito Médico. */
+    .pf-topic {
+      transition:
+        background-color 280ms var(--pf-ease-out),
+        padding-left 280ms var(--pf-ease-out);
+    }
+
+    .pf-topic:hover {
+      background-color: var(--pf-accent-veil);
+    }
+
+    .pf-topic__title,
+    .pf-topic__number {
+      transition:
+        transform 280ms var(--pf-ease-out),
+        color 240ms var(--pf-ease-out);
+    }
+
+    .pf-topic:hover .pf-topic__title {
+      transform: translateX(6px);
+    }
+
+    .pf-topic:hover .pf-topic__number {
+      color: var(--pf-gold);
+    }
+  }
+
+  /* ===========================================================================
+   * INTERAÇÕES QUE VALEM SEMPRE
+   * Mudança de cor e de contorno não é "movimento": continua acontecendo para
+   * quem pediu menos animação, porque é o que informa que o item respondeu.
+   * ======================================================================== */
+
+  .pf-card:hover {
+    border-color: var(--pf-line-strong);
+  }
+
+  .pf-topic:hover .pf-topic__title {
+    color: var(--pf-fg);
+  }
+
+  /* Item de menu da seção em que a pessoa está agora. */
+  .pf-nav-link[data-pf-active="true"] {
+    color: var(--pf-fg);
+  }
+
+  .pf-menu__label {
+    display: inline-block;
+    transition:
+      color 220ms var(--pf-ease-out),
+      transform 240ms var(--pf-ease-out);
+  }
+
+  .pf-menu__item:hover .pf-menu__label,
+  .pf-menu__item[data-pf-active="true"] .pf-menu__label {
+    color: var(--pf-accent-text);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .pf-menu__item:hover .pf-menu__label {
+      transform: translateX(6px);
+    }
+  }
+
+  .pf-nav-link[data-pf-active="true"]::after {
+    transform: scaleX(1);
+    background-color: var(--pf-gold);
+  }
+
+  /* ===========================================================================
+   * BOTÃO FLUTUANTE DE CONTATO
+   * Pequeno, discreto, encostado no canto. Aparece só depois que a pessoa
+   * passa da primeira tela — antes disso os dois botões do Hero já resolvem.
+   * ======================================================================== */
+
+  .pf-fab {
+    position: fixed;
+    right: clamp(1rem, 3vw, 2rem);
+    bottom: calc(clamp(1rem, 3vw, 2rem) + env(safe-area-inset-bottom));
+    z-index: 45;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.85rem 1.15rem;
+    border: 1px solid var(--pf-line-gold);
+    border-radius: 999px;
+    background-color: oklch(0.125 0.004 285 / 97%);
+    color: var(--pf-paper);
+    font-size: var(--pf-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--pf-tracking-wide);
+    text-transform: uppercase;
+    text-decoration: none;
+    box-shadow: 0 18px 40px -20px oklch(0 0 0 / 85%);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition:
+      opacity 300ms var(--pf-ease-out),
+      transform 300ms var(--pf-ease-out),
+      visibility 0s linear 300ms,
+      background-color 240ms var(--pf-ease-out),
+      border-color 240ms var(--pf-ease-out);
+  }
+
+  @supports ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    .pf-fab {
+      background-color: oklch(0.125 0.004 285 / 88%);
+      backdrop-filter: blur(12px) saturate(140%);
+      -webkit-backdrop-filter: blur(12px) saturate(140%);
+    }
+  }
+
+  .pf-fab[data-pf-shown="true"] {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+
+  .pf-fab:hover {
+    background-color: var(--pf-accent);
+    border-color: var(--pf-accent);
+  }
+
+  /* No computador o botão flutuante sai de cena: o cabeçalho fixo já mostra
+   * "Fale com Paulo Ferraro" o tempo todo, e ali embaixo ele só tampava o
+   * conteúdo. Ele existe para resolver um problema que é do celular — onde o
+   * botão do cabeçalho não cabe. */
+  @media (min-width: 1024px) {
+    .pf-fab {
+      display: none;
+    }
+  }
+
+  .pf-fab__label {
+    display: none;
+  }
+
+  @media (min-width: 480px) {
+    .pf-fab__label {
+      display: inline;
+    }
+  }
+
+  /* ===========================================================================
+   * MENU DO CELULAR
+   * ======================================================================== */
+
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes pf-menu-in {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes pf-menu-item-in {
+      from {
+        opacity: 0;
+        transform: translate3d(0, 18px, 0);
+      }
+      to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+      }
+    }
+
+    .pf-menu {
+      animation: pf-menu-in 260ms var(--pf-ease-out) both;
+    }
+
+    .pf-menu__item {
+      animation: pf-menu-item-in 380ms var(--pf-ease-out) both;
+      animation-delay: calc(80ms + var(--pf-reveal-index, 0) * 55ms);
+    }
+  }
+
+  /* ===========================================================================
+   * SEM ANIMAÇÃO (preferência do sistema)
+   * Nada fica escondido, nada se move, tudo continua utilizável.
+   * ======================================================================== */
 
   @media (prefers-reduced-motion: reduce) {
     .pf-root *,
@@ -824,6 +1390,12 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    .pf-root [data-pf-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+      clip-path: none !important;
     }
   }
 }

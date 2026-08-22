@@ -36,7 +36,7 @@ export function PFExperience() {
             <PFReveal
               key={marco.titulo}
               as="li"
-              animacao="fade-up"
+              animacao="fade-right"
               indice={indice}
               className="relative pb-10 pl-8 last:pb-0 sm:pl-10"
             >

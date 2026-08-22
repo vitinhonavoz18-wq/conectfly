@@ -1,4 +1,4 @@
-# Site do advogado Paulo Ferraro — FASE 1/3
+# Site do advogado Paulo Ferraro — FASES 1 e 2 concluídas
 
 Este é o guia prático da pasta. Está escrito para ser entendido **sem saber
 programar**.
@@ -127,19 +127,54 @@ cinco outras áreas, a atuação na JARI / SEMOB e o perfil `@ferrarooadv`.
 
 ---
 
-## 7. O que vem na FASE 2/3
+## 7. As animações (FASE 2)
 
-A estrutura já está preparada, mas **ainda não animada**. Cada bloco que vai
-se mover carrega uma marca invisível no HTML (`data-pf-reveal`) dizendo qual
-movimento receberá e em que ordem. É como numerar as caixas antes da mudança:
-nada se move ainda, mas quando o caminhão chegar já se sabe o que entra
-primeiro.
+**A abertura.** Quando a página carrega, ela se monta como a abertura de um
+filme: primeiro a luz da sala (o fundo), depois o halo atrás da silhueta, então
+o arco, e aí o advogado é revelado de baixo para cima por uma máscara que sobe
+— enquanto a imagem se assenta e o desfoque inicial se dissolve, como uma lente
+encontrando o foco. Por último entram os letreiros, um a cada 0,085 segundo.
 
-O mesmo vale para a fotografia do Hero: halo de luz, arco, grade e retrato são
-camadas separadas e empilhadas, cada uma com sua marca
-(`data-pf-hero-layer`). Assim dá para mover cada uma numa velocidade diferente
-sem encostar em uma linha de texto.
+Tudo acaba em cerca de 1,5 segundo. É rápido de propósito: animação longa em
+site institucional cansa mais do que impressiona.
 
-Os tempos e as curvas de movimento já estão definidos em `theme.css`
-(`--pf-dur`, `--pf-ease-out`, `--pf-stagger`). Mudar a velocidade de todo o
-site será questão de trocar um número em um lugar só.
+**Ao rolar.** Cada bloco entra quando chega na tela, e não todos do mesmo jeito:
+títulos emergem de baixo como letra saindo do papel, fotografias aparecem por
+trás de uma máscara, fios se estendem da esquerda para a direita, cartões
+crescem de leve. A variedade é proposital — se tudo se movesse igual, o site
+viraria uma demonstração de animações em vez de um escritório de advocacia.
+
+**Parallax.** As camadas de fundo do topo andam alguns pixels mais devagar que
+a página, como a montanha vista do carro. É sutil de propósito: se você notar
+o efeito, ele está exagerado.
+
+**Ao passar o mouse ou tocar.** Botões sobem 2 pixels e ganham brilho discreto,
+setas avançam um passo, cartões se elevam e ganham contorno, o item do menu da
+seção que você está lendo fica aceso. Nada pisca, nada brilha como letreiro.
+
+**Quem não quer movimento.** Se o celular ou o computador estiver configurado
+para reduzir animações (recurso de acessibilidade do sistema), o site não anima
+nada: mostra tudo pronto, parado e completo. Nenhum conteúdo fica escondido
+esperando um movimento que não vai acontecer.
+
+**Onde mexer.** Velocidade e curvas ficam em `theme.css`, nas variáveis
+`--pf-dur`, `--pf-ease-out` e `--pf-stagger`. Mudar a velocidade do site
+inteiro é trocar um número em um lugar só.
+
+---
+
+## 8. Botão flutuante de contato
+
+Aparece no celular depois que a pessoa passa da primeira tela e fica quieto no
+canto — não pisca, não pula, não abre janela nenhuma. No computador ele nem
+aparece, porque o cabeçalho já mostra o botão o tempo todo.
+
+Enquanto o número do WhatsApp não for informado, ele leva para a seção de
+contato. Assim que o número entrar em `content.ts`, o mesmo botão passa a abrir
+o WhatsApp direto, sem mexer em mais nada.
+
+---
+
+## 9. O que vem na FASE 3/3
+
+Auditoria final, refinamento, SEO, performance e entrega. Não foi iniciada.
