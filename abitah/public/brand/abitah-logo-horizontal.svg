@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1010 220" role="img" aria-label="ABITAH">
+  <title>ABITAH</title>
+
+  <!-- Símbolo -->
+  <g transform="translate(6 8) scale(0.62)">
+    <g fill="none" stroke="#29E23D" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M120 26 C182 26 214 52 214 88 C214 120 188 141 152 146 C194 150 224 176 224 212 C224 254 188 288 128 288" />
+      <path d="M100 30 L100 150" />
+    </g>
+    <g fill="#29E23D">
+      <path d="M100 18 L84 46 L100 62 L116 46 Z" />
+      <path d="M62 52 L100 84 L138 52 L138 70 L100 102 L62 70 Z" />
+      <path d="M62 96 L100 128 L138 96 L138 114 L100 146 L62 114 Z" />
+      <path d="M100 132 L76 200 L100 302 L124 200 Z" />
+    </g>
+  </g>
+
+  <!-- Wordmark ABITAH -->
+  <g transform="translate(258 46)">
+    <g fill="none" stroke="#FFFFFF" stroke-width="11" stroke-linecap="square">
+      <path d="M6 108 L56 6 L106 108" />
+      <path d="M292 6 L292 108" />
+      <path d="M348 8 L448 8 M398 8 L398 108" />
+      <path d="M482 108 L532 6 L582 108" />
+      <path d="M622 6 L622 108 M700 6 L700 108 M622 62 L700 62" />
+    </g>
+    <g transform="translate(150 -2) scale(0.36)">
+      <g fill="none" stroke="#29E23D" stroke-width="28" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M120 26 C182 26 214 52 214 88 C214 120 188 141 152 146 C194 150 224 176 224 212 C224 254 188 288 128 288" />
+      </g>
+      <g fill="#29E23D">
+        <path d="M100 18 L84 46 L100 62 L116 46 Z" />
+        <path d="M62 52 L100 84 L138 52 L138 70 L100 102 L62 70 Z" />
+        <path d="M62 96 L100 128 L138 96 L138 114 L100 146 L62 114 Z" />
+        <path d="M100 132 L78 210 L100 302 L122 210 Z" />
+      </g>
+    </g>
+    <rect x="6" y="140" width="694" height="9" rx="4.5" fill="#29E23D" />
+  </g>
+</svg>
