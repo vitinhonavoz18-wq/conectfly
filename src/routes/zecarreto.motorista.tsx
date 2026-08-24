@@ -194,6 +194,22 @@ function MotoristaPage() {
 
       <ZcRejectionNote reason={driver?.rejection_reason} />
 
+      {snapshot?.canGoOnline && (
+        <Link
+          to="/zecarreto/motorista/trabalho"
+          className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 hover:border-neutral-300"
+        >
+          <Power className="h-5 w-5 text-emerald-600" />
+          <span className="flex-1">
+            <span className="block font-semibold">Trabalhar agora</span>
+            <span className="block text-sm text-neutral-600">
+              Ficar online, receber ofertas e tocar o carreto.
+            </span>
+          </span>
+          <span className="text-neutral-400">→</span>
+        </Link>
+      )}
+
       <Link
         to="/zecarreto/motorista/veiculos"
         className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4 hover:border-neutral-300"

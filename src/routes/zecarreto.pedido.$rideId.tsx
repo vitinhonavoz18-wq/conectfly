@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, MapPin, Truck } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, MapPin, Share2, Star, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { ZcShell } from "@/components/zecarreto/ZcShell";
 import { ZcMap } from "@/components/zecarreto/ZcMap";
+import { ZcChat } from "@/components/zecarreto/ZcChat";
 import { useZcSession } from "@/components/zecarreto/useZcSession";
 import { Button } from "@/components/ui/button";
 import { zcApi, zcErrorMessage } from "@/lib/zecarreto/client";
@@ -44,21 +45,82 @@ interface Ride {
   stops: Stop[];
 }
 
+interface Tracking {
+  driver: {
+    name: string;
+    photoUrl: string | null;
+    ratingAvg: number;
+    ridesCount: number;
+    phone: string | null;
+    vehicle: {
+      brand: string | null;
+      model: string | null;
+      color: string | null;
+      plate: string;
+      categoryName: string | null;
+    } | null;
+  } | null;
+  position: { lat: number; lng: number; recordedAt: string; stale: boolean } | null;
+  eta: { seconds: number | null; label: string | null };
+  path: { lat: number; lng: number }[];
+}
+
 function PedidoPage() {
   const { rideId } = Route.useParams();
   const { session, loading } = useZcSession({ required: true });
   const [ride, setRide] = useState<Ride | null>(null);
+  const [tracking, setTracking] = useState<Tracking | null>(null);
   const [busy, setBusy] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   async function load() {
-    setRide(await zcApi<Ride>(`/rides/${rideId}`));
+    const atual = await zcApi<Ride>(`/rides/${rideId}`);
+    setRide(atual);
+    // Só busca o acompanhamento quando já existe um carreteiro na jogada.
+    if (
+      [
+        "driver_assigned",
+        "driver_to_pickup",
+        "driver_arrived",
+        "loading",
+        "in_transit",
+        "unloading",
+      ].includes(atual.status)
+    ) {
+      setTracking(await zcApi<Tracking>(`/rides/${rideId}/track`).catch(() => null));
+    }
   }
 
   useEffect(() => {
     if (!session) return;
     load().catch((error) => toast.error(zcErrorMessage(error)));
+    // A tela se atualiza sozinha enquanto o carreto está andando.
+    const timer = setInterval(() => {
+      load().catch(() => undefined);
+    }, 10_000);
+    return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, rideId]);
+
+  async function compartilhar() {
+    try {
+      const link = await zcApi<{ url: string }>(`/rides/${rideId}/share`, {
+        method: "POST",
+        body: {},
+      });
+      const url = `${window.location.origin}${link.url}`;
+      setShareUrl(url);
+      // No celular abre a folha de compartilhamento; no computador, copia.
+      if (navigator.share) {
+        await navigator.share({ title: "Acompanhe meu carreto", url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copiado! É só colar para quem está esperando.");
+      }
+    } catch (error) {
+      toast.error(zcErrorMessage(error));
+    }
+  }
 
   /**
    * Confirma o pedido e libera a busca por motorista.
@@ -92,13 +154,18 @@ function PedidoPage() {
     );
   }
 
-  const pontos = ride.stops
-    .filter((stop) => stop.lat !== null && stop.lng !== null)
-    .map((stop) => ({
-      lat: stop.lat as number,
-      lng: stop.lng as number,
-      label: stop.kind === "pickup" ? "Retirada" : stop.kind === "dropoff" ? "Entrega" : "Parada",
-    }));
+  const pontos = [
+    ...(tracking?.position
+      ? [{ lat: tracking.position.lat, lng: tracking.position.lng, label: "Carreteiro" }]
+      : []),
+    ...ride.stops
+      .filter((stop) => stop.lat !== null && stop.lng !== null)
+      .map((stop) => ({
+        lat: stop.lat as number,
+        lng: stop.lng as number,
+        label: stop.kind === "pickup" ? "Retirada" : stop.kind === "dropoff" ? "Entrega" : "Parada",
+      })),
+  ];
 
   const aguardandoConfirmacao = ride.status === "draft" || ride.status === "awaiting_payment";
 
@@ -109,6 +176,62 @@ function PedidoPage() {
       back={{ to: "/zecarreto", label: "Início" }}
     >
       {pontos.length > 0 && <ZcMap points={pontos} />}
+
+      {tracking?.driver && (
+        <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+          <div className="flex items-center gap-3">
+            {tracking.driver.photoUrl ? (
+              <img
+                src={tracking.driver.photoUrl}
+                alt={`Foto de ${tracking.driver.name}`}
+                className="h-14 w-14 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100">
+                <Truck className="h-6 w-6 text-neutral-500" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold">{tracking.driver.name}</p>
+              <p className="flex items-center gap-1 text-sm text-neutral-600">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                {tracking.driver.ratingAvg.toFixed(1).replace(".", ",")}
+                <span className="text-neutral-400">·</span>
+                {tracking.driver.ridesCount} carretos
+              </p>
+              {tracking.driver.vehicle && (
+                <p className="text-sm text-neutral-600">
+                  {[tracking.driver.vehicle.brand, tracking.driver.vehicle.model]
+                    .filter(Boolean)
+                    .join(" ")}
+                  {tracking.driver.vehicle.color ? ` ${tracking.driver.vehicle.color}` : ""} ·{" "}
+                  <span className="font-mono font-semibold">{tracking.driver.vehicle.plate}</span>
+                </p>
+              )}
+            </div>
+          </div>
+
+          {tracking.eta.label && (
+            <p className="flex items-center gap-2 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
+              <Clock className="h-4 w-4" />
+              Chega em aproximadamente <strong>{tracking.eta.label}</strong>
+            </p>
+          )}
+
+          {tracking.position?.stale && (
+            <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+              Perdemos o sinal do carreteiro há alguns minutos. Se não voltar, procuramos outro para
+              você automaticamente.
+            </p>
+          )}
+
+          <Button variant="outline" className="w-full" onClick={compartilhar}>
+            <Share2 className="mr-2 h-4 w-4" />
+            Compartilhar acompanhamento
+          </Button>
+          {shareUrl && <p className="break-all text-xs text-neutral-500">{shareUrl}</p>}
+        </div>
+      )}
 
       <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
         {ride.stops.map((stop) => (
@@ -202,6 +325,8 @@ function PedidoPage() {
           </p>
         </div>
       )}
+
+      {tracking?.driver && session && <ZcChat rideId={ride.id} myProfileId={session.user.id} />}
 
       {ride.status === "searching_driver" && (
         <div className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-4">

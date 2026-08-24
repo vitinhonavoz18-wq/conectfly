@@ -348,6 +348,13 @@ export type ZcRideRow = Timestamps & {
   cancellation_reason: string | null;
   cancellation_fee_cents: number;
   idempotency_key: string | null;
+  share_token: string | null;
+  share_expires_at: string | null;
+  eta_seconds: number | null;
+  eta_updated_at: string | null;
+  last_driver_ping_at: string | null;
+  reassignment_count: number;
+  assignment_strategy: "broadcast" | "reserve";
   metadata: Json;
   deleted_at: string | null;
 };
@@ -412,6 +419,8 @@ export type ZcDriverLocationRow = {
   speed_kmh: number | null;
   accuracy_m: number | null;
   availability: ZcDriverAvailability;
+  app_state: "foreground" | "background" | "unknown";
+  battery_pct: number | null;
   recorded_at: string;
   updated_at: string;
 };
@@ -424,6 +433,7 @@ export type ZcRideTrackingRow = {
   lng: number;
   heading: number | null;
   speed_kmh: number | null;
+  distance_from_previous_m: number | null;
   recorded_at: string;
   created_at: string;
 };
@@ -553,6 +563,29 @@ export type ZcSupportTicketRow = Timestamps & {
   resolved_at: string | null;
   closed_at: string | null;
   metadata: Json;
+};
+
+export type ZcDriverReservationRow = Timestamps & {
+  id: string;
+  driver_id: string;
+  ride_id: string;
+  starts_at: string;
+  ends_at: string;
+  status: "held" | "confirmed" | "released";
+  released_at: string | null;
+  reason: string | null;
+};
+
+export type ZcRideMessageRow = {
+  id: string;
+  ride_id: string;
+  sender_profile_id: string | null;
+  sender_role: ZcRole | null;
+  is_system: boolean;
+  body: string;
+  attachments: Json;
+  read_at: string | null;
+  created_at: string;
 };
 
 export type ZcTariffAddonRow = Timestamps & {
@@ -729,6 +762,11 @@ export type ZecarretoDatabase = {
       >;
       zc_tariff_addons: Table<ZcTariffAddonRow, Insertable<ZcTariffAddonRow, "code" | "name">>;
       zc_item_presets: Table<ZcItemPresetRow, Insertable<ZcItemPresetRow, "code" | "name">>;
+      zc_driver_reservations: Table<
+        ZcDriverReservationRow,
+        Insertable<ZcDriverReservationRow, "driver_id" | "ride_id" | "starts_at" | "ends_at">
+      >;
+      zc_ride_messages: Table<ZcRideMessageRow, Insertable<ZcRideMessageRow, "ride_id" | "body">>;
       zc_record_history: Table<
         ZcRecordHistoryRow,
         Insertable<ZcRecordHistoryRow, "entity_table" | "entity_id" | "field">
@@ -747,6 +785,27 @@ export type ZecarretoDatabase = {
       zc_has_role: {
         Args: { _user_id: string; _role: ZcRole };
         Returns: boolean;
+      };
+      zc_driver_has_conflict: {
+        Args: {
+          _driver_id: string;
+          _starts_at: string;
+          _ends_at: string;
+          _exclude_ride?: string | null;
+        };
+        Returns: boolean;
+      };
+      zc_release_ride: {
+        Args: { _ride_id: string; _reason?: string | null; _blame_driver?: boolean };
+        Returns: ZcRideRow;
+      };
+      zc_expire_stale_drivers: {
+        Args: { _stale_seconds?: number };
+        Returns: number;
+      };
+      zc_recover_abandoned_rides: {
+        Args: { _grace_seconds?: number };
+        Returns: number;
       };
       zc_driver_can_go_online: {
         Args: { _driver_id: string };

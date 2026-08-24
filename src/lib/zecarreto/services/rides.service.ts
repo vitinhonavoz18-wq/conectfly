@@ -9,7 +9,7 @@
 
 import { zcAdmin } from "../db/client";
 import { ZcError, zcError, fromPostgresError } from "../errors";
-import type { ZcCancelActor, ZcRideStatus } from "../domain/enums";
+import { ZC_RIDE_ACTIVE_WITH_DRIVER, type ZcCancelActor, type ZcRideStatus } from "../domain/enums";
 import { actorCanTransition, canTransition, describeTransitionError } from "../domain/ride-status";
 import { computeCancellationFee } from "../domain/pricing";
 import type { Json, ZcRideRow, ZcRideStopRow } from "../db/types";
@@ -22,6 +22,7 @@ import { recordAudit } from "./audit.service";
 import { notify } from "./notifications.service";
 import { creditRideEarnings, reverseRideEarnings } from "./wallet.service";
 import { cancelPendingOffers, startDriverSearch } from "./dispatch.service";
+import { sendSystemMessage } from "./messages.service";
 
 export interface RideWithStops extends ZcRideRow {
   stops: ZcRideStopRow[];
@@ -509,7 +510,21 @@ const STATUS_MESSAGES: Partial<Record<ZcRideStatus, { title: string; body: strin
   cancelled: { title: "Carreto cancelado", body: "Este carreto foi cancelado." },
 };
 
+const CHAT_UPDATES: Partial<Record<ZcRideStatus, string>> = {
+  driver_assigned: "Carreteiro a caminho! Você já pode conversar por aqui.",
+  driver_arrived: "O carreteiro chegou ao local de retirada.",
+  loading: "Carregando o veículo.",
+  in_transit: "A carga saiu para a entrega.",
+  unloading: "Chegamos ao destino, descarregando.",
+  completed: "Carreto concluído. Obrigado!",
+};
+
 async function notifyRideParties(ride: ZcRideRow, status: ZcRideStatus): Promise<void> {
+  const chatUpdate = CHAT_UPDATES[status];
+  if (chatUpdate) {
+    await sendSystemMessage(ride.id, chatUpdate).catch(() => undefined);
+  }
+
   const message = STATUS_MESSAGES[status];
   if (!message) return;
   await notify({
@@ -575,4 +590,106 @@ async function assertStopsLimit(stopsCount: number) {
   if (stopsCount > maxStops) {
     throw zcError.validation(`Um carreto pode ter no máximo ${maxStops} paradas.`);
   }
+}
+
+/**
+ * Link de acompanhamento para compartilhar.
+ *
+ * Quem recebe o link vê o carreto andando no mapa, mas não vê telefone,
+ * nem valor, nem o resto da conta do cliente. É como mandar a localização
+ * ao vivo no WhatsApp: a pessoa acompanha, não entra na sua casa.
+ *
+ * O link vence sozinho depois de algumas horas.
+ */
+export async function createShareLink(
+  caller: ZcCaller,
+  rideId: string,
+): Promise<{ token: string; expiresAt: string; url: string }> {
+  const db = zcAdmin();
+  const { data: ride } = await db.from("zc_rides").select("*").eq("id", rideId).maybeSingle();
+  if (!ride) throw zcError.notFound("Carreto não encontrado.");
+  assertCanSeeRide(caller, ride);
+
+  const ttlHours = await getNumberSetting("share.tracking_ttl_hours");
+  const expiresAt = new Date(Date.now() + ttlHours * 3_600_000).toISOString();
+
+  // Reaproveita o link enquanto ele ainda vale — mandar dois links para a
+  // mesma pessoa só confunde.
+  if (ride.share_token && ride.share_expires_at && new Date(ride.share_expires_at) > new Date()) {
+    return {
+      token: ride.share_token,
+      expiresAt: ride.share_expires_at,
+      url: `/zecarreto/acompanhar/${ride.share_token}`,
+    };
+  }
+
+  const token = generateShareToken();
+  const { error } = await db
+    .from("zc_rides")
+    .update({ share_token: token, share_expires_at: expiresAt })
+    .eq("id", rideId);
+  if (error) throw fromPostgresError(error);
+
+  await recordAudit({
+    caller,
+    action: "ride.share_link",
+    entityTable: "zc_rides",
+    entityId: rideId,
+    after: { expires_at: expiresAt },
+  });
+
+  return { token, expiresAt, url: `/zecarreto/acompanhar/${token}` };
+}
+
+export async function revokeShareLink(caller: ZcCaller, rideId: string): Promise<void> {
+  const db = zcAdmin();
+  const { data: ride } = await db.from("zc_rides").select("*").eq("id", rideId).maybeSingle();
+  if (!ride) throw zcError.notFound("Carreto não encontrado.");
+  assertCanSeeRide(caller, ride);
+
+  await db.from("zc_rides").update({ share_token: null, share_expires_at: null }).eq("id", rideId);
+  await recordAudit({
+    caller,
+    action: "ride.share_revoke",
+    entityTable: "zc_rides",
+    entityId: rideId,
+  });
+}
+
+/** Encontra a corrida pelo link compartilhado, se ele ainda vale. */
+export async function findRideByShareToken(token: string): Promise<ZcRideRow> {
+  const { data, error } = await zcAdmin()
+    .from("zc_rides")
+    .select("*")
+    .eq("share_token", token)
+    .maybeSingle();
+  if (error) throw fromPostgresError(error);
+  if (!data) throw zcError.notFound("Este link de acompanhamento não existe mais.");
+  if (data.share_expires_at && new Date(data.share_expires_at) < new Date()) {
+    throw zcError.notFound("Este link de acompanhamento venceu.");
+  }
+  return data;
+}
+
+function generateShareToken(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(36).padStart(2, "0"))
+    .join("")
+    .slice(0, 24);
+}
+
+/** A corrida que o carreteiro está tocando agora. */
+export async function getDriverCurrentRide(driverId: string): Promise<RideWithStops | null> {
+  const { data, error } = await zcAdmin()
+    .from("zc_rides")
+    .select("*")
+    .eq("driver_id", driverId)
+    .in("status", [...ZC_RIDE_ACTIVE_WITH_DRIVER])
+    .order("assigned_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw fromPostgresError(error);
+  if (!data) return null;
+  return withStops(data);
 }

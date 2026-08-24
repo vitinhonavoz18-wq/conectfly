@@ -243,6 +243,9 @@ export const locationPingSchema = z.object({
   accuracy_m: z.number().min(0).max(10_000).optional(),
   ride_id: uuidSchema.optional(),
   recorded_at: z.string().datetime({ offset: true }).optional(),
+  /* Ajuda a explicar "o motorista sumiu do mapa". */
+  app_state: z.enum(["foreground", "background", "unknown"]).optional(),
+  battery_pct: z.number().int().min(0).max(100).optional(),
 });
 
 export const availabilitySchema = z.object({

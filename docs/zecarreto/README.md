@@ -1,5 +1,10 @@
 # ZÉ CARRETO — Fase 1 (fundação)
 
+> **Fase 4 (motorista e rastreamento) concluída** — tela de trabalho do
+> carreteiro, motor de matching completo, acompanhamento no mapa, conversa
+> na plataforma e link de compartilhamento.
+> Ver [FASE-4-motorista-e-rastreamento.md](./FASE-4-motorista-e-rastreamento.md).
+>
 > **Fase 3 (pedido e preço) concluída** — home com as categorias, pedido em
 > 5 passos com mapa, motor de tarifas configurável e snapshot financeiro.
 > Ver [FASE-3-pedido-e-preco.md](./FASE-3-pedido-e-preco.md).
@@ -195,9 +200,10 @@ Coisas que **ainda não existem** e precisam entrar:
 - **Rota de verdade.** O mapa entrou na Fase 3 (OpenStreetMap), mas a
   DISTÂNCIA ainda é linha reta + 30% (rua não é régua). Com um serviço de
   mapas pago, a estimativa fica exata. O lugar de plugar já está pronto.
-- **As rodadas de busca rodando sozinhas.** Hoje a próxima rodada de
-  ofertas precisa ser acionada; falta a tarefa automática que roda de
-  minuto em minuto.
+- **As rodadas de busca rodando sozinhas.** A Fase 4 acrescentou a faxina
+  de estado (`/api/zecarreto/admin/dispatch/recover`), mas ela e as novas
+  rodadas de oferta ainda precisam ser acionadas — falta a tarefa
+  automática.
 - **O repasse saindo sozinho.** O fechamento semanal já existe, mas é
   acionado pelo administrador. Falta agendar e falta a transferência
   bancária automática.
