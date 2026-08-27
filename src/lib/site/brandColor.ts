@@ -89,6 +89,72 @@ export function receitaDeCor(bruto: unknown): Receita | null {
   return hexParaReceita(texto);
 }
 
+function partes(receita: Receita): { h: number; s: number; l: number } {
+  const numeros = (receita.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+  return {
+    h: (((numeros[0] ?? 0) % 360) + 360) % 360,
+    s: limitar(numeros[1] ?? 0, 0, 100),
+    l: limitar(numeros[2] ?? 50, 0, 100),
+  };
+}
+
+function montar(h: number, s: number, l: number): Receita {
+  return `${arredondar(h)} ${arredondar(limitar(s, 0, 100))}% ${arredondar(limitar(l, 0, 100))}%`;
+}
+
+/** A cor é escura o bastante para pedir texto claro por cima? */
+export function ehEscuro(receita: Receita): boolean {
+  return luminanciaDe(receita) <= 0.45;
+}
+
+// ---------------------------------------------------------------------------
+// Peças derivadas do fundo escolhido
+// ---------------------------------------------------------------------------
+//
+// Quando a loja escolhe a cor de fundo, o resto da tela precisa acompanhar:
+// fundo preto com card branco e letra preta por cima vira um borrão. A regra
+// é sempre a mesma — fundo escuro, as peças por cima clareiam; fundo claro,
+// elas escurecem. É o prato branco sobre a toalha escura.
+//
+// ATENÇÃO: estas contas são as MESMAS de `lib/theme/color.ts` no FlyControl,
+// que desenha a prévia do painel. Os dois sistemas são separados e não
+// compartilham código — mexeu aqui, mexa lá, senão a prévia promete uma coisa
+// e o cardápio entrega outra.
+
+/** Move a luminosidade na direção que "levanta" a peça sobre o fundo. */
+function elevar(fundo: Receita, passo: number): Receita {
+  const { h, s, l } = partes(fundo);
+  const paraCima = ehEscuro(fundo) || l < 96;
+  return montar(h, s, paraCima ? l + passo : l - passo);
+}
+
+/** O card do produto: um degrau acima do fundo, nunca a mesma cor. */
+export function superficieSobre(fundo: Receita): Receita {
+  return elevar(fundo, 5);
+}
+
+/** Áreas discretas (caixa de total, moldura de foto). */
+export function apagadoSobre(fundo: Receita): Receita {
+  return elevar(fundo, 8);
+}
+
+/** O fio que separa um card do outro. Precisa de mais salto para aparecer. */
+export function bordaSobre(fundo: Receita): Receita {
+  const { h, s, l } = partes(fundo);
+  return montar(h, s, ehEscuro(fundo) ? l + 16 : l - 14);
+}
+
+/** O texto principal. Não é preto/branco puro: cansa menos a vista. */
+export function textoPrincipalSobre(fundo: Receita): Receita {
+  return ehEscuro(fundo) ? "0 0% 98%" : "222 47% 11%";
+}
+
+/** O texto de apoio (descrição do prato), mais apagado mas ainda legível. */
+export function textoApagadoSobre(fundo: Receita): Receita {
+  const { h, s } = partes(fundo);
+  return montar(h, Math.min(s, 20), ehEscuro(fundo) ? 68 : 38);
+}
+
 /**
  * Preto ou branco, o que se lê melhor por cima da cor recebida.
  *
@@ -96,10 +162,19 @@ export function receitaDeCor(bruto: unknown): Receita | null {
  * ilegível no celular, no meio da rua, com sol batendo na tela.
  */
 export function letraLegivelSobre(receita: Receita): Receita {
-  const numeros = (receita.match(/-?\d*\.?\d+/g) ?? []).map(Number);
-  const h = ((((numeros[0] ?? 0) % 360) + 360) % 360);
-  const s = limitar(numeros[1] ?? 0, 0, 100) / 100;
-  const l = limitar(numeros[2] ?? 50, 0, 100) / 100;
+  return luminanciaDe(receita) > 0.45 ? "0 0% 0%" : "0 0% 100%";
+}
+
+/**
+ * O quanto a cor reflete de luz, como o olho percebe (WCAG).
+ *
+ * Amarelo a 50% de luz é muito mais claro aos olhos do que azul a 50%: a
+ * conta pesa cada canal como o olho pesa.
+ */
+function luminanciaDe(receita: Receita): number {
+  const { h, s: sBruto, l: lBruto } = partes(receita);
+  const s = sBruto / 100;
+  const l = lBruto / 100;
 
   const c = (1 - Math.abs(2 * l - 1)) * s;
   const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
@@ -113,13 +188,9 @@ export function letraLegivelSobre(receita: Receita): Receita {
   else if (h < 300) rgb = [x, 0, c];
   else rgb = [c, 0, x];
 
-  // Amarelo a 50% de luz é muito mais claro aos olhos do que azul a 50%: a
-  // conta pesa cada canal como o olho pesa.
   const canal = (v: number) => {
     const n = v + m;
     return n <= 0.03928 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
   };
-  const luminancia = 0.2126 * canal(rgb[0]) + 0.7152 * canal(rgb[1]) + 0.0722 * canal(rgb[2]);
-
-  return luminancia > 0.45 ? "0 0% 0%" : "0 0% 100%";
+  return 0.2126 * canal(rgb[0]) + 0.7152 * canal(rgb[1]) + 0.0722 * canal(rgb[2]);
 }

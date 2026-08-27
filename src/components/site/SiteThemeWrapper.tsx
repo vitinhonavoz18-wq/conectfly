@@ -1,10 +1,24 @@
 import type { CSSProperties, ReactNode } from "react";
-import { letraLegivelSobre, receitaDeCor } from "@/lib/site/brandColor";
+import {
+  apagadoSobre,
+  bordaSobre,
+  letraLegivelSobre,
+  receitaDeCor,
+  superficieSobre,
+  textoApagadoSobre,
+  textoPrincipalSobre,
+} from "@/lib/site/brandColor";
 
 interface Props {
   /** Vem do painel. Pode chegar como "38 92% 50%" ou como "#D7AC32". */
   primaryColor: string;
   secondaryColor: string;
+  /**
+   * A cor de fundo do cardápio, vinda de `site_settings.background_color`.
+   * Quando existe, ela arrasta card, borda e cor do texto junto — senão um
+   * fundo preto ficaria com card branco e letra preta por cima.
+   */
+  backgroundColor?: string | null;
   template?: string;
   children: ReactNode;
 }
@@ -26,7 +40,13 @@ interface Props {
  * devolve nulo para campo vazio e para o `#FF7A00` que a tabela preenche
  * sozinha, e aí a cor do modelo permanece.
  */
-export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "black", children }: Props) {
+export function SiteThemeWrapper({
+  primaryColor,
+  secondaryColor,
+  backgroundColor,
+  template = "black",
+  children,
+}: Props) {
   const isWhite = template === "white";
   const isPizzaRed = template === "pizza_hut_style";
   const isBurger = template === "burger_style";
@@ -34,6 +54,7 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
 
   const escolhidaPrimaria = receitaDeCor(primaryColor);
   const escolhidaSecundaria = receitaDeCor(secondaryColor);
+  const escolhidoFundo = receitaDeCor(backgroundColor);
 
   // Base tokens for different templates
   let themeTokens = {
@@ -105,6 +126,21 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
     };
   }
 
+  // O fundo entra antes das outras cores porque ele arrasta o resto: card,
+  // borda, área apagada e cor do texto saem dele. O cabeçalho perde a
+  // transparência de propósito — sobre um fundo escolhido pelo lojista, o
+  // "/95%" do modelo deixaria passar a cor errada por baixo.
+  if (escolhidoFundo) {
+    themeTokens.bg = escolhidoFundo;
+    themeTokens.fg = textoPrincipalSobre(escolhidoFundo);
+    themeTokens.card = superficieSobre(escolhidoFundo);
+    themeTokens.muted = apagadoSobre(escolhidoFundo);
+    themeTokens.mutedFg = textoApagadoSobre(escolhidoFundo);
+    themeTokens.border = bordaSobre(escolhidoFundo);
+    themeTokens.headerBg = superficieSobre(escolhidoFundo);
+    themeTokens.headerFg = textoPrincipalSobre(escolhidoFundo);
+  }
+
   // A escolha do restaurante entra por último, por cima de qualquer modelo.
   if (escolhidaPrimaria) {
     themeTokens.primary = escolhidaPrimaria;
@@ -131,6 +167,15 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
     ["--site-danger" as string]: themeTokens.danger,
     ["--site-header-bg" as string]: themeTokens.headerBg,
     ["--site-header-fg" as string]: themeTokens.headerFg,
+
+    // Nomes curtos, apontando para os mesmos valores. Deixam explícita a
+    // separação de papéis — fundo da página, card, texto, marca — sem
+    // precisar renomear as `--site-*` que todo componente do cardápio já usa.
+    ["--background" as string]: themeTokens.bg,
+    ["--surface" as string]: themeTokens.card,
+    ["--foreground" as string]: themeTokens.fg,
+    ["--primary" as string]: themeTokens.primary,
+    ["--secondary" as string]: themeTokens.secondary,
   };
 
   return (

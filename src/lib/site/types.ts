@@ -123,6 +123,13 @@ export interface RestaurantRow {
   business_type?: BusinessType;
   theme_settings?: any;
   site_settings?: {
+    /**
+     * A cor de fundo do cardápio, escolhida no FlyControl. Fica aqui, e não
+     * numa coluna própria, porque `site_settings` já viaja na sincronização
+     * e já é mesclado — assim a cor nova não apaga as outras configurações e
+     * não exigiu mexer no banco dos dois sistemas.
+     */
+    background_color?: string;
     hero_button_text?: string;
     show_hero_button?: boolean;
     entry_mode?: "navigation" | "direct" | "cards";

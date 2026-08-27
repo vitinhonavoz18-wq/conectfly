@@ -9,8 +9,9 @@ export function DeliverySite({ data }: { data: SiteData }) {
 
   return (
     <SiteThemeWrapper 
-      primaryColor={r.primary_color} 
+      primaryColor={r.primary_color}
       secondaryColor={r.secondary_color}
+      backgroundColor={r.site_settings?.background_color}
       template={template}
     >
       <CartProvider namespace={r.id || r.slug || "default"}>
