@@ -403,6 +403,7 @@ export function SiteCheckoutCentral(props: Props) {
                       nomeRestaurante={restaurant?.name}
                       marcado={core.aceitaOfertas}
                       aoMudar={core.setAceitaOfertas}
+                      descontoPercent={core.descontoAceitePercent}
                     />
                   )}
 
@@ -435,6 +436,18 @@ export function SiteCheckoutCentral(props: Props) {
                       <span className="font-bold text-[hsl(var(--site-fg))]">
                         {core.selectedZone ? formatBRL(core.deliveryFee) : "a combinar"}
                       </span>
+                    </div>
+                  )}
+                  {/* Desconto por aceitar ofertas. Aparece só quando existe —
+                      uma linha de "desconto: R$ 0,00" em todo pedido seria
+                      barulho, e para quem tem desconto ela precisa estar
+                      visível na conta, não escondida. */}
+                  {core.descontoAceiteValor > 0 && (
+                    <div className="flex justify-between text-[hsl(var(--site-primary))]">
+                      <span className="font-bold">
+                        Desconto ({core.descontoAceitePercent}% por aceitar ofertas)
+                      </span>
+                      <span className="font-bold">− {formatBRL(core.descontoAceiteValor)}</span>
                     </div>
                   )}
                   <div className="flex items-baseline justify-between border-t border-dashed border-[hsl(var(--site-border))] pt-2">

@@ -32,7 +32,7 @@ export function SiteCartDrawer(props: Props) {
     scrollContainerRef, selectedZone, sending, sessionClosed, sessionConsumed, sessionHydrating,
     sessionOrderCount, setAddress, setChangeFor, setCurrentTableSessionId, setDebugQr, setError,
     setFinishedOrder, setIsOpeningTableSession, setIsScanning, setIsValidatingQr,
-    aceitaOfertas, setAceitaOfertas,
+    aceitaOfertas, setAceitaOfertas, descontoAceitePercent, descontoAceiteValor,
     setLastOpenedTableToken, setManualTableToken, setName, setNotes, setOrderType,
     setPaymentMethod, setPhone, setSending, setStep, setTableId, setTableNumber, setTableSessionId,
     setTableSessionOpened, setTableToken, setTicketNumber, setValidatedTable,
@@ -403,6 +403,7 @@ export function SiteCartDrawer(props: Props) {
                         nomeRestaurante={restaurant?.name}
                         marcado={aceitaOfertas}
                         aoMudar={setAceitaOfertas}
+                        descontoPercent={descontoAceitePercent}
                       />
                     )}
                   </div>
@@ -464,6 +465,15 @@ export function SiteCartDrawer(props: Props) {
           {step !== "confirmation" && (
             <div className="p-4 border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] shadow-[0_-10px_40px_rgba(0,0,0,0.05)] sticky bottom-0 mt-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
               <div className="flex flex-col gap-3">
+                {/* Desconto por aceitar ofertas, acima do total. Sem esta
+                    linha o cliente veria o valor cair e não saberia por quê —
+                    conta que muda sozinha gera desconfiança. */}
+                {step !== "cart" && descontoAceiteValor > 0 && (
+                  <div className="flex justify-between px-1 text-xs font-bold text-[hsl(var(--site-primary))]">
+                    <span>Desconto ({descontoAceitePercent}% por aceitar ofertas)</span>
+                    <span>− {formatBRL(descontoAceiteValor)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-end px-1">
                   <div className="flex flex-col">
                     <span className="text-[10px] font-bold text-[hsl(var(--site-muted-fg))] uppercase tracking-widest">

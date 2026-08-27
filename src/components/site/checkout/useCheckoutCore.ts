@@ -18,11 +18,18 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useCart, isValidTableNumber } from "../CartContext";
 import { formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl } from "@/lib/site/flycontrol";
+import {
+  buildOrderPayload,
+  sendOrderToFlycontrol,
+  sendOrderToExternalWebhook,
+  sendUnifiedOrderToFiqon,
+  resolveTablesUrl,
+} from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
 import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
 import { supabase } from "@/integrations/supabase/client";
+import { descontoAceiteOf, valorDoDescontoAceite } from "@/lib/site/descontoAceite";
 
 export interface CheckoutCoreParams {
   open: boolean;
@@ -33,8 +40,32 @@ export interface CheckoutCoreParams {
   restaurant?: RestaurantRow;
 }
 
-export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: CheckoutCoreParams) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, sessionHydrating, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession, validateAndOpenTable } = useCart();
+export function useCheckoutCore({
+  open,
+  onClose,
+  whatsappNumber,
+  restaurantName,
+  deliveryZones = [],
+  restaurant,
+}: CheckoutCoreParams) {
+  const {
+    items,
+    updateQty,
+    removeLine,
+    totalPrice,
+    clear,
+    validatedTable,
+    setValidatedTable,
+    sessionConsumed,
+    sessionOrderCount,
+    addSessionOrder,
+    sessionClosed: ctxSessionClosed,
+    sessionHydrating,
+    terminateSession: ctxTerminateSession,
+    clearSessionClosed,
+    revalidateSession,
+    validateAndOpenTable,
+  } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -60,7 +91,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
   const qrErrorCooldownMs = 3000;
   const lastScannedQrRef = useRef<string | null>(null);
   const [finishedOrder, setFinishedOrder] = useState<any>(null);
-  
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [manualTableToken, setManualTableToken] = useState("");
@@ -71,12 +102,16 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
   /**
    * "Quero receber ofertas deste restaurante pelo WhatsApp."
    *
-   * Começa DESMARCADO e não existe caminho que marque sozinho. Caixa que já
-   * vem marcada não é permissão, é pegadinha — e propaganda para quem não
-   * pediu é o jeito mais rápido de o WhatsApp do restaurante ser denunciado
-   * e bloqueado.
+   * Começa MARCADO, por decisão do dono do produto. O cliente desmarca se não
+   * quiser — e a caixa foi desenhada para isso ficar visível, não escondido
+   * (ver AceiteOfertas.tsx).
+   *
+   * O risco de vir marcado está escrito por extenso naquele arquivo, e é
+   * risco do restaurante, não nosso: quem não repara e recebe promoção sem
+   * esperar tende a denunciar, e denúncia suficiente derruba o número de
+   * WhatsApp da loja. Se um dia isso acontecer, é aqui e lá que se mexe.
    */
-  const [aceitaOfertas, setAceitaOfertas] = useState(false);
+  const [aceitaOfertas, setAceitaOfertas] = useState(true);
   const [zoneId, setZoneId] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
@@ -96,13 +131,10 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
   // Detect mesa parameter
   useEffect(() => {
     if (!restaurant || sessionHydrating) return;
-    
+
     const params = new URLSearchParams(window.location.search);
     const numberParam =
-      params.get("table_number") ||
-      params.get("mesa") ||
-      params.get("table") ||
-      params.get("m");
+      params.get("table_number") || params.get("mesa") || params.get("table") || params.get("m");
     const mode = params.get("mode");
     const token = params.get("table_token") || params.get("token");
 
@@ -144,7 +176,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       setTableNumber(validatedTable.number);
       setTableToken(validatedTable.token);
       setTableSessionId(validatedTable.sessionId || null);
-      
+
       // Update new state controls
       setTableSessionOpened(true);
       setLastOpenedTableToken(validatedTable.token);
@@ -170,16 +202,16 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
   // SiteCartDrawer only consumes shared state and never performs polling or
   // direct session status fetches.
 
-
   const extractTableQrData = (qrValue: string) => {
     console.log("QR_RAW_VALUE:", qrValue);
     if (!qrValue) return { restaurant_slug: null, table_number: null, table_token: null };
 
     // Limpeza inicial: espaços, quebras de linha, aspas extras, caracteres invisíveis
-    let cleanedValue = qrValue.trim()
+    const cleanedValue = qrValue
+      .trim()
       .replace(/[\n\r]/g, "")
       .replace(/^["'](.+)["']$/, "$1");
-    
+
     console.log("QR_CLEANED_VALUE:", cleanedValue);
 
     let slug = restaurant?.slug || null;
@@ -193,7 +225,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         const result = {
           restaurant_slug: parsed.restaurant_slug || parsed.slug || slug,
           table_number: parsed.table_number || parsed.number || parsed.mesa || parsed.table || null,
-          table_token: parsed.table_token || parsed.token || parsed.public_token
+          table_token: parsed.table_token || parsed.token || parsed.public_token,
         };
         console.log("QR_EXTRACTED_DATA (JSON):", result);
         return result;
@@ -205,10 +237,12 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     // 2. URL parsing
     try {
       // Tenta tratar como URL se contiver http ou se parecer um path
-      const isUrl = cleanedValue.startsWith('http') || cleanedValue.includes('?');
-      const urlStr = isUrl ? cleanedValue : `https://dummy.com/${cleanedValue.startsWith('/') ? cleanedValue.substring(1) : cleanedValue}`;
+      const isUrl = cleanedValue.startsWith("http") || cleanedValue.includes("?");
+      const urlStr = isUrl
+        ? cleanedValue
+        : `https://dummy.com/${cleanedValue.startsWith("/") ? cleanedValue.substring(1) : cleanedValue}`;
       const url = new URL(urlStr);
-      
+
       console.log("QR_PARSING_URL:", url.toString());
 
       // Extrair slug da URL se for conectfly.com.br/SLUG
@@ -220,20 +254,22 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       }
 
       // Extrair token
-      token = url.searchParams.get("table_token") || 
-              url.searchParams.get("token") || 
-              url.searchParams.get("public_token");
-      
+      token =
+        url.searchParams.get("table_token") ||
+        url.searchParams.get("token") ||
+        url.searchParams.get("public_token");
+
       // Extrair número da mesa
-      number = url.searchParams.get("table_number") || 
-               url.searchParams.get("mesa") || 
-               url.searchParams.get("table") ||
-               url.searchParams.get("m");
+      number =
+        url.searchParams.get("table_number") ||
+        url.searchParams.get("mesa") ||
+        url.searchParams.get("table") ||
+        url.searchParams.get("m");
 
       // Caso B: /mesa/TOKEN ou /table/TOKEN ou /SLUG/mesa/TOKEN (se token não veio via query)
       if (!token) {
         const paths = url.pathname.split("/").filter(Boolean);
-        const mesaIdx = paths.findIndex(p => ["mesa", "table", "m"].includes(p.toLowerCase()));
+        const mesaIdx = paths.findIndex((p) => ["mesa", "table", "m"].includes(p.toLowerCase()));
         if (mesaIdx !== -1 && paths[mesaIdx + 1]) {
           token = paths[mesaIdx + 1];
         }
@@ -247,12 +283,12 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       token = cleanedValue;
     }
 
-    const result = { 
-      restaurant_slug: slug, 
+    const result = {
+      restaurant_slug: slug,
       table_number: number,
-      table_token: token?.trim() || null 
+      table_token: token?.trim() || null,
     };
-    
+
     console.log("QR_EXTRACTED_DATA:", result);
     return result;
   };
@@ -271,14 +307,16 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     setCurrentTableSessionId(null);
     setStep("cart");
     ctxTerminateSession(opts);
-    try { toast.dismiss("qr-error"); } catch {}
+    try {
+      toast.dismiss("qr-error");
+    } catch {}
   };
 
   const handleValidateTable = async (
     token: string,
     slugFromQr?: string | null,
     numberFromQr?: string | null,
-    options?: { silent?: boolean }
+    options?: { silent?: boolean },
   ) => {
     const silent = !!options?.silent;
     if (!restaurant) return false;
@@ -296,10 +334,10 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     }
     if (!isValidTableNumber(numberFromQr)) {
       if (!silent) {
-        toast.error(
-          "Número da mesa não identificado. Escaneie novamente o QR Code da mesa.",
-          { id: "qr-error", duration: 6000 }
-        );
+        toast.error("Número da mesa não identificado. Escaneie novamente o QR Code da mesa.", {
+          id: "qr-error",
+          duration: 6000,
+        });
       }
       console.warn("VALIDATE_TABLE_ABORTED_INVALID_NUMBER", { numberFromQr, token: cleanToken });
       return false;
@@ -310,11 +348,11 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     if (sessionClosed && !silent) {
       toast.error(
         "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.",
-        { id: "qr-error", duration: 6000 }
+        { id: "qr-error", duration: 6000 },
       );
       return false;
     }
-    
+
     // TRAVAS DE SEGURANÇA (Conforme solicitado)
     if (isOpeningTableSession) {
       console.log("OPEN_TABLE_SESSION_SKIPPED_ALREADY_OPENING");
@@ -328,7 +366,11 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     const targetSlug = (slugFromQr || restaurant.slug)?.trim();
     if (!targetSlug) return false;
 
-    console.log("QR_TABLE_IDENTIFIED", { table_number: numberFromQr, table_token: token, restaurant_slug: targetSlug });
+    console.log("QR_TABLE_IDENTIFIED", {
+      table_number: numberFromQr,
+      table_token: token,
+      restaurant_slug: targetSlug,
+    });
     console.log("OPEN_TABLE_SESSION_ONLY", { table_number: numberFromQr, table_token: token });
 
     setIsValidatingQr(true);
@@ -348,9 +390,16 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       console.log("OPEN_TABLE_SESSION_RESPONSE", sessionResult);
 
       if (sessionResult.success) {
-        if (!sessionResult.session_id || !sessionResult.dining_session_id || !sessionResult.customer_token) {
+        if (
+          !sessionResult.session_id ||
+          !sessionResult.dining_session_id ||
+          !sessionResult.customer_token
+        ) {
           if (!silent) {
-            toast.error("Sessão da mesa não foi confirmada. Escaneie novamente o QR Code.", { id: "qr-error", duration: 6000 });
+            toast.error("Sessão da mesa não foi confirmada. Escaneie novamente o QR Code.", {
+              id: "qr-error",
+              duration: 6000,
+            });
           }
           return false;
         }
@@ -359,12 +408,12 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         setTableNumber(resolvedNumber);
         setTableToken(cleanToken);
         setTableSessionId(sessionResult.session_id || null);
-        
+
         // Atualizar travas e IDs
         setTableSessionOpened(true);
         setLastOpenedTableToken(cleanToken);
         setCurrentTableSessionId(sessionResult.session_id || null);
-        
+
         if (sessionResult.session_id) {
           console.log("TABLE_SESSION_ID_SAVED:", sessionResult.session_id);
         }
@@ -378,7 +427,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
             toast.success(`Mesa ${resolvedNumber} aberta com sucesso!`, { id: "qr-success" });
           }
         }
-        
+
         setIsScanning(false);
         return true;
       } else {
@@ -429,7 +478,6 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     }
   };
 
-
   const onQrScan = async (text: string) => {
     // 1. Verificações iniciais e bloqueio de múltiplas leituras
     if (!text || isValidatingQr || isOpeningTableSession || !isScanning) return;
@@ -438,7 +486,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     if (sessionClosed) {
       clearSessionClosed();
     }
-    
+
     // Se já estiver aberta a mesma mesa, não faz nada
     const { table_token: extractedToken } = extractTableQrData(text);
     if (tableSessionOpened && lastOpenedTableToken === extractedToken) {
@@ -449,9 +497,12 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     // 2. Pausar scanner imediatamente ao detectar um QR
     console.log("QR_TABLE_SCANNED", text);
     setIsScanning(false); // Fecha o modal do scanner
-    
+
     const now = Date.now();
-    if (text === lastInvalidQrRef.current?.value && (now - lastInvalidQrRef.current.at < qrErrorCooldownMs)) {
+    if (
+      text === lastInvalidQrRef.current?.value &&
+      now - lastInvalidQrRef.current.at < qrErrorCooldownMs
+    ) {
       return;
     }
 
@@ -462,11 +513,14 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       slug: restaurant_slug,
       token: table_token,
       status: "Validando...",
-      reason: ""
+      reason: "",
     });
 
     if (!table_token) {
-      if (text !== lastInvalidQrRef.current?.value || (now - lastInvalidQrRef.current.at > qrErrorCooldownMs)) {
+      if (
+        text !== lastInvalidQrRef.current?.value ||
+        now - lastInvalidQrRef.current.at > qrErrorCooldownMs
+      ) {
         toast.error("QR Code de mesa inválido. Procure um atendente.", { id: "qr-error" });
         lastInvalidQrRef.current = { value: text, at: now };
       }
@@ -476,10 +530,10 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     }
 
     const success = await handleValidateTable(table_token, restaurant_slug, table_number);
-    
+
     if (!success) {
       lastInvalidQrRef.current = { value: text, at: now };
-      // Opcional: Reabrir scanner em caso de erro não crítico? 
+      // Opcional: Reabrir scanner em caso de erro não crítico?
       // O usuário disse "bloquear novas leituras", então mantemos fechado.
     } else {
       lastInvalidQrRef.current = null;
@@ -488,10 +542,10 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
 
   const handleManualTest = async () => {
     if (!manualTableToken.trim()) return;
-    
+
     console.log("QR_MANUAL_TEST_STARTED:", manualTableToken);
     const { restaurant_slug, table_token } = extractTableQrData(manualTableToken);
-    
+
     if (!table_token) {
       toast.error("Formato inválido. Insira a URL completa ou o token.");
       return;
@@ -539,22 +593,50 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
   const selectedZone = deliveryZones.find((z) => z.id === zoneId) ?? null;
   const isDelivery = orderType === "delivery";
   const deliveryFee = isDelivery ? Number(selectedZone?.fee ?? 0) : 0;
-  const grandTotal = totalPrice + deliveryFee;
+
+  /**
+   * O desconto por aceitar receber ofertas.
+   *
+   * O percentual é do restaurante, lido da configuração dele — o navegador
+   * nunca escolhe o próprio desconto. E o FlyControl confere de novo quando o
+   * pedido chega, com o número que ele mesmo tem guardado; se não bater, vale
+   * o do FlyControl. É o caixa conferindo a conta em vez de aceitar o valor
+   * escrito no guardanapo pelo cliente.
+   *
+   * Pedido de mesa fica de fora: quem está sentado na mesa não entra em
+   * campanha de delivery, então não faz sentido dar o desconto de assinatura.
+   *
+   * Incide só sobre os produtos, nunca sobre a taxa de entrega — a taxa é
+   * dinheiro do entregador, não margem da loja.
+   */
+  const descontoAceitePercent = orderType === "table" ? 0 : descontoAceiteOf(restaurant);
+  const descontoAceiteValor =
+    aceitaOfertas && descontoAceitePercent > 0
+      ? valorDoDescontoAceite(totalPrice, descontoAceitePercent)
+      : 0;
+
+  const grandTotal = Math.max(0, totalPrice - descontoAceiteValor + deliveryFee);
   const hasZones = deliveryZones.length > 0;
 
-   const flycontrolOn = useMemo(() => !!restaurant?.flycontrol_enabled, [restaurant?.flycontrol_enabled]);
-   const whatsappOn = useMemo(() => restaurant?.whatsapp_enabled !== false, [restaurant?.whatsapp_enabled]);
- 
-   const openWhatsAppOrder = (message: string) => {
-     if (!whatsappNumber) return;
-     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-     
-     // Try window.open first, fallback to location.href if blocked
-     const opened = window.open(url, "_blank");
-     if (!opened || opened.closed || typeof opened.closed === "undefined") {
-       window.location.href = url;
-     }
-   };
+  const flycontrolOn = useMemo(
+    () => !!restaurant?.flycontrol_enabled,
+    [restaurant?.flycontrol_enabled],
+  );
+  const whatsappOn = useMemo(
+    () => restaurant?.whatsapp_enabled !== false,
+    [restaurant?.whatsapp_enabled],
+  );
+
+  const openWhatsAppOrder = (message: string) => {
+    if (!whatsappNumber) return;
+    const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    // Try window.open first, fallback to location.href if blocked
+    const opened = window.open(url, "_blank");
+    if (!opened || opened.closed || typeof opened.closed === "undefined") {
+      window.location.href = url;
+    }
+  };
 
   const goToCheckout = () => {
     if (items.length === 0) {
@@ -572,7 +654,8 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
 
     // Block submissions for sessions that have been closed remotely.
     if (sessionClosed || (orderType === "table" && (sessionHydrating || !validatedTable))) {
-      const msg = "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
+      const msg =
+        "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
       setError(msg);
       toast.error(msg, { id: "qr-error", duration: 6000 });
       return;
@@ -585,7 +668,8 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     if (orderType === "table") {
       const stillActive = await revalidateSession();
       if (!stillActive) {
-        const msg = "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
+        const msg =
+          "Esta mesa foi encerrada. Para realizar novos pedidos, escaneie novamente o QR Code da mesa.";
         setError(msg);
         toast.error(msg, { id: "qr-error", duration: 6000 });
         return;
@@ -652,7 +736,9 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     // FlyControl é a fonte da verdade para TODOS os modos (delivery, retirada, mesa).
     // O WhatsApp é apenas notificação pós-confirmação para delivery.
     if (!flycontrolOn) {
-      setError("Esta loja não está conectada ao painel. Pedidos não podem ser confirmados no momento.");
+      setError(
+        "Esta loja não está conectada ao painel. Pedidos não podem ser confirmados no momento.",
+      );
       return;
     }
     if (orderType === "delivery" && whatsappOn && !whatsappNumber) {
@@ -670,14 +756,22 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     console.log("CHECKOUT_ITEMS_COUNT:", items.length);
     console.log("CHECKOUT_TOTAL:", grandTotal);
     console.log("CHECKOUT_ORDER_TYPE:", orderType);
-    console.log("CHECKOUT_SERVICE_MODE:", orderType === "table" ? "mesa" : (orderType === "pickup" ? "retirada" : "delivery"));
-    
+    console.log(
+      "CHECKOUT_SERVICE_MODE:",
+      orderType === "table" ? "mesa" : orderType === "pickup" ? "retirada" : "delivery",
+    );
+
     const orderData = {
       customer: {
         name,
         phone,
-        address: orderType === "delivery" ? address : (orderType === "table" ? `Mesa ${tableNumber}` : "Retirada no Balcão"),
-        neighborhood: orderType === "delivery" ? (selectedZone?.neighborhood || null) : null,
+        address:
+          orderType === "delivery"
+            ? address
+            : orderType === "table"
+              ? `Mesa ${tableNumber}`
+              : "Retirada no Balcão",
+        neighborhood: orderType === "delivery" ? selectedZone?.neighborhood || null : null,
         marketing_opt_in: aceitaOfertas,
       },
       items,
@@ -689,7 +783,8 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       notes,
       createdAt: new Date().toISOString(),
       order_type: orderType,
-      service_mode: orderType === "table" ? "mesa" : (orderType === "pickup" ? "retirada" : "delivery"),
+      service_mode:
+        orderType === "table" ? "mesa" : orderType === "pickup" ? "retirada" : "delivery",
       table_number: orderType === "table" ? tableNumber : null,
       table_id: orderType === "table" ? tableId : null,
       table_token: orderType === "table" ? tableToken : null,
@@ -700,13 +795,16 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     };
 
     const messageWhatsApp = buildWhatsAppMessage(orderData);
-    
+
     setSending(true);
     let success = false;
     const siteSettings = restaurant?.site_settings as any;
-    
-    let flowMode = restaurant?.order_flow_mode || siteSettings?.order_flow_mode || (restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url ? "fiqon" : "direct");
-    
+
+    let flowMode =
+      restaurant?.order_flow_mode ||
+      siteSettings?.order_flow_mode ||
+      (restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url ? "fiqon" : "direct");
+
     if (!FEATURES.ENABLE_FIQON_AUTOMATION && flowMode === "fiqon") {
       flowMode = "direct";
     }
@@ -718,7 +816,8 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
 
     const allowDoubleSend = restaurant?.allow_dual_send ?? !!siteSettings?.allow_double_send;
     const externalWebhookUrl = restaurant?.fiqon_webhook_url || siteSettings?.external_webhook_url;
-    const whatsappEnabled = restaurant?.continue_opening_whatsapp ?? (restaurant?.whatsapp_enabled !== false);
+    const whatsappEnabled =
+      restaurant?.continue_opening_whatsapp ?? restaurant?.whatsapp_enabled !== false;
 
     console.log("CHECKOUT_FETCH_STARTED");
 
@@ -740,7 +839,8 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         pizzeria_name: restaurant?.name || "",
         whatsapp_message: messageWhatsApp,
         order_type: orderType,
-        service_mode: orderType === "table" ? "mesa" : (orderType === "pickup" ? "retirada" : "delivery"),
+        service_mode:
+          orderType === "table" ? "mesa" : orderType === "pickup" ? "retirada" : "delivery",
         table_number: orderData.table_number,
         table_id: orderData.table_id,
         table_token: orderData.table_token,
@@ -749,22 +849,32 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         customer_token: (orderData as any).customer_token,
         ticket_number: orderData.ticket_number,
         marketing_opt_in: aceitaOfertas,
+        discount: descontoAceiteValor,
       });
 
       console.log("CHECKOUT_FINAL_PAYLOAD:", JSON.stringify(orderPayload, null, 2));
 
       // 1. Envio para FIQON (Webhook Externo)
-      if (FEATURES.ENABLE_FIQON_AUTOMATION && (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp"))) {
+      if (
+        FEATURES.ENABLE_FIQON_AUTOMATION &&
+        (flowMode === "fiqon" || (allowDoubleSend && flowMode !== "whatsapp"))
+      ) {
         if (externalWebhookUrl) {
           try {
-            const result = await sendUnifiedOrderToFiqon(orderPayload, restaurant as any, "public_checkout");
+            const result = await sendUnifiedOrderToFiqon(
+              orderPayload,
+              restaurant as any,
+              "public_checkout",
+            );
             console.log("CHECKOUT_RESPONSE_STATUS (FIQON):", result.status);
             console.log("CHECKOUT_RESPONSE_JSON (FIQON):", result);
 
             if (result.success) {
               success = true;
             } else if (flowMode === "fiqon") {
-              throw new Error(`Erro no FIQON (${result.status}): ${result.error || 'Falha no envio'}`);
+              throw new Error(
+                `Erro no FIQON (${result.status}): ${result.error || "Falha no envio"}`,
+              );
             }
           } catch (webhookErr: any) {
             console.error("CHECKOUT_SEND_ERROR (FIQON):", webhookErr);
@@ -776,11 +886,15 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       }
 
       // 2. Envio Direto para FlyControl
-      if (flycontrolOn && restaurant && (flowMode === "direct" || requiresBackend || (allowDoubleSend && !success))) {
+      if (
+        flycontrolOn &&
+        restaurant &&
+        (flowMode === "direct" || requiresBackend || (allowDoubleSend && !success))
+      ) {
         try {
           const result = await sendOrderToFlycontrol(restaurant, orderPayload);
           console.log("CHECKOUT_RESPONSE_JSON (FLYCONTROL):", result);
-          
+
           if (result.success) {
             success = true;
             console.log("CHECKOUT_SUCCESS_CONFIRMED");
@@ -800,7 +914,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         } else {
           toast.success("Pedido confirmado com sucesso!");
         }
-        
+
         // Redirecionar para WhatsApp APÓS o envio (SOMENTE PARA DELIVERY E SE NÃO FOR MESA)
         if (whatsappEnabled && orderType === "delivery") {
           openWhatsAppOrder(messageWhatsApp);
@@ -808,7 +922,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
 
         // Limpar carrinho e encerrar apenas APÓS confirmação
         clear();
-        
+
         // Registrar consumo acumulado para a sessão de mesa atual.
         if (orderType === "table" && validatedTable) {
           addSessionOrder(grandTotal);
@@ -830,7 +944,6 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       } else {
         throw new Error("Não foi possível confirmar o recebimento do pedido pelo painel.");
       }
-
     } catch (err: any) {
       console.error("CHECKOUT_SEND_ERROR:", err);
       // CORREÇÃO 4: se o FlyControl reportou sessão encerrada durante o
@@ -840,13 +953,16 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         err?.sessionClosed === true ||
         err?.httpStatus === 404 ||
         err?.httpStatus === 409 ||
-        /session_closed|session_not_found|dining_session_not_active|invalid_dining_session|mesa encerrada|mesa foi encerrada|table_closed/.test(raw);
+        /session_closed|session_not_found|dining_session_not_active|invalid_dining_session|mesa encerrada|mesa foi encerrada|table_closed/.test(
+          raw,
+        );
       if (sessionClosed) {
         toast.error("Esta mesa foi encerrada. Escaneie novamente o QR Code.");
         terminateClosedSession({ silent: true });
         return;
       }
-      const errorMsg = "Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.";
+      const errorMsg =
+        "Não foi possível enviar seu pedido para o painel. Tente novamente ou procure um atendente.";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -855,25 +971,100 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
     }
   };
 
-
-
   return {
-    aceitaOfertas, setAceitaOfertas,
-    addSessionOrder, address, addressRef, changeFor, changeRef, clear, clearSessionClosed,
-    currentTableSessionId, debugQr, deliveryFee, error, fieldsContainerRef, finishedOrder,
-    flycontrolOn, goToCheckout, grandTotal, handleFinish, handleManualTest, handleValidateTable,
-    hasZones, isDelivery, isOpeningTableSession, isScanning, isValidatingQr, items,
-    lastOpenedTableToken, manualTableToken, name, nameRef, notes, onQrScan, openWhatsAppOrder,
-    orderType, paymentMethod, paymentRef, phone, phoneRef, removeLine, revalidateSession,
-    scrollContainerRef, selectedZone, sending, sessionClosed, sessionConsumed, sessionHydrating,
-    sessionOrderCount, setAddress, setChangeFor, setCurrentTableSessionId, setDebugQr, setError,
-    setFinishedOrder, setIsOpeningTableSession, setIsScanning, setIsValidatingQr,
-    setLastOpenedTableToken, setManualTableToken, setName, setNotes, setOrderType,
-    setPaymentMethod, setPhone, setSending, setStep, setTableId, setTableNumber, setTableSessionId,
-    setTableSessionOpened, setTableToken, setTicketNumber, setValidatedTable,
-    setValidationAttempted, setZoneId, step, tableId, tableNumber, tableSessionId,
-    tableSessionOpened, tableToken, terminateClosedSession, ticketNumber, totalPrice, updateQty,
-    validateAndOpenTable, validatedTable, validationAttempted, whatsappOn, zoneId, zoneRef,
+    aceitaOfertas,
+    setAceitaOfertas,
+    descontoAceitePercent,
+    descontoAceiteValor,
+    addSessionOrder,
+    address,
+    addressRef,
+    changeFor,
+    changeRef,
+    clear,
+    clearSessionClosed,
+    currentTableSessionId,
+    debugQr,
+    deliveryFee,
+    error,
+    fieldsContainerRef,
+    finishedOrder,
+    flycontrolOn,
+    goToCheckout,
+    grandTotal,
+    handleFinish,
+    handleManualTest,
+    handleValidateTable,
+    hasZones,
+    isDelivery,
+    isOpeningTableSession,
+    isScanning,
+    isValidatingQr,
+    items,
+    lastOpenedTableToken,
+    manualTableToken,
+    name,
+    nameRef,
+    notes,
+    onQrScan,
+    openWhatsAppOrder,
+    orderType,
+    paymentMethod,
+    paymentRef,
+    phone,
+    phoneRef,
+    removeLine,
+    revalidateSession,
+    scrollContainerRef,
+    selectedZone,
+    sending,
+    sessionClosed,
+    sessionConsumed,
+    sessionHydrating,
+    sessionOrderCount,
+    setAddress,
+    setChangeFor,
+    setCurrentTableSessionId,
+    setDebugQr,
+    setError,
+    setFinishedOrder,
+    setIsOpeningTableSession,
+    setIsScanning,
+    setIsValidatingQr,
+    setLastOpenedTableToken,
+    setManualTableToken,
+    setName,
+    setNotes,
+    setOrderType,
+    setPaymentMethod,
+    setPhone,
+    setSending,
+    setStep,
+    setTableId,
+    setTableNumber,
+    setTableSessionId,
+    setTableSessionOpened,
+    setTableToken,
+    setTicketNumber,
+    setValidatedTable,
+    setValidationAttempted,
+    setZoneId,
+    step,
+    tableId,
+    tableNumber,
+    tableSessionId,
+    tableSessionOpened,
+    tableToken,
+    terminateClosedSession,
+    ticketNumber,
+    totalPrice,
+    updateQty,
+    validateAndOpenTable,
+    validatedTable,
+    validationAttempted,
+    whatsappOn,
+    zoneId,
+    zoneRef,
   };
 }
 

@@ -46,6 +46,15 @@ export interface FlycontrolOrderPayload {
     items: any[];
     subtotal: number;
     delivery_fee: number;
+    /**
+     * Desconto dado por aceitar receber ofertas, em reais.
+     *
+     * Viaja só como informação. Quem manda no valor final é o FlyControl:
+     * ele recalcula com o percentual que ele mesmo tem guardado, porque o
+     * navegador do cliente não pode escolher o próprio desconto.
+     */
+    discount?: number;
+    discount_reason?: "marketing_opt_in";
     total: number;
     payment_method: string;
     change_for: number | null;
@@ -93,6 +102,7 @@ export function buildOrderPayload(args: {
   order_type?: "delivery" | "pickup" | "table";
   service_mode?: "delivery" | "retirada" | "mesa";
   marketing_opt_in?: boolean;
+  discount?: number;
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => {
 
@@ -177,6 +187,11 @@ export function buildOrderPayload(args: {
       items,
        subtotal: Number(args.subtotal) || 0,
        delivery_fee: Number(args.deliveryFee) || 0,
+       // Só viaja quando existe. Mandar "0" em todo pedido só sujaria o
+       // registro de quem nem oferece desconto.
+       ...(Number(args.discount) > 0
+         ? { discount: Number(args.discount), discount_reason: "marketing_opt_in" as const }
+         : {}),
        total: Number(args.total) || 0,
       payment_method: args.paymentMethod || "PIX",
        change_for: args.changeFor ? Number(args.changeFor) : null,
