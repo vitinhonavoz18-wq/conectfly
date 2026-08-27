@@ -1,21 +1,39 @@
 import type { CSSProperties, ReactNode } from "react";
+import { letraLegivelSobre, receitaDeCor } from "@/lib/site/brandColor";
 
 interface Props {
-  primaryColor: string; // HSL "h s% l%"
+  /** Vem do painel. Pode chegar como "38 92% 50%" ou como "#D7AC32". */
+  primaryColor: string;
   secondaryColor: string;
   template?: string;
   children: ReactNode;
 }
 
 /**
- * Injects per-restaurant brand colors as CSS variables for the generated site.
- * Uses HSL so users can pick simple hue/saturation/lightness values.
+ * Pinta o site do restaurante.
+ *
+ * Cada modelo visual traz um conjunto de cores de fábrica. Por cima dele, a
+ * cor que o restaurante escolheu no painel SEMPRE vence.
+ *
+ * ISSO MUDOU, E É DE PROPÓSITO
+ *
+ * Antes, Pizza Red e Burger Showcase forçavam a própria cor e engoliam a
+ * escolha do lojista: ele trocava a cor no painel, salvava, abria o site e
+ * não via diferença nenhuma — como pedir sem cebola e receber com cebola
+ * toda vez. Agora a escolha dele manda.
+ *
+ * Quem nunca escolheu cor continua exatamente como está: `receitaDeCor`
+ * devolve nulo para campo vazio e para o `#FF7A00` que a tabela preenche
+ * sozinha, e aí a cor do modelo permanece.
  */
 export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "black", children }: Props) {
   const isWhite = template === "white";
   const isPizzaRed = template === "pizza_hut_style";
   const isBurger = template === "burger_style";
   const isBarPrime = template === "bar_prime";
+
+  const escolhidaPrimaria = receitaDeCor(primaryColor);
+  const escolhidaSecundaria = receitaDeCor(secondaryColor);
 
   // Base tokens for different templates
   let themeTokens = {
@@ -25,9 +43,9 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
     border: "0 0% 12%",
     muted: "0 0% 6%",
     mutedFg: "0 0% 65%", // Texto secundário com boa leitura
-    primary: primaryColor || "38 92% 50%", // Amarelo/Ouro premium
+    primary: "38 92% 50%", // Amarelo/Ouro premium
     primaryFg: "0 0% 0%", // Texto preto sobre primário (contraste total)
-    secondary: secondaryColor || "142 71% 45%",
+    secondary: "142 71% 45%",
     success: "142 70% 45%",
     danger: "0 84% 60%",
     headerBg: "0 0% 2% / 95%", // Mais opaco para legibilidade
@@ -79,16 +97,24 @@ export function SiteThemeWrapper({ primaryColor, secondaryColor, template = "bla
     themeTokens = {
       ...themeTokens,
       bg: "0 0% 4%", // Background profundo para bares/eventos
-      fg: "0 0% 98%",
       card: "0 0% 7%",
       border: "0 0% 15%",
       muted: "0 0% 10%",
       mutedFg: "0 0% 60%",
-      primary: primaryColor || "38 92% 50%", // Ouro ou cor do restaurante
-      primaryFg: "0 0% 0%",
       headerBg: "0 0% 5% / 95%",
-      headerFg: "0 0% 98%",
     };
+  }
+
+  // A escolha do restaurante entra por último, por cima de qualquer modelo.
+  if (escolhidaPrimaria) {
+    themeTokens.primary = escolhidaPrimaria;
+    // A letra dos botões acompanha: cor clara pede letra preta, cor escura
+    // pede letra branca. Sem isto, alguém escolhendo amarelo ganharia botão
+    // amarelo com letra branca — ilegível na rua, com sol na tela.
+    themeTokens.primaryFg = letraLegivelSobre(escolhidaPrimaria);
+  }
+  if (escolhidaSecundaria) {
+    themeTokens.secondary = escolhidaSecundaria;
   }
 
   const style: CSSProperties = {
