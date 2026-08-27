@@ -31,6 +31,14 @@ export interface FlycontrolOrderPayload {
     address: string;
     neighborhood: string | null;
     reference: string | null;
+    /**
+     * O cliente marcou "quero receber ofertas pelo WhatsApp" no checkout.
+     *
+     * Só viaja quando ele marcou de verdade. Ausente ou falso significa "não
+     * autorizou" — e é assim que o FlyControl trata: quem não marcou não
+     * entra em campanha nenhuma. Nunca preencha isto por padrão.
+     */
+    marketing_opt_in?: boolean;
   };
   order: {
     id: string;
@@ -84,6 +92,7 @@ export function buildOrderPayload(args: {
   ticket_number?: string | null;
   order_type?: "delivery" | "pickup" | "table";
   service_mode?: "delivery" | "retirada" | "mesa";
+  marketing_opt_in?: boolean;
 }): FlycontrolOrderPayload {
    const items = args.items.map((l) => {
 
@@ -154,7 +163,11 @@ export function buildOrderPayload(args: {
       phone: args.phone,
       address: args.address,
       neighborhood: args.neighborhood || null,
-      reference: args.reference || null
+      reference: args.reference || null,
+      // Só manda quando é verdade. Mandar "false" também funcionaria, mas
+      // deixar o campo fora deixa explícito no que trafega que ninguém
+      // marcou nada.
+      ...(args.marketing_opt_in ? { marketing_opt_in: true } : {})
     },
     order: {
       id: typeof crypto !== "undefined" && "randomUUID" in crypto

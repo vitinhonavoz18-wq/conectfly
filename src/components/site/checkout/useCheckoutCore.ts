@@ -68,6 +68,15 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
   const [paymentMethod, setPaymentMethod] = useState("PIX");
   const [changeFor, setChangeFor] = useState("");
   const [notes, setNotes] = useState("");
+  /**
+   * "Quero receber ofertas deste restaurante pelo WhatsApp."
+   *
+   * Começa DESMARCADO e não existe caminho que marque sozinho. Caixa que já
+   * vem marcada não é permissão, é pegadinha — e propaganda para quem não
+   * pediu é o jeito mais rápido de o WhatsApp do restaurante ser denunciado
+   * e bloqueado.
+   */
+  const [aceitaOfertas, setAceitaOfertas] = useState(false);
   const [zoneId, setZoneId] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
@@ -669,6 +678,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         phone,
         address: orderType === "delivery" ? address : (orderType === "table" ? `Mesa ${tableNumber}` : "Retirada no Balcão"),
         neighborhood: orderType === "delivery" ? (selectedZone?.neighborhood || null) : null,
+        marketing_opt_in: aceitaOfertas,
       },
       items,
       subtotal: totalPrice,
@@ -738,6 +748,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
         dining_session_id: (orderData as any).dining_session_id,
         customer_token: (orderData as any).customer_token,
         ticket_number: orderData.ticket_number,
+        marketing_opt_in: aceitaOfertas,
       });
 
       console.log("CHECKOUT_FINAL_PAYLOAD:", JSON.stringify(orderPayload, null, 2));
@@ -847,6 +858,7 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
 
 
   return {
+    aceitaOfertas, setAceitaOfertas,
     addSessionOrder, address, addressRef, changeFor, changeRef, clear, clearSessionClosed,
     currentTableSessionId, debugQr, deliveryFee, error, fieldsContainerRef, finishedOrder,
     flycontrolOn, goToCheckout, grandTotal, handleFinish, handleManualTest, handleValidateTable,

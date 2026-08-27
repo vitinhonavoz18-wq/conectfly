@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { AceiteOfertas } from "./AceiteOfertas";
 import {
   X,
   Minus,
@@ -393,6 +394,17 @@ export function SiteCheckoutCentral(props: Props) {
                       className={`${inputClass} resize-none`}
                     />
                   </section>
+
+                  {/* ---- Aceite de ofertas ------------------------------
+                       Não aparece em pedido de mesa: quem está sentado na
+                       mesa não vira cliente de campanha de delivery. */}
+                  {core.orderType !== "table" && (
+                    <AceiteOfertas
+                      nomeRestaurante={restaurant?.name}
+                      marcado={core.aceitaOfertas}
+                      aoMudar={core.setAceitaOfertas}
+                    />
+                  )}
 
                   {core.error && (
                     <p

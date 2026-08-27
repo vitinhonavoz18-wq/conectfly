@@ -1,4 +1,5 @@
 import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2, QrCode, Camera, AlertCircle, Loader2 } from "lucide-react";
+import { AceiteOfertas } from "./checkout/AceiteOfertas";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { QrScanner } from "./QrScanner";
@@ -31,6 +32,7 @@ export function SiteCartDrawer(props: Props) {
     scrollContainerRef, selectedZone, sending, sessionClosed, sessionConsumed, sessionHydrating,
     sessionOrderCount, setAddress, setChangeFor, setCurrentTableSessionId, setDebugQr, setError,
     setFinishedOrder, setIsOpeningTableSession, setIsScanning, setIsValidatingQr,
+    aceitaOfertas, setAceitaOfertas,
     setLastOpenedTableToken, setManualTableToken, setName, setNotes, setOrderType,
     setPaymentMethod, setPhone, setSending, setStep, setTableId, setTableNumber, setTableSessionId,
     setTableSessionOpened, setTableToken, setTicketNumber, setValidatedTable,
@@ -393,6 +395,16 @@ export function SiteCartDrawer(props: Props) {
                         className="w-full pl-10 pr-4 py-3 rounded-xl bg-[hsl(var(--site-card))] border border-[hsl(var(--site-border))] transition-all font-bold focus:outline-none focus:border-[hsl(var(--site-primary)/0.5)] text-sm text-[hsl(var(--site-fg))] placeholder:text-[hsl(var(--site-muted-fg))] resize-none"
                       />
                     </div>
+
+                    {/* Aceite de ofertas. Fora do pedido de mesa: quem está
+                        sentado na mesa não vira cliente de campanha. */}
+                    {orderType !== "table" && (
+                      <AceiteOfertas
+                        nomeRestaurante={restaurant?.name}
+                        marcado={aceitaOfertas}
+                        aoMudar={setAceitaOfertas}
+                      />
+                    )}
                   </div>
                 </div>
 
