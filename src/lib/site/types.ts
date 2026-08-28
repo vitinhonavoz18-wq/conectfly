@@ -130,6 +130,19 @@ export interface RestaurantRow {
      * não exigiu mexer no banco dos dois sistemas.
      */
     background_color?: string;
+    /**
+     * Como o cardápio se ORGANIZA — a ordem dos blocos, o tamanho dos cards,
+     * se a busca fica em destaque. Vem do FlyControl.
+     *
+     * É separado de `business_type` de propósito: o tipo diz o que a loja É,
+     * este campo diz como ela se MOSTRA. Assim uma pizzaria pode experimentar
+     * outro layout sem deixar de ser pizzaria — e um dia poderemos ter
+     * "pizza_classic" e "pizza_modern" sem mexer no tipo da empresa.
+     *
+     * Ausente ou desconhecido: cai no layout recomendado pelo segmento e, na
+     * falta dele, no padrão — que é exatamente o cardápio de antes.
+     */
+    menu_layout?: string;
     hero_button_text?: string;
     show_hero_button?: boolean;
     entry_mode?: "navigation" | "direct" | "cards";
