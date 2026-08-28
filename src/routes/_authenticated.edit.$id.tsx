@@ -331,7 +331,7 @@ function EditPage() {
           </div>
         )}
          {tab === "preview" && (
-           <div className="space-y-8 site-hero-enter">
+           <div className="space-y-8">
              <div className="rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-black/40 backdrop-blur-md">
                <div className="p-4 bg-white/5 border-b border-white/5 flex items-center gap-2">
                  <div className="flex gap-1.5">

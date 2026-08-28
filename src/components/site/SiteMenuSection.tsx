@@ -58,7 +58,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 Escolha uma categoria para começar.
               </p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 site-stagger">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
               {clickableCategories.map((c) => {
                 const count = c.is_pizza
                   ? c.items.length
@@ -67,7 +67,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 <button
                   key={c.id}
                   onClick={() => setActive(c.id)}
-                  className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                  className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-colors duration-200 shadow-xl text-left"
                 >
                   {c.image_url ? (
                     <img
@@ -102,7 +102,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                 <button
                   key={BEV_ID}
                   onClick={() => setActive(BEV_ID)}
-                  className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                  className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-colors duration-200 shadow-xl text-left"
                 >
                   <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-[hsl(var(--site-muted))]">
                     <span className="text-7xl opacity-60">🍺</span>
@@ -211,14 +211,14 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
               return (
                 <>
                   <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-8 text-[hsl(var(--site-fg))]">🍺 Bebidas</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 site-stagger">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                     {cats.map((bc) => {
                       const count = allBevs.filter(b => b.catalog_id === bc.id).length;
                       return (
                         <button
                           key={bc.id}
                           onClick={() => setActiveBevCatalog(bc.id)}
-                          className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                          className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-colors duration-200 shadow-xl text-left"
                         >
                           {bc.image_url ? (
                             <img src={bc.image_url} alt={bc.name} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -244,7 +244,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                       <button
                         key={BEV_UNCAT}
                         onClick={() => setActiveBevCatalog(BEV_UNCAT)}
-                        className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-all duration-500 shadow-xl text-left"
+                        className="group relative aspect-[4/3] rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary))] transition-colors duration-200 shadow-xl text-left"
                       >
                         <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[hsl(var(--site-primary)/0.2)] to-[hsl(var(--site-muted))]">
                           <span className="text-6xl opacity-60">🥤</span>
@@ -292,7 +292,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                   Nenhum produto disponível nesta categoria.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 site-stagger">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {selectedCat.items.map((it) => (
                     <div key={it.id} className="h-full">
                       <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
@@ -309,12 +309,12 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
   // ============ END NEW LAYOUT ============
 
   const renderCategoryList = (cats: (MenuCategoryRow & { items: MenuItemRow[] })[]) => (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 site-stagger">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
       {cats.map((c) => (
          <button
            key={c.id}
            onClick={() => setActive(c.id)}
-           className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-all duration-500 shadow-xl sm:shadow-2xl"
+           className="group relative aspect-square rounded-2xl sm:rounded-3xl overflow-hidden border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-primary/50 transition-colors duration-200 shadow-xl sm:shadow-2xl"
          >
           {c.image_url && (
             <img
@@ -380,7 +380,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                   </h3>
                   <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 site-stagger h-full">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 h-full">
                   {cat.items.map((it) => (
                     <div key={it.id} className="h-full">
                       <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
@@ -445,7 +445,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                       </h3>
                       <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[hsl(var(--site-border))]" />
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
                       {cat.items.map((it) => (
                         <div key={it.id} className="h-full">
                           <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
@@ -493,7 +493,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
                   />
                 ) : (
                   <div className="space-y-12">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 site-stagger h-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
                       {current?.items.map((it) => (
                         <div key={it.id} className="h-full">
                           <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />

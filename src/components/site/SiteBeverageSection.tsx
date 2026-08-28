@@ -56,16 +56,20 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
         return (
           <div 
             key={bev.id} 
-            className={`rounded-xl sm:rounded-[2rem] border flex transition-all duration-500 backdrop-blur-md relative overflow-hidden group h-full ${
+            className={`rounded-xl sm:rounded-[2rem] border flex transition-colors duration-200 relative overflow-hidden group h-full ${
               qty > 0 ? 'border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.08)] shadow-glow' : 'border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]'
             }`}
           >
             {bev.image_url && (
               <div className="w-20 sm:w-auto h-auto sm:h-48 overflow-hidden relative shrink-0">
-                 <img 
-                   src={bev.image_url} 
+                 <img
+                   src={bev.image_url}
                    alt={bev.name}
-                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                   loading="lazy"
+                   decoding="async"
+                   width={400}
+                   height={400}
+                   className="w-full h-full object-cover [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500 [@media(hover:hover)]:group-hover:scale-110"
                  />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent hidden sm:block" />
               </div>
@@ -138,7 +142,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
   const uncategorizedBeverages = beverages.filter(b => !b.catalog_id || !activeCatalogs.some(c => c.id === b.catalog_id));
 
   return (
-    <div id="bebidas" className="py-6 sm:py-20 site-stagger bg-[hsl(var(--site-muted))] rounded-2xl sm:rounded-[3rem] px-2 sm:px-8">
+    <div id="bebidas" className="py-6 sm:py-20 bg-[hsl(var(--site-muted))] rounded-2xl sm:rounded-[3rem] px-2 sm:px-8">
       <div className="text-center mb-6 sm:mb-16">
         <span className="inline-block px-3 py-1 rounded-full bg-[hsl(var(--site-primary)/0.15)] text-[hsl(var(--site-primary))] text-[8px] sm:text-[10px] font-black tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-2 sm:mb-4 border border-[hsl(var(--site-primary)/0.25)]">
           Refresque sua experiência

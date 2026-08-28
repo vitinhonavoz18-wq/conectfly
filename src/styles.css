@@ -369,77 +369,24 @@
   padding-top: env(safe-area-inset-top);
 }
 
-/* Scroll-driven site animations */
-@keyframes site-hero-enter {
-  0% { opacity: 0; transform: translateY(24px) scale(0.98); filter: blur(6px); }
-  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-}
- .site-hero-enter > *,
- .site-stagger > * {
-   animation: none !important;
-   opacity: 1 !important;
-   transform: none !important;
-   filter: none !important;
- }
-
-@media (prefers-reduced-motion: reduce) {
-  .site-hero-enter > *,
-  .site-stagger > * {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-  }
-}
-
 /*
- * Scroll-driven per-section progress utilities.
+ * Sem animação de entrada no catálogo.
  *
- * Powered by useSectionProgress / <SectionScroll>, which writes:
- *   --section-progress           0 → 1   (full enter→leave window)
- *   --section-progress-in        0 → 1   (only enter phase)
- *   --section-progress-out       0 → 1   (only leave phase)
- *   --section-progress-center    0 → 1   (peak at viewport center)
+ * O cardápio já teve uma animação que fazia cada produto surgir conforme
+ * entrava na tela. Ela foi tirada porque atrapalhava a rolagem — e o que
+ * ficou no lugar por um tempo foi pior: um "anulador" que mandava o navegador
+ * ignorar a animação (`animation: none !important`). É como pintar por cima
+ * de uma infiltração: a mancha some, o problema continua atrás da tinta, e
+ * qualquer estilo novo que encostasse ali voltava a quebrar.
  *
- * These utilities translate progress into synchronized visual effects.
+ * Agora as classes de entrada foram removidas das grades de produto no
+ * próprio componente, então não existe mais nada para anular. Os produtos são
+ * desenhados como qualquer outro conteúdo da página: já estão lá quando o
+ * cliente rola até eles.
+ *
+ * As microinterações continuam: botão que afunda ao ser tocado, hover no
+ * computador, carrinho que abre. O que saiu foi só o que dependia da rolagem.
  */
-.site-section-scroll {
-  --section-progress: 0;
-  --section-progress-in: 0;
-  --section-progress-out: 0;
-  --section-progress-center: 0;
-}
-
- .site-scroll-fade,
- .site-scroll-rise,
- .site-scroll-zoom,
- .site-scroll-blur,
- .site-scroll-parallax-bg,
- .site-scroll-slide-left,
- .site-scroll-slide-right,
- .site-scroll-headline {
-   opacity: 1 !important;
-   transform: none !important;
-   filter: none !important;
-   letter-spacing: normal !important;
-   visibility: visible !important;
- }
-
-@media (prefers-reduced-motion: reduce) {
-  .site-scroll-fade,
-  .site-scroll-rise,
-  .site-scroll-zoom,
-  .site-scroll-blur,
-  .site-scroll-parallax-bg,
-  .site-scroll-slide-left,
-  .site-scroll-slide-right,
-  .site-scroll-headline {
-    opacity: 1 !important;
-    transform: none !important;
-    filter: none !important;
-    letter-spacing: normal !important;
-  }
-}
 
 @layer components {
   .input {

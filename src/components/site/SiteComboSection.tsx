@@ -47,11 +47,11 @@ export function SiteComboSection({ groups }: Props) {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 site-stagger">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
           {current.combos.map((c) => (
              <div
                key={c.id}
-               className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-6 sm:p-8 flex flex-col gap-6 relative group hover:border-[hsl(var(--site-primary)/0.5)] transition-all duration-500 shadow-2xl backdrop-blur-sm h-full"
+               className="rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] p-6 sm:p-8 flex flex-col gap-6 relative group hover:border-[hsl(var(--site-primary)/0.5)] transition-colors duration-200 shadow-2xl h-full"
              >
                {c.badge && (
                  <span className="absolute -top-3 right-6 px-3 py-1.5 rounded-xl bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] text-[9px] font-black uppercase tracking-widest shadow-lg">

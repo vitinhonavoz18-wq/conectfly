@@ -80,7 +80,7 @@ export function SiteHero({
 
   return (
     <div className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden pt-12 sm:pt-16">
-      <div className="absolute inset-0 site-scroll-parallax-bg">
+      <div className="absolute inset-0">
         {showVideo ? (
           <video
             ref={videoRef}
@@ -104,7 +104,7 @@ export function SiteHero({
       </div>
        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.4)] via-[hsl(var(--site-bg)/0.7)] to-[hsl(var(--site-bg))]" />
        <div className="absolute inset-0 bg-radial-at-c from-primary/5 to-transparent opacity-40" />
-       <div className="relative z-10 text-center px-4 py-12 sm:py-20 site-hero-enter max-w-5xl mx-auto">
+       <div className="relative z-10 text-center px-4 py-12 sm:py-20 max-w-5xl mx-auto">
          {logoUrl ? (
            <div className="relative group inline-block mb-6 sm:mb-8">
              <div className="absolute inset-0 bg-primary/10 blur-[80px] group-hover:bg-primary/30 transition-all rounded-full" />

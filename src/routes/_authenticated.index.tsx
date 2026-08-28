@@ -194,7 +194,7 @@ function Dashboard() {
 
        <main className="max-w-7xl mx-auto px-6 py-12">
         {creating && (
-           <div className="mb-10 card-premium p-8 site-hero-enter border-primary/20 bg-primary/5 relative overflow-hidden">
+           <div className="mb-10 card-premium p-8 border-primary/20 bg-primary/5 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-8 opacity-5">
                <Sparkles className="h-32 w-32 text-primary" />
              </div>
@@ -297,7 +297,7 @@ function Dashboard() {
         ) : list.length === 0 ? (
           <EmptyState onCreate={() => setCreating(true)} />
         ) : (
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 site-stagger">
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {list.map((r) => {
               const isDuplicate = list.filter((item) => item.slug === r.slug).length > 1;
               return (

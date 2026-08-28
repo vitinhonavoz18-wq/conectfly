@@ -52,19 +52,30 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory }: { ite
   const itemName = nameParts[2];
 
   return (
-     <div className="rounded-2xl sm:rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-0 hover:border-[hsl(var(--site-primary)/0.6)] transition-all duration-500 overflow-hidden shadow-xl group relative backdrop-blur-sm h-full">
-       <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.08)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+     <div className="rounded-2xl sm:rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-0 hover:border-[hsl(var(--site-primary)/0.6)] transition-colors duration-200 overflow-hidden shadow-xl group relative h-full">
+       {/* Brilho de hover: só existe em tela com mouse. No celular ninguém
+           passa o mouse, e a camada ficaria sendo pintada à toa em cada card. */}
+       <div className="hidden [@media(hover:hover)]:block absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.08)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
        {(restaurant?.show_item_images ?? true) && item.image_url && (
-         <div className="relative aspect-[16/9] sm:aspect-[16/10] overflow-hidden bg-[hsl(var(--site-muted))] shrink-0">
+         <div
+           data-foto
+           className="relative aspect-[16/9] sm:aspect-[16/10] overflow-hidden bg-[hsl(var(--site-muted))] shrink-0"
+         >
            <img
              src={item.image_url}
              alt={item.name}
              loading="lazy"
              decoding="async"
-             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+             // A proporção já vem do contêiner; as medidas aqui evitam que o
+             // card mude de altura quando a foto termina de carregar — é a
+             // diferença entre a lista ficar parada e os produtos pularem de
+             // lugar bem na hora em que o cliente vai tocar num deles.
+             width={800}
+             height={450}
+             className="absolute inset-0 w-full h-full object-cover [@media(hover:hover)]:group-hover:scale-110 [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
              onError={(e) => {
-               const container = (e.target as HTMLImageElement).closest('.relative.aspect-\\[16\\/9\\]');
-               if (container) (container as HTMLElement).style.display = 'none';
+               const foto = (e.target as HTMLImageElement).closest("[data-foto]");
+               if (foto) (foto as HTMLElement).style.display = "none";
              }}
            />
            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
@@ -155,7 +166,11 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory }: { ite
           <button
             onClick={handleAdd}
             disabled={showConsult || isAdding}
-            className={`mt-1.5 sm:mt-2 site-btn-primary py-2 sm:py-3.5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-70 disabled:scale-100 shadow-xl active:scale-95 transition-all group/btn ${sizes.length === 0 ? 'mt-auto' : ''} ${isAdding ? 'bg-green-600 border-green-500 shadow-green-900/20' : ''}`}
+            // Transição só do que de fato muda no botão: a cor (fica verde ao
+            // adicionar) e o afundar do toque. `transition-all` mandaria o
+            // navegador ficar de olho em toda propriedade animável de cada um
+            // dos 200 botões da lista.
+            className={`mt-1.5 sm:mt-2 site-btn-primary py-2 sm:py-3.5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-70 disabled:scale-100 shadow-xl active:scale-95 transition-[background-color,transform] duration-200 group/btn ${sizes.length === 0 ? 'mt-auto' : ''} ${isAdding ? 'bg-green-600 border-green-500 shadow-green-900/20' : ''}`}
           >
             {isAdding ? (
               <>
