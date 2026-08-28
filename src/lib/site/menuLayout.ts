@@ -160,8 +160,10 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
     id: "beverage",
     nome: "Adega e distribuidora",
     descricao: "Busca em primeiro lugar e prateleira de produtos, como uma loja.",
-    // Quem compra bebida procura pelo nome. A busca vem antes de tudo.
-    ordem: ["busca", "categorias", "populares", "cardapio", "bebidas", "combos"],
+    // A capa vem sempre primeiro — é a identidade da loja, e nenhum layout
+    // pode engolir a logo. Depois dela, a busca: quem compra bebida procura
+    // pelo nome, não rola a tela.
+    ordem: ["capa", "busca", "categorias", "populares", "cardapio", "bebidas", "combos"],
     estiloDeCard: "prateleira",
     colunas: 3,
     buscaEmDestaque: true,
@@ -174,7 +176,7 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
     id: "pharmacy",
     nome: "Farmácia",
     descricao: "Catálogo com busca no topo, do jeito que se procura remédio.",
-    ordem: ["busca", "categorias", "cardapio", "populares", "combos", "bebidas"],
+    ordem: ["capa", "busca", "categorias", "cardapio", "populares", "combos", "bebidas"],
     estiloDeCard: "prateleira",
     colunas: 3,
     buscaEmDestaque: true,
@@ -187,7 +189,7 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
     id: "market",
     nome: "Mercado e conveniência",
     descricao: "Muitas categorias, muitos itens na tela e carrinho sempre à mão.",
-    ordem: ["busca", "categorias", "cardapio", "populares", "combos", "bebidas"],
+    ordem: ["capa", "busca", "categorias", "cardapio", "populares", "combos", "bebidas"],
     estiloDeCard: "compacto",
     colunas: 4,
     buscaEmDestaque: true,

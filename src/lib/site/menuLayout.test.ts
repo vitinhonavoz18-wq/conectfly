@@ -96,6 +96,14 @@ describe("integridade dos layouts", () => {
     }
   });
 
+  it("TODO layout começa pela capa — a logo nunca some", () => {
+    // O que muda entre um nicho e outro é a NAVEGAÇÃO, nunca a identidade da
+    // loja. Um cardápio que abre sem a logo é uma loja sem placa na porta.
+    for (const id of Object.keys(MENU_LAYOUTS) as LayoutId[]) {
+      expect(MENU_LAYOUTS[id].ordem[0], id).toBe("capa");
+    }
+  });
+
   it("todo layout monta o cardápio de produtos", () => {
     // Um layout sem o bloco "cardapio" seria uma loja sem produtos na tela.
     for (const id of Object.keys(MENU_LAYOUTS) as LayoutId[]) {
