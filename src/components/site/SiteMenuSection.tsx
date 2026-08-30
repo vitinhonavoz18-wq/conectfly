@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ImageIcon, ArrowLeft } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
 import { SiteBeverageSection } from "./SiteBeverageSection";
+import { dividirTitulo, resolverTextos } from "@/lib/site/menuTexts";
 
  
 interface Props {
@@ -17,6 +18,15 @@ interface Props {
 
  
 export function SiteMenuSection({ categories, restaurant, entryMode = "navigation", adicionaisCategory, beverages, beverageCatalogs }: Props) {
+  // Os textos institucionais do cardápio. Vêm das configurações desta loja;
+  // se ela nunca personalizou, `resolverTextos` devolve exatamente as frases
+  // que já estavam no ar — nenhum cardápio existente muda sozinho.
+  const textos = useMemo(
+    () => resolverTextos(restaurant.site_settings),
+    [restaurant.site_settings],
+  );
+  const tituloDoCardapio = useMemo(() => dividirTitulo(textos.menu_title), [textos.menu_title]);
+
   const [active, setActive] = useState<string | null>(null);
   const [activeBevCatalog, setActiveBevCatalog] = useState<string | null>(null);
   const BEV_ID = "__beverages__";
@@ -356,14 +366,15 @@ export function SiteMenuSection({ categories, restaurant, entryMode = "navigatio
         {(restaurant.site_settings?.show_categories_section !== false) && clickableCategories.length > 0 && (
           <div className="text-center mb-10 sm:mb-16">
             <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.15)] text-[hsl(var(--site-primary))] text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.25)]">
-              Curadoria Gastronômica
+              {textos.menu_badge}
             </span>
             <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))] drop-shadow-sm">
-              Nossa <span className="text-[hsl(var(--site-primary))]">Cozinha</span>
+              {tituloDoCardapio.inicio}
+              <span className="text-[hsl(var(--site-primary))]">{tituloDoCardapio.destaque}</span>
             </h2>
             <div className="h-1 w-20 bg-[hsl(var(--site-primary))] mx-auto mb-6 rounded-full opacity-80" />
             <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic text-sm sm:text-base leading-relaxed opacity-90 px-4">
-              {current ? `Explorando a seleção premium de ${current.name}` : "Selecione uma categoria para descobrir nossas especialidades artesanais de alta qualidade."}
+              {current ? `Explorando a seleção premium de ${current.name}` : textos.menu_description}
             </p>
           </div>
         )}

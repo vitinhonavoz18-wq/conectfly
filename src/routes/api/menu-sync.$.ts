@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { validateApiKey } from "@/lib/api-auth";
 import { buildCorsHeaders } from "@/lib/cors";
+import { CHAVE_NO_SITE_SETTINGS, paraGravar } from "@/lib/site/menuTexts";
 
 const CORS_OPTS = {
   methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
@@ -87,6 +88,29 @@ async function mergeJsonbSettings(restaurantId: string, patch: Record<string, an
     const existing = (current as Record<string, any> | null)?.[key];
     merged[key] = { ...(existing && typeof existing === "object" ? existing : {}), ...patch[key] };
   }
+
+  // Os textos do cardápio são limpos AQUI TAMBÉM, e não só na tela onde foram
+  // digitados.
+  //
+  // Esta porta aceita quem chega com a chave da loja — e a chave pode vazar,
+  // ou alguém pode montar a chamada à mão sem passar pela tela. Confiar só na
+  // conferência do outro lado seria como o porteiro liberar todo mundo que
+  // diz "o segurança lá de baixo já me revistou".
+  //
+  // Só mexe quando os textos vieram de fato. Sem esta conferência, toda
+  // sincronização de cor ou de layout deixaria um pacote de textos vazio na
+  // ficha de todas as lojas — sujeira que não quebra nada hoje e confunde
+  // quem for ler amanhã.
+  const configs = merged.site_settings as Record<string, unknown> | undefined;
+  if (configs && typeof configs === "object" && CHAVE_NO_SITE_SETTINGS in configs) {
+    merged.site_settings = {
+      ...configs,
+      [CHAVE_NO_SITE_SETTINGS]: paraGravar(
+        (configs[CHAVE_NO_SITE_SETTINGS] ?? {}) as Record<string, string>,
+      ),
+    };
+  }
+
   return merged;
 }
 
