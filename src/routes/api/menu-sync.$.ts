@@ -3,6 +3,11 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { validateApiKey } from "@/lib/api-auth";
 import { buildCorsHeaders } from "@/lib/cors";
 import { CHAVE_NO_SITE_SETTINGS, paraGravar } from "@/lib/site/menuTexts";
+import {
+  CHAVE_NO_SITE_SETTINGS as CHAVE_DA_CAPA,
+  lerProgramacao,
+  paraGravar as capaParaGravar,
+} from "@/lib/site/heroSchedule";
 
 const CORS_OPTS = {
   methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
@@ -108,6 +113,17 @@ async function mergeJsonbSettings(restaurantId: string, patch: Record<string, an
       [CHAVE_NO_SITE_SETTINGS]: paraGravar(
         (configs[CHAVE_NO_SITE_SETTINGS] ?? {}) as Record<string, string>,
       ),
+    };
+  }
+
+  // Mesmo tratamento para a programação da capa: períodos com horário
+  // inválido ou sem identificação são descartados na entrada, em vez de
+  // ficarem guardados esperando dar problema no cardápio de alguém.
+  const comCapa = merged.site_settings as Record<string, unknown> | undefined;
+  if (comCapa && typeof comCapa === "object" && CHAVE_DA_CAPA in comCapa) {
+    merged.site_settings = {
+      ...comCapa,
+      [CHAVE_DA_CAPA]: capaParaGravar(lerProgramacao(comCapa)),
     };
   }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { SiteBrandLogo } from "./SiteBrandLogo";
+import { useCapaDoHero } from "@/lib/site/useCapaDoHero";
 
 interface Props {
   name: string;
@@ -13,6 +14,11 @@ interface Props {
   showButton?: boolean;
   hasCombos?: boolean;
   combosVisibility?: "auto" | "always" | "hide";
+  /**
+   * O pacotinho de configurações da loja. É de onde sai a capa programada.
+   * Sem ele, vale a capa fixa de sempre — nenhuma loja antiga muda.
+   */
+  siteSettings?: unknown;
 }
 
 export function SiteHero({
@@ -27,11 +33,21 @@ export function SiteHero({
   showButton = true,
   hasCombos = false,
   combosVisibility = "auto",
+  siteSettings,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
   const showHeroButton = showButton;
-  const showVideo = heroMediaType === "video" && heroVideoUrl;
+
+  // A capa do momento. No modo fixo — que é o padrão — devolve exatamente a
+  // mídia que a loja já escolheu, então nada muda para quem não programou nada.
+  const capa = useCapaDoHero(siteSettings, {
+    tipo: heroMediaType === "video" ? "video" : "imagem",
+    url: heroMediaType === "video" ? (heroVideoUrl ?? null) : heroImageUrl,
+  });
+
+  const showVideo = capa.tipo === "video" && !!capa.url;
+  const urlDaImagem = capa.tipo === "imagem" ? capa.url || null : heroImageUrl;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -54,7 +70,7 @@ export function SiteHero({
     if (showVideo) {
       attemptPlay();
     }
-  }, [showVideo, heroVideoUrl]);
+  }, [showVideo, capa.url]);
 
   const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -83,8 +99,12 @@ export function SiteHero({
       <div className="absolute inset-0">
         {showVideo ? (
           <video
+            // A chave amarra o elemento ao endereço: quando a capa programada
+            // troca, o navegador monta um vídeo novo em vez de tentar remendar
+            // o antigo, que às vezes fica congelado no último quadro.
+            key={capa.url}
             ref={videoRef}
-            src={heroVideoUrl ?? undefined}
+            src={capa.url}
             autoPlay
             muted
             loop
@@ -95,10 +115,11 @@ export function SiteHero({
             className="absolute inset-0 w-full h-full object-cover"
             style={{ pointerEvents: 'none' }}
           />
-        ) : heroImageUrl ? (
+        ) : urlDaImagem ? (
           <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroImageUrl})` }}
+            key={urlDaImagem}
+            className="absolute inset-0 bg-cover bg-center motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
+            style={{ backgroundImage: `url(${urlDaImagem})` }}
           />
         ) : null}
       </div>

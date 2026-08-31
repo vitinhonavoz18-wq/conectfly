@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { publicSupabaseConfig } from './publicConfig';
+import { fetchQueAnotaAHora } from '@/lib/site/relogio';
 
 function createSupabaseClient() {
   // Três fontes, nesta ordem:
@@ -28,7 +29,13 @@ function createSupabaseClient() {
       storage: typeof window !== 'undefined' ? localStorage : undefined,
       persistSession: true,
       autoRefreshToken: true,
-    }
+    },
+    global: {
+      // Lê o carimbo de hora que já vem em toda resposta, para a capa
+      // programada não depender do relógio do celular do cliente estar
+      // certo. Ver src/lib/site/relogio.ts.
+      fetch: fetchQueAnotaAHora(),
+    },
   });
 }
 

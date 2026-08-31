@@ -55,6 +55,7 @@ export function WhiteTemplate({ data }: { data: SiteData }) {
             heroImageUrl={r.hero_image_url}
             heroMediaType={r.hero_media_type}
             heroVideoUrl={r.hero_video_url}
+            siteSettings={r.site_settings}
             buttonText={getPrimaryButtonText(r)}
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
