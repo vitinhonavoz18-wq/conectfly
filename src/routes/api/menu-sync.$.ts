@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { validateApiKey } from "@/lib/api-auth";
 import { buildCorsHeaders } from "@/lib/cors";
 import { CHAVE_NO_SITE_SETTINGS, paraGravar } from "@/lib/site/menuTexts";
+import { sanearConfiguracoesRecebidas } from "@/lib/site/menuBehavior";
 import {
   CHAVE_NO_SITE_SETTINGS as CHAVE_DA_CAPA,
   lerProgramacao,
@@ -125,6 +126,14 @@ async function mergeJsonbSettings(restaurantId: string, patch: Record<string, an
       ...comCapa,
       [CHAVE_DA_CAPA]: capaParaGravar(lerProgramacao(comCapa)),
     };
+  }
+
+  // Por último, o comportamento do cardápio: apaga o que o painel mandou
+  // apagar e descarta o que veio escrito errado. Ver
+  // `sanearConfiguracoesRecebidas`.
+  const comportamento = merged.site_settings as Record<string, unknown> | undefined;
+  if (comportamento && typeof comportamento === "object") {
+    merged.site_settings = sanearConfiguracoesRecebidas(comportamento);
   }
 
   return merged;

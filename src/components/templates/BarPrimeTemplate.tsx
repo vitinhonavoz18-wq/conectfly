@@ -9,6 +9,7 @@ import type { SiteData } from "@/lib/site/types";
 import { Utensils, Beer, Wine, Coffee, Star, ArrowRight, Minus, Plus, ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { isAdicionaisCategory } from "@/lib/site/categoryKinds";
+import { resolverModoDeNavegacao } from "@/lib/site/menuBehavior";
 
 export function BarPrimeTemplate({ data }: { data: SiteData }) {
   const {
@@ -188,7 +189,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
   );
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
-  const entryMode = r.site_settings?.entry_mode || "navigation";
+  const entryMode = resolverModoDeNavegacao(r.site_settings);
   const cardsCategories = allCategories.filter((c) => !isBeverage(c));
 
   return (

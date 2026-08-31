@@ -28,6 +28,8 @@
  * categorias, produtos, adicionais e carrinho. Layout é só a vitrine.
  */
 
+import type { ModoDeNavegacao } from "./menuBehavior";
+
 /** Os blocos que um cardápio pode montar, na ordem que o layout mandar. */
 export type BlocoDoCardapio =
   "capa" | "busca" | "categorias" | "populares" | "pizzas" | "combos" | "cardapio" | "bebidas";
@@ -50,6 +52,15 @@ export type ConfigDeLayout = {
   ctaProduto: string;
   /** Mostra "12 peças" e afins no card — vale para sushi e para packs. */
   mostraQuantidade: boolean;
+  /**
+   * O modo de navegação que combina com este layout — uma SUGESTÃO, não uma
+   * ordem. Vale só para a loja que nunca escolheu nada na aba Comportamento.
+   * Se o lojista escolheu, a escolha dele ganha sempre. Ver
+   * `resolverModoDeNavegacao` em `menuBehavior.ts`.
+   *
+   * Ausente = usa o padrão global (rolagem única).
+   */
+  modoDeNavegacaoPadrao?: ModoDeNavegacao;
 };
 
 export type LayoutId =
@@ -124,6 +135,8 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
   restaurant: {
     ...GENERICO,
     id: "restaurant",
+    // Cardápio grande: escolher a categoria antes evita rolar a loja inteira.
+    modoDeNavegacaoPadrao: "navigation",
     nome: "Restaurante",
     descricao: "Categorias organizadas e espaço para descrever bem cada prato.",
     ordem: ["capa", "categorias", "populares", "cardapio", "combos", "bebidas"],
@@ -135,6 +148,8 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
   japanese: {
     ...GENERICO,
     id: "japanese",
+    // Cardápio grande: escolher a categoria antes evita rolar a loja inteira.
+    modoDeNavegacaoPadrao: "navigation",
     nome: "Japonês e sushi",
     descricao: "Combinados em destaque e a quantidade de peças visível no card.",
     ordem: ["capa", "combos", "categorias", "populares", "cardapio", "bebidas"],
@@ -147,6 +162,8 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
   bakery: {
     ...GENERICO,
     id: "bakery",
+    // Cardápio grande: escolher a categoria antes evita rolar a loja inteira.
+    modoDeNavegacaoPadrao: "navigation",
     nome: "Padaria e cafeteria",
     descricao: "Compra rápida, com mais itens à vista e busca por perto.",
     ordem: ["capa", "busca", "populares", "categorias", "cardapio", "bebidas"],
@@ -158,6 +175,8 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
   beverage: {
     ...GENERICO,
     id: "beverage",
+    // Cardápio grande: escolher a categoria antes evita rolar a loja inteira.
+    modoDeNavegacaoPadrao: "navigation",
     nome: "Adega e distribuidora",
     descricao: "Busca em primeiro lugar e prateleira de produtos, como uma loja.",
     // A capa vem sempre primeiro — é a identidade da loja, e nenhum layout
@@ -174,6 +193,8 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
   pharmacy: {
     ...GENERICO,
     id: "pharmacy",
+    // Cardápio grande: escolher a categoria antes evita rolar a loja inteira.
+    modoDeNavegacaoPadrao: "navigation",
     nome: "Farmácia",
     descricao: "Catálogo com busca no topo, do jeito que se procura remédio.",
     ordem: ["capa", "busca", "categorias", "cardapio", "populares", "combos", "bebidas"],
@@ -187,6 +208,8 @@ export const MENU_LAYOUTS: Readonly<Record<LayoutId, ConfigDeLayout>> = {
   market: {
     ...GENERICO,
     id: "market",
+    // Cardápio grande: escolher a categoria antes evita rolar a loja inteira.
+    modoDeNavegacaoPadrao: "navigation",
     nome: "Mercado e conveniência",
     descricao: "Muitas categorias, muitos itens na tela e carrinho sempre à mão.",
     ordem: ["capa", "busca", "categorias", "cardapio", "populares", "combos", "bebidas"],

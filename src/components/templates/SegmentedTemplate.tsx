@@ -13,6 +13,11 @@ import type { MenuCategoryRow, SiteData } from "@/lib/site/types";
 import { getPrimaryButtonText } from "@/lib/site/format";
 import { isAdicionaisCategory, isBordasCategory, isExtrasCategory } from "@/lib/site/categoryKinds";
 import { resolverLayout, type BlocoDoCardapio } from "@/lib/site/menuLayout";
+import {
+  deveMostrarCombos,
+  resolverModoDeNavegacao,
+  visibilidadeDeCombosDe,
+} from "@/lib/site/menuBehavior";
 
 /**
  * O cardápio montado pelo layout do segmento.
@@ -57,10 +62,13 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
   const bordasCategory = data.categories.find(isBordasCategory);
   const adicionaisCategory = data.categories.find(isAdicionaisCategory);
 
-  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const combosVisibility = visibilidadeDeCombosDe(r.site_settings);
   const hasCombos = data.comboGroups.some((g) => g.combos.length > 0);
-  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
-  const entryMode = r.site_settings?.entry_mode || "navigation";
+  const showCombos = deveMostrarCombos(combosVisibility, hasCombos);
+  // Aqui, e só aqui, existe padrão de nicho: mercado e farmácia preferem que o
+  // cliente escolha a categoria antes de ver produto. Mas é SUGESTÃO — se o
+  // lojista escolheu na aba Comportamento, a escolha dele passa por cima.
+  const entryMode = resolverModoDeNavegacao(r.site_settings, layout.modoDeNavegacaoPadrao);
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
 
   // As categorias que a busca e os destaques varrem: tudo que é produto de
@@ -141,10 +149,8 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
       // aparece de uma vez.
       case "categorias":
       case "cardapio": {
-        const modoDoBloco =
-          bloco === "categorias" ? "navigation" : entryMode === "cards" ? "cards" : entryMode;
-        // Com os dois blocos na receita, o primeiro já mostra as categorias e
-        // o segundo repetiria a mesma lista.
+        // Com os dois blocos na receita, o primeiro já mostra o cardápio e o
+        // segundo repetiria a mesma lista.
         if (bloco === "cardapio" && layout.ordem.includes("categorias")) return null;
 
         return (
@@ -153,7 +159,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               categories={entryMode === "cards" ? categoriasDeProduto : nonPizzaCategories}
               restaurant={r}
               adicionaisCategory={adicionaisCategory}
-              entryMode={modoDoBloco}
+              entryMode={entryMode}
               beverages={!hasPizzas ? (data.beverages ?? []) : []}
               beverageCatalogs={data.beverageCatalogs}
             />

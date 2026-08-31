@@ -10,6 +10,11 @@ import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
 import { getPrimaryButtonText } from "@/lib/site/format";
 import { isAdicionaisCategory, isBordasCategory, isExtrasCategory } from "@/lib/site/categoryKinds";
+import {
+  deveMostrarCombos,
+  resolverModoDeNavegacao,
+  visibilidadeDeCombosDe,
+} from "@/lib/site/menuBehavior";
 
 export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen } = useCart();
@@ -35,10 +40,13 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const bordasCategory = data.categories.find(isBordasCategory);
   const adicionaisCategory = data.categories.find(isAdicionaisCategory);
 
-  const combosVisibility = r.site_settings?.combos_visibility || "auto";
+  const combosVisibility = visibilidadeDeCombosDe(r.site_settings);
   const hasCombos = data.comboGroups.some((g) => g.combos.length > 0);
-  const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
-  const entryMode = r.site_settings?.entry_mode || "navigation";
+  const showCombos = deveMostrarCombos(combosVisibility, hasCombos);
+  // O modo vem do contrato único: escolha do lojista, senão o padrão. Estes
+  // modelos clássicos não têm layout de segmento, então não há padrão de
+  // nicho a consultar aqui.
+  const entryMode = resolverModoDeNavegacao(r.site_settings);
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const beveragesPosition = r.site_settings?.beverages_position || "end";
