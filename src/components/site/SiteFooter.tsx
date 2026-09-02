@@ -1,4 +1,5 @@
 import { Phone, Clock, MapPin } from "lucide-react";
+import { gradeParaBlocos } from "@/lib/site/rodapeGrade";
 
 interface Props {
   name: string;
@@ -10,12 +11,15 @@ interface Props {
 
 export function SiteFooter({ name, phoneDisplay, hours, address, city }: Props) {
   const cleanPhone = phoneDisplay?.replace(/\D/g, "");
+  // Conta o que REALMENTE vai aparecer, com a mesma regra usada lá embaixo
+  // para decidir se cada bloco entra.
+  const blocosVisiveis = [phoneDisplay, hours, address || city].filter(Boolean).length;
 
   return (
      <footer className="border-t border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] px-4 py-16 sm:py-24 mt-16 backdrop-blur-md relative overflow-hidden">
        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[hsl(var(--site-primary)/0.3)] to-transparent" />
        
-       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8 text-center sm:text-left relative z-10">
+       <div className={`max-w-7xl mx-auto grid grid-cols-1 ${gradeParaBlocos(blocosVisiveis)} gap-12 sm:gap-8 text-center sm:text-left relative z-10`}>
          {phoneDisplay && (
            <a 
              href={`tel:${cleanPhone}`}
