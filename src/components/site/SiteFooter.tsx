@@ -68,7 +68,7 @@ export function SiteFooter({ name, phoneDisplay, hours, address, city }: Props) 
           <div className="flex flex-col items-center gap-4">
             <span className="font-black text-lg tracking-tighter uppercase text-[hsl(var(--site-fg))] opacity-40">{name}</span>
             <p className="text-[9px] font-black uppercase tracking-[0.3em] text-[hsl(var(--site-muted-fg))] opacity-60">
-              © {new Date().getFullYear()} • Gastronomia Digital by SuperCreatorFly
+              © {new Date().getFullYear()} • Gastronomia Digital
             </p>
           </div>
        </div>
