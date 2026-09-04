@@ -1,3 +1,23 @@
+/**
+ * O CARDÁPIO DE PIZZA QUE TODA LOJA NOVA GANHAVA — AGORA DESLIGADO
+ *
+ * Estas funções continuam aqui, mas NINGUÉM AS CHAMA MAIS no fluxo de criação
+ * de loja. Até setembro de 2026, toda loja criada recebia automaticamente 32
+ * sabores de pizza: a batataria, o boteco e a açaiteria também.
+ *
+ * É a loja nova que abre com a prateleira cheia de produto de outro dono. O
+ * lojista gastava o primeiro dia apagando o que nunca vendeu.
+ *
+ * Foram mantidas de propósito, e não apagadas, por dois motivos: elas
+ * documentam o que as lojas antigas receberam (e que ainda está lá), e podem
+ * servir de base para um "cardápio de exemplo" que o lojista PEÇA, em vez de
+ * receber sem escolher.
+ *
+ * As zonas de entrega continuam sendo aplicadas: bairro com taxa não é produto
+ * de ninguém, é ponto de partida — e sem nenhuma zona a loja de delivery não
+ * recebe nem o primeiro pedido.
+ */
+
 import type { PizzaSize } from "./types";
 
 /**

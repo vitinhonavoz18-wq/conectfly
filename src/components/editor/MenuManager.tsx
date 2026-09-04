@@ -3,7 +3,6 @@ import { Plus, Trash2, ChevronDown, ChevronRight, Upload, ImageIcon, Sparkles, S
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { MenuCategoryRow, MenuItemRow, PizzaSize, Size, RestaurantRow } from "@/lib/site/types";
-import { seedDefaultMenu } from "@/lib/site/defaultMenu";
 
 import { MenuImport } from "./MenuImport";
 import { MenuSyncDebug } from "./MenuSyncDebug";

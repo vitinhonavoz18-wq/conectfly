@@ -6,10 +6,7 @@ import {
   getPizzeriaPublicUrl,
   getMenuSyncEndpoint,
 } from "@/lib/site/format";
-import {
-  seedDefaultMenuWithClient,
-  seedDefaultDeliveryZonesWithClient,
-} from "@/lib/site/defaultMenu";
+import { seedDefaultDeliveryZonesWithClient } from "@/lib/site/defaultMenu";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -261,8 +258,27 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
           );
         }
 
+        // ── POR QUE A LOJA NOVA NASCE COM O CARDÁPIO VAZIO ────────────────
+        //
+        // Até aqui, TODA loja criada recebia automaticamente um cardápio de 32
+        // sabores de pizza. Não era só a pizzaria: a batataria, o boteco e a
+        // açaiteria também nasciam vendendo Portuguesa e Romeu e Julieta.
+        //
+        // É a loja nova que abre com a prateleira já cheia de produto de outro
+        // dono — o lojista gasta o primeiro dia apagando coisa que nunca
+        // vendeu, em vez de cadastrar o que ele vende de verdade.
+        //
+        // Agora ela começa vazia, e a preparação guiada do FlyControl leva o
+        // lojista direto para montar o cardápio dele.
+        //
+        // AS ZONAS DE ENTREGA CONTINUAM. Elas não são produto de ninguém: são
+        // bairros com taxa, um ponto de partida que o lojista ajusta. Loja de
+        // delivery sem nenhuma zona não consegue nem receber o primeiro
+        // pedido.
+        //
+        // NADA FOI APAGADO de quem já existe: esta mudança vale só para lojas
+        // criadas daqui para frente.
         try {
-          await seedDefaultMenuWithClient(supabaseAdmin, created.id);
           await seedDefaultDeliveryZonesWithClient(supabaseAdmin, created.id);
         } catch (e) {
           console.warn("[provision] seed error", e);

@@ -19,7 +19,7 @@ import type { RestaurantRow } from "@/lib/site/types";
 import { supabase } from "@/integrations/supabase/client";
 import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { slugify, subdomainify } from "@/lib/site/format";
-import { seedDefaultMenu, seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
+import { seedDefaultDeliveryZones } from "@/lib/site/defaultMenu";
 import { generateApiKey } from "@/lib/site/flycontrol";
 import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
@@ -124,12 +124,18 @@ function Dashboard() {
       setError(insErr?.message ?? "Falha ao criar");
       return;
     }
-    // Aplica o cardápio padrão pré-definido (ignora erros silenciosamente)
+    // A loja nova nasce com o cardápio VAZIO. Antes ela recebia 32 sabores de
+    // pizza automaticamente — inclusive quando era uma batataria ou um boteco.
+    // É a prateleira já cheia de produto de outro dono: o lojista passa o
+    // primeiro dia apagando o que nunca vendeu.
+    //
+    // As zonas de entrega continuam: bairro com taxa não é produto de ninguém,
+    // é um ponto de partida que ele ajusta — e sem nenhuma zona a loja de
+    // delivery não recebe nem o primeiro pedido.
     try {
-      await seedDefaultMenu(data.id);
       await seedDefaultDeliveryZones(data.id);
     } catch (e) {
-      console.warn("[seedDefaultMenu]", e);
+      console.warn("[seedDefaultDeliveryZones]", e);
     }
     setName("");
     setCreating(false);
