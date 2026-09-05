@@ -63,6 +63,7 @@ const RESTAURANT_WRITABLE = new Set([
   "delivery_enabled",
   "pickup_enabled",
   "table_enabled",
+  "is_open",
 ]);
 
 // Colunas JSONB de configuração — um UPDATE comum SUBSTITUI a coluna
