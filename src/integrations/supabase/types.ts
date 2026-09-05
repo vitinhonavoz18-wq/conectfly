@@ -940,6 +940,7 @@ export type Database = {
           hero_image_url: string | null
           hero_media_type: string
           hero_video_url: string | null
+          is_open: boolean
           hours: string | null
           id: string
           logo_url: string | null
@@ -992,6 +993,7 @@ export type Database = {
           hero_image_url?: string | null
           hero_media_type?: string
           hero_video_url?: string | null
+          is_open?: boolean
           hours?: string | null
           id?: string
           logo_url?: string | null
@@ -1044,6 +1046,7 @@ export type Database = {
           hero_image_url?: string | null
           hero_media_type?: string
           hero_video_url?: string | null
+          is_open?: boolean
           hours?: string | null
           id?: string
           logo_url?: string | null
@@ -1330,6 +1333,7 @@ export type Database = {
           hero_image_url: string | null
           hero_media_type: string | null
           hero_video_url: string | null
+          is_open: boolean | null
           hours: string | null
           id: string | null
           logo_url: string | null
@@ -1374,6 +1378,7 @@ export type Database = {
           hero_image_url?: string | null
           hero_media_type?: string | null
           hero_video_url?: string | null
+          is_open?: boolean | null
           hours?: string | null
           id?: string | null
           logo_url?: string | null
@@ -1418,6 +1423,7 @@ export type Database = {
           hero_image_url?: string | null
           hero_media_type?: string | null
           hero_video_url?: string | null
+          is_open?: boolean | null
           hours?: string | null
           id?: string | null
           logo_url?: string | null

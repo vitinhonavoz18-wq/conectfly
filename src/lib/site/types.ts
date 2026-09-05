@@ -106,6 +106,19 @@ export interface RestaurantRow {
   primary_color: string;
   secondary_color: string;
   published: boolean;
+  /**
+   * A loja está aceitando pedidos AGORA (botão "Fechar Loja Agora" do
+   * FlyControl).
+   *
+   * Diferente de `published`: com `published = false` o site inteiro some do
+   * ar; com `is_open = false` o cliente continua vendo o cardápio, as fotos e
+   * os preços — só não consegue fechar o pedido. É a loja de portas fechadas
+   * com o cardápio na vitrine.
+   *
+   * Loja antiga, ou resposta que veio sem este campo, conta como ABERTA: uma
+   * falha de leitura não pode fechar a loja de quem está vendendo.
+   */
+  is_open?: boolean | null;
   created_at: string;
   updated_at: string;
   flycontrol_enabled?: boolean;
