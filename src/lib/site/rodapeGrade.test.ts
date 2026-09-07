@@ -45,3 +45,29 @@ describe("colunas do rodapé do cardápio", () => {
     expect(fonte).toContain("{(address || city) && (");
   });
 });
+
+/**
+ * Guarda do alinhamento entre as colunas.
+ *
+ * Não basta abrir o número certo de lugares: os três blocos precisam dividir
+ * as mesmas faixas de altura. Sem isso, um rótulo que quebra em duas linhas
+ * empurra só o seu bloco para baixo e o rodapé entorta de novo.
+ */
+describe("alinhamento das colunas do rodapé", () => {
+  const fonte = readFileSync(join(process.cwd(), "src/components/site/SiteFooter.tsx"), "utf8");
+
+  it("a grade declara as três faixas: ícone, rótulo e conteúdo", () => {
+    expect(fonte).toContain("sm:grid-rows-[auto_auto_1fr]");
+  });
+
+  it("todo bloco encaixa nas mesmas faixas, em vez de empilhar por conta própria", () => {
+    expect(fonte).toContain("sm:grid-rows-subgrid sm:row-span-3");
+    // Os três blocos usam o MESMO encaixe — se um ficar de fora, ele volta a
+    // descer sozinho.
+    expect(fonte.match(/\$\{blocoAlinhado\}/g)?.length).toBe(3);
+  });
+
+  it("texto comprido quebra dentro da coluna em vez de vazar", () => {
+    expect(fonte.match(/break-words/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+});
