@@ -275,6 +275,7 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
           <SiteMenuSection
             categories={cardsCategories as any}
             adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
             restaurant={r}
             entryMode="cards"
             beverages={data.beverages ?? []}

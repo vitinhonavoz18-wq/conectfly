@@ -4,12 +4,14 @@ import type { MenuCategoryRow, MenuItemRow, PizzaSize, RestaurantRow, BeverageRo
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
 import { SiteBeverageSection } from "./SiteBeverageSection";
+import { adicionaisDaCategoria, type VinculosDeAdicional } from "@/lib/site/adicionaisDaCategoria";
 
   interface Props {
     category: MenuCategoryRow & { items: MenuItemRow[] };
     restaurant?: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
     adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    vinculosDeAdicional?: VinculosDeAdicional;
     beverages?: BeverageRow[];
     beverageCatalogs?: BeverageCatalogRow[];
   }
@@ -79,7 +81,16 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
   );
 }
 
-  export function SitePizzaBuilder({ category, restaurant, bordasCategory, adicionaisCategory, beverages, beverageCatalogs }: Props) {
+  export function SitePizzaBuilder({ category, restaurant, bordasCategory, adicionaisCategory, vinculosDeAdicional, beverages, beverageCatalogs }: Props) {
+    // Os adicionais que valem para ESTA categoria de pizza. Calculado uma vez
+    // e usado em todos os pontos abaixo: ler `adicionaisCategory.items` direto
+    // em qualquer um deles traria a lista inteira de volta e o filtro passaria
+    // a valer só em metade da tela.
+    const adicionaisDaqui = adicionaisDaCategoria(
+      adicionaisCategory?.items ?? [],
+      category?.id,
+      vinculosDeAdicional,
+    );
   const sizes: PizzaSize[] = category.pizza_sizes ?? [];
   const { addLine, setCartOpen } = useCart();
   const [sizeIdx, setSizeIdx] = useState<number | null>(sizes.length > 0 ? 0 : null);
@@ -115,7 +126,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
       if (bordasCategory && bordasCategory.items.length > 0) {
         targetRef = bordasRef;
         message = "Agora escolha sua borda ✨";
-      } else if (adicionaisCategory && adicionaisCategory.items.length > 0) {
+      } else if (adicionaisDaqui.length > 0) {
         // Sem bordas cadastradas, o proximo passo e o de adicionais - levar
         // direto para o resumo faria o cliente passar reto por eles.
         targetRef = adicionaisRef;
@@ -179,7 +190,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     const borderPrice = selectedBorder?.price ?? 0;
 
     const selectedExtras = selectedAdicionais
-      .map((id) => adicionaisCategory?.items.find((a) => a.id === id))
+      .map((id) => adicionaisDaqui.find((a) => a.id === id))
       .filter(Boolean) as MenuItemRow[];
     const adicionaisPrice = selectedExtras.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
 
@@ -188,7 +199,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
     // Numeracao das etapas calculada, e nao escrita a mao: uma loja sem
     // bordas cadastradas mostraria "1, 2, 4" e pareceria uma etapa perdida.
     const hasBordas = !!(bordasCategory && bordasCategory.items.length > 0);
-    const hasAdicionais = !!(adicionaisCategory && adicionaisCategory.items.length > 0);
+    const hasAdicionais = adicionaisDaqui.length > 0;
     const bordasStepNumber = 3;
     const adicionaisStepNumber = hasBordas ? 4 : 3;
     const beveragesStepNumber = 3 + (hasBordas ? 1 : 0) + (hasAdicionais ? 1 : 0);
@@ -470,7 +481,7 @@ function FlavorCard({ it, checked, disabled, size, toggleFlavor, restaurant, isS
           </div>
           <p className="text-xs text-[hsl(var(--site-muted-fg))]">Pode escolher mais de um.</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            {adicionaisCategory!.items.map((a) => {
+            {adicionaisDaqui.map((a) => {
               const active = selectedAdicionais.includes(a.id);
               return (
                 <button

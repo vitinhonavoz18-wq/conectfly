@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "./api-utils";
+import { montarVinculos } from "./adicionaisDaCategoria";
 import type {
   ComboGroupRow,
   ComboRow,
@@ -63,7 +64,17 @@ const debugLog = (...args: any[]) => {
  ): Promise<SiteData> {
   debugLog(`[fetchSiteByRestaurant] Carregando cardápio para restaurante ID: ${restaurant.id}`);
    
-   const [catsRes, itemsRes, groupsRes, combosRes, zonesRes, beveragesRes, catalogsRes, sizesRes] = await Promise.all([
+   const [
+     catsRes,
+     itemsRes,
+     groupsRes,
+     combosRes,
+     zonesRes,
+     beveragesRes,
+     catalogsRes,
+     sizesRes,
+     vinculosRes,
+   ] = await Promise.all([
      supabase
        .from("menu_categories")
        .select("*")
@@ -112,6 +123,15 @@ const debugLog = (...args: any[]) => {
        .eq("pizzeria_id", restaurant.id)
        .eq("is_active", true)
        .order("sort_order"),
+     // Em quais categorias cada adicional aparece. Vem junto das outras
+     // buscas, não depois: uma consulta a mais no mesmo lote não atrasa nada,
+     // enquanto uma consulta em sequência atrasaria o cardápio inteiro.
+     //
+     // Adicional que não aparece aqui é adicional SEM vínculo, e continua
+     // valendo no cardápio todo (ver `adicionaisDaCategoria`).
+     (supabase as any)
+       .from("menu_addon_categories")
+       .select("addon_item_id, category_id"),
    ]);
    if (catsRes.error) {
      console.error("[fetchSiteByRestaurant] Erro ao carregar categorias:", catsRes.error);
@@ -186,6 +206,12 @@ const debugLog = (...args: any[]) => {
     beverages,
     beverageCatalogs,
     pizzaSizes: pizzaSizesFromTable,
+    // Falha ao ler os vínculos não pode derrubar o cardápio. Sem eles, todo
+    // adicional volta a aparecer em todo produto — que é o comportamento
+    // antigo, chato mas inofensivo. Cardápio fora do ar é que não pode.
+    vinculosDeAdicional: montarVinculos(
+      (vinculosRes as any)?.error ? [] : ((vinculosRes as any)?.data ?? []),
+    ),
   };
 
 }

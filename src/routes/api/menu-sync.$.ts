@@ -236,11 +236,77 @@ const mapFields = (body: any, type: string) => {
   // tela dele. Aqui essa separação já virou a categoria de destino, e a
   // coluna não existe nesta tabela — deixá-la passar derruba a gravação.
   delete data.extra_type;
+  // `category_ids` (plural) diz em quais categorias o ADICIONAL é oferecido.
+  // Não confundir com `category_id` (singular), que é a categoria onde o item
+  // mora. O plural não é coluna de `menu_items`: vira linhas em
+  // `menu_addon_categories`, gravadas depois que o item existe.
+  delete data.category_ids;
   delete data.id;
   delete data.restaurant_id;
   delete data.pizzeria_id;
   return data;
 };
+
+/**
+ * Regrava em quais categorias este adicional aparece.
+ *
+ * `undefined` significa "não me falaram nada sobre vínculos" — é o caso da
+ * sincronização em massa do cardápio, que só manda nome e preço. Nesse caso os
+ * vínculos que já existem ficam como estão; apagá-los faria uma sincronização
+ * de rotina desmanchar, em silêncio, a configuração que o lojista montou.
+ *
+ * Lista VAZIA é diferente: é o lojista dizendo "sem restrição, vale para o
+ * cardápio inteiro". Aí os vínculos são apagados mesmo.
+ *
+ * Os códigos recebidos são conferidos contra as categorias DESTA loja antes de
+ * gravar: é o porteiro conferindo o nome na lista em vez de aceitar quem diz
+ * "pode deixar, eu sou convidado".
+ */
+async function gravarVinculosDoAdicional(
+  addonItemId: string,
+  categoryIds: unknown,
+  restaurantId: string,
+): Promise<void> {
+  if (categoryIds === undefined) return;
+
+  const pedidos = Array.isArray(categoryIds)
+    ? categoryIds.filter((v): v is string => isUuid(v))
+    : [];
+
+  // Só categorias que existem e são desta loja.
+  let validos: string[] = [];
+  if (pedidos.length > 0) {
+    const { data: encontradas } = await supabaseAdmin
+      .from("menu_categories")
+      .select("id")
+      .eq("restaurant_id", restaurantId)
+      .in("id", pedidos);
+    validos = ((encontradas ?? []) as Array<{ id: string }>).map((c) => c.id);
+  }
+
+  // Apaga o que saiu e grava o que entrou. Apagar tudo e regravar deixaria o
+  // adicional visível no cardápio inteiro por uma fração de segundo — e é
+  // exatamente nessa fração que um cliente pode estar com a tela aberta.
+  const vinculos = () => (supabaseAdmin.from("menu_addon_categories" as any) as any);
+
+  const { data: atuaisRaw } = await vinculos()
+    .select("category_id")
+    .eq("addon_item_id", addonItemId);
+  const atuais = ((atuaisRaw ?? []) as Array<{ category_id: string }>).map((v) => v.category_id);
+
+  const remover = atuais.filter((id) => !validos.includes(id));
+  const inserir = validos.filter((id) => !atuais.includes(id));
+
+  if (remover.length > 0) {
+    await vinculos().delete().eq("addon_item_id", addonItemId).in("category_id", remover);
+  }
+
+  if (inserir.length > 0) {
+    await vinculos().insert(
+      inserir.map((category_id) => ({ addon_item_id: addonItemId, category_id })),
+    );
+  }
+}
 
 const json = (body: any, status: number, corsHeaders: Record<string, string>) =>
   new Response(JSON.stringify(body), {
@@ -310,6 +376,13 @@ export const Route = createFileRoute("/api/menu-sync/$")({
             .single();
 
           if (error) throw error;
+
+          // Os vínculos só podem ser gravados DEPOIS que o item existe: eles
+          // apontam para ele.
+          if (EXTRA_CATEGORY[type] && result?.id) {
+            await gravarVinculosDoAdicional(result.id, body?.category_ids, restaurant.id!);
+          }
+
           return json({ success: true, data: result }, 201, corsHeaders);
         } catch (err: any) {
           console.error(`[menu-sync] POST ${type} error:`, err);
@@ -405,6 +478,11 @@ export const Route = createFileRoute("/api/menu-sync/$")({
               404,
               corsHeaders,
             );
+
+          if (EXTRA_CATEGORY[type]) {
+            await gravarVinculosDoAdicional(internalId, body?.category_ids, restaurant.id!);
+          }
+
           return json({ success: true, data: result }, 200, corsHeaders);
         } catch (err: any) {
           console.error(`[menu-sync] PUT ${type}/${rawId} error:`, err);
