@@ -4,6 +4,7 @@ import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { buscarNoCardapio, MINIMO_PARA_BUSCAR } from "@/lib/site/buscaNoCardapio";
 import { classesDaGrade, type ConfigDeLayout } from "@/lib/site/menuLayout";
 import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
+import type { VinculosDeAdicional } from "@/lib/site/adicionaisDaCategoria";
 
 /**
  * A busca do cardápio.
@@ -21,11 +22,13 @@ export function MenuBusca({
   restaurant,
   layout,
   adicionaisCategory,
+  vinculosDeAdicional,
 }: {
   categorias: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
   layout: ConfigDeLayout;
   adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+  vinculosDeAdicional?: VinculosDeAdicional;
 }) {
   const [termo, setTermo] = useState("");
   const resultados = useMemo(() => buscarNoCardapio(categorias, termo), [categorias, termo]);
@@ -79,6 +82,7 @@ export function MenuBusca({
                     item={item}
                     restaurant={restaurant}
                     adicionaisCategory={adicionaisCategory}
+                      vinculosDeAdicional={vinculosDeAdicional}
                   />
                 </div>
               ))}

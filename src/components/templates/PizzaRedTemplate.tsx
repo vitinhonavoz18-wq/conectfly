@@ -80,6 +80,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
               categories={cardsCategories}
               restaurant={r}
               adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
               entryMode="cards"
               beverages={data.beverages ?? []}
               beverageCatalogs={data.beverageCatalogs}
@@ -93,6 +94,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
                 restaurant={r}
                 bordasCategory={bordasCategory}
                 adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
                 beverages={data.beverages ?? []}
                 beverageCatalogs={data.beverageCatalogs}
               />
@@ -109,6 +111,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
                 categories={nonPizzaCategories}
                 restaurant={r}
                 adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
                 entryMode={entryMode}
                 beverages={!hasPizzas ? (data.beverages ?? []) : []}
                 beverageCatalogs={data.beverageCatalogs}

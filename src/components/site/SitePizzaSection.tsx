@@ -2,18 +2,20 @@ import { useState } from "react";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
  import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
+import type { VinculosDeAdicional } from "@/lib/site/adicionaisDaCategoria";
 
   interface Props {
     categories: (MenuCategoryRow & { items: MenuItemRow[] })[];
     restaurant: RestaurantRow;
     bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
     adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+    vinculosDeAdicional?: VinculosDeAdicional;
     beverages: BeverageRow[];
     beverageCatalogs?: BeverageCatalogRow[];
 
   }
   
-  export function SitePizzaSection({ categories, restaurant, bordasCategory, adicionaisCategory, beverages, beverageCatalogs }: Props) {
+  export function SitePizzaSection({ categories, restaurant, bordasCategory, adicionaisCategory, vinculosDeAdicional, beverages, beverageCatalogs }: Props) {
   const pizzaCats = categories.filter(
     (c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0,
   );
@@ -80,6 +82,7 @@ import { SitePizzaBuilder } from "./SitePizzaBuilder";
             restaurant={restaurant} 
             bordasCategory={bordasCategory} 
             adicionaisCategory={adicionaisCategory}
+            vinculosDeAdicional={vinculosDeAdicional}
             beverages={beverages}
             beverageCatalogs={beverageCatalogs}
           />

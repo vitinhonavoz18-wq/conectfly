@@ -1,15 +1,29 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, ImageIcon, Check } from "lucide-react";
 import type { MenuItemRow, MenuCategoryRow, Size, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
+import {
+  adicionaisDaCategoria,
+  type VinculosDeAdicional,
+} from "@/lib/site/adicionaisDaCategoria";
 
-export function SiteMenuItemCard({ item, restaurant, adicionaisCategory }: { item: MenuItemRow, restaurant?: RestaurantRow, adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] } }) {
+export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculosDeAdicional }: { item: MenuItemRow, restaurant?: RestaurantRow, adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] }, vinculosDeAdicional?: VinculosDeAdicional }) {
   const { addLine } = useCart();
   const sizes: Size[] = item.sizes && item.sizes.length > 0 ? item.sizes : [];
   const [selected, setSelected] = useState<Size | null>(sizes[0] ?? null);
 
-  const extras = adicionaisCategory?.items ?? [];
+  // Só os adicionais que valem para a categoria DESTE produto. Sem isto, quem
+  // abre o açaí é oferecido bacon. Adicional sem vínculo continua em todos.
+  const extras = useMemo(
+    () =>
+      adicionaisDaCategoria(
+        adicionaisCategory?.items ?? [],
+        item.category_id,
+        vinculosDeAdicional,
+      ),
+    [adicionaisCategory, item.category_id, vinculosDeAdicional],
+  );
   const [selectedExtraIds, setSelectedExtraIds] = useState<string[]>([]);
   // Fechado por padrão: o card é pequeno, e abrir a lista de adicionais em
   // todo produto empurraria o botão de pedir para fora da tela no celular.

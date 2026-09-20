@@ -3,6 +3,7 @@ import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { destaquesDoCardapio } from "@/lib/site/buscaNoCardapio";
 import { classesDaGrade, type ConfigDeLayout } from "@/lib/site/menuLayout";
 import type { MenuCategoryRow, MenuItemRow, RestaurantRow } from "@/lib/site/types";
+import type { VinculosDeAdicional } from "@/lib/site/adicionaisDaCategoria";
 
 /**
  * Os produtos que a loja escolheu destacar.
@@ -20,12 +21,14 @@ export function MenuDestaques({
   restaurant,
   layout,
   adicionaisCategory,
+  vinculosDeAdicional,
   titulo = "Destaques da casa",
 }: {
   categorias: (MenuCategoryRow & { items: MenuItemRow[] })[];
   restaurant: RestaurantRow;
   layout: ConfigDeLayout;
   adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+  vinculosDeAdicional?: VinculosDeAdicional;
   titulo?: string;
 }) {
   const itens = destaquesDoCardapio(categorias);
@@ -47,6 +50,7 @@ export function MenuDestaques({
             item={item}
             restaurant={restaurant}
             adicionaisCategory={adicionaisCategory}
+                      vinculosDeAdicional={vinculosDeAdicional}
           />
         ))}
       </div>

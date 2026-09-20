@@ -106,6 +106,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
             restaurant={r}
             layout={layout}
             adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
           />
         );
 
@@ -117,6 +118,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
             restaurant={r}
             layout={layout}
             adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
           />
         );
 
@@ -129,6 +131,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               restaurant={r}
               bordasCategory={bordasCategory}
               adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
               beverages={data.beverages ?? []}
               beverageCatalogs={data.beverageCatalogs}
             />
@@ -159,6 +162,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               categories={entryMode === "cards" ? categoriasDeProduto : nonPizzaCategories}
               restaurant={r}
               adicionaisCategory={adicionaisCategory}
+              vinculosDeAdicional={data.vinculosDeAdicional}
               entryMode={entryMode}
               beverages={!hasPizzas ? (data.beverages ?? []) : []}
               beverageCatalogs={data.beverageCatalogs}

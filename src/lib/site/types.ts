@@ -1,3 +1,5 @@
+import type { VinculosDeAdicional } from "./adicionaisDaCategoria";
+
 export type Size = { label: string; price: number };
 
  export type PizzaSize = { 
@@ -203,6 +205,11 @@ export interface SiteData {
    beverages?: BeverageRow[];
    beverageCatalogs?: BeverageCatalogRow[];
    pizzaSizes?: PizzaSize[];
+   /**
+    * Em quais categorias cada adicional aparece: `{ idDoAdicional: [idsDeCategoria] }`.
+    * Adicional ausente daqui (ou com lista vazia) vale no cardápio inteiro.
+    */
+   vinculosDeAdicional?: VinculosDeAdicional;
 }
 
 

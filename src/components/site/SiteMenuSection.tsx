@@ -10,6 +10,7 @@ import {
   normalizarModoDeNavegacao,
   type ModoDeNavegacao,
 } from "@/lib/site/menuBehavior";
+import type { VinculosDeAdicional } from "@/lib/site/adicionaisDaCategoria";
 
 
 interface Props {
@@ -22,6 +23,7 @@ interface Props {
    */
   entryMode?: ModoDeNavegacao;
   adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
+  vinculosDeAdicional?: VinculosDeAdicional;
   beverages?: BeverageRow[];
   beverageCatalogs?: BeverageCatalogRow[];
 }
@@ -39,7 +41,7 @@ interface Props {
  * - `navigation` → grade de categorias; escolhe uma e troca pela barra.
  * - `direct`     → tudo numa rolagem só, categoria após categoria.
  */
-export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRAO_GLOBAL, adicionaisCategory, beverages, beverageCatalogs }: Props) {
+export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRAO_GLOBAL, adicionaisCategory, vinculosDeAdicional, beverages, beverageCatalogs }: Props) {
   // Os textos institucionais do cardápio. Vêm das configurações desta loja;
   // se ela nunca personalizou, `resolverTextos` devolve exatamente as frases
   // que já estavam no ar — nenhum cardápio existente muda sozinho.
@@ -370,7 +372,8 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {selectedCat.items.map((it) => (
                     <div key={it.id} className="h-full">
-                      <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
+                      <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory}
+                      vinculosDeAdicional={vinculosDeAdicional} />
                     </div>
                   ))}
                 </div>
@@ -411,7 +414,8 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 h-full">
                     {cat.items.map((it) => (
                       <div key={it.id} className="h-full">
-                        <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
+                        <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory}
+                      vinculosDeAdicional={vinculosDeAdicional} />
                       </div>
                     ))}
                   </div>
@@ -583,7 +587,8 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
                         {current?.items.map((it) => (
                           <div key={it.id} className="h-full">
-                            <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory} />
+                            <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory}
+                      vinculosDeAdicional={vinculosDeAdicional} />
                           </div>
                         ))}
                       </div>
