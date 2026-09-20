@@ -108,7 +108,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
     <div className="space-y-6 sm:space-y-10 mt-16 pt-12 border-t border-[hsl(var(--site-border))]">
       <div className="flex items-center gap-4 sm:gap-6 px-2">
         <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
-        <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] shrink-0">
+        <h3 className="min-w-0 text-center text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] [overflow-wrap:anywhere]">
           {titulo}
         </h3>
         <div className="h-[2px] flex-1 bg-gradient-to-l from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
@@ -400,7 +400,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
               <div key={cat.id} className="space-y-6 sm:space-y-10">
                 <div className="flex items-center gap-4 sm:gap-6 px-2">
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
-                  <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] shrink-0">
+                  <h3 className="min-w-0 text-center text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] [overflow-wrap:anywhere]">
                     {cat.icon ? `${cat.icon} ` : ""}
                     {cat.name}
                   </h3>
