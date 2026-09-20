@@ -61,7 +61,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
             }`}
           >
             {bev.image_url && (
-              <div className="w-20 sm:w-auto h-auto sm:h-48 overflow-hidden relative shrink-0">
+              <div className="w-20 sm:w-1/4 sm:max-w-32 min-h-20 sm:min-h-32 overflow-hidden relative shrink-0">
                  <img
                    src={bev.image_url}
                    alt={bev.name}
@@ -69,52 +69,52 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
                    decoding="async"
                    width={400}
                    height={400}
-                   className="w-full h-full object-cover [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500 [@media(hover:hover)]:group-hover:scale-110"
+                   className="absolute inset-0 w-full h-full object-cover [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500 [@media(hover:hover)]:group-hover:scale-110"
                  />
                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent hidden sm:block" />
               </div>
             )}
             
-            <div className="p-3 sm:p-6 flex flex-col flex-1 gap-2 sm:gap-4">
+            <div className="p-3 sm:p-6 flex flex-col flex-1 min-w-0 gap-2 sm:gap-4">
               {!bev.image_url && (
                 <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
                   <ShoppingBag className="h-10 w-10 sm:h-16 sm:w-16 text-[hsl(var(--site-primary))]" />
                 </div>
               )}
 
-            <div className="flex justify-between items-start gap-2 relative z-10">
-              <div className="min-w-0 flex-1">
-                <h3 className="font-black text-sm sm:text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-primary))]">
-                  {bev.name}
-                </h3>
-                <p className="text-[8px] sm:text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-0.5 sm:mt-1 uppercase tracking-widest opacity-80 truncate">
-                  {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
-                </p>
-              </div>
+            <div className="min-w-0 relative z-10">
+              <h3 className="font-black text-sm sm:text-base lg:text-lg tracking-tight uppercase leading-tight line-clamp-2 break-words text-[hsl(var(--site-primary))]">
+                {bev.name}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-0.5 sm:mt-1 uppercase tracking-widest opacity-80 truncate">
+                {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
+              </p>
               {!isBarPrime && (
-                <div className="text-right shrink-0">
-                  <span className="text-sm sm:text-xl font-black text-[hsl(var(--site-fg))] block tracking-tighter">
-                    {formatBRL(Number(bev.price))}
-                  </span>
-                </div>
+                <span className="mt-1 block text-base sm:text-lg font-black text-[hsl(var(--site-fg))] tracking-tighter">
+                  {formatBRL(Number(bev.price))}
+                </span>
               )}
             </div>
 
-            <div className="mt-auto flex items-center justify-between gap-2 sm:gap-4 pt-2 sm:pt-4 border-t border-[hsl(var(--site-border))] relative z-10">
-              <div className="flex items-center gap-1.5 sm:gap-3 bg-[hsl(var(--site-card))] p-0.5 sm:p-1 rounded-lg sm:rounded-2xl border border-[hsl(var(--site-border))]">
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-2 sm:gap-x-4 pt-2 sm:pt-4 border-t border-[hsl(var(--site-border))] relative z-10">
+              <div className="flex items-center gap-1.5 lg:gap-3 bg-[hsl(var(--site-card))] p-1 rounded-lg sm:rounded-2xl border border-[hsl(var(--site-border))] shrink-0">
                  <button 
+                   type="button"
+                   aria-label={`Remover uma unidade de ${bev.name}`}
                    onClick={(e) => handleRemove(bev, e)}
                    disabled={qty === 0}
-                   className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center site-btn-secondary !rounded-md sm:!rounded-xl active:scale-90 transition-transform"
+                   className="h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center site-btn-secondary !rounded-md sm:!rounded-xl active:scale-90 transition-transform"
                  >
-                   <Minus className="h-3 sm:h-4 w-3 sm:w-4" />
+                   <Minus className="h-4 w-4" />
                  </button>
-                 <span className="w-4 sm:w-8 text-center font-black text-sm sm:text-lg">{qty}</span>
+                 <span className="w-6 lg:w-8 text-center font-black text-sm sm:text-lg tabular-nums">{qty}</span>
                  <button 
+                   type="button"
+                   aria-label={`Adicionar ${bev.name} ao pedido`}
                    onClick={(e) => handleAdd(bev, e)}
-                   className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center site-btn-primary !rounded-md sm:!rounded-xl active:scale-90 shadow-lg transition-transform"
+                   className="h-9 w-9 lg:h-10 lg:w-10 flex items-center justify-center site-btn-primary !rounded-md sm:!rounded-xl active:scale-90 shadow-lg transition-transform"
                  >
-                   <Plus className="h-3 sm:h-4 w-3 sm:w-4" />
+                   <Plus className="h-4 w-4" />
                  </button>
               </div>
               
