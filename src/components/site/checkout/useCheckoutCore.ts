@@ -17,6 +17,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useCart, isValidTableNumber } from "../CartContext";
 import { formatPhoneMask } from "@/lib/site/format";
+import { linkDoWhatsApp } from "@/lib/site/whatsappLink";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { buildOrderPayload, sendOrderToFlycontrol, sendOrderToExternalWebhook, sendUnifiedOrderToFiqon, resolveTablesUrl } from "@/lib/site/flycontrol";
 import { buildOrderMessage, buildWhatsAppMessage } from "@/lib/site/orderFormatter";
@@ -564,16 +565,20 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
    const flycontrolOn = useMemo(() => !!restaurant?.flycontrol_enabled, [restaurant?.flycontrol_enabled]);
    const whatsappOn = useMemo(() => restaurant?.whatsapp_enabled !== false, [restaurant?.whatsapp_enabled]);
  
-   const openWhatsAppOrder = (message: string) => {
-     if (!whatsappNumber) return;
-     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-     
-     // Try window.open first, fallback to location.href if blocked
-     const opened = window.open(url, "_blank");
-     if (!opened || opened.closed || typeof opened.closed === "undefined") {
-       window.location.href = url;
-     }
-   };
+  const openWhatsAppOrder = (message: string) => {
+    // Sem número utilizável, o WhatsApp simplesmente NÃO abre — e o pedido
+    // segue valendo, porque ele já foi confirmado pelo painel. Abrir uma
+    // página de "número inválido" logo depois de confirmar faria o cliente
+    // achar que perdeu a compra.
+    const url = linkDoWhatsApp(whatsappNumber, message);
+    if (!url) return;
+
+    // Try window.open first, fallback to location.href if blocked
+    const opened = window.open(url, "_blank");
+    if (!opened || opened.closed || typeof opened.closed === "undefined") {
+      window.location.href = url;
+    }
+  };
 
   const goToCheckout = () => {
     if (items.length === 0) {
@@ -674,10 +679,15 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       setError("Esta loja não está conectada ao painel. Pedidos não podem ser confirmados no momento.");
       return;
     }
-    if (orderType === "delivery" && whatsappOn && !whatsappNumber) {
-      setError("Loja sem WhatsApp configurado");
-      return;
-    }
+    // O WHATSAPP NÃO BARRA MAIS O PEDIDO.
+    //
+    // Aqui o site recusava a entrega inteira quando faltava o número do
+    // WhatsApp da loja. Só que, como está escrito logo acima, quem confirma
+    // o pedido é o FlyControl; o WhatsApp é o bilhete que vai junto DEPOIS.
+    //
+    // Recusar a venda por causa do bilhete é fechar a loja porque acabou o
+    // papel da comanda. O pedido entra, e se não der para abrir o WhatsApp,
+    // ele simplesmente não abre.
 
     // Generate ticket number for pickup if not exists
     let generatedTicket = ticketNumber;
