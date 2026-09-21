@@ -50,18 +50,30 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
   };
 
   const renderBeverageList = (bevs: BeverageRow[]) => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-8">
+    // Três colunas só a partir de 1280px. O card é DEITADO (foto ao lado do
+    // texto), e a 1024px a terceira coluna deixava cada card com 267px: não
+    // cabia a foto mais os botões de quantidade, e o "+" ficava para fora,
+    // escondido pelo `overflow-hidden`. O cliente via o "−" e o "0" e não
+    // tinha como somar a segunda bebida.
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-8">
       {bevs.map((bev) => {
         const qty = getQty(bev.id);
         return (
           <div 
             key={bev.id} 
-            className={`rounded-xl sm:rounded-[2rem] border flex transition-colors duration-200 relative overflow-hidden group h-full ${
+            // `min-w-0`: sem isto o card se recusa a ficar menor que o
+            // conteúdo dele e vaza para fora da coluna, levando o botão "+"
+            // junto. É a gaveta que não fecha porque tem uma colher atravessada.
+            className={`rounded-xl sm:rounded-[2rem] border flex min-w-0 transition-colors duration-200 relative overflow-hidden group h-full ${
               qty > 0 ? 'border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.08)] shadow-glow' : 'border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] hover:border-[hsl(var(--site-primary)/0.3)]'
             }`}
           >
             {bev.image_url && (
-              <div className="w-20 sm:w-auto h-auto sm:h-48 overflow-hidden relative shrink-0">
+              // Largura ESCRITA, não deduzida da foto. Com `sm:w-auto` o
+              // navegador tirava a largura do tamanho natural da imagem
+              // (400px de lado, virando 192px na altura h-48) e `shrink-0`
+              // proibia encolher: a foto sozinha comia dois terços do card.
+              <div className="w-20 sm:w-28 md:w-32 self-stretch overflow-hidden relative shrink-0">
                  <img
                    src={bev.image_url}
                    alt={bev.name}
@@ -75,7 +87,7 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
               </div>
             )}
             
-            <div className="p-3 sm:p-6 flex flex-col flex-1 gap-2 sm:gap-4">
+            <div className="p-3 sm:p-4 md:p-6 flex flex-col flex-1 min-w-0 gap-2 sm:gap-3">
               {!bev.image_url && (
                 <div className="absolute top-0 right-0 p-2 sm:p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity pointer-events-none">
                   <ShoppingBag className="h-10 w-10 sm:h-16 sm:w-16 text-[hsl(var(--site-primary))]" />
@@ -84,48 +96,56 @@ export function SiteBeverageSection({ beverages, catalogs, restaurant }: Props) 
 
             <div className="flex justify-between items-start gap-2 relative z-10">
               <div className="min-w-0 flex-1">
-                <h3 className="font-black text-sm sm:text-xl tracking-tighter uppercase leading-tight truncate text-[hsl(var(--site-primary))]">
+                {/* Duas linhas em vez de reticências: "CERVEJA ITAIPAV…" não diz se é
+                    lata ou long neck, e o cliente não compra o que não consegue ler. */}
+                <h3 className="font-black text-sm sm:text-base md:text-lg tracking-tighter uppercase leading-tight line-clamp-2 [overflow-wrap:anywhere] text-[hsl(var(--site-primary))]">
                   {bev.name}
                 </h3>
-                <p className="text-[8px] sm:text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-0.5 sm:mt-1 uppercase tracking-widest opacity-80 truncate">
+                <p className="text-[9px] sm:text-xs text-[hsl(var(--site-muted-fg))] font-bold mt-0.5 sm:mt-1 uppercase tracking-widest opacity-80 truncate">
                   {bev.brand} {bev.brand && bev.size ? '•' : ''} {bev.size}
                 </p>
               </div>
               {!isBarPrime && (
                 <div className="text-right shrink-0">
-                  <span className="text-sm sm:text-xl font-black text-[hsl(var(--site-fg))] block tracking-tighter">
+                  <span className="text-sm sm:text-lg font-black text-[hsl(var(--site-fg))] block tracking-tighter whitespace-nowrap">
                     {formatBRL(Number(bev.price))}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="mt-auto flex items-center justify-between gap-2 sm:gap-4 pt-2 sm:pt-4 border-t border-[hsl(var(--site-border))] relative z-10">
-              <div className="flex items-center gap-1.5 sm:gap-3 bg-[hsl(var(--site-card))] p-0.5 sm:p-1 rounded-lg sm:rounded-2xl border border-[hsl(var(--site-border))]">
+            {/* `flex-wrap`: em coluna estreita o subtotal desce para a linha
+                de baixo em vez de espremer os botões para fora do card. Quem
+                precisa caber inteiro é o controle de quantidade — é ele que
+                faz o pedido acontecer. */}
+            <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2 sm:pt-3 border-t border-[hsl(var(--site-border))] relative z-10">
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 bg-[hsl(var(--site-card))] p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-[hsl(var(--site-border))]">
                  <button 
                    onClick={(e) => handleRemove(bev, e)}
                    disabled={qty === 0}
-                   className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center site-btn-secondary !rounded-md sm:!rounded-xl active:scale-90 transition-transform"
+                   aria-label={`Tirar uma unidade de ${bev.name}`}
+                   className="h-9 w-9 shrink-0 flex items-center justify-center site-btn-secondary !rounded-md sm:!rounded-lg active:scale-90 transition-transform"
                  >
-                   <Minus className="h-3 sm:h-4 w-3 sm:w-4" />
+                   <Minus className="h-4 w-4" />
                  </button>
-                 <span className="w-4 sm:w-8 text-center font-black text-sm sm:text-lg">{qty}</span>
+                 <span className="w-6 shrink-0 text-center font-black text-sm sm:text-base tabular-nums">{qty}</span>
                  <button 
                    onClick={(e) => handleAdd(bev, e)}
-                   className="h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center site-btn-primary !rounded-md sm:!rounded-xl active:scale-90 shadow-lg transition-transform"
+                   aria-label={`Adicionar uma unidade de ${bev.name}`}
+                   className="h-9 w-9 shrink-0 flex items-center justify-center site-btn-primary !rounded-md sm:!rounded-lg active:scale-90 shadow-lg transition-transform"
                  >
-                   <Plus className="h-3 sm:h-4 w-3 sm:w-4" />
+                   <Plus className="h-4 w-4" />
                  </button>
               </div>
               
               {isBarPrime ? (
-                <div className="text-right shrink-0">
-                  <span className="text-sm sm:text-xl font-black text-[hsl(var(--site-fg))] block tracking-tighter">
+                <div className="text-right min-w-0 shrink">
+                  <span className="text-sm sm:text-lg font-black text-[hsl(var(--site-fg))] block tracking-tighter whitespace-nowrap">
                     {formatBRL(Number(bev.price))}
                   </span>
                 </div>
               ) : qty > 0 && (
-                <div className="text-right animate-in fade-in slide-in-from-right-2">
+                <div className="text-right min-w-0 shrink animate-in fade-in slide-in-from-right-2">
                   <p className="text-[8px] uppercase font-bold text-[hsl(var(--site-muted-fg))] leading-none">Subtotal</p>
                   <p className="font-black text-[hsl(var(--site-fg))] text-xs sm:text-base">{formatBRL(qty * Number(bev.price))}</p>
                 </div>
