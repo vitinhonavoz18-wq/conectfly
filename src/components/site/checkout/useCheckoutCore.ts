@@ -668,6 +668,18 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       return;
     }
 
+    // Loja fechada: o pedido para aqui, antes de sair da tela.
+    //
+    // O servidor também recusa (ver `submit-order`), e é ele quem tranca a
+    // porta de verdade. Esta conferência existe para o cliente descobrir na
+    // hora, com o carrinho ainda montado, em vez de preencher endereço e
+    // pagamento para levar um "não" no final. Avisar na porta é melhor do que
+    // deixar sentar, anotar o pedido e só então dizer que a cozinha fechou.
+    if (restaurant.is_open === false) {
+      setError("A loja está fechada no momento e não está aceitando pedidos.");
+      return;
+    }
+
     // FlyControl é a fonte da verdade para TODOS os modos (delivery, retirada, mesa).
     // O WhatsApp é apenas notificação pós-confirmação para delivery.
     if (!flycontrolOn) {

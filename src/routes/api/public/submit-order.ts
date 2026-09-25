@@ -168,7 +168,7 @@ export const Route = createFileRoute("/api/public/submit-order")({
 
           const { data: r, error } = await supabaseAdmin
             .from("restaurants")
-            .select("id, name, slug, flycontrol_enabled, flycontrol_api_url, flycontrol_api_key, flycontrol_base_url")
+            .select("id, name, slug, is_open, flycontrol_enabled, flycontrol_api_url, flycontrol_api_key, flycontrol_base_url")
             .eq("id", body.restaurant_id)
             .maybeSingle();
 
@@ -177,6 +177,32 @@ export const Route = createFileRoute("/api/public/submit-order")({
             return new Response(
               JSON.stringify({ success: false, error: "Pizzaria não encontrada" }),
               { status: 404, headers },
+            );
+          }
+
+          // LOJA FECHADA NÃO RECEBE PEDIDO — E QUEM DECIDE ISSO É AQUI.
+          //
+          // A tela já esconde o botão de finalizar quando a loja está
+          // fechada, mas esconder o botão não tranca a porta: basta a página
+          // ter ficado aberta desde antes de fechar, ou alguém chamar este
+          // endereço direto, para o pedido entrar assim mesmo.
+          //
+          // É a diferença entre apagar a luz da fachada e trancar a porta. O
+          // pedido que passa depois de fechado vira comida que ninguém está
+          // na cozinha para fazer, e cliente esperando entrega que não sai.
+          //
+          // `is_open` só bloqueia quando é explicitamente `false`. Loja antiga
+          // (ou leitura que veio sem o campo) conta como aberta: uma falha de
+          // leitura nunca pode fechar a loja de quem está vendendo.
+          if (r.is_open === false) {
+            console.log(`[SUBMIT-ORDER] 🚪 Pedido recusado: ${r.name} está fechada agora.`);
+            return new Response(
+              JSON.stringify({
+                success: false,
+                store_closed: true,
+                error: "A loja está fechada no momento e não está aceitando pedidos.",
+              }),
+              { status: 409, headers },
             );
           }
 
