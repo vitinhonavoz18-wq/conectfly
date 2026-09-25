@@ -1,0 +1,88 @@
+import type { Category } from "@/types/catalog";
+
+export const demoCategories: Category[] = [
+  {
+    id: "cat-camisetas",
+    slug: "camisetas",
+    name: "Camisetas",
+    group: "roupas",
+    description: "Malhas respiráveis para treino pesado e uso diário.",
+    imageUrl: null,
+    position: 1,
+    active: true,
+  },
+  {
+    id: "cat-regatas",
+    slug: "regatas",
+    name: "Regatas",
+    group: "roupas",
+    description: "Liberdade total de ombro para os dias de força.",
+    imageUrl: null,
+    position: 2,
+    active: true,
+  },
+  {
+    id: "cat-shorts",
+    slug: "shorts",
+    name: "Shorts",
+    group: "roupas",
+    description: "Leveza, elasticidade e secagem rápida.",
+    imageUrl: null,
+    position: 3,
+    active: true,
+  },
+  {
+    id: "cat-calcas-leggings",
+    slug: "calcas-e-leggings",
+    name: "Calças e leggings",
+    group: "roupas",
+    description: "Compressão inteligente para performance e conforto.",
+    imageUrl: null,
+    position: 4,
+    active: true,
+  },
+  {
+    id: "cat-moletons",
+    slug: "moletons",
+    name: "Moletons",
+    group: "roupas",
+    description: "Aquecimento pré-treino com pegada streetwear.",
+    imageUrl: null,
+    position: 5,
+    active: true,
+  },
+  {
+    id: "cat-bones",
+    slug: "bones",
+    name: "Bonés",
+    group: "acessorios",
+    description: "Assinatura ABITAH da academia à rua.",
+    imageUrl: null,
+    position: 6,
+    active: true,
+  },
+  {
+    id: "cat-garrafas",
+    slug: "garrafas-e-coqueteleiras",
+    name: "Garrafas e coqueteleiras",
+    group: "acessorios",
+    description: "Hidratação e suplementação sem complicação.",
+    imageUrl: null,
+    position: 7,
+    active: true,
+  },
+  {
+    id: "cat-mochilas",
+    slug: "mochilas-e-acessorios",
+    name: "Mochilas e acessórios",
+    group: "acessorios",
+    description: "Equipamento de apoio para levar o treino junto.",
+    imageUrl: null,
+    position: 8,
+    active: true,
+  },
+];
+
+export function findCategory(slug: string): Category | undefined {
+  return demoCategories.find((category) => category.slug === slug);
+}
