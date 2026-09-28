@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, ImageIcon, Check } from "lucide-react";
 import type { MenuItemRow, MenuCategoryRow, Size, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
@@ -65,6 +65,26 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
   const itemCode = nameParts[1];
   const itemName = nameParts[2];
 
+  // Mesmo em duas linhas, um nome bem comprido ainda pode não caber
+  // ("PASTEL DE CARNE SECA COM CREAM CHEESE E..."). Aqui a gente mede se
+  // sobrou texto cortado e só aí liga o botão "..." — em nome curto ele nem
+  // aparece.
+  const nameRef = useRef<HTMLHeadingElement>(null);
+  const [nameExpanded, setNameExpanded] = useState(false);
+  const [nameOverflows, setNameOverflows] = useState(false);
+
+  useEffect(() => {
+    if (nameExpanded) return;
+    const medir = () => {
+      const el = nameRef.current;
+      if (!el) return;
+      setNameOverflows(el.scrollHeight > el.clientHeight + 1);
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [itemName, nameExpanded]);
+
   return (
      <div className="rounded-2xl sm:rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-0 hover:border-[hsl(var(--site-primary)/0.6)] transition-colors duration-200 overflow-hidden shadow-xl group relative h-full">
        {/* Brilho de hover: só existe em tela com mouse. No celular ninguém
@@ -105,10 +125,25 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
               )}
               {/* Duas linhas em vez de reticências: "PASTEL DE CARNE DE S…" não
                   diz qual é o recheio, e o cliente não compra o que não
-                  consegue ler. */}
-              <h3 className="font-black text-base sm:text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight line-clamp-2 [overflow-wrap:anywhere]">
+                  consegue ler. Se nem duas linhas bastarem, o botão "..."
+                  abaixo mostra o nome inteiro. */}
+              <h3
+                ref={nameRef}
+                className={`font-black text-base sm:text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight [overflow-wrap:anywhere] ${
+                  nameExpanded ? "" : "line-clamp-2"
+                }`}
+              >
                 {itemName}
               </h3>
+              {nameOverflows && (
+                <button
+                  type="button"
+                  onClick={() => setNameExpanded((v) => !v)}
+                  className="self-start text-[10px] sm:text-xs font-black text-[hsl(var(--site-primary))] mt-0.5"
+                >
+                  {nameExpanded ? "ver menos" : "..."}
+                </button>
+              )}
             </div>
             <div className="flex flex-col items-end shrink-0">
               <span className="text-[hsl(var(--site-primary))] font-black text-base sm:text-xl tracking-tighter">
