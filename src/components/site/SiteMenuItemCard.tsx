@@ -103,7 +103,10 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                   [{itemCode}]
                 </span>
               )}
-              <h3 className="font-black text-base sm:text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight truncate">
+              {/* Duas linhas em vez de reticências: "PASTEL DE CARNE DE S…" não
+                  diz qual é o recheio, e o cliente não compra o que não
+                  consegue ler. */}
+              <h3 className="font-black text-base sm:text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight line-clamp-2 [overflow-wrap:anywhere]">
                 {itemName}
               </h3>
             </div>
