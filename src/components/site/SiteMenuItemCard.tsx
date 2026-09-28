@@ -32,6 +32,19 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
   const chosenExtras = extras.filter((e) => selectedExtraIds.includes(e.id));
   const extrasPrice = chosenExtras.reduce((sum, e) => sum + (Number(e.price) || 0), 0);
 
+  // Nulo/vazio = sem limite. Com limite, dá pra TIRAR um adicional marcado
+  // sempre — só travamos quem ainda não foi marcado, quando o teto já bateu.
+  const limiteDeAdicionais = item.max_extras ?? null;
+  const limiteAtingido = limiteDeAdicionais != null && selectedExtraIds.length >= limiteDeAdicionais;
+
+  function alternarExtra(extraId: string) {
+    setSelectedExtraIds((cur) => {
+      if (cur.includes(extraId)) return cur.filter((x) => x !== extraId);
+      if (limiteDeAdicionais != null && cur.length >= limiteDeAdicionais) return cur;
+      return [...cur, extraId];
+    });
+  }
+
   const price = (selected ? selected.price : item.price) + extrasPrice;
   const showConsult = !selected && item.price === 0;
 
@@ -181,7 +194,11 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                 aria-expanded={showExtras}
                 className="w-full flex items-center justify-between gap-2 py-1.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-[hsl(var(--site-primary))]"
               >
-                <span>+ Adicionais{chosenExtras.length > 0 && ` (${chosenExtras.length})`}</span>
+                <span>
+                  + Adicionais
+                  {chosenExtras.length > 0 &&
+                    ` (${chosenExtras.length}${limiteDeAdicionais != null ? `/${limiteDeAdicionais}` : ""})`}
+                </span>
                 <span className="text-[hsl(var(--site-muted-fg))] normal-case tracking-normal font-bold">
                   {showExtras ? "fechar" : "ver"}
                 </span>
@@ -190,20 +207,21 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                 <div className="flex flex-wrap gap-1 sm:gap-1.5 pb-1">
                   {extras.map((e) => {
                     const active = selectedExtraIds.includes(e.id);
+                    const travado = !active && limiteAtingido;
                     return (
                       <button
                         key={e.id}
                         type="button"
                         aria-pressed={active}
-                        onClick={() =>
-                          setSelectedExtraIds((cur) =>
-                            cur.includes(e.id) ? cur.filter((x) => x !== e.id) : [...cur, e.id],
-                          )
-                        }
+                        aria-disabled={travado}
+                        disabled={travado}
+                        onClick={() => alternarExtra(e.id)}
                         className={`px-2 sm:px-2.5 py-1 text-[8px] sm:text-[10px] font-bold rounded-lg border transition-all ${
                           active
                             ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.12)] text-[hsl(var(--site-primary))]"
-                            : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))] hover:border-[hsl(var(--site-primary)/0.4)]"
+                            : travado
+                              ? "cursor-not-allowed border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))] opacity-40"
+                              : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))] hover:border-[hsl(var(--site-primary)/0.4)]"
                         }`}
                       >
                         {active && <Check className="inline h-2.5 w-2.5 mr-0.5" />}
@@ -211,6 +229,12 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                       </button>
                     );
                   })}
+                  {limiteAtingido && (
+                    <p className="w-full text-[9px] sm:text-[10px] text-[hsl(var(--site-muted-fg))]">
+                      Máximo de {limiteDeAdicionais} adicion
+                      {limiteDeAdicionais === 1 ? "al" : "ais"} atingido.
+                    </p>
+                  )}
                 </div>
               )}
             </div>

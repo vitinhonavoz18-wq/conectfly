@@ -36,6 +36,8 @@ export interface MenuItemRow {
    special_extra: number;
    image_url?: string | null;
    is_active?: boolean;
+   /** Máximo de adicionais que o cliente pode escolher neste item. Vazio/nulo = sem limite. */
+   max_extras?: number | null;
 }
 
 export interface MenuCategoryRow {

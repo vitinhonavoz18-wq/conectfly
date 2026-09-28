@@ -95,6 +95,7 @@ export const Route = createFileRoute("/api/public/pizzerias/$slug/menu-sync")({
               sort_order: i.sort_order,
               is_special: i.is_special,
               special_extra: i.special_extra,
+              max_extras: i.max_extras,
               sizes: i.sizes
             })),
             beverages: (bevs.data || []).map(b => ({
