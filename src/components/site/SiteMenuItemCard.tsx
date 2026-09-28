@@ -125,8 +125,8 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
               )}
               {/* Duas linhas em vez de reticências: "PASTEL DE CARNE DE S…" não
                   diz qual é o recheio, e o cliente não compra o que não
-                  consegue ler. Se nem duas linhas bastarem, o botão "..."
-                  abaixo mostra o nome inteiro. */}
+                  consegue ler. Se nem duas linhas bastarem, o botão "ver
+                  mais" abaixo mostra o nome inteiro. */}
               <h3
                 ref={nameRef}
                 className={`font-black text-base sm:text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight [overflow-wrap:anywhere] ${
@@ -141,7 +141,7 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                   onClick={() => setNameExpanded((v) => !v)}
                   className="self-start text-[10px] sm:text-xs font-black text-[hsl(var(--site-primary))] mt-0.5"
                 >
-                  {nameExpanded ? "ver menos" : "..."}
+                  {nameExpanded ? "ver menos" : "ver mais"}
                 </button>
               )}
             </div>
