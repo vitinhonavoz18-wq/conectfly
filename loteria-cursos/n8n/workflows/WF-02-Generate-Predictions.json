@@ -1,0 +1,687 @@
+{
+  "id": "LcWf02Predict000",
+  "name": "WF-02-Generate-Predictions",
+  "description": "Gera palpites com algoritmo determinístico (lottery-core), valida, grava e dispara o conteúdo PREDICTION.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-02 — Palpites\n\nHistórico → estatísticas descritivas → candidatos válidos por construção → seleção diversificada → **validação determinística** → banco.\n\nO LLM **não** gera números. A semente é `jogo:concurso:método:versão` (reproduzível).\n\nAviso obrigatório: estatística serve só para diversificar; em loteria justa todas as combinações têm a mesma chance.",
+        "height": 260,
+        "width": 520,
+        "color": 7
+      },
+      "id": "e800ae85-2866-4015-af92-7b68209bcab3",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "b7a13770-f56f-48c1-a8ab-04dcac6853c9",
+      "name": "Trigger — Prediction Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const i = $input.item.json;\nif (!/^[a-z0-9_]+$/.test(String(i.game ?? ''))) throw new Error('INVALID_PREDICTION_INPUT: game inválido');\nconst contest = i.contest === undefined || i.contest === null ? null : Number(i.contest);\nif (contest !== null && (!Number.isInteger(contest) || contest < 1)) throw new Error('INVALID_PREDICTION_INPUT: contest inválido');\nreturn { json: { game: i.game, contest, dry_run: i.dry_run === true, correlation_id: String(i.correlation_id ?? $execution.id) } };\n"
+      },
+      "id": "7ce92e73-7608-40a0-ac4d-f61f4f643ef9",
+      "name": "Validate — Prediction Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_prediction_context($1, $2::bigint, COALESCE((lc_settings()->>'prediction_history_size')::int, 100)) AS ctx",
+        "options": {
+          "queryReplacement": "={{ [ $json.game, $json.contest ] }}"
+        }
+      },
+      "id": "a13da941-41a6-4c45-a8f9-b30ef434a2c1",
+      "name": "DB — Load Prediction Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "980eb1fd-b162-4fbf-adf2-2a26851b3ba2",
+              "leftValue": "={{ $json.ctx.ok === true && $json.ctx.game.enabled === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c845d723-9662-4f2d-aba6-c615bd641eee",
+      "name": "Context — OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: $json.ctx.outcome ?? 'GAME_DISABLED', message: $json.ctx.message ?? null, game: $('Validate — Prediction Input').first().json.game } };\n"
+      },
+      "id": "94f8f76e-316e-472b-a2cf-4d86f5d6c217",
+      "name": "Return — Prediction Skipped",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c2f81238-6ba7-43a2-a1d2-ca3767b246fb",
+              "leftValue": "={{ ($json.ctx.existing ?? []).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "732852f2-4589-4bf0-ab01-dbdf65ffc069",
+      "name": "Predictions — Already Exist?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        500
+      ],
+      "notes": "Idempotente: palpite do concurso já gerado é reaproveitado.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Prediction Context').first().json.ctx.settings.engine_url }}/v1/predictions/generate",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ game: $('DB — Load Prediction Context').first().json.ctx.game, contest: $('DB — Load Prediction Context').first().json.ctx.target_contest, history: $('DB — Load Prediction Context').first().json.ctx.history, count: Number($('DB — Load Prediction Context').first().json.ctx.settings.prediction_bets ?? 1) }) }}"
+      },
+      "id": "cd79d3b5-2f28-4df2-a639-be4f73e10ec8",
+      "name": "Engine — Generate Predictions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c470022-cc69-4924-ae5e-7829257e4bad",
+              "leftValue": "={{ $json.statusCode === 200 && $json.body?.ok === true && ($json.body.predictions ?? []).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2d676f28-b0ee-44c7-a574-94262e6df59b",
+      "name": "Generation — OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0c15a80b-9b2e-4ca5-ac11-6fd3a57a0db7",
+              "name": "error_code",
+              "value": "PREDICTION_GENERATION_FAILED",
+              "type": "string"
+            },
+            {
+              "id": "80298e35-d9d0-492b-a1e0-1a0de21518e6",
+              "name": "message",
+              "value": "=PREDICTION_GENERATION_FAILED {{ $('Validate — Prediction Input').first().json.game }}: {{ $json.body?.message ?? $json.error?.message ?? 'engine indisponível' }}",
+              "type": "string"
+            },
+            {
+              "id": "f8c06238-1328-4f6c-afcf-3f44d1bf2f21",
+              "name": "workflow_name",
+              "value": "WF-02-Generate-Predictions",
+              "type": "string"
+            },
+            {
+              "id": "ae8eb2f1-c7b6-445d-a3fe-0f8725ca48cd",
+              "name": "workflow_id",
+              "value": "LcWf02Predict000",
+              "type": "string"
+            },
+            {
+              "id": "ddbf9c40-7ba2-4d71-aae8-07f2f6334213",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c1bd8608-f512-4bb1-a6d8-0a5a8b4ff2be",
+              "name": "payload",
+              "value": "={{ { game: $('Validate — Prediction Input').first().json.game, contest: $('DB — Load Prediction Context').first().json.ctx.target_contest } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "97b84061-15ec-4cdf-aa46-ac75fe54293a",
+      "name": "Generation Failed — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "6d7331f0-b0bf-4f83-ab43-982f77799ae1",
+      "name": "Generation Failed — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2480,
+        300
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'PREDICTION_GENERATION_FAILED', game: $('Validate — Prediction Input').first().json.game } };\n"
+      },
+      "id": "423a6879-2725-462e-a45c-2f74cbbe217e",
+      "name": "Return — Generation Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_save_predictions($1::jsonb) AS saved",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify({ game: $('Validate — Prediction Input').first().json.game, contest: $('DB — Load Prediction Context').first().json.ctx.target_contest, method: $json.body.method, algorithm_version: $json.body.algorithm_version,\n        seed: $json.body.seed, history_size: $json.body.history_size, disclaimer: $json.body.disclaimer, predictions: $json.body.predictions }) ] }}"
+        }
+      },
+      "id": "1c7c19f5-6c8f-4d3e-a546-e4c50d201929",
+      "name": "DB — Save Predictions",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2200,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "Banco revalida as dezenas (trigger) e UNIQUE(game, contest, método, versão, variante) impede duplicata.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c3a50ce-5dd2-4e2b-a7e2-de374efc93e3",
+              "name": "content_type",
+              "value": "PREDICTION",
+              "type": "string"
+            },
+            {
+              "id": "5242bde4-92b1-4b31-a2ee-9fa07f6bbede",
+              "name": "game",
+              "value": "={{ $('Validate — Prediction Input').first().json.game }}",
+              "type": "string"
+            },
+            {
+              "id": "9d0c8558-7f64-4924-a0c7-ea31e3e33758",
+              "name": "prediction_id",
+              "value": "={{ $json.saved.predictions[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "f74d0f6c-8127-4faa-aeda-baa616a063a9",
+              "name": "dry_run",
+              "value": "={{ $('Validate — Prediction Input').first().json.dry_run }}",
+              "type": "boolean"
+            },
+            {
+              "id": "69974a51-9ac5-47d4-ab9b-f4cc925986fc",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Prediction Input').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "4681b1a1-f5fc-4041-abbe-e13110ea9096",
+      "name": "Job — Prediction Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0c012d7-0bc9-4b2d-a64f-faad2c486cf2",
+              "name": "content_type",
+              "value": "PREDICTION",
+              "type": "string"
+            },
+            {
+              "id": "562eb9f1-a417-47b4-a071-2a2b4b42e58e",
+              "name": "game",
+              "value": "={{ $('Validate — Prediction Input').first().json.game }}",
+              "type": "string"
+            },
+            {
+              "id": "0ab0ba04-e818-4dff-a268-76aadfdb15d6",
+              "name": "prediction_id",
+              "value": "={{ $json.ctx.existing[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "265891e1-57ce-4337-a465-bc454555ebec",
+              "name": "dry_run",
+              "value": "={{ $('Validate — Prediction Input').first().json.dry_run }}",
+              "type": "boolean"
+            },
+            {
+              "id": "47e89cb3-3294-425c-a7f7-ec350a959707",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Prediction Input').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "ab325a10-d102-46a4-a32b-d27c4d8fe0da",
+      "name": "Job — Existing Prediction Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1640,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf07Orchestr00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "cd8cc6ad-b1f1-40dc-a823-1cbcb93b11d3",
+      "name": "Run — Prediction Content",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: $json.ok === true, outcome: 'PREDICTION_DONE', game: $('Validate — Prediction Input').first().json.game, contest: $('DB — Load Prediction Context').first().json.ctx.target_contest, ...$json } };\n"
+      },
+      "id": "c8e8b32f-d339-4fb1-a93b-c49558056996",
+      "name": "Return — Prediction Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        700
+      ]
+    }
+  ],
+  "connections": {
+    "Generation Failed — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Generation Failed — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Prediction Request": {
+      "main": [
+        [
+          {
+            "node": "Validate — Prediction Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Prediction Input": {
+      "main": [
+        [
+          {
+            "node": "DB — Load Prediction Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Load Prediction Context": {
+      "main": [
+        [
+          {
+            "node": "Context — OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context — OK?": {
+      "main": [
+        [
+          {
+            "node": "Predictions — Already Exist?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Prediction Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Predictions — Already Exist?": {
+      "main": [
+        [
+          {
+            "node": "Job — Existing Prediction Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Engine — Generate Predictions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Generate Predictions": {
+      "main": [
+        [
+          {
+            "node": "Generation — OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generation — OK?": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Predictions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generation Failed — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generation Failed — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Generation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Predictions": {
+      "main": [
+        [
+          {
+            "node": "Job — Prediction Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Prediction Content": {
+      "main": [
+        [
+          {
+            "node": "Run — Prediction Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Prediction Content": {
+      "main": [
+        [
+          {
+            "node": "Return — Prediction Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Existing Prediction Content": {
+      "main": [
+        [
+          {
+            "node": "Run — Prediction Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

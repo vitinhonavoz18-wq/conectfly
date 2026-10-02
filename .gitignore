@@ -35,3 +35,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Loteria Cursos (subprojeto) — segredos e artefatos
+loteria-cursos/.env
+loteria-cursos/.env.*
+!loteria-cursos/.env.example
+loteria-cursos/.tmp/

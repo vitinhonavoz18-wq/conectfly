@@ -1,0 +1,6 @@
+{
+  "id": "gpt-fixture",
+  "object": "model",
+  "created": 1790000000,
+  "owned_by": "system"
+}

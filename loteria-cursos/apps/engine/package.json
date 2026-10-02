@@ -1,0 +1,15 @@
+{
+  "name": "@lc/engine",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node dist/server.mjs"
+  },
+  "dependencies": {
+    "@lc/lottery-core": "*",
+    "@lc/shared": "*",
+    "fastify": "^5.12.5",
+    "zod": "^4.6.5"
+  }
+}

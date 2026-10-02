@@ -1,0 +1,7 @@
+node_modules
+dist
+package-lock.json
+n8n/workflows/*.json
+fixtures/**/*.json
+coverage
+.tmp

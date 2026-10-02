@@ -1,0 +1,47 @@
+{
+  "name": "loteria-cursos-automation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Loteria Cursos — automação de conteúdo de loterias para Instagram (n8n + Lottery Core + Renderer).",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*",
+    "database"
+  ],
+  "scripts": {
+    "build": "node scripts/build-apps.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --project unit",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "bash scripts/test-integration.sh",
+    "test:e2e": "bash scripts/test-e2e.sh",
+    "test:real": "vitest run --project real",
+    "test:all": "npm run lint && npm run typecheck && npm run test:unit && npm run workflows:validate && npm run test:integration && npm run test:e2e",
+    "workflows:build": "node n8n/builder/build.mjs",
+    "workflows:validate": "node scripts/validate-workflows.mjs",
+    "db:migrate": "node database/migrate.mjs",
+    "security:scan": "bash scripts/security-scan.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^22.16.5",
+    "@types/pg": "^8.23.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^9.39.5",
+    "globals": "^15.15.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.0",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "fflate": "^0.8.2"
+  }
+}

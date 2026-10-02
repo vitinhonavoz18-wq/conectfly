@@ -1,0 +1,13 @@
+{
+  "name": "@lc/lottery-core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@lc/shared": "*",
+    "zod": "^4.6.5"
+  }
+}

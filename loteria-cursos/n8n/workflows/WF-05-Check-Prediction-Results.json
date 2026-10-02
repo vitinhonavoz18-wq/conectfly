@@ -1,0 +1,577 @@
+{
+  "id": "LcWf05Check00000",
+  "name": "WF-05-Check-Prediction-Results",
+  "description": "Confere deterministicamente os palpites contra o resultado oficial, grava e dispara o conteúdo CHECK.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-05 — Conferência\n\nInterseção exata palpite × resultado oficial (engine). **Nenhum LLM conta acertos.**\n\nTexto fala em *coincidências* — prêmio só a CAIXA confirma (faixas oficiais).",
+        "height": 200,
+        "width": 420,
+        "color": 7
+      },
+      "id": "a8171cbd-0c2c-4bd1-af75-8616f9441d60",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "030e7c95-fdf8-48b2-a188-812f8be445b0",
+      "name": "Trigger — Check Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const i = $input.item.json;\nconst uuid = /^[0-9a-f-]{36}$/i;\nconst hasDraw = uuid.test(String(i.draw_id ?? ''));\nif (!hasDraw && !(/^[a-z0-9_]+$/.test(String(i.game ?? '')) && Number.isInteger(Number(i.contest)))) {\n  throw new Error('INVALID_CHECK_INPUT: informe draw_id ou game + contest');\n}\nreturn { json: { draw_id: hasDraw ? i.draw_id : null, game: i.game ?? null, contest: i.contest ? Number(i.contest) : null,\n  dry_run: i.dry_run === true, correlation_id: String(i.correlation_id ?? $execution.id) } };\n"
+      },
+      "id": "7bd462be-9cb4-4381-a6e6-852d7d94aa10",
+      "name": "Validate — Check Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_check_context(COALESCE($1::uuid, (SELECT d.id FROM lottery_draws d JOIN lottery_games g ON g.id = d.game_id WHERE g.slug = $2 AND d.contest = $3::bigint))) AS ctx",
+        "options": {
+          "queryReplacement": "={{ [ $json.draw_id, $json.game, $json.contest ] }}"
+        }
+      },
+      "id": "569f6dc4-d253-46d2-a216-ff9d1ac3278f",
+      "name": "DB — Load Check Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "19a71636-cc01-4001-a128-1a966dc3392a",
+              "leftValue": "={{ $json.ctx.ok === true && ($json.ctx.predictions ?? []).length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ff907670-2012-4395-a05f-4b44fc7b7945",
+      "name": "Context — Has Predictions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: true, outcome: $json.ctx.ok ? 'NO_PREDICTIONS' : $json.ctx.outcome, checked: 0, message: $json.ctx.message ?? null } };\n"
+      },
+      "id": "0bf23058-8c64-4005-a248-145880b0b54b",
+      "name": "Return — Nothing To Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Check Context').first().json.ctx.settings.engine_url }}/v1/predictions/check",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ game: $('DB — Load Check Context').first().json.ctx.game, result_numbers: $('DB — Load Check Context').first().json.ctx.draw.numbers, predictions: $('DB — Load Check Context').first().json.ctx.predictions.map((p) => ({ id: p.id, numbers: p.numbers })) }) }}"
+      },
+      "id": "bf1b1ceb-108f-4796-ab80-ad2bb9665f6f",
+      "name": "Engine — Check Predictions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "92738b79-a5b1-4206-acbd-679005500bda",
+              "leftValue": "={{ $json.statusCode === 200 && $json.body?.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b3c8a2fe-c1f9-4cd6-a2af-a885142a771e",
+      "name": "Check — OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b63901e-6115-4869-a416-33d6cee8d444",
+              "name": "error_code",
+              "value": "PREDICTION_CHECK_FAILED",
+              "type": "string"
+            },
+            {
+              "id": "3c766365-7192-4580-a420-7024b981cf14",
+              "name": "message",
+              "value": "=PREDICTION_CHECK_FAILED: {{ $json.body?.message ?? $json.error?.message ?? 'engine indisponível' }}",
+              "type": "string"
+            },
+            {
+              "id": "61f2b21b-3041-4647-a4cc-993643972e65",
+              "name": "workflow_name",
+              "value": "WF-05-Check-Prediction-Results",
+              "type": "string"
+            },
+            {
+              "id": "a8c6b362-5498-420b-a4c6-0e8b8c0b32a5",
+              "name": "workflow_id",
+              "value": "LcWf05Check00000",
+              "type": "string"
+            },
+            {
+              "id": "396287ec-6ca0-4d5e-a2a2-392dca07da94",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ca279de9-c620-4b5f-aa99-8b8461af9cbe",
+              "name": "payload",
+              "value": "={{ { draw_id: $('DB — Load Check Context').first().json.ctx.draw?.id ?? null } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "2f78164e-4a78-4e9b-a889-e56f4d891a83",
+      "name": "Check Failed — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "a6c5acd0-b6fb-4413-a360-c9f3528fd084",
+      "name": "Check Failed — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2200,
+        300
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'PREDICTION_CHECK_FAILED', checked: 0 } };\n"
+      },
+      "id": "dbdd8532-10e9-4eb1-a53a-696613107a4c",
+      "name": "Return — Check Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_save_checks($1::uuid, $2::jsonb) AS saved",
+        "options": {
+          "queryReplacement": "={{ [ $('DB — Load Check Context').first().json.ctx.draw.id, JSON.stringify($json.body.checks) ] }}"
+        }
+      },
+      "id": "49594c50-fc30-401a-adca-7cdf9321713b",
+      "name": "DB — Save Checks",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1920,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01865589-7bf7-4d12-ab4a-cd45e8e90c93",
+              "name": "content_type",
+              "value": "CHECK",
+              "type": "string"
+            },
+            {
+              "id": "198d2ca4-7783-4050-a81a-18c95f5f1c36",
+              "name": "game",
+              "value": "={{ $('DB — Load Check Context').first().json.ctx.game.slug }}",
+              "type": "string"
+            },
+            {
+              "id": "7f65de0d-62bb-4d91-ade9-90d4b553de87",
+              "name": "draw_id",
+              "value": "={{ $('DB — Load Check Context').first().json.ctx.draw.id }}",
+              "type": "string"
+            },
+            {
+              "id": "ea5f0b7b-f55f-4889-a926-0e86a3e3f563",
+              "name": "prediction_id",
+              "value": "={{ $('DB — Load Check Context').first().json.ctx.predictions[0].id }}",
+              "type": "string"
+            },
+            {
+              "id": "b92a37b2-256f-46d1-abb7-e1d5f32314f6",
+              "name": "dry_run",
+              "value": "={{ $('Validate — Check Input').first().json.dry_run }}",
+              "type": "boolean"
+            },
+            {
+              "id": "70f7f4e0-a2f4-4eb7-a4ee-e3cf73b4f44f",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Check Input').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "75762e5e-272b-4b7e-a4e0-279a35ded08e",
+      "name": "Job — Check Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2200,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf07Orchestr00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "6e5e77de-4365-4c0e-a371-0aecf88918b9",
+      "name": "Run — Check Content",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2480,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: $json.ok === true, outcome: 'CHECK_DONE', checked: $('Engine — Check Predictions').item.json.body.checks.length,\n  checks: $('Engine — Check Predictions').item.json.body.checks, post: $json } };\n"
+      },
+      "id": "0778f14b-2bbf-472c-a33b-3c1672e8d072",
+      "name": "Return — Check Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2760,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Check Failed — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Check Failed — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Check Request": {
+      "main": [
+        [
+          {
+            "node": "Validate — Check Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Check Input": {
+      "main": [
+        [
+          {
+            "node": "DB — Load Check Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Load Check Context": {
+      "main": [
+        [
+          {
+            "node": "Context — Has Predictions?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context — Has Predictions?": {
+      "main": [
+        [
+          {
+            "node": "Engine — Check Predictions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Nothing To Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Check Predictions": {
+      "main": [
+        [
+          {
+            "node": "Check — OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check — OK?": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Checks",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Failed — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Failed — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Check Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Checks": {
+      "main": [
+        [
+          {
+            "node": "Job — Check Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Check Content": {
+      "main": [
+        [
+          {
+            "node": "Run — Check Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Check Content": {
+      "main": [
+        [
+          {
+            "node": "Return — Check Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

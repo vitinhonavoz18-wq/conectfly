@@ -1,0 +1,9 @@
+{
+  "error": {
+    "message": "Application request limit reached",
+    "type": "OAuthException",
+    "code": 4,
+    "fbtrace_id": "AFixtureTrace000",
+    "is_transient": true
+  }
+}

@@ -1,0 +1,2123 @@
+{
+  "id": "LcWf01SyncRes000",
+  "name": "WF-01-Sync-Lottery-Results",
+  "description": "Busca o resultado na fonte (via Lottery Core), valida, grava com idempotência e dispara o conteúdo RESULT e a conferência de palpites.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-01 — Resultados\n\nFluxo obrigatório: **Fonte → validação estrutural → dezenas → concurso → persistência → arte → publicação**. A IA nunca toca nos números.\n\n- `mode=poll` (agenda): reserva a rodada (`result_poll_runs`, UNIQUE), consulta, e se ainda não saiu o concurso novo espera com backoff (`lottery_result_poll_interval_seconds`, máx. `lottery_result_max_attempts`). Sem laço infinito.\n- `mode=once` (teste manual): consulta uma vez; resultado já gravado segue para o conteúdo (idempotente).\n- `mode=backfill`: completa o histórico para os palpites, com pausa entre chamadas.\n- Payload inválido → **não publica**; mesmo concurso com conteúdo diferente → **DATA_CONFLICT**, publicação bloqueada.",
+        "height": 380,
+        "width": 560,
+        "color": 7
+      },
+      "id": "d2c8fb5b-6c37-416f-acc0-a51397afc7c1",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "f2c30178-81d1-46b0-ac39-99f9b9f39ad3",
+      "name": "Trigger — Sync Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const i = $input.item.json;\nconst mode = ['poll', 'once', 'backfill'].includes(i.mode) ? i.mode : 'once';\nif (!/^[a-z0-9_]+$/.test(String(i.game ?? ''))) throw new Error('INVALID_SYNC_INPUT: game inválido');\nif (mode === 'poll' && Number.isNaN(Date.parse(i.scheduled_draw_at ?? ''))) throw new Error('INVALID_SYNC_INPUT: scheduled_draw_at obrigatório no modo poll');\nconst contest = i.contest === undefined || i.contest === null ? null : Number(i.contest);\nif (contest !== null && (!Number.isInteger(contest) || contest < 1)) throw new Error('INVALID_SYNC_INPUT: contest inválido');\nreturn { json: { game: i.game, mode, scheduled_draw_at: i.scheduled_draw_at ?? null, contest, count: Number(i.count ?? 20),\n  dry_run: i.dry_run === true, correlation_id: String(i.correlation_id ?? $execution.id) } };\n"
+      },
+      "id": "22aea013-c21c-4273-af04-a1789f7404f8",
+      "name": "Validate — Sync Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_game_context($1) AS ctx",
+        "options": {
+          "queryReplacement": "={{ [ $json.game ] }}"
+        }
+      },
+      "id": "3440eac9-255d-43e6-abca-760f13422dba",
+      "name": "DB — Load Game Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "15a1e80d-1bab-473c-a07c-9a5c62af9780",
+              "leftValue": "={{ $json.ctx.ok === true && $json.ctx.outcome === 'OK' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "873a638b-46d3-4138-aaf8-2fc5c87e9699",
+      "name": "Game — Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: $json.ctx.outcome, game: $('Validate — Sync Input').first().json.game } };\n"
+      },
+      "id": "ef6ba42e-b845-4f81-a5e5-b9445ed83820",
+      "name": "Return — Game Unavailable",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6a14e15b-f80a-4503-ac78-3bfef3124d21",
+                    "leftValue": "={{ $('Validate — Sync Input').first().json.mode }}",
+                    "rightValue": "poll",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "poll"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "db65cbd4-32fc-4a00-a191-18155946b8f6",
+                    "leftValue": "={{ $('Validate — Sync Input').first().json.mode }}",
+                    "rightValue": "once",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "once"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "bc3782fb-5e35-4c36-a450-9dc0b236e0a7",
+                    "leftValue": "={{ $('Validate — Sync Input').first().json.mode }}",
+                    "rightValue": "backfill",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "backfill"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b573b1c0-c490-4b9d-abf6-e741b0af4abc",
+      "name": "Route — Sync Mode",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_claim_poll_run($1, $2::timestamptz) AS run",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Sync Input').first().json.game, $('Validate — Sync Input').first().json.scheduled_draw_at ] }}"
+        }
+      },
+      "id": "e19e5b0f-7f6d-4a80-a265-24a774a37eb3",
+      "name": "DB — Claim Poll Run",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "UNIQUE(game_id, scheduled_draw_at): duas execuções para o mesmo sorteio → só uma faz o polling.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aca440fa-35cd-487e-ad20-0a6daa3717dd",
+              "leftValue": "={{ $json.run.claimed === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "849603f7-572b-4f0f-aa50-3f79a8cf4a33",
+      "name": "Poll Run — Claimed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: true, outcome: 'ALREADY_RUNNING_OR_DONE', game: $('Validate — Sync Input').first().json.game } };\n"
+      },
+      "id": "65e478ba-002b-49dd-ad42-cb3981c14b53",
+      "name": "Return — Already Polling",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const j = $input.item.json;\nconst ctx = j.body?.context ?? {};\nreturn { json: { attempt: ctx.loop === 'result_poll' ? Number(ctx.attempt ?? 0) + 1 : 1 } };\n"
+      },
+      "id": "2aa6f4d0-2740-4b6d-aac4-d442499207fa",
+      "name": "Poll — Attempt State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "03afe279-a696-4562-aa7c-732256921a54",
+              "leftValue": "={{ $json.attempt <= 30 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "64ac8637-000c-43dc-a686-ff9aaa0cb95d",
+      "name": "Guard — Poll Attempts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        500
+      ],
+      "notes": "Trava extra contra laço infinito.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'POLL_LOOP_GUARD: tentativas demais para ' + $('Validate — Sync Input').first().json.game }}"
+      },
+      "id": "25d01ab7-a21b-4b9e-a238-347c03b913a9",
+      "name": "Stop — Poll Loop Guard",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_circuit_allow('lottery_source') AS circuit",
+        "options": {}
+      },
+      "id": "774f41ad-275e-4a81-a2a7-b9ec5e8ed7ab",
+      "name": "DB — Circuit Check (Source)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2200,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d358bd13-a3eb-4540-ac01-27526c878d94",
+              "leftValue": "={{ $json.circuit.allowed === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8ee8c7b-7d2d-41c9-a4f5-be66777cbdda",
+      "name": "Circuit — Source Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT CASE WHEN $1::uuid IS NULL THEN NULL ELSE lc_finish_poll_run($1::uuid, 'FAILED', $2::int, NULL, 'SOURCE_CIRCUIT_OPEN') END AS run",
+        "options": {
+          "queryReplacement": "={{ [ ($('DB — Claim Poll Run').isExecuted ? ($('DB — Claim Poll Run').first().json.run?.run_id ?? null) : null), $('Poll — Attempt State').item.json.attempt ] }}"
+        }
+      },
+      "id": "7228bb9a-9b5a-42bf-a49e-0da3caf74319",
+      "name": "DB — Finish Run (Circuit Open)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2760,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'SOURCE_CIRCUIT_OPEN', game: $('Validate — Sync Input').first().json.game } };\n"
+      },
+      "id": "75980d6b-7061-48c2-a328-80fad2d65661",
+      "name": "Return — Source Circuit Open",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Game Context').first().json.ctx.settings.engine_url }}/v1/results/fetch",
+        "options": {
+          "timeout": 90000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ game: $('DB — Load Game Context').first().json.ctx.game, ...($('Validate — Sync Input').first().json.mode === 'once' && $('Validate — Sync Input').first().json.contest ? { contest: $('Validate — Sync Input').first().json.contest } : {}) }) }}"
+      },
+      "id": "d97b2721-129e-4f28-a406-76ac3aff8d41",
+      "name": "Engine — Fetch Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2760,
+        500
+      ],
+      "notes": "O engine usa o LotterySourceAdapter (CAIXA hoje; trocável) e devolve o resultado JÁ validado e normalizado.",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e7e4422c-d9a3-4f57-a10c-696aef34893e",
+                    "leftValue": "={{ String($json.statusCode ?? 0) }}",
+                    "rightValue": "200",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "200"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "dec3a56e-d5f7-4db8-acdb-633d33f2b97a",
+                    "leftValue": "={{ String($json.statusCode ?? 0) }}",
+                    "rightValue": "422",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "422"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "503f5825-af49-493b-a035-6a6275aeb207",
+      "name": "Route — Source Response",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3040,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_ingest_draw($1, $2::jsonb, false) AS ingest, lc_circuit_record('lottery_source', true) AS circuit",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Sync Input').first().json.game, JSON.stringify($json.body.draw) ] }}"
+        }
+      },
+      "id": "1345954c-6497-4460-a858-aa47adb28c4e",
+      "name": "DB — Ingest Draw",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3320,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "INSERT … ON CONFLICT (game_id, contest). Mesmo concurso + hash diferente = DATA_CONFLICT (não sobrescreve).",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// PROCEED: concurso novo (ou repetição no modo manual) · WAIT: polling e a fonte ainda mostra o concurso antigo.\nconst ing = $json.ingest;\nconst mode = $('Validate — Sync Input').first().json.mode;\nconst baseline = Number($('DB — Load Game Context').first().json.ctx.last_draw?.contest ?? 0);\nlet route = 'INVALID';\nif (ing.outcome === 'CONFLICT') route = 'CONFLICT';\nelse if (['INSERTED', 'DUPLICATE'].includes(ing.outcome)) route = mode !== 'poll' || Number(ing.contest) > baseline ? 'PROCEED' : 'WAIT';\nreturn { json: { route, ingest: ing } };\n"
+      },
+      "id": "d75fef25-1400-4b30-a5a7-fc8b59c96604",
+      "name": "Ingest — Classify",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5519bb8f-3b43-4646-a017-a14ba9741848",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "PROCEED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PROCEED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1bc4fc7c-7b3f-4ea6-ac2c-09b30a3e98ab",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "WAIT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "WAIT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "24a344c0-c049-4cf6-a319-4d2675aecfd5",
+                    "leftValue": "={{ $json.route }}",
+                    "rightValue": "CONFLICT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CONFLICT"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "a55e36f3-8a24-4a5c-ac95-b4b4d3d809aa",
+      "name": "Route — Ingest Outcome",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_circuit_record('lottery_source', false, $1) AS circuit",
+        "options": {
+          "queryReplacement": "={{ [ String($json.body?.message ?? $json.error?.message ?? ('HTTP ' + ($json.statusCode ?? 0))) ] }}"
+        }
+      },
+      "id": "288d35b9-5a58-4bf8-aba3-037e684864fa",
+      "name": "DB — Source Unavailable",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3320,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "75c99a84-ac3f-4f86-a686-cb5fefd57015",
+              "leftValue": "={{ $('Validate — Sync Input').first().json.mode === 'poll' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4d59675f-c6ab-44ea-a2f6-1a916f5fff29",
+      "name": "Mode — Is Polling?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3600,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: $('Engine — Fetch Result').isExecuted && $('Engine — Fetch Result').item.json.statusCode !== 200 ? 'SOURCE_UNAVAILABLE' : 'NO_NEW_RESULT', game: $('Validate — Sync Input').first().json.game, published: false } };\n"
+      },
+      "id": "5e98cdcc-8c4a-4e4d-aeae-a5d4b154adcd",
+      "name": "Return — No New Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3880,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Game Context').first().json.ctx.settings.engine_url }}/v1/results/poll-decision",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ attempt: $('Poll — Attempt State').item.json.attempt, max_attempts: Number($('DB — Load Game Context').first().json.ctx.settings.lottery_result_max_attempts ?? 10),\n      interval_seconds: Number($('DB — Load Game Context').first().json.ctx.settings.lottery_result_poll_interval_seconds ?? 180), context: { loop: 'result_poll', attempt: $('Poll — Attempt State').item.json.attempt } }) }}"
+      },
+      "id": "e10e7634-dead-43fd-a0c1-5aec3aa0f92a",
+      "name": "Engine — Poll Decision",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        700
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "69326052-a2ae-4cc9-a49f-bf6c5a96c3c1",
+                    "leftValue": "={{ $json.body?.outcome ?? 'stop' }}",
+                    "rightValue": "retry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "ea13a2ef-dc54-47c1-a6e1-701a5666ff6b",
+      "name": "Route — Poll Decision",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        4160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.body.delay_seconds }}",
+        "unit": "seconds"
+      },
+      "id": "8b8f7a18-e0ff-49fc-a595-7e2ae00bf88a",
+      "name": "Wait — Poll Interval",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4440,
+        300
+      ],
+      "notes": "Acima de 65s a execução é salva no banco e retomada depois (sem segurar memória).",
+      "webhookId": "d370d1fc-def0-4b1a-a0f2-32611044aab6",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT CASE WHEN $1::uuid IS NULL THEN NULL ELSE lc_finish_poll_run($1::uuid, 'EXHAUSTED', $2::int, $3::bigint, 'RESULT_NOT_AVAILABLE') END AS run",
+        "options": {
+          "queryReplacement": "={{ [ ($('DB — Claim Poll Run').isExecuted ? ($('DB — Claim Poll Run').first().json.run?.run_id ?? null) : null), $('Poll — Attempt State').item.json.attempt, $('DB — Load Game Context').first().json.ctx.last_draw?.contest ?? null ] }}"
+        }
+      },
+      "id": "bb6ab56f-041d-418b-a185-aaac7d2b85a0",
+      "name": "DB — Finish Run (Exhausted)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4440,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'RESULT_NOT_AVAILABLE', game: $('Validate — Sync Input').first().json.game, published: false } };\n"
+      },
+      "id": "dca129c3-1773-4ca9-abec-bb98297556b2",
+      "name": "Return — Result Not Available",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_circuit_record('lottery_source', false, $1) AS circuit, CASE WHEN $2::uuid IS NULL THEN NULL ELSE lc_finish_poll_run($2::uuid, 'FAILED', 1, NULL, $1) END AS run",
+        "options": {
+          "queryReplacement": "={{ [ 'INVALID_PAYLOAD: ' + ($json.body?.message ?? $json.ingest?.message ?? 'dados inconsistentes'), ($('DB — Claim Poll Run').isExecuted ? ($('DB — Claim Poll Run').first().json.run?.run_id ?? null) : null) ] }}"
+        }
+      },
+      "id": "5e5a1415-ab9d-4e06-ac2e-21dc76fe0daa",
+      "name": "DB — Record Invalid Payload",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3320,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a13e110-06c0-44fd-a562-df9974582631",
+              "name": "error_code",
+              "value": "INVALID_LOTTERY_PAYLOAD",
+              "type": "string"
+            },
+            {
+              "id": "eb3bb462-2158-4287-ab57-21474a5b8010",
+              "name": "message",
+              "value": "=INVALID_LOTTERY_PAYLOAD {{ $('Validate — Sync Input').first().json.game }}: {{ $('Engine — Fetch Result').item.json.body?.message }} — NADA foi publicado.",
+              "type": "string"
+            },
+            {
+              "id": "95339c59-63a2-40d8-a0b8-2d96eda619ac",
+              "name": "workflow_name",
+              "value": "WF-01-Sync-Lottery-Results",
+              "type": "string"
+            },
+            {
+              "id": "aef1f11e-9443-4709-a68d-318b75c817d5",
+              "name": "workflow_id",
+              "value": "LcWf01SyncRes000",
+              "type": "string"
+            },
+            {
+              "id": "7731a0f5-ba18-4cc1-a4b3-77207beb906c",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "e5ce70cb-bbb9-40fa-a9e1-3919e5488c6b",
+              "name": "payload",
+              "value": "={{ { game: $('Validate — Sync Input').first().json.game, issues: $('Engine — Fetch Result').item.json.body?.issues ?? [] } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "7e3ca76b-492b-4d52-a9bf-47678afb11dd",
+      "name": "Invalid Payload — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3600,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "2921eabc-a9ec-493a-acf7-58af56d84902",
+      "name": "Invalid Payload — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3880,
+        900
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'INVALID_PAYLOAD', game: $('Validate — Sync Input').first().json.game, published: false } };\n"
+      },
+      "id": "7c689fa9-2eee-4342-af7b-ffb33b12d0c7",
+      "name": "Return — Invalid Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT CASE WHEN $1::uuid IS NULL THEN NULL ELSE lc_finish_poll_run($1::uuid, 'FAILED', 1, $2::bigint, 'DATA_CONFLICT') END AS run",
+        "options": {
+          "queryReplacement": "={{ [ ($('DB — Claim Poll Run').isExecuted ? ($('DB — Claim Poll Run').first().json.run?.run_id ?? null) : null), $json.ingest.contest ] }}"
+        }
+      },
+      "id": "994c1f3a-c807-49ef-af96-e420e1869b69",
+      "name": "DB — Finish Run (Conflict)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4160,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b7a4ba6-dfb1-49bf-a13e-dcf6c1307e54",
+              "name": "error_code",
+              "value": "DATA_CONFLICT",
+              "type": "string"
+            },
+            {
+              "id": "be33d37e-2f63-407e-a91f-6c89421db15e",
+              "name": "message",
+              "value": "=DATA_CONFLICT {{ $('Validate — Sync Input').first().json.game }} concurso {{ $('Ingest — Classify').item.json.ingest.contest }}: fonte mudou o resultado já gravado. Publicação BLOQUEADA até análise (tabela data_conflicts).",
+              "type": "string"
+            },
+            {
+              "id": "be4ebdbf-c05f-4395-a34a-66ff1b396d9c",
+              "name": "workflow_name",
+              "value": "WF-01-Sync-Lottery-Results",
+              "type": "string"
+            },
+            {
+              "id": "7400876a-5f3e-4f67-a042-4b935d64a712",
+              "name": "workflow_id",
+              "value": "LcWf01SyncRes000",
+              "type": "string"
+            },
+            {
+              "id": "3878bc4a-6c50-4e26-a5cd-5d919e196b25",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "efa320bc-427d-4417-accf-9806451e6d35",
+              "name": "payload",
+              "value": "={{ $('Ingest — Classify').item.json.ingest }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "1b90f54a-bc12-4126-a1c4-ac91fad96605",
+      "name": "Data Conflict — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4440,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "ed5f4f31-2c83-4fc6-a025-d7980332fc4c",
+      "name": "Data Conflict — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4720,
+        500
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'DATA_CONFLICT', game: $('Validate — Sync Input').first().json.game, published: false } };\n"
+      },
+      "id": "998fcd27-e007-4d57-a55a-604671bcaefd",
+      "name": "Return — Data Conflict",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT CASE WHEN $1::uuid IS NULL THEN NULL ELSE lc_finish_poll_run($1::uuid, 'FOUND', $2::int, $3::bigint) END AS run",
+        "options": {
+          "queryReplacement": "={{ [ ($('DB — Claim Poll Run').isExecuted ? ($('DB — Claim Poll Run').first().json.run?.run_id ?? null) : null), $('Poll — Attempt State').item.json.attempt, $json.ingest.contest ] }}"
+        }
+      },
+      "id": "ca036666-7fc9-4d8b-ad2a-80408d256b41",
+      "name": "DB — Finish Run (Found)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4160,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0853f0a3-06c8-4b9a-a778-e74ae3f3fd5b",
+              "name": "content_type",
+              "value": "RESULT",
+              "type": "string"
+            },
+            {
+              "id": "6a4510eb-1003-4cd2-a09f-114813f2c606",
+              "name": "game",
+              "value": "={{ $('Validate — Sync Input').first().json.game }}",
+              "type": "string"
+            },
+            {
+              "id": "c023daaa-79b6-4310-a90c-8ceb6bd1c2cd",
+              "name": "draw_id",
+              "value": "={{ $('Ingest — Classify').item.json.ingest.draw_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3bc1d119-6a68-4295-a310-7aecb2ad2305",
+              "name": "dry_run",
+              "value": "={{ $('Validate — Sync Input').first().json.dry_run }}",
+              "type": "boolean"
+            },
+            {
+              "id": "33487e38-ce67-434e-a1a1-898415d1389a",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Sync Input').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "e7c9b1a6-531a-4941-ac9e-b2b8723548f2",
+      "name": "Job — Result Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4440,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf07Orchestr00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "28a20180-4a09-44e9-adaf-aa7732f2750c",
+      "name": "Run — Result Content",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4720,
+        700
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "69a8222e-5dab-41c7-aa31-fcd83138e541",
+              "name": "draw_id",
+              "value": "={{ $('Ingest — Classify').item.json.ingest.draw_id }}",
+              "type": "string"
+            },
+            {
+              "id": "20d380d9-a7b5-41ef-a9ef-fd181d808c17",
+              "name": "dry_run",
+              "value": "={{ $('Validate — Sync Input').first().json.dry_run }}",
+              "type": "boolean"
+            },
+            {
+              "id": "63316c04-f3b1-44c6-a025-529afd3037ce",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Sync Input').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "c19b088e-cb20-44df-a829-4f3a85ff5c5c",
+      "name": "Job — Check Predictions",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5000,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf05Check00000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "205c7388-9085-4e9a-aa7b-7f3f2d0a6238",
+      "name": "Run — Check Predictions",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        5280,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const ing = $('Ingest — Classify').item.json.ingest;\nconst post = $('Run — Result Content').item.json;\nreturn { json: { ok: post.ok === true, outcome: ing.outcome, game: $('Validate — Sync Input').first().json.game, contest: ing.contest, numbers: ing.draw?.numbers ?? null,\n  gap_detected: ing.gap === true, caption: post.caption ?? null, image_url: post.image_url ?? null,\n  instagram_publish: post.instagram_publish ?? null, post_status: post.status ?? null, post_id: post.post_id ?? null,\n  check: $json } };\n"
+      },
+      "id": "49d3e598-678e-44ce-a415-25af65461df7",
+      "name": "Return — Sync Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT contest FROM lc_missing_contests($1, $2::bigint, $3::int)",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Sync Input').first().json.game, $('Validate — Sync Input').first().json.contest ?? (($('DB — Load Game Context').first().json.ctx.last_draw?.contest ?? 1) - 1), Math.min($('Validate — Sync Input').first().json.count, Number($('DB — Load Game Context').first().json.ctx.settings.backfill_max_contests ?? 50)) ] }}"
+        }
+      },
+      "id": "55c4828f-8865-45a4-ab02-d4e46bc6fcf3",
+      "name": "DB — Missing Contests",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "Lista só os concursos que ainda não estão no banco.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "alwaysOutputData": true,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd30d07e-56be-45a4-addc-45fde0657900",
+              "leftValue": "={{ $json.contest !== undefined && $json.contest !== null }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c20c3656-a073-4ef8-a0d5-dc9ebd8df335",
+      "name": "Backfill — Anything Missing?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "11845f84-de50-4979-a1a4-011b4c35ddf6",
+      "name": "Loop — Backfill Contests",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2200,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Game Context').first().json.ctx.settings.engine_url }}/v1/results/fetch",
+        "options": {
+          "timeout": 90000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ game: $('DB — Load Game Context').first().json.ctx.game, contest: Number($json.contest) }) }}"
+      },
+      "id": "bcd7b6fc-a2a9-4dff-a04d-3e654998ca32",
+      "name": "Engine — Fetch Contest",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "10055623-2192-4609-a1fc-d003ae9cf9f0",
+              "leftValue": "={{ $json.statusCode === 200 && $json.body?.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8c9ab53a-9ccf-4eeb-aff9-705e6d400f4f",
+      "name": "Backfill — Fetched?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2760,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_ingest_draw($1, $2::jsonb, true) AS ingest",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Sync Input').first().json.game, JSON.stringify($json.body.draw) ] }}"
+        }
+      },
+      "id": "0e952d79-7970-4239-aca7-8df99effe8e8",
+      "name": "DB — Ingest Backfill Draw",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3040,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "amount": "={{ 2 }}",
+        "unit": "seconds"
+      },
+      "id": "abe366d4-b6dc-4159-ad77-afb2d75714ef",
+      "name": "Wait — Backfill Throttle",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3040,
+        900
+      ],
+      "notes": "Pausa entre consultas para não sobrecarregar a fonte.",
+      "webhookId": "a58c7061-87e1-49e8-a81a-e4ac0a347b11",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return [{ json: { ok: true, outcome: 'BACKFILL_DONE', game: $('Validate — Sync Input').first().json.game, processed: $input.all().filter((i) => i.json.contest !== undefined || i.json.ingest || i.json.statusCode).length } }];\n"
+      },
+      "id": "59c4d084-286e-440d-aee6-017479d819d3",
+      "name": "Return — Backfill Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        1100
+      ]
+    }
+  ],
+  "connections": {
+    "Invalid Payload — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Invalid Payload — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Conflict — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Data Conflict — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Sync Request": {
+      "main": [
+        [
+          {
+            "node": "Validate — Sync Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Sync Input": {
+      "main": [
+        [
+          {
+            "node": "DB — Load Game Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Load Game Context": {
+      "main": [
+        [
+          {
+            "node": "Game — Enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Game — Enabled?": {
+      "main": [
+        [
+          {
+            "node": "Route — Sync Mode",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Game Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Sync Mode": {
+      "main": [
+        [
+          {
+            "node": "DB — Claim Poll Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Poll — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Missing Contests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Claim Poll Run": {
+      "main": [
+        [
+          {
+            "node": "Poll Run — Claimed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll Run — Claimed?": {
+      "main": [
+        [
+          {
+            "node": "Poll — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Already Polling",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll — Attempt State": {
+      "main": [
+        [
+          {
+            "node": "Guard — Poll Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — Poll Attempts": {
+      "main": [
+        [
+          {
+            "node": "DB — Circuit Check (Source)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop — Poll Loop Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Circuit Check (Source)": {
+      "main": [
+        [
+          {
+            "node": "Circuit — Source Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Circuit — Source Allowed?": {
+      "main": [
+        [
+          {
+            "node": "Engine — Fetch Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Finish Run (Circuit Open)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Finish Run (Circuit Open)": {
+      "main": [
+        [
+          {
+            "node": "Return — Source Circuit Open",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Fetch Result": {
+      "main": [
+        [
+          {
+            "node": "Route — Source Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Source Response": {
+      "main": [
+        [
+          {
+            "node": "DB — Ingest Draw",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Record Invalid Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Source Unavailable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Record Invalid Payload": {
+      "main": [
+        [
+          {
+            "node": "Invalid Payload — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invalid Payload — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Invalid Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Ingest Draw": {
+      "main": [
+        [
+          {
+            "node": "Ingest — Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingest — Classify": {
+      "main": [
+        [
+          {
+            "node": "Route — Ingest Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Ingest Outcome": {
+      "main": [
+        [
+          {
+            "node": "DB — Finish Run (Found)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mode — Is Polling?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Finish Run (Conflict)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Record Invalid Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Finish Run (Conflict)": {
+      "main": [
+        [
+          {
+            "node": "Data Conflict — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Conflict — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Data Conflict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Source Unavailable": {
+      "main": [
+        [
+          {
+            "node": "Mode — Is Polling?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mode — Is Polling?": {
+      "main": [
+        [
+          {
+            "node": "Engine — Poll Decision",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — No New Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Poll Decision": {
+      "main": [
+        [
+          {
+            "node": "Route — Poll Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Poll Decision": {
+      "main": [
+        [
+          {
+            "node": "Wait — Poll Interval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Finish Run (Exhausted)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Poll Interval": {
+      "main": [
+        [
+          {
+            "node": "Poll — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Finish Run (Exhausted)": {
+      "main": [
+        [
+          {
+            "node": "Return — Result Not Available",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Finish Run (Found)": {
+      "main": [
+        [
+          {
+            "node": "Job — Result Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Result Content": {
+      "main": [
+        [
+          {
+            "node": "Run — Result Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Result Content": {
+      "main": [
+        [
+          {
+            "node": "Job — Check Predictions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Check Predictions": {
+      "main": [
+        [
+          {
+            "node": "Run — Check Predictions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Check Predictions": {
+      "main": [
+        [
+          {
+            "node": "Return — Sync Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Missing Contests": {
+      "main": [
+        [
+          {
+            "node": "Backfill — Anything Missing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backfill — Anything Missing?": {
+      "main": [
+        [
+          {
+            "node": "Loop — Backfill Contests",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Backfill Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop — Backfill Contests": {
+      "main": [
+        [
+          {
+            "node": "Return — Backfill Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Engine — Fetch Contest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Fetch Contest": {
+      "main": [
+        [
+          {
+            "node": "Backfill — Fetched?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backfill — Fetched?": {
+      "main": [
+        [
+          {
+            "node": "DB — Ingest Backfill Draw",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait — Backfill Throttle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Ingest Backfill Draw": {
+      "main": [
+        [
+          {
+            "node": "Wait — Backfill Throttle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Backfill Throttle": {
+      "main": [
+        [
+          {
+            "node": "Loop — Backfill Contests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

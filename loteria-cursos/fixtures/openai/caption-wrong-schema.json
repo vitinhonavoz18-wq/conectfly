@@ -1,0 +1,32 @@
+{
+  "id": "resp_fixture_0001",
+  "object": "response",
+  "created_at": 1790000000,
+  "status": "completed",
+  "model": "gpt-fixture",
+  "output": [
+    {
+      "id": "rs_fixture",
+      "type": "reasoning",
+      "summary": []
+    },
+    {
+      "id": "msg_fixture",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"title\":\"x\",\"text\":\"y\"}",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 420,
+    "output_tokens": 180,
+    "total_tokens": 600
+  }
+}

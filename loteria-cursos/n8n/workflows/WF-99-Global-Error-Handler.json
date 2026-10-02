@@ -1,0 +1,284 @@
+{
+  "id": "LcWf99ErrorHdl00",
+  "name": "WF-99-Global-Error-Handler",
+  "description": "Registra erros (inesperados e tratados) em workflow_errors, sem segredos, e opcionalmente avisa por webhook.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-99 — Tratador global de erros\n\nDois jeitos de chegar aqui:\n1. **Error Trigger** — qualquer workflow que falhar (configurado como Error Workflow nas Settings).\n2. **Execute Sub-workflow** — falhas *tratadas* (ex.: arte não gerada, publicação recusada) relatadas pelos outros workflows.\n\nTudo é gravado em `workflow_errors` **sem segredos**. Alerta externo é opcional: preencha `alert_webhook_url` em `system_settings` (ou ALERT_WEBHOOK_URL no .env).",
+        "height": 240,
+        "width": 420,
+        "color": 7
+      },
+      "id": "83af1653-5089-452e-a1cc-8025f810d32f",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "cf8716ad-006e-4cfe-a5cc-6c02e87b473c",
+      "name": "Trigger — Workflow Error",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "24a8cb1b-98a9-49b5-ae7e-0853809a585a",
+      "name": "Trigger — Report Error",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        500
+      ],
+      "notes": "Usado pelos workflows para relatar falhas tratadas.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Normaliza dois formatos: Error Trigger (falha inesperada) e relato explícito (falha tratada).\n// Remove segredos antes de gravar: nunca registrar token, chave ou senha.\nconst j = $input.item.json;\nconst SECRET = [/Bearer\\s+[A-Za-z0-9._~+/=-]{8,}/g, /(access_token|token|api_key|apikey|key|client_secret)=([^&\\s\"']+)/gi,\n  /\\bsk-[A-Za-z0-9_-]{16,}/g, /\\bsb_secret_[A-Za-z0-9_-]{8,}/g, /\\bEAA[A-Za-z0-9]{20,}/g, /\\bIG[A-Za-z0-9]{40,}/g,\n  /\\beyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}/g, /(postgres(?:ql)?:\\/\\/[^:\\s]+:)([^@\\s]+)(@)/gi];\nconst clean = (v, max = 4000) => { if (v === null || v === undefined) return null; let s = typeof v === 'string' ? v : JSON.stringify(v);\n  for (const re of SECRET) s = s.replace(re, '[REDACTED]'); return s.slice(0, max); };\nconst SENSITIVE = /(pass(word)?|secret|token|api[-_]?key|authorization|service[-_]?role|credential|cookie)/i;\nconst scrub = (o, d = 0) => { if (o === null || typeof o !== 'object') return typeof o === 'string' ? clean(o, 2000) : o;\n  if (d > 5) return '[MaxDepth]'; if (Array.isArray(o)) return o.slice(0, 50).map((x) => scrub(x, d + 1));\n  const r = {}; for (const [k, v] of Object.entries(o)) r[k] = SENSITIVE.test(k) ? '[REDACTED]' : scrub(v, d + 1); return r; };\nconst fromTrigger = Boolean(j.execution || j.trigger);\nconst err = fromTrigger ? (j.execution?.error ?? j.trigger?.error ?? {}) : j;\nconst message = clean(err.message ?? j.message ?? 'erro sem mensagem');\nconst code = j.error_code ?? (/^([A-Z][A-Z0-9_]{3,})\\b/.exec(message ?? '')?.[1] ?? null);\nreturn { json: {\n  workflow_id: j.workflow?.id ?? j.workflow_id ?? null,\n  workflow_name: j.workflow?.name ?? j.workflow_name ?? null,\n  execution_id: j.execution?.id ?? j.execution_id ?? null,\n  execution_url: j.execution?.url ?? null,\n  node: j.execution?.lastNodeExecuted ?? j.trigger?.error?.node?.name ?? j.node ?? null,\n  error_code: code,\n  message,\n  stack: clean(err.stack ?? null, 8000),\n  mode: j.execution?.mode ?? j.trigger?.mode ?? 'reported',\n  payload: scrub(fromTrigger ? { retryOf: j.execution?.retryOf ?? null } : (j.payload ?? {})),\n  occurred_at: new Date().toISOString(),\n} };\n"
+      },
+      "id": "078ec0b0-930c-4c61-a425-7ed299009327",
+      "name": "Sanitize — Error Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_log_workflow_error($1::jsonb) AS result, COALESCE(lc_settings()->>'alert_webhook_url', '') AS alert_url",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify($json) ] }}"
+        }
+      },
+      "id": "19bd921f-20ca-4015-ac10-935f11111fe1",
+      "name": "DB — Insert Workflow Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "Se o banco estiver fora, o erro segue no histórico de execuções do n8n.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "48a4f2b7-4527-4ce9-a7c5-435b4a1ce3a6",
+              "leftValue": "={{ String($json.alert_url ?? '').startsWith('http') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "af846d05-4b6c-4177-a081-ae784fea636a",
+      "name": "Alert — Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.alert_url }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ source: 'loteria-cursos', text: '[Loteria Cursos] ' + ($('Sanitize — Error Payload').item.json.error_code ?? 'ERRO') + ' em ' + ($('Sanitize — Error Payload').item.json.workflow_name ?? '?') + ': ' + $('Sanitize — Error Payload').item.json.message, error: $('Sanitize — Error Payload').item.json }) }}"
+      },
+      "id": "3dbc4f0e-8cd7-4a1c-a330-69c0e5093a81",
+      "name": "Alert — Send Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        300
+      ],
+      "notes": "Opcional. Falha no alerta nunca derruba o tratador.",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2039b3b4-f45d-42ad-afa1-a0f91e01c236",
+              "name": "ok",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "3372ac70-6ee1-4448-a4c8-b79199ded28f",
+              "name": "logged",
+              "value": "={{ $('DB — Insert Workflow Error').item.json.result?.ok === true }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "7488c1d4-a1b6-4430-a189-a9be057d416f",
+      "name": "Return — Error Logged",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Trigger — Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Sanitize — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Sanitize — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sanitize — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "DB — Insert Workflow Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Insert Workflow Error": {
+      "main": [
+        [
+          {
+            "node": "Alert — Configured?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert — Configured?": {
+      "main": [
+        [
+          {
+            "node": "Alert — Send Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Error Logged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert — Send Webhook": {
+      "main": [
+        [
+          {
+            "node": "Return — Error Logged",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

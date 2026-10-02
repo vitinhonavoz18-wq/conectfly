@@ -1,0 +1,2165 @@
+{
+  "id": "LcWf04Publish000",
+  "name": "WF-04-Publish-Instagram",
+  "description": "Sub-workflow reutilizável que publica um post no Instagram (API oficial) com idempotência, dry-run, retry com backoff e circuit breaker.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-04 — Publicador do Instagram (API oficial)\n\n**Entrada:** `{ post_id, dry_run?, media_type?, media_url?, caption?, idempotency_key? }` — o banco é a fonte da verdade.\n\n1. *Claim* atômico RENDERED→PUBLISHING (duas execuções simultâneas: só uma passa).\n2. **DRY RUN**: se `enable_real_instagram_publish` ≠ true, nada vai à Meta → `PUBLISHED_SIMULATED`.\n3. Circuit breaker da Meta, intervalo mínimo entre posts.\n4. Container → status (IN_PROGRESS/FINISHED/ERROR/EXPIRED/PUBLISHED) → `media_publish`.\n5. 429/5xx/rede: backoff com jitter (decisão do engine). Token inválido/permissão: falha na hora, sem repetir.\nContainer que nunca chega a FINISHED → FAILED **sem** media_publish.",
+        "height": 360,
+        "width": 520,
+        "color": 7
+      },
+      "id": "592ff060-2b2e-4a1f-ac17-2d4214433225",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "d9484cd0-b259-4169-aa34-3c3dc399a9e5",
+      "name": "Trigger — Publish Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const i = $input.item.json;\nif (!/^[0-9a-f-]{36}$/i.test(String(i.post_id ?? ''))) throw new Error('INVALID_PUBLISH_INPUT: post_id ausente ou inválido');\nif (i.media_type !== undefined && !['IMAGE', 'STORIES', 'REELS'].includes(i.media_type)) throw new Error('INVALID_PUBLISH_INPUT: media_type não suportado');\nif (i.media_url !== undefined && !/^https?:\\/\\//.test(String(i.media_url))) throw new Error('INVALID_PUBLISH_INPUT: media_url deve ser http(s)');\nreturn { json: { post_id: i.post_id, force_dry_run: i.dry_run === true, expected_key: i.idempotency_key ?? null,\n  correlation_id: String(i.correlation_id ?? $execution.id) } };\n"
+      },
+      "id": "0d3a13ff-ea8f-43c2-a86c-470b3ea13da3",
+      "name": "Validate — Publish Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['RENDERED'], 'PUBLISHING', '{}'::jsonb) AS claim, lc_settings() AS settings,\n  (SELECT max(published_at) FROM social_posts WHERE status = 'PUBLISHED') AS last_publish_at",
+        "options": {
+          "queryReplacement": "={{ [ $json.post_id ] }}"
+        }
+      },
+      "id": "5b0b83da-2c5a-4039-a053-22a5b57ab4a5",
+      "name": "DB — Claim Post For Publish",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "Compare-and-swap: só muda se o post estiver RENDERED. Post já publicado nunca volta para cá.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cd523c1c-16ad-406f-a55c-09e12493b7b2",
+              "leftValue": "={{ $json.claim.transitioned === true && ($('Validate — Publish Input').first().json.expected_key === null || $('Validate — Publish Input').first().json.expected_key === $json.claim.post.idempotency_key) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3bee0984-8b65-48a5-a591-f31ee3467b15",
+      "name": "Claim — Acquired?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const c = $('DB — Claim Post For Publish').first().json.claim;\nconst st = c.post?.status ?? 'NOT_FOUND';\nconst map = { PUBLISHED: 'ALREADY_PUBLISHED', PUBLISHED_SIMULATED: 'SKIPPED_DRY_RUN', PUBLISHING: 'IN_PROGRESS_ELSEWHERE' };\nreturn { json: { ok: st === 'PUBLISHED' || st === 'PUBLISHED_SIMULATED', post_id: c.post?.id ?? null, status: st,\n  instagram_publish: map[st] ?? 'SKIPPED_' + st, instagram_media_id: c.post?.instagram_media_id ?? null, idempotent_stop: true } };\n"
+      },
+      "id": "7405073e-708e-48cc-aa60-e39e9a7becae",
+      "name": "Return — Already Handled",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "213e94da-6270-497f-a8d8-97daf01f48ff",
+              "leftValue": "={{ $('DB — Claim Post For Publish').first().json.settings.enable_real_instagram_publish === true && $('DB — Claim Post For Publish').first().json.claim.post.dry_run === false && $('Validate — Publish Input').first().json.force_dry_run !== true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "aa91c1fd-6674-4721-a8a4-d140b6f2778e",
+      "name": "Gate — Real Publish Enabled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        500
+      ],
+      "notes": "Publicação real só com ENABLE_REAL_INSTAGRAM_PUBLISH=true E post de produção E sem dry_run na chamada.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['PUBLISHING'], 'PUBLISHED_SIMULATED', '{}'::jsonb) AS result, lc_record_attempt($2::jsonb) AS attempt",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Publish Input').first().json.post_id, JSON.stringify({ post_id: $('Validate — Publish Input').first().json.post_id, operation: 'dry_run', attempt: 1, outcome: 'skipped', error_code: 'DRY_RUN', error_message: 'Meta NÃO chamada: publicação real desativada ou post de simulação', correlation_id: $('Validate — Publish Input').first().json.correlation_id }) ] }}"
+        }
+      },
+      "id": "9c878aa2-baf1-4548-a804-314d02ace107",
+      "name": "DB — Mark Published Simulated",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const p = $json.result.post;\nreturn { json: { ok: true, post_id: p.id, status: p.status, instagram_publish: 'SKIPPED_DRY_RUN', media_url: p.media_url, idempotency_key: p.idempotency_key } };\n"
+      },
+      "id": "0b234d35-5892-4e95-a5e5-5bd39468eed2",
+      "name": "Return — Dry Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_circuit_allow('meta') AS circuit",
+        "options": {}
+      },
+      "id": "4f492824-a2cd-4966-ae7b-74d0b22699f0",
+      "name": "DB — Circuit Check (Meta)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "59c45a83-9af6-4ece-a115-02bc9b24b371",
+              "leftValue": "={{ $json.circuit.allowed === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f08611d6-7c2b-4216-aaa8-00947683b115",
+      "name": "Circuit — Meta Allowed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['PUBLISHING'], 'RENDERED', jsonb_build_object('last_error', $2::text)) AS result, lc_record_attempt($3::jsonb) AS attempt",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Publish Input').first().json.post_id, 'META_CIRCUIT_OPEN: Meta com falhas seguidas; nova tentativa após ' + ($json.circuit.retry_after_seconds ?? '?') + 's', JSON.stringify({ post_id: $('Validate — Publish Input').first().json.post_id, operation: 'circuit_open', attempt: 1, outcome: 'skipped', error_code: 'META_CIRCUIT_OPEN', error_message: $json.circuit.last_error ?? null, correlation_id: $('Validate — Publish Input').first().json.correlation_id }) ] }}"
+        }
+      },
+      "id": "e540a2d0-f2af-4716-a7c2-344a8382d7c0",
+      "name": "DB — Release Claim (Circuit Open)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2200,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7a1a5636-1dcf-40df-a0d9-befe3652732c",
+              "name": "error_code",
+              "value": "META_CIRCUIT_OPEN",
+              "type": "string"
+            },
+            {
+              "id": "c8c02e4e-d039-456a-a873-8fb7b5f48aea",
+              "name": "message",
+              "value": "=Publicação adiada: circuit breaker da Meta aberto (post {{ $('Validate — Publish Input').first().json.post_id }}).",
+              "type": "string"
+            },
+            {
+              "id": "45a122f2-908c-4666-addb-59da8635357f",
+              "name": "workflow_name",
+              "value": "WF-04-Publish-Instagram",
+              "type": "string"
+            },
+            {
+              "id": "d8165315-8f36-4b67-a6c8-a2c9633cbc39",
+              "name": "workflow_id",
+              "value": "LcWf04Publish000",
+              "type": "string"
+            },
+            {
+              "id": "76223090-02e5-4c5d-af69-eda3cd87d24b",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "0f683530-32e4-49b2-ac5d-6eccd240709a",
+              "name": "payload",
+              "value": "={{ { post_id: $('Validate — Publish Input').first().json.post_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "304da096-c360-45d9-a2b5-9e09ec425c42",
+      "name": "Circuit Open — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "0a04907f-98b2-4f49-a80b-189c2287b41d",
+      "name": "Circuit Open — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2760,
+        300
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, post_id: $('Validate — Publish Input').first().json.post_id, status: 'RENDERED', instagram_publish: 'DEFERRED_CIRCUIT_OPEN' } };\n"
+      },
+      "id": "ad0856fc-04c6-4b72-a1a9-a83d7a0afce1",
+      "name": "Return — Circuit Open",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Intervalo mínimo entre publicações reais (não dispara vários posts de uma vez).\nconst c = $('DB — Claim Post For Publish').first().json;\nconst gap = Number(c.settings.min_seconds_between_publishes ?? 60);\nconst last = c.last_publish_at ? new Date(c.last_publish_at).getTime() : 0;\nreturn { json: { wait_seconds: Math.min(600, Math.max(0, Math.ceil(gap - (Date.now() - last) / 1000))) } };\n"
+      },
+      "id": "7c82b589-cb18-4604-ac07-94ad9c01e874",
+      "name": "Throttle — Compute Delay",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a35dae84-46bc-48a3-acbd-7f141e1d9095",
+              "leftValue": "={{ $json.wait_seconds > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a55693a4-4e4d-4d2b-aba3-988882dcd712",
+      "name": "Throttle — Needs Wait?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2480,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.wait_seconds }}",
+        "unit": "seconds"
+      },
+      "id": "9b669512-ab2d-45fb-a172-6f71c3a334f2",
+      "name": "Wait — Publish Throttle",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2760,
+        500
+      ],
+      "webhookId": "511f2858-a3f0-4b6b-a009-ac6478a65292"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.engine_url }}/v1/meta/container-request",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ media_type: $('DB — Claim Post For Publish').first().json.claim.post.media_type, media_url: $('DB — Claim Post For Publish').first().json.claim.post.media_url, caption: $('DB — Claim Post For Publish').first().json.claim.post.caption ?? '' }) }}"
+      },
+      "id": "eb42b8eb-1aef-47d5-a779-9cb1fbf7c3b5",
+      "name": "Engine — Build Container Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2760,
+        700
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fea1415c-5207-418c-af49-7da751fad38b",
+              "leftValue": "={{ $json.statusCode === 200 && $json.body?.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "37f3a453-ef7d-400f-ae65-08d272b4b782",
+      "name": "Container Request — Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const j = $input.item.json;\nconst ctx = j.classification?.context ?? {};\nreturn { json: { attempt: ctx.loop === 'create' ? Number(ctx.attempt ?? 0) + 1 : 1 } };\n"
+      },
+      "id": "7b1e8835-a333-4e0f-a034-df25589760d0",
+      "name": "Create — Attempt State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_host }}/{{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_api_version }}/{{ $('DB — Claim Post For Publish').first().json.settings.meta_ig_user_id }}/media",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Engine — Build Container Request').first().json.body.body) }}"
+      },
+      "id": "1112721c-c092-46e5-a476-a52079551590",
+      "name": "Meta — Create Media Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcMetaCred000001",
+          "name": "Meta — Loteria Cursos"
+        }
+      },
+      "notes": "POST /{ig-user-id}/media — token no header Authorization (credencial), nunca na URL.",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.engine_url }}/v1/meta/classify",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ operation: 'create_container', status_code: $json.statusCode ?? null, body: $json.body ?? null, headers: $json.headers ?? null,\n    error: $json.error ? String($json.error.message ?? $json.error) : null,\n    attempt: $('Create — Attempt State').item.json.attempt, max_attempts: Number($('DB — Claim Post For Publish').first().json.settings.meta_max_attempts ?? 4),\n    context: { loop: 'create', attempt: $('Create — Attempt State').item.json.attempt } }) }}"
+      },
+      "id": "7f7ced50-0f06-45bb-ac2e-1f2396e53fbe",
+      "name": "Engine — Classify Create",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3880,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_record_attempt($1::jsonb) AS result, $2::jsonb AS classification",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify({ post_id: $('Validate — Publish Input').first().json.post_id, operation: 'create_container', attempt: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).attempt ?? 1, http_status: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).http_status ?? null,\n    outcome: ['success', 'retry', 'fail', 'wait', 'ready', 'already_published'].includes(($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome) ? ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome : 'fail',\n    error_code: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).error_code ?? null, error_message: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).error_message ?? null,\n    response: { graph_error: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).graph_error ?? null, data: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).data ?? null }, correlation_id: $('Validate — Publish Input').first().json.correlation_id }), JSON.stringify(($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} })) ] }}"
+        }
+      },
+      "id": "c0a3ee2f-2647-432b-ac24-8be38fee86cc",
+      "name": "DB — Log Create Attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4160,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "07915918-b019-43d6-aae5-ce90d90968f7",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "success"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4a6e9732-4d3d-42fa-af5e-520e734d64b8",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "retry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "retry"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5e441d50-5f2e-4ed2-a92d-94818a394af9",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "fail",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "fail"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "28de7609-8664-4fd4-affa-4814f8303ab8",
+      "name": "Route — Create Outcome",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        4440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.classification.delay_seconds }}",
+        "unit": "seconds"
+      },
+      "id": "1ebe2341-14d1-4189-af41-461ef927a270",
+      "name": "Wait — Create Backoff",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4720,
+        300
+      ],
+      "webhookId": "2bb045fe-80bd-4808-ab4a-29fe4e99aaec"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['PUBLISHING'], 'PUBLISHING', jsonb_build_object('instagram_container_id', $2::text)) AS result",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Publish Input').first().json.post_id, $json.classification.data.container_id ] }}"
+        }
+      },
+      "id": "827a9503-a664-4140-a9b8-030f0ebb3c6a",
+      "name": "DB — Save Container Id",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4720,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const j = $input.item.json;\nconst ctx = j.classification?.context ?? {};\nreturn { json: { attempt: ctx.loop === 'poll' ? Number(ctx.attempt ?? 0) + 1 : 1 } };\n"
+      },
+      "id": "d0e74754-eef4-475a-ac34-d2178ae52da9",
+      "name": "Poll — Attempt State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_host }}/{{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_api_version }}/{{ $('DB — Save Container Id').first().json.result.post.instagram_container_id }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "status_code,status"
+            }
+          ]
+        }
+      },
+      "id": "fd1af59d-df4b-497d-a7b4-ba190c77b514",
+      "name": "Meta — Get Container Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5280,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcMetaCred000001",
+          "name": "Meta — Loteria Cursos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.engine_url }}/v1/meta/classify",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ operation: 'container_status', status_code: $json.statusCode ?? null, body: $json.body ?? null, headers: $json.headers ?? null,\n    error: $json.error ? String($json.error.message ?? $json.error) : null,\n    attempt: $('Poll — Attempt State').item.json.attempt, max_attempts: Number($('DB — Claim Post For Publish').first().json.settings.meta_container_max_polls ?? 4),\n    context: { loop: 'poll', attempt: $('Poll — Attempt State').item.json.attempt } }) }}"
+      },
+      "id": "ed2a5d38-9bb8-47f7-a1fc-4dafea934d9f",
+      "name": "Engine — Classify Container Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5560,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_record_attempt($1::jsonb) AS result, $2::jsonb AS classification",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify({ post_id: $('Validate — Publish Input').first().json.post_id, operation: 'container_status', attempt: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).attempt ?? 1, http_status: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).http_status ?? null,\n    outcome: ['success', 'retry', 'fail', 'wait', 'ready', 'already_published'].includes(($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome) ? ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome : 'fail',\n    error_code: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).error_code ?? null, error_message: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).error_message ?? null,\n    response: { graph_error: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).graph_error ?? null, data: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).data ?? null }, correlation_id: $('Validate — Publish Input').first().json.correlation_id }), JSON.stringify(($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} })) ] }}"
+        }
+      },
+      "id": "28c971f5-1f4c-472f-a49e-fa07edee6271",
+      "name": "DB — Log Status Attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        5840,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "637134e2-91a6-4051-a15a-f8aefa90681b",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "ready",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ready"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8cae0f26-e227-4e2a-a546-2c50f0583d6c",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "wait",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "wait"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3003d39d-435e-4a53-afbd-1c859a6515c7",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "retry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "retry"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "77e61524-1b79-4ce6-a708-8ecbc6db9143",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "fail",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "fail"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "14fea572-81e6-4c6a-a251-d014ea30a41d",
+      "name": "Route — Container Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        6120,
+        300
+      ],
+      "notes": "ready=FINISHED · wait=IN_PROGRESS · fail=ERROR/EXPIRED/timeout · outros=engine fora/PUBLISHED inesperado",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.classification.delay_seconds }}",
+        "unit": "seconds"
+      },
+      "id": "3d01d6d5-62f3-41be-aebb-1e50984d9492",
+      "name": "Wait — Container Poll",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6400,
+        300
+      ],
+      "webhookId": "76399bb7-67ce-4362-a93f-7ef9ba887885"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const j = $input.item.json;\nconst ctx = j.classification?.context ?? {};\nreturn { json: { attempt: ctx.loop === 'publish' ? Number(ctx.attempt ?? 0) + 1 : 1 } };\n"
+      },
+      "id": "86faf2dc-f810-4157-ab32-e7b5783355ba",
+      "name": "Publish — Attempt State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6400,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_host }}/{{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_api_version }}/{{ $('DB — Claim Post For Publish').first().json.settings.meta_ig_user_id }}/media_publish",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ creation_id: $('DB — Save Container Id').first().json.result.post.instagram_container_id }) }}"
+      },
+      "id": "df346d62-e711-446c-a7b9-0a10e2d592fe",
+      "name": "Meta — Publish Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6680,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcMetaCred000001",
+          "name": "Meta — Loteria Cursos"
+        }
+      },
+      "notes": "POST /{ig-user-id}/media_publish. Um container só pode ser publicado uma vez (idempotência do lado da Meta).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.engine_url }}/v1/meta/classify",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ operation: 'media_publish', status_code: $json.statusCode ?? null, body: $json.body ?? null, headers: $json.headers ?? null,\n    error: $json.error ? String($json.error.message ?? $json.error) : null,\n    attempt: $('Publish — Attempt State').item.json.attempt, max_attempts: Number($('DB — Claim Post For Publish').first().json.settings.meta_max_attempts ?? 4),\n    context: { loop: 'publish', attempt: $('Publish — Attempt State').item.json.attempt } }) }}"
+      },
+      "id": "63b4a699-6b24-44f3-ae56-551dca2fcd65",
+      "name": "Engine — Classify Publish",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6960,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_record_attempt($1::jsonb) AS result, $2::jsonb AS classification",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify({ post_id: $('Validate — Publish Input').first().json.post_id, operation: 'media_publish', attempt: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).attempt ?? 1, http_status: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).http_status ?? null,\n    outcome: ['success', 'retry', 'fail', 'wait', 'ready', 'already_published'].includes(($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome) ? ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome : 'fail',\n    error_code: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).error_code ?? null, error_message: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).error_message ?? null,\n    response: { graph_error: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).graph_error ?? null, data: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).data ?? null }, correlation_id: $('Validate — Publish Input').first().json.correlation_id }), JSON.stringify(($json.body?.outcome ? $json.body : { outcome: 'engine_error', error_code: 'ENGINE_UNAVAILABLE', error_message: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} })) ] }}"
+        }
+      },
+      "id": "d36e42b2-a000-4f1c-abba-62b9ab219b82",
+      "name": "DB — Log Publish Attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        7240,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2df2ad4b-0bde-45f0-acff-8aac268dc533",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "success"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9d76d5c9-9800-4c19-a02d-418eaef3b11a",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "retry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "retry"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9ebdd514-fdd3-42ca-a714-528a0c1e5ebe",
+                    "leftValue": "={{ $json.classification?.outcome ?? 'engine_error' }}",
+                    "rightValue": "fail",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "fail"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "2ed36b5f-c5d3-4d4e-aac8-c96c87a99e6b",
+      "name": "Route — Publish Outcome",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        7520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.classification.delay_seconds }}",
+        "unit": "seconds"
+      },
+      "id": "2b3dde23-fd47-46f9-a302-2111388d0084",
+      "name": "Wait — Publish Backoff",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        7800,
+        300
+      ],
+      "webhookId": "9df3020c-d5db-4cc2-aaef-8635ac2e1caa"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['PUBLISHING'], 'PUBLISHED', jsonb_build_object('instagram_media_id', $2::text)) AS result, lc_circuit_record('meta', true) AS circuit",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Publish Input').first().json.post_id, $json.classification.data.media_id ] }}"
+        }
+      },
+      "id": "7ac53920-088a-48f6-a66b-5af3850fc9a3",
+      "name": "DB — Mark Published",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        7800,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const p = $json.result.post;\nreturn { json: { ok: true, post_id: p.id, status: p.status, instagram_publish: 'PUBLISHED', instagram_media_id: p.instagram_media_id, published_at: p.published_at } };\n"
+      },
+      "id": "0d4d92c7-672c-4045-aac1-e5f8e22e8f63",
+      "name": "Return — Published",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        8080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c9fef313-e507-4f56-ad7a-d14df89d53b3",
+              "leftValue": "={{ Number($json.classification?.attempt ?? 1) > 1 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "575b0a9e-5bb8-4c88-a80e-053df39ec91b",
+      "name": "Publish — Was Retried?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        7800,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_host }}/{{ $('DB — Claim Post For Publish').first().json.settings.meta_graph_api_version }}/{{ $('DB — Save Container Id').first().json.result.post.instagram_container_id }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "status_code"
+            }
+          ]
+        }
+      },
+      "id": "0c844cd5-b2bf-4656-a953-758713003acc",
+      "name": "Meta — Recheck Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8080,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcMetaCred000001",
+          "name": "Meta — Loteria Cursos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f15d9c86-73a9-4767-a488-bb2d84ecb6ff",
+              "leftValue": "={{ $json.statusCode === 200 && $json.body?.status_code === 'PUBLISHED' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4530753c-d03a-4cbf-a429-5bc47224e152",
+      "name": "Recheck — Already Published?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        8360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['PUBLISHING'], 'PUBLISHED', jsonb_build_object('last_error', 'MEDIA_ID_UNCONFIRMED: publicado (container PUBLISHED) mas o ID da mídia não retornou')) AS result, lc_circuit_record('meta', true) AS circuit",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Publish Input').first().json.post_id ] }}"
+        }
+      },
+      "id": "ec7f0644-d539-4aea-ac4e-d80abe57d467",
+      "name": "DB — Mark Published (Id Unconfirmed)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        8640,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const j = $input.item.json;\nconst b = j.classification ?? j.body ?? {};\nconst code = b.error_code ?? (j.statusCode && j.statusCode !== 200 ? 'ENGINE_HTTP_' + j.statusCode : (j.error ? 'ENGINE_UNAVAILABLE' : 'PUBLISH_FAILED'));\nconst message = b.error_message ?? b.message ?? j.error?.message ?? 'falha na publicação';\nreturn { json: { error_code: code, message: String(message).slice(0, 900), permanent: b.permanent === true, operation: b.operation ?? null } };\n"
+      },
+      "id": "1cf71806-a996-46d8-a745-aed4575d434d",
+      "name": "Fail — Describe Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3320,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['PUBLISHING'], 'FAILED', jsonb_build_object('last_error', $2::text)) AS result, lc_circuit_record('meta', false, $2::text) AS circuit",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Publish Input').first().json.post_id, $json.error_code + ': ' + $json.message ] }}"
+        }
+      },
+      "id": "c4f949db-c0fd-4a77-a694-c7d073557d2a",
+      "name": "DB — Mark Publish Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3600,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5bb88681-1878-4fd0-a3f1-551e50cbc9d6",
+              "name": "error_code",
+              "value": "={{ $('Fail — Describe Error').item.json.error_code }}",
+              "type": "string"
+            },
+            {
+              "id": "1f7cf5cb-0345-42bf-ae23-11778bb2331f",
+              "name": "message",
+              "value": "=META_PUBLISH_FAILED post {{ $('Validate — Publish Input').first().json.post_id }}: {{ $('Fail — Describe Error').item.json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "9e6fee09-425c-4835-aaf3-e18734a5ca2e",
+              "name": "workflow_name",
+              "value": "WF-04-Publish-Instagram",
+              "type": "string"
+            },
+            {
+              "id": "7ed4dd26-2bb7-4389-a021-7eed25d78b77",
+              "name": "workflow_id",
+              "value": "LcWf04Publish000",
+              "type": "string"
+            },
+            {
+              "id": "ec437bfa-8a1b-417d-ad46-0b2e4aaed423",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "356375e4-8170-4dc9-a69f-4d2f17f33b54",
+              "name": "payload",
+              "value": "={{ { post_id: $('Validate — Publish Input').first().json.post_id, operation: $('Fail — Describe Error').item.json.operation, permanent: $('Fail — Describe Error').item.json.permanent } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "0562aecf-9c72-44f1-a453-696d7c915801",
+      "name": "Publish Failed — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3880,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "65986f99-dfb2-4b66-ada4-fb9dbddf5d7a",
+      "name": "Publish Failed — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        4160,
+        500
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const d = $('Fail — Describe Error').item.json;\nreturn { json: { ok: false, post_id: $('Validate — Publish Input').first().json.post_id, status: 'FAILED', instagram_publish: 'FAILED', error_code: d.error_code, message: d.message } };\n"
+      },
+      "id": "9bb487e3-a58c-4449-a49a-dc80061c8871",
+      "name": "Return — Publish Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4440,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Circuit Open — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Circuit Open — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Failed — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Publish Failed — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Publish Request": {
+      "main": [
+        [
+          {
+            "node": "Validate — Publish Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Publish Input": {
+      "main": [
+        [
+          {
+            "node": "DB — Claim Post For Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Claim Post For Publish": {
+      "main": [
+        [
+          {
+            "node": "Claim — Acquired?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim — Acquired?": {
+      "main": [
+        [
+          {
+            "node": "Gate — Real Publish Enabled?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Already Handled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate — Real Publish Enabled?": {
+      "main": [
+        [
+          {
+            "node": "DB — Circuit Check (Meta)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Mark Published Simulated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Mark Published Simulated": {
+      "main": [
+        [
+          {
+            "node": "Return — Dry Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Circuit Check (Meta)": {
+      "main": [
+        [
+          {
+            "node": "Circuit — Meta Allowed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Circuit — Meta Allowed?": {
+      "main": [
+        [
+          {
+            "node": "Throttle — Compute Delay",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Release Claim (Circuit Open)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Release Claim (Circuit Open)": {
+      "main": [
+        [
+          {
+            "node": "Circuit Open — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Circuit Open — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Circuit Open",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle — Compute Delay": {
+      "main": [
+        [
+          {
+            "node": "Throttle — Needs Wait?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Throttle — Needs Wait?": {
+      "main": [
+        [
+          {
+            "node": "Wait — Publish Throttle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Engine — Build Container Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Publish Throttle": {
+      "main": [
+        [
+          {
+            "node": "Engine — Build Container Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Build Container Request": {
+      "main": [
+        [
+          {
+            "node": "Container Request — Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Container Request — Valid?": {
+      "main": [
+        [
+          {
+            "node": "Create — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create — Attempt State": {
+      "main": [
+        [
+          {
+            "node": "Meta — Create Media Container",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta — Create Media Container": {
+      "main": [
+        [
+          {
+            "node": "Engine — Classify Create",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Classify Create": {
+      "main": [
+        [
+          {
+            "node": "DB — Log Create Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Log Create Attempt": {
+      "main": [
+        [
+          {
+            "node": "Route — Create Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Create Outcome": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Container Id",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait — Create Backoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Create Backoff": {
+      "main": [
+        [
+          {
+            "node": "Create — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Container Id": {
+      "main": [
+        [
+          {
+            "node": "Poll — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll — Attempt State": {
+      "main": [
+        [
+          {
+            "node": "Meta — Get Container Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta — Get Container Status": {
+      "main": [
+        [
+          {
+            "node": "Engine — Classify Container Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Classify Container Status": {
+      "main": [
+        [
+          {
+            "node": "DB — Log Status Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Log Status Attempt": {
+      "main": [
+        [
+          {
+            "node": "Route — Container Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Container Status": {
+      "main": [
+        [
+          {
+            "node": "Publish — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait — Container Poll",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait — Container Poll",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Container Poll": {
+      "main": [
+        [
+          {
+            "node": "Poll — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish — Attempt State": {
+      "main": [
+        [
+          {
+            "node": "Meta — Publish Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta — Publish Media": {
+      "main": [
+        [
+          {
+            "node": "Engine — Classify Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Classify Publish": {
+      "main": [
+        [
+          {
+            "node": "DB — Log Publish Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Log Publish Attempt": {
+      "main": [
+        [
+          {
+            "node": "Route — Publish Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Publish Outcome": {
+      "main": [
+        [
+          {
+            "node": "DB — Mark Published",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait — Publish Backoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Publish — Was Retried?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Publish — Was Retried?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Mark Published": {
+      "main": [
+        [
+          {
+            "node": "Return — Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Publish Backoff": {
+      "main": [
+        [
+          {
+            "node": "Publish — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish — Was Retried?": {
+      "main": [
+        [
+          {
+            "node": "Meta — Recheck Container",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta — Recheck Container": {
+      "main": [
+        [
+          {
+            "node": "Recheck — Already Published?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recheck — Already Published?": {
+      "main": [
+        [
+          {
+            "node": "DB — Mark Published (Id Unconfirmed)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fail — Describe Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Mark Published (Id Unconfirmed)": {
+      "main": [
+        [
+          {
+            "node": "Return — Published",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fail — Describe Error": {
+      "main": [
+        [
+          {
+            "node": "DB — Mark Publish Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Mark Publish Failed": {
+      "main": [
+        [
+          {
+            "node": "Publish Failed — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Failed — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Publish Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

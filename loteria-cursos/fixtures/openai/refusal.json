@@ -1,0 +1,26 @@
+{
+  "id": "resp_fixture_0001",
+  "object": "response",
+  "created_at": 1790000000,
+  "status": "completed",
+  "model": "gpt-fixture",
+  "output": [
+    {
+      "id": "msg_fixture",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "refusal",
+          "refusal": "I can't help with that."
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 420,
+    "output_tokens": 180,
+    "total_tokens": 600
+  }
+}

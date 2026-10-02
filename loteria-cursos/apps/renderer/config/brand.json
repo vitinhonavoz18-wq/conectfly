@@ -1,0 +1,20 @@
+{
+  "brand_name": "LOTERIA CURSOS",
+  "font_family": "Montserrat",
+  "colors": {
+    "text_on_brand": "#FFFFFF",
+    "ball_background": "#FFFFFF",
+    "match_highlight": "#FFD23F",
+    "match_text": "#1A1A1A",
+    "footer_text": "#F2F2F2"
+  },
+  "games": {
+    "megasena": { "name": "Mega-Sena", "color": "#1B8F5A" },
+    "lotofacil": { "name": "Lotofácil", "color": "#8E1A9C" },
+    "quina": { "name": "Quina", "color": "#1F4FBF" },
+    "lotomania": { "name": "Lotomania", "color": "#F28C1B" }
+  },
+  "default_game_color": "#2E3A59",
+  "disclaimer": "Conteúdo recreativo • Confira o resultado oficial no site das Loterias CAIXA • Proibido para menores de 18 anos",
+  "prediction_note": "Palpite gerado com auxílio de estatística e IA. Conteúdo recreativo, sem garantia de acerto."
+}

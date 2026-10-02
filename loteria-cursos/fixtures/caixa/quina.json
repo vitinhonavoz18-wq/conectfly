@@ -1,0 +1,42 @@
+{
+  "acumulado": true,
+  "dataApuracao": "01/10/2026",
+  "dataProximoConcurso": "02/10/2026",
+  "dezenasSorteadasOrdemSorteio": [
+    "77",
+    "03",
+    "41",
+    "18",
+    "62"
+  ],
+  "id": null,
+  "indicadorConcursoEspecial": 1,
+  "listaDezenas": [
+    "03",
+    "18",
+    "41",
+    "62",
+    "77"
+  ],
+  "listaDezenasSegundoSorteio": null,
+  "listaMunicipioUFGanhadores": [],
+  "listaRateioPremio": [],
+  "listaResultadoEquipeEsportiva": null,
+  "localSorteio": "ESPAÇO DA SORTE",
+  "nomeMunicipioUFSorteio": "SÃO PAULO, SP",
+  "nomeTimeCoracaoMesSorte": "",
+  "numero": 6870,
+  "numeroConcursoAnterior": 6869,
+  "numeroConcursoFinal_0_5": 6885,
+  "numeroConcursoProximo": 6871,
+  "numeroJogo": 2,
+  "observacao": "",
+  "tipoJogo": "QUINA",
+  "tipoPublicacao": 3,
+  "valorAcumuladoConcurso_0_5": 0,
+  "valorAcumuladoConcursoEspecial": 0,
+  "valorAcumuladoProximoConcurso": 0,
+  "valorArrecadado": 12345678.9,
+  "valorEstimadoProximoConcurso": 7200000,
+  "valorTotalPremioFaixaUm": 0
+}

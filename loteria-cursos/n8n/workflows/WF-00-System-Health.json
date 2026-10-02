@@ -1,0 +1,497 @@
+{
+  "id": "LcWf00Health0000",
+  "name": "WF-00-System-Health",
+  "description": "Verifica n8n, PostgreSQL, fonte de loterias, OpenAI, renderer, storage e Meta — sem chamadas pagas.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-00 — Saúde do sistema\n\nSaída: `{ status, services: { n8n, database, engine, lottery_source, openai, renderer, storage, meta } }`.\n\nCusto zero: OpenAI só `GET /models/{modelo}`; Meta só `GET /me`; fonte de loteria com cache de 5 min no engine.\n\nWebhook: `GET /webhook/loteria-cursos/health` (com header de autenticação).",
+        "height": 240,
+        "width": 420,
+        "color": 7
+      },
+      "id": "41290868-d32a-4e33-a575-770e601f4f89",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "7 */6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "487ae1f6-15eb-40a5-ab0a-9a9390fdd30d",
+      "name": "Schedule — Every 6 Hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "loteria-cursos/health",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "eea83c3f-b272-4c49-a665-55acb3452cb2",
+      "name": "Webhook — Health Check",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcWebhookCred001",
+          "name": "Webhook — Loteria Cursos"
+        }
+      },
+      "webhookId": "d81b167b-7724-418d-a597-c2ad6cd257d7"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "3e33dd58-f46a-4566-ac87-40fa5abf3648",
+      "name": "Trigger — Health Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_settings() AS settings, now() AS db_time",
+        "options": {}
+      },
+      "id": "d907aafd-183f-4222-a601-770b03d4dd27",
+      "name": "DB — Health Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        520,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": false,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Health Context').first().json.settings?.engine_url ?? 'http://engine:3001' }}/v1/health/deep",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "b69f3cfd-9623-4a69-a607-96155326c671",
+      "name": "Engine — Deep Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        800,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Health Context').first().json.settings?.openai_base_url ?? 'https://api.openai.com/v1' }}/models/{{ encodeURIComponent($('DB — Health Context').first().json.settings?.openai_model || 'not-configured') }}",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi"
+      },
+      "id": "0d247221-cbbc-4b9b-a45d-89d93e2459c1",
+      "name": "OpenAI — Check Model",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LcOpenAiCred0001",
+          "name": "OpenAI — Loteria Cursos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Health Context').first().json.settings?.meta_graph_host }}/{{ $('DB — Health Context').first().json.settings?.meta_graph_api_version }}/me",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "user_id,username"
+            }
+          ]
+        }
+      },
+      "id": "58f6566d-41de-47e0-ab33-a30b4cf1489e",
+      "name": "Meta — Check Account",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcMetaCred000001",
+          "name": "Meta — Loteria Cursos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Health Context').first().json.settings?.n8n_health_url ?? 'http://127.0.0.1:5678/healthz' }}",
+        "options": {
+          "timeout": 10000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "b076232f-2ca1-4732-adb2-15e2c4c4c394",
+      "name": "n8n — Self Health",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Junta os testes num relatório único. Nenhuma chamada paga é feita (OpenAI: só GET /models).\nconst get = (name) => { try { return $(name).first().json; } catch { return {}; } };\nconst db = get('DB — Health Context');\nconst s = db.settings ?? {};\nconst deep = get('Engine — Deep Health').body ?? {};\nconst oa = get('OpenAI — Check Model');\nconst meta = get('Meta — Check Account');\nconst self = get('n8n — Self Health');\nconst ok = (r) => r.statusCode === 200;\nconst services = {\n  n8n: ok(self) ? 'ok' : 'down',\n  database: db.db_time ? 'ok' : 'down',\n  engine: deep.services?.engine ?? 'down',\n  lottery_source: deep.services?.lottery_source ?? 'down',\n  openai: !String(s.openai_model ?? '').trim() ? 'not_configured' : ok(oa) ? 'ok' : 'down',\n  renderer: deep.services?.renderer ?? 'down',\n  storage: deep.services?.storage ?? 'down',\n  meta: !String(s.meta_ig_user_id ?? '').trim() ? 'not_configured' : ok(meta) ? 'ok' : 'down',\n};\nconst values = Object.values(services);\nconst status = values.every((v) => v === 'ok') ? 'ok' : services.database === 'down' ? 'down' : 'degraded';\nreturn [{ json: { status, services, publish_mode: s.enable_real_instagram_publish === true ? 'REAL' : 'DRY_RUN',\n  details: { lottery_source: deep.details?.lottery_source ?? null, storage: deep.details?.storage ?? null,\n    meta_http: meta.statusCode ?? null, openai_http: oa.statusCode ?? null }, checked_at: new Date().toISOString() } }];\n"
+      },
+      "id": "277183ba-28a3-4f36-aa52-d8dd3e1da94f",
+      "name": "Health — Aggregate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO health_checks (status, services, details) VALUES ($1, $2::jsonb, $3::jsonb) RETURNING id",
+        "options": {
+          "queryReplacement": "={{ [ $json.status, JSON.stringify($json.services), JSON.stringify($json.details) ] }}"
+        }
+      },
+      "id": "776bec09-fad5-4982-a5c9-e24a3e26ba68",
+      "name": "DB — Save Health Check",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2200,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "68233ba5-cc08-4f1f-a99a-7289aca49350",
+              "leftValue": "={{ $('Webhook — Health Check').isExecuted }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "47fce98f-a6d2-4d45-a544-b9eca757ff26",
+      "name": "Started By Webhook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Health — Aggregate').first().json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "4e46fd1b-aa08-45e3-af04-8f6d427829f6",
+      "name": "Respond — Health",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return [{ json: $('Health — Aggregate').first().json }];\n"
+      },
+      "id": "001dc56a-e4be-44e2-a01f-796247fc9d27",
+      "name": "Return — Health Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule — Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "DB — Health Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — Health Check": {
+      "main": [
+        [
+          {
+            "node": "DB — Health Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Health Request": {
+      "main": [
+        [
+          {
+            "node": "DB — Health Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Health Context": {
+      "main": [
+        [
+          {
+            "node": "Engine — Deep Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Deep Health": {
+      "main": [
+        [
+          {
+            "node": "OpenAI — Check Model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI — Check Model": {
+      "main": [
+        [
+          {
+            "node": "Meta — Check Account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta — Check Account": {
+      "main": [
+        [
+          {
+            "node": "n8n — Self Health",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n — Self Health": {
+      "main": [
+        [
+          {
+            "node": "Health — Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Health — Aggregate": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Health Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Health Check": {
+      "main": [
+        [
+          {
+            "node": "Started By Webhook?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Started By Webhook?": {
+      "main": [
+        [
+          {
+            "node": "Respond — Health",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Health Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond — Health": {
+      "main": [
+        [
+          {
+            "node": "Return — Health Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

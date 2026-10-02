@@ -1,0 +1,2309 @@
+{
+  "id": "LcWf07Orchestr00",
+  "name": "WF-07-Content-Orchestrator",
+  "description": "Orquestrador central: agenda (resultado/palpite/recuperação), teste manual por webhook e o trabalho de conteúdo (plano → post → arte → publicação).",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-07 — Orquestrador de conteúdo\n\n**1. Agenda (a cada 10 min)** — pergunta ao banco o que está vencido (`lc_due_jobs`): buscar resultado, gerar palpite, recuperar resultado sem post ou palpite não conferido. Cada trabalho roda em execução separada (uma modalidade não trava a outra).\n\n**2. Teste manual** — `POST /webhook/loteria-cursos/run` com header de autenticação:\n`{ \"game\": \"megasena\", \"action\": \"result\", \"dry_run\": true }`\nAções: result · poll · prediction · check · backfill · requeue · health · insights · test_error. `dry_run` é **true por padrão**.\n\n**3. Trabalho de conteúdo** (chamado por WF-01/02/05) — plano determinístico no engine → post idempotente → WF-03 → WF-04.",
+        "height": 400,
+        "width": 560,
+        "color": 7
+      },
+      "id": "fd70de0e-1a97-4556-a813-387596b818dc",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/10 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "c354135b-f401-4a02-af7d-fc64b0b3164d",
+      "name": "Schedule — Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "Horários dos sorteios ficam em lottery_games (banco), não aqui.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_recover_stuck_posts(30) AS recovered",
+        "options": {}
+      },
+      "id": "9936e89a-22d2-4470-a9b6-a978f4051a21",
+      "name": "DB — Recover Stuck Posts",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        520,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "Post preso em RENDERING/PUBLISHING há 30+ min vai para FAILED com motivo. PUBLISHING preso nunca é republicado sozinho.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT job_type, game_slug, scheduled_draw_at, contest, draw_id, reason FROM lc_due_jobs(now())",
+        "options": {}
+      },
+      "id": "38a327d8-701f-4db1-af67-6f76ff977411",
+      "name": "DB — Find Due Jobs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "705b527e-32e5-4ada-afbf-3df168d4772c",
+      "name": "Loop — Due Jobs",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "78dce7d5-6588-4274-a41f-ba166bf54bd2",
+                    "leftValue": "={{ $json.job_type }}",
+                    "rightValue": "RESULT_POLL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RESULT_POLL"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "06b4cc89-a959-4883-acc9-980128055579",
+                    "leftValue": "={{ $json.job_type }}",
+                    "rightValue": "PREDICTION",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PREDICTION"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "648e870d-e166-4154-a60f-ec2e08bebf8e",
+                    "leftValue": "={{ $json.job_type }}",
+                    "rightValue": "RESULT_CONTENT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RESULT_CONTENT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "03dd807a-6c6b-42fc-affd-f1bbd2768f76",
+                    "leftValue": "={{ $json.job_type }}",
+                    "rightValue": "CHECK",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "CHECK"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "2c6d45f1-f95e-4853-adfb-5e99e021198c",
+      "name": "Route — Job Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f07d69f0-bdb0-4f5f-a421-eb72abc1e84a",
+              "name": "game",
+              "value": "={{ $json.game_slug }}",
+              "type": "string"
+            },
+            {
+              "id": "b90deb4e-d057-490e-a78b-164779eefe9d",
+              "name": "mode",
+              "value": "poll",
+              "type": "string"
+            },
+            {
+              "id": "b4c07ca5-3210-4abf-a5d7-da14a758504e",
+              "name": "scheduled_draw_at",
+              "value": "={{ $json.scheduled_draw_at }}",
+              "type": "string"
+            },
+            {
+              "id": "55d07cea-3628-426d-a485-d8fa88e4a144",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "0d34ac01-a518-4764-a6e0-731881bd272a",
+              "name": "correlation_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "6180562b-b82d-490b-a483-0f34bc27d6fd",
+      "name": "Job — Poll Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf01SyncRes000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "b41187ee-c9b8-4d2c-abd6-1b76b1896440",
+      "name": "Run — Sync Results (background)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        300
+      ],
+      "notes": "Execução separada: o polling pode levar até ~40 min.",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "614659d5-b6fa-41b9-a9fe-db04386dc833",
+              "name": "game",
+              "value": "={{ $json.game_slug }}",
+              "type": "string"
+            },
+            {
+              "id": "e35bb5d9-4336-411f-a0fb-60c964c823ab",
+              "name": "contest",
+              "value": "={{ Number($json.contest) }}",
+              "type": "number"
+            },
+            {
+              "id": "ce33320d-f1a5-4221-a944-9a7234053b4c",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "26c76bf5-37b2-4fab-a6ec-6176c1cd651a",
+              "name": "correlation_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "5af7589b-174a-47d4-a814-977578aaa516",
+      "name": "Job — Prediction Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1640,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf02Predict000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "1d150dc2-2645-4c84-a2c3-5cd253de5caa",
+      "name": "Run — Generate Prediction (background)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e9beb67-d187-4b4c-a15f-3b60745486bf",
+              "name": "content_type",
+              "value": "RESULT",
+              "type": "string"
+            },
+            {
+              "id": "433cdac5-2679-4bd0-add8-6cb4deef8fc6",
+              "name": "game",
+              "value": "={{ $json.game_slug }}",
+              "type": "string"
+            },
+            {
+              "id": "e53117be-3787-46b4-a5d4-2960de0d8dc2",
+              "name": "draw_id",
+              "value": "={{ $json.draw_id }}",
+              "type": "string"
+            },
+            {
+              "id": "b936ece7-a2d4-4895-a4de-8028f7d8fd7e",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "925f7c79-5332-4a00-a90e-67a8f6c5eeb5",
+              "name": "correlation_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "b3004708-a823-411e-a37b-945ac15c05dc",
+      "name": "Job — Recover Result Content",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1640,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf07Orchestr00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "9d954e6b-a078-4625-aceb-e0102a106a07",
+      "name": "Run — Result Content (background)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        700
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "011d9668-277a-4a3b-a9bc-7e97d2d2dfae",
+              "name": "draw_id",
+              "value": "={{ $json.draw_id }}",
+              "type": "string"
+            },
+            {
+              "id": "7a1c8a6d-a6b9-461c-a6d3-2bfdd6ea4098",
+              "name": "dry_run",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "5b226578-6571-464f-ae94-ea9aa8134ce2",
+              "name": "correlation_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "51a84d4d-9f20-4ac6-ab60-a343c98f35be",
+      "name": "Job — Check Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1640,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf05Check00000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "d72ab2d1-1d56-4e6c-a057-cce8130946eb",
+      "name": "Run — Check Predictions (background)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1920,
+        900
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "dfdee16d-6826-4f7d-ae43-999d72f02217",
+      "name": "Done — Jobs Dispatched",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "loteria-cursos/run",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5cc64a0e-e1a5-406d-aae2-a618ff9f2b1d",
+      "name": "Webhook — Manual Run",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        500
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcWebhookCred001",
+          "name": "Webhook — Loteria Cursos"
+        }
+      },
+      "notes": "Protegido por Header Auth (credencial 'Webhook — Loteria Cursos'). dry_run=true por padrão.",
+      "webhookId": "bb815145-5af4-4bb2-ad21-781668a264ab",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const body = $input.item.json.body ?? {};\nconst actions = ['result', 'poll', 'prediction', 'check', 'backfill', 'requeue', 'health', 'insights', 'test_error'];\nconst errors = [];\nconst action = String(body.action ?? '').toLowerCase();\nif (!actions.includes(action)) errors.push('action deve ser uma de: ' + actions.join(', '));\nconst game = body.game === undefined ? null : String(body.game);\nif (['result', 'poll', 'prediction', 'check', 'backfill'].includes(action) && !/^[a-z0-9_]+$/.test(game ?? '')) errors.push('game obrigatório (ex.: megasena)');\nconst contest = body.contest === undefined || body.contest === null ? null : Number(body.contest);\nif (contest !== null && (!Number.isInteger(contest) || contest < 1)) errors.push('contest deve ser inteiro positivo');\nif (action === 'requeue' && !/^[0-9a-f-]{36}$/i.test(String(body.post_id ?? ''))) errors.push('post_id obrigatório para requeue');\n// Segurança: sem \"dry_run\": false explícito, é simulação.\nconst dry_run = body.dry_run !== false;\nreturn { json: { valid: errors.length === 0, errors, action, game, contest, dry_run, post_id: body.post_id ?? null,\n  count: Math.min(Number(body.count ?? 20) || 20, 200), mode: { backfill: 'backfill', poll: 'poll' }[action] ?? 'once',\n  scheduled_draw_at: action === 'poll' ? String(body.scheduled_draw_at ?? new Date().toISOString()) : null, correlation_id: $execution.id } };\n"
+      },
+      "id": "8bba4d82-3d8c-42fb-ac43-21209faf842c",
+      "name": "Validate — Manual Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "200c2c47-2f18-48e6-aa83-6b9f712fb127",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "result",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "result"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6398ef63-1e65-4617-a257-f794959ebde1",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "poll",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "poll"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "536450fe-f994-4294-a8ca-3af1e19c1745",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "prediction",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "prediction"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b3c006af-6b45-4f32-a8a0-68c88612d83d",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "check",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "check"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "17f6b894-ebaf-46b3-afcc-52be1aa1424a",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "backfill",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "backfill"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cee6351b-4088-4d85-acbd-c4e08269ee4a",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "requeue",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "requeue"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "288d1978-c5d6-42d0-a570-8b8271e23b5a",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "health",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "health"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d6305355-d522-4a20-a5d6-6afed0dd946a",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "insights",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "insights"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "db40dee2-918f-4b23-a2b8-b4feca862267",
+                    "leftValue": "={{ $json.valid ? $json.action : 'invalid' }}",
+                    "rightValue": "test_error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "test_error"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "01840889-ef3a-4634-a14f-06ba025e24db",
+      "name": "Route — Manual Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf01SyncRes000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "a85e8983-4f1a-4127-abaf-6eb3334c8e32",
+      "name": "Run — Sync Results (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf01SyncRes000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "bb1e296d-25a2-4606-a20f-749b088c19e3",
+      "name": "Run — Poll Results (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        700
+      ],
+      "notes": "Força a rotina de polling agora (útil se o resultado atrasar).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf06Insights00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "434bc787-8b54-4dd9-a7ed-37bc1190e682",
+      "name": "Run — Insights (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        900
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf02Predict000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "726ee97e-a99b-46fb-ae1e-a08c2cded503",
+      "name": "Run — Prediction (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        1100
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf05Check00000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "eb9b5433-4f15-4fae-a70a-554cce4cbbd3",
+      "name": "Run — Check (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        1300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf01SyncRes000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "75a00783-36a8-4232-a334-b3b156ea79fb",
+      "name": "Run — Backfill (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        1500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_requeue_post($1::uuid) AS result",
+        "options": {
+          "queryReplacement": "={{ [ $json.post_id ] }}"
+        }
+      },
+      "id": "c389c4e3-85ff-48da-a3ae-02062e1c84d7",
+      "name": "DB — Requeue Post",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1080,
+        1700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf00Health0000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "ed055f2f-6b89-4c87-ad0b-de75fe382d09",
+      "name": "Run — Health (manual)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1080,
+        1900
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "bd8d4360-76cc-467c-a087-0dbde62354c7",
+      "name": "Respond — Manual Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, errors: $json.errors }) }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "d2fc1e60-f8a2-4249-a746-7382f404cb87",
+      "name": "Respond — Invalid Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'ERROR_HANDLER_TEST: falha proposital para testar o WF-99 (alerta e registro)' }}"
+      },
+      "id": "57d45556-904b-4523-a155-f59bf79aae06",
+      "name": "Stop — Error Handler Test",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        2100
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "4148e12a-46ea-4afa-a69f-87f7fa1db5dc",
+      "name": "Trigger — Content Job",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        1100
+      ],
+      "notes": "Chamado por WF-01 (RESULT), WF-02 (PREDICTION), WF-05 (CHECK).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const i = $input.item.json;\nconst types = ['RESULT', 'PREDICTION', 'CHECK', 'EDUCATIONAL'];\nconst uuid = (v) => v === undefined || v === null || /^[0-9a-f-]{36}$/i.test(String(v));\nif (!types.includes(i.content_type)) throw new Error('INVALID_CONTENT_JOB: content_type inválido: ' + i.content_type);\nif (!/^[a-z0-9_]+$/.test(String(i.game ?? ''))) throw new Error('INVALID_CONTENT_JOB: game inválido');\nif (!uuid(i.draw_id) || !uuid(i.prediction_id)) throw new Error('INVALID_CONTENT_JOB: id inválido');\nreturn { json: { content_type: i.content_type, game: i.game, draw_id: i.draw_id ?? null, prediction_id: i.prediction_id ?? null,\n  contest: i.contest ?? null, format: i.format === 'story' ? 'story' : 'feed', dry_run: i.dry_run === true,\n  correlation_id: String(i.correlation_id ?? $execution.id) } };\n"
+      },
+      "id": "2f398518-4aab-4140-a64e-03632543c4bf",
+      "name": "Validate — Content Job",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_content_context($1::jsonb) AS ctx",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify($json) ] }}"
+        }
+      },
+      "id": "9dce2627-55ea-4ee7-a4d3-46d2cf51ecf1",
+      "name": "DB — Load Content Context",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "efeacc8f-77ae-44e8-aa7a-f7cb842736b4",
+              "leftValue": "={{ $json.ctx.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1621ba79-10f0-4b0c-a32f-d6a7e80c988c",
+      "name": "Context — OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1080,
+        2300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, content_type: $('Validate — Content Job').first().json.content_type, game: $('Validate — Content Job').first().json.game, outcome: $json.ctx?.outcome ?? 'UNKNOWN', message: $json.ctx?.message ?? null } };\n"
+      },
+      "id": "edf74bd0-b8b4-4c26-ae40-90f86227dc69",
+      "name": "Return — Content Skipped",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Content Context').first().json.ctx.settings.engine_url }}/v1/content/plan",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content_type: $('Validate — Content Job').first().json.content_type, format: $('Validate — Content Job').first().json.format,\n      dry_run: $('Validate — Content Job').first().json.dry_run === true || $('DB — Load Content Context').first().json.ctx.settings.enable_real_instagram_publish !== true,\n      brand_name: $('DB — Load Content Context').first().json.ctx.settings.brand_name, default_cta: $('DB — Load Content Context').first().json.ctx.settings.default_cta, openai_model: $('DB — Load Content Context').first().json.ctx.settings.openai_model ?? '',\n      game: $('DB — Load Content Context').first().json.ctx.game, draw: $('DB — Load Content Context').first().json.ctx.draw, prediction: $('DB — Load Content Context').first().json.ctx.prediction }) }}"
+      },
+      "id": "0efc5de5-6eaf-4e19-ae9f-08fff2122928",
+      "name": "Engine — Plan Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        900
+      ],
+      "notes": "Plano 100% determinístico: chave de idempotência, caminho no Storage, dados da arte, pedido de legenda e legenda de reserva.",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a966ad0d-5f9b-4d27-a11e-7415d86ae0b8",
+              "leftValue": "={{ $json.statusCode === 200 && $json.body?.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e3909afa-84dc-423e-ae50-6d2bb03adcaf",
+      "name": "Plan — Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9dc0df71-887d-4057-adc8-42b5e0765fef",
+              "name": "error_code",
+              "value": "INVALID_CONTENT",
+              "type": "string"
+            },
+            {
+              "id": "d54b0b03-9dea-484d-a7d4-2100ae0b47f4",
+              "name": "message",
+              "value": "=INVALID_CONTENT {{ $('Validate — Content Job').first().json.content_type }} {{ $('Validate — Content Job').first().json.game }}: {{ $json.body?.message ?? $json.error?.message ?? 'engine indisponível' }}",
+              "type": "string"
+            },
+            {
+              "id": "d2cfdaef-e25c-47de-ac96-3860a73cd10c",
+              "name": "workflow_name",
+              "value": "WF-07-Content-Orchestrator",
+              "type": "string"
+            },
+            {
+              "id": "1c7b32ae-97a6-4571-a9cc-8d4824de637b",
+              "name": "workflow_id",
+              "value": "LcWf07Orchestr00",
+              "type": "string"
+            },
+            {
+              "id": "69382d7c-45f0-4417-ab8b-f2113003b313",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "88c5802d-8614-47fe-a5da-bf40155abed3",
+              "name": "payload",
+              "value": "={{ { job: $('Validate — Content Job').first().json, issues: $json.body?.issues ?? null } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "f9ba307d-eabe-4057-ad3c-87b91f0aef9d",
+      "name": "Plan Failed — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1920,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "8c065595-9a38-4276-ac21-c0e0ba56f642",
+      "name": "Plan Failed — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2200,
+        300
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, outcome: 'INVALID_CONTENT', content_type: $('Validate — Content Job').first().json.content_type, game: $('Validate — Content Job').first().json.game } };\n"
+      },
+      "id": "0e2da31b-e9e1-4346-af4c-4201bec8f99b",
+      "name": "Return — Plan Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_upsert_post($1::jsonb, $2) AS upsert",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify($json.body.plan), $('Validate — Content Job').first().json.correlation_id ] }}"
+        }
+      },
+      "id": "ccf4d856-d4cf-4732-aa41-40c3324070e7",
+      "name": "DB — Upsert Social Post",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1920,
+        1300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "notes": "INSERT … ON CONFLICT (idempotency_key): rodar duas vezes devolve o MESMO post.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "33eb360e-f5fa-45bc-ac5b-c025de625c1c",
+                    "leftValue": "={{ $json.upsert.ok ? $json.upsert.post.status : $json.upsert.outcome }}",
+                    "rightValue": "DRAFT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DRAFT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e8930adb-eb0d-4072-a7e5-4228f0c92bd2",
+                    "leftValue": "={{ $json.upsert.ok ? $json.upsert.post.status : $json.upsert.outcome }}",
+                    "rightValue": "READY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "READY"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "877cdc22-933d-4561-a110-a1c57b43f721",
+                    "leftValue": "={{ $json.upsert.ok ? $json.upsert.post.status : $json.upsert.outcome }}",
+                    "rightValue": "RENDERED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "RENDERED"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "0f65e2db-64b2-4e52-a25e-b5242abf95eb",
+      "name": "Route — Post Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2200,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6a4a0281-660d-44f3-abff-e195fb617971",
+              "name": "post_id",
+              "value": "={{ $('DB — Upsert Social Post').first().json.upsert.post.id }}",
+              "type": "string"
+            },
+            {
+              "id": "9234bb5f-e92e-4662-a20b-24c69098ac14",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Content Job').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "e6298e97-afbf-4b4d-a17a-43270d3b01b9",
+      "name": "Job — Render Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf03Render0000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "7f17b28a-2022-445a-a60d-2ce884b6622d",
+      "name": "Run — Render Social Post",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2760,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "bb5f61c2-1a97-4267-a5ed-744f276a66f8",
+              "leftValue": "={{ $json.status === 'RENDERED' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ab60bbf8-01d3-448f-aef1-5586dfe3e024",
+      "name": "Render — Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e6ea9cf-be00-4a0f-a70b-563f2a523d2f",
+              "name": "post_id",
+              "value": "={{ $('DB — Upsert Social Post').first().json.upsert.post.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a0d5610f-2ab8-4e90-a62e-e68ce81b6a64",
+              "name": "dry_run",
+              "value": "={{ $('Validate — Content Job').first().json.dry_run === true }}",
+              "type": "boolean"
+            },
+            {
+              "id": "9a09be36-0394-4eb5-a06e-bebda594f2bd",
+              "name": "correlation_id",
+              "value": "={{ $('Validate — Content Job').first().json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "be9db5b4-a2db-42bf-a258-b107ea763cbb",
+      "name": "Job — Publish Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf04Publish000",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "9b48fb24-8ccc-4fda-ab84-e60630ea48e9",
+      "name": "Run — Publish Instagram",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2760,
+        500
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_get_post($1::uuid) AS ctx",
+        "options": {
+          "queryReplacement": "={{ [ $('DB — Upsert Social Post').first().json.upsert.post?.id ?? null ] }}"
+        }
+      },
+      "id": "0f5941e7-1047-4b77-a9d0-113ba988bae4",
+      "name": "DB — Load Final Post",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2480,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Resumo do post (é isto que o teste manual devolve).\nconst p = $json.ctx?.post ?? {};\nconst up = $('DB — Upsert Social Post').first().json.upsert;\nconst d = p.content_data ?? {};\nconst label = { PUBLISHED: 'PUBLISHED', PUBLISHED_SIMULATED: 'SKIPPED_DRY_RUN' }[p.status] ?? p.status ?? up.outcome;\nreturn { json: { ok: ['PUBLISHED', 'PUBLISHED_SIMULATED'].includes(p.status), content_type: p.type ?? $('Validate — Content Job').first().json.content_type,\n  game: p.game ?? $('Validate — Content Job').first().json.game, contest: p.contest ?? null, numbers: d.content_type === 'PREDICTION' ? d.prediction_numbers : d.numbers,\n  hits: d.hits ?? null, caption: p.caption ?? null, caption_source: p.caption_source ?? null, image_url: p.media_url ?? null,\n  instagram_publish: label, instagram_media_id: p.instagram_media_id ?? null, status: p.status ?? up.outcome, post_id: p.id ?? null,\n  idempotency_key: p.idempotency_key ?? null, created_now: up.inserted === true, last_error: p.last_error ?? null } };\n"
+      },
+      "id": "e9432e42-c690-4494-ad58-32554cba1fc6",
+      "name": "Return — Content Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2760,
+        700
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule — Every 10 Minutes": {
+      "main": [
+        [
+          {
+            "node": "DB — Recover Stuck Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Recover Stuck Posts": {
+      "main": [
+        [
+          {
+            "node": "DB — Find Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Find Due Jobs": {
+      "main": [
+        [
+          {
+            "node": "Loop — Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop — Due Jobs": {
+      "main": [
+        [
+          {
+            "node": "Done — Jobs Dispatched",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route — Job Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Job Type": {
+      "main": [
+        [
+          {
+            "node": "Job — Poll Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job — Prediction Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job — Recover Result Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job — Check Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop — Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Poll Input": {
+      "main": [
+        [
+          {
+            "node": "Run — Sync Results (background)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Sync Results (background)": {
+      "main": [
+        [
+          {
+            "node": "Loop — Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Prediction Input": {
+      "main": [
+        [
+          {
+            "node": "Run — Generate Prediction (background)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Generate Prediction (background)": {
+      "main": [
+        [
+          {
+            "node": "Loop — Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Recover Result Content": {
+      "main": [
+        [
+          {
+            "node": "Run — Result Content (background)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Result Content (background)": {
+      "main": [
+        [
+          {
+            "node": "Loop — Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Check Input": {
+      "main": [
+        [
+          {
+            "node": "Run — Check Predictions (background)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Check Predictions (background)": {
+      "main": [
+        [
+          {
+            "node": "Loop — Due Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — Manual Run": {
+      "main": [
+        [
+          {
+            "node": "Validate — Manual Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Manual Request": {
+      "main": [
+        [
+          {
+            "node": "Route — Manual Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Manual Action": {
+      "main": [
+        [
+          {
+            "node": "Run — Sync Results (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run — Poll Results (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run — Prediction (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run — Check (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run — Backfill (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Requeue Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run — Health (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Run — Insights (manual)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop — Error Handler Test",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond — Invalid Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Sync Results (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Poll Results (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Prediction (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Check (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Backfill (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Requeue Post": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Health (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Insights (manual)": {
+      "main": [
+        [
+          {
+            "node": "Respond — Manual Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Failed — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Plan Failed — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Content Job": {
+      "main": [
+        [
+          {
+            "node": "Validate — Content Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Content Job": {
+      "main": [
+        [
+          {
+            "node": "DB — Load Content Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Load Content Context": {
+      "main": [
+        [
+          {
+            "node": "Context — OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Context — OK?": {
+      "main": [
+        [
+          {
+            "node": "Engine — Plan Content",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Content Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Plan Content": {
+      "main": [
+        [
+          {
+            "node": "Plan — Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan — Valid?": {
+      "main": [
+        [
+          {
+            "node": "DB — Upsert Social Post",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Plan Failed — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plan Failed — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Plan Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Upsert Social Post": {
+      "main": [
+        [
+          {
+            "node": "Route — Post Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Post Status": {
+      "main": [
+        [
+          {
+            "node": "Job — Render Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job — Render Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Job — Publish Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Load Final Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Render Input": {
+      "main": [
+        [
+          {
+            "node": "Run — Render Social Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Render Social Post": {
+      "main": [
+        [
+          {
+            "node": "Render — Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render — Succeeded?": {
+      "main": [
+        [
+          {
+            "node": "Job — Publish Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Load Final Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job — Publish Input": {
+      "main": [
+        [
+          {
+            "node": "Run — Publish Instagram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run — Publish Instagram": {
+      "main": [
+        [
+          {
+            "node": "DB — Load Final Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Load Final Post": {
+      "main": [
+        [
+          {
+            "node": "Return — Content Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

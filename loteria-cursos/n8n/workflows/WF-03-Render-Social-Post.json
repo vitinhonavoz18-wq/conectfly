@@ -1,0 +1,1453 @@
+{
+  "id": "LcWf03Render0000",
+  "name": "WF-03-Render-Social-Post",
+  "description": "Gera a legenda (OpenAI com Structured Outputs + fallback determinístico) e a arte (renderer + Supabase Storage) de um post.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-03 — Legenda + Arte\n\n**Entrada:** `{ post_id }`\n\n- **DRAFT → READY**: OpenAI (Responses API, json_schema *strict*). A resposta é validada pelo engine (schema, regras editoriais, integridade). Erro transitório → backoff; esgotou/erro permanente → **legenda de reserva determinística**. Os dados oficiais nunca dependem da IA.\n- **READY → RENDERING → RENDERED**: renderer gera JPEG 1080×1350 (feed) ou 1080×1920 (story) e grava no Storage.\n- Falha na arte → **FAILED**, nada é publicado, erro registrado no WF-99.",
+        "height": 330,
+        "width": 520,
+        "color": 7
+      },
+      "id": "0cef5fc4-1550-4478-abdb-74d237c992a4",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "39a527d2-1907-4639-a9fa-55e75815c0a9",
+      "name": "Trigger — Render Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const i = $input.item.json;\nif (!/^[0-9a-f-]{36}$/i.test(String(i.post_id ?? ''))) throw new Error('INVALID_RENDER_INPUT: post_id ausente ou inválido');\nreturn { json: { post_id: i.post_id, correlation_id: String(i.correlation_id ?? $execution.id) } };\n"
+      },
+      "id": "fc4d3d5c-6f8f-4eba-ab8b-3b73be09d267",
+      "name": "Validate — Render Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_get_post($1::uuid) AS ctx",
+        "options": {
+          "queryReplacement": "={{ [ $json.post_id ] }}"
+        }
+      },
+      "id": "1d4a5aca-3325-46b2-aa85-ce3d5e7b56da",
+      "name": "DB — Load Post",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ea2c4dd1-2007-4cac-a9e2-5f47376b5bf0",
+                    "leftValue": "={{ $json.ctx.post?.status ?? 'NOT_FOUND' }}",
+                    "rightValue": "DRAFT",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DRAFT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d3e5c530-ff86-4ba0-a48f-71b883231d8d",
+                    "leftValue": "={{ $json.ctx.post?.status ?? 'NOT_FOUND' }}",
+                    "rightValue": "READY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "READY"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2f40b4b2-609d-40b7-aea7-42fc77ea439a",
+                    "leftValue": "={{ $json.ctx.post?.status ?? 'NOT_FOUND' }}",
+                    "rightValue": "NOT_FOUND",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NOT_FOUND"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "26c6d87b-900c-4b31-a529-f706c1dcd1f0",
+      "name": "Route — Post Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const p = $('DB — Load Post').first().json.ctx.post ?? {};\nreturn { json: { ok: ['RENDERED', 'PUBLISHED', 'PUBLISHED_SIMULATED'].includes(p.status), post_id: p.id ?? $('Validate — Render Input').first().json.post_id, status: p.status ?? 'NOT_FOUND', skipped: true } };\n"
+      },
+      "id": "c09aa257-1053-4908-a436-a68ce1817304",
+      "name": "Return — Nothing To Render",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "374d98aa-329a-41e3-acf0-30b123b5264f",
+              "leftValue": "={{ String($('DB — Load Post').first().json.ctx.settings.openai_model ?? '').trim() !== '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4c5f21fa-d075-4158-a3e3-7b6ec90dbc92",
+      "name": "Gate — OpenAI Configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1360,
+        500
+      ],
+      "notes": "Sem OPENAI_MODEL → legenda de reserva (o post não para).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Post').first().json.ctx.settings.engine_url }}/v1/content/caption-finalize",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content_data: $('DB — Load Post').first().json.ctx.post.content_data, openai: { skipped: true }, attempt: 1, max_attempts: 1, context: { attempt: 1 } }) }}"
+      },
+      "id": "b9db44c9-e629-4db8-a93c-8da0a52af7b6",
+      "name": "Engine — Fallback Caption",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// Tentativa atual + pedido à OpenAI (modelo vem da configuração, não do código).\nconst j = $input.item.json;\nconst ctx = j.finalize?.context ?? {};\nconst c = $('DB — Load Post').first().json.ctx;\nreturn { json: { attempt: ctx.loop === 'caption' ? Number(ctx.attempt ?? 0) + 1 : 1, request: { ...c.caption_request, model: c.settings.openai_model } } };\n"
+      },
+      "id": "ce9ebbb2-1f78-42fa-a69d-0cc11f100001",
+      "name": "Caption — Attempt State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "84c9a741-e894-4371-ae82-4c710b7a8fc3",
+              "leftValue": "={{ $json.attempt <= 10 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "76a12720-9f18-4de7-a2b3-b3f1d768b74f",
+      "name": "Guard — Caption Attempts",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        300
+      ],
+      "notes": "Trava extra contra laço infinito (o engine já limita a openai_max_attempts).",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ 'CAPTION_LOOP_GUARD: tentativas demais para o post ' + $('Validate — Render Input').first().json.post_id }}"
+      },
+      "id": "c497d076-b4f0-40f5-aa06-7720c70828ab",
+      "name": "Stop — Caption Loop Guard",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Post').first().json.ctx.settings.openai_base_url }}/responses",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.request) }}"
+      },
+      "id": "389a6d5a-aa34-48b0-a940-af491f472b18",
+      "name": "OpenAI — Generate Caption",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        500
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "LcOpenAiCred0001",
+          "name": "OpenAI — Loteria Cursos"
+        }
+      },
+      "notes": "Responses API + Structured Outputs (text.format json_schema strict). Chave na credencial OpenAI — nunca no JSON.",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Post').first().json.ctx.settings.engine_url }}/v1/content/caption-finalize",
+        "options": {
+          "timeout": 15000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ content_data: $('DB — Load Post').first().json.ctx.post.content_data,\n      openai: { status_code: $json.statusCode ?? null, body: $json.body ?? null, headers: $json.headers ?? null, error: $json.error ? String($json.error.message ?? $json.error) : null },\n      attempt: $('Caption — Attempt State').item.json.attempt, max_attempts: Number($('DB — Load Post').first().json.ctx.settings.openai_max_attempts ?? 3),\n      context: { loop: 'caption', attempt: $('Caption — Attempt State').item.json.attempt } }) }}"
+      },
+      "id": "928c1cbf-f1de-4a8d-a1e9-b1406a3135c8",
+      "name": "Engine — Finalize Caption",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        300
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_record_attempt($1::jsonb) AS result, $2::jsonb AS finalize",
+        "options": {
+          "queryReplacement": "={{ [ JSON.stringify({ post_id: $('Validate — Render Input').first().json.post_id, operation: 'caption', attempt: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).attempt ?? 1,\n        outcome: ['ok', 'fallback', 'retry'].includes(($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome) ? ($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome : 'fail',\n        error_code: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome === 'ok' ? null : ({ fallback: 'CAPTION_FALLBACK', retry: 'CAPTION_RETRY' }[($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).outcome] ?? 'ENGINE_UNAVAILABLE'),\n        error_message: ($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} }).reason ?? null, correlation_id: $('Validate — Render Input').first().json.correlation_id }), JSON.stringify(($json.body?.outcome ? $json.body : { outcome: 'engine_error', reason: String($json.error?.message ?? ('engine HTTP ' + ($json.statusCode ?? 0))), attempt: 1, context: {} })) ] }}"
+        }
+      },
+      "id": "982f96ef-401c-4c8f-a936-8be1265887d7",
+      "name": "DB — Log Caption Attempt",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1920,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "82b2bce9-e5d6-4006-af75-fd072ee91f07",
+                    "leftValue": "={{ $json.finalize?.outcome ?? 'engine_error' }}",
+                    "rightValue": "ok",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ok"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4fc98bb4-4ebe-4088-ad8d-4a3efd303e98",
+                    "leftValue": "={{ $json.finalize?.outcome ?? 'engine_error' }}",
+                    "rightValue": "fallback",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "fallback"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "28130f9b-296d-43b7-a85c-8554976e5e83",
+                    "leftValue": "={{ $json.finalize?.outcome ?? 'engine_error' }}",
+                    "rightValue": "retry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "retry"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "outros"
+        }
+      },
+      "id": "deb452c3-3fa6-4ed7-a0f2-492db731b724",
+      "name": "Route — Caption Outcome",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2200,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $json.finalize.delay_seconds }}",
+        "unit": "seconds"
+      },
+      "id": "2bb583a2-d97d-4982-ac20-39bd6a6e20ad",
+      "name": "Wait — Caption Backoff",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2480,
+        500
+      ],
+      "webhookId": "daf7091c-5a9d-485b-abbd-9406f7fb83dd"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['DRAFT'], 'READY', $2::jsonb) AS result",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Render Input').first().json.post_id, JSON.stringify({ headline: $json.finalize.headline, caption: $json.finalize.caption, caption_source: $json.finalize.source, hashtags: $json.finalize.hashtags, alt_text: $json.finalize.alt_text }) ] }}"
+        }
+      },
+      "id": "c0fb23dc-3d37-4aaa-a714-cf5575d853c6",
+      "name": "DB — Save Caption",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2480,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['DRAFT'], 'FAILED', jsonb_build_object('last_error', 'ENGINE_UNAVAILABLE: não foi possível validar a legenda; reprocessar com requeue')) AS result",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Render Input').first().json.post_id ] }}"
+        }
+      },
+      "id": "b400b511-108d-4e06-ab36-86d80338c4b1",
+      "name": "DB — Mark Caption Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2480,
+        900
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['READY'], 'RENDERING', '{}'::jsonb) AS result",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Render Input').first().json.post_id ] }}"
+        }
+      },
+      "id": "b979901d-bdcc-4a9f-ac46-1e611119a212",
+      "name": "DB — Claim Render",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1360,
+        700
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "156e0ed7-f06b-4808-a24e-5c1d6dd59f56",
+              "leftValue": "={{ $json.result.transitioned === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2851ac4a-4792-4faf-afc2-bd656895ce09",
+      "name": "Render Claim — Acquired?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1640,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('DB — Load Post').first().json.ctx.settings.renderer_url }}/render",
+        "options": {
+          "timeout": 120000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ...$json.result.post.render_payload, storage_path: $json.result.post.storage_path, store: true, output_format: 'jpeg' }) }}"
+      },
+      "id": "8f865af0-f646-49f2-a597-176d2baacfef",
+      "name": "Renderer — Generate Artwork",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        700
+      ],
+      "notes": "Template determinístico: nenhum texto crítico da arte vem da IA. Grava no Storage e devolve URL pública.",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "// HTTP 200 não basta: confere formato, dimensão, URL pública e hash.\nconst r = $input.item.json;\nconst body = r.body ?? {};\nconst post = $('DB — Claim Render').first().json.result.post;\nconst expected = post.format === 'story' ? [1080, 1920] : [1080, 1350];\nconst problems = [];\nif (r.statusCode !== 200) problems.push('HTTP ' + (r.statusCode ?? 'sem resposta') + ' ' + (body.message ?? r.error?.message ?? ''));\nif (body.success !== true) problems.push('renderer não confirmou sucesso');\nif (body.mime_type !== 'image/jpeg') problems.push('arte não é JPEG (exigência da Meta)');\nif (body.width !== expected[0] || body.height !== expected[1]) problems.push('dimensão inesperada');\nif (!/^https?:\\/\\//.test(body.public_url ?? '')) problems.push('sem URL pública');\nif (!/^[a-f0-9]{64}$/.test(body.sha256 ?? '')) problems.push('hash ausente');\nreturn { json: { ok: problems.length === 0, message: problems.join('; '), media_url: body.public_url ?? null, media_sha256: body.sha256 ?? null,\n  media_width: body.width ?? null, media_height: body.height ?? null, storage_path: body.storage_path ?? null } };\n"
+      },
+      "id": "aca855ef-e48b-46ec-afaa-f83d6c52f8c8",
+      "name": "Validate — Render Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b0175976-d611-4bf0-a957-84f5360d9b74",
+              "leftValue": "={{ $json.ok === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8b32d46c-f1cb-46e5-a94c-c5e0f8eb884b",
+      "name": "Render — Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2480,
+        1100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['RENDERING'], 'RENDERED', $2::jsonb) AS result, lc_record_attempt($3::jsonb) AS attempt",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Render Input').first().json.post_id, JSON.stringify({ media_url: $json.media_url, media_sha256: $json.media_sha256, media_width: $json.media_width, media_height: $json.media_height, storage_path: $json.storage_path }), JSON.stringify({ post_id: $('Validate — Render Input').first().json.post_id, operation: 'render', attempt: 1, outcome: 'success', correlation_id: $('Validate — Render Input').first().json.correlation_id }) ] }}"
+        }
+      },
+      "id": "3f277349-a0bd-4ce0-adc8-a8cffcedb48a",
+      "name": "DB — Save Media",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2760,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "const p = $json.result.post;\nreturn { json: { ok: true, post_id: p.id, status: p.status, media_url: p.media_url, caption: p.caption, caption_source: p.caption_source } };\n"
+      },
+      "id": "fb8c0211-f7db-4e31-ab22-0531dd514332",
+      "name": "Return — Rendered",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_transition_post($1::uuid, ARRAY['RENDERING'], 'FAILED', jsonb_build_object('last_error', 'RENDER_FAILED: ' || $2::text)) AS result, lc_record_attempt($3::jsonb) AS attempt",
+        "options": {
+          "queryReplacement": "={{ [ $('Validate — Render Input').first().json.post_id, $json.message, JSON.stringify({ post_id: $('Validate — Render Input').first().json.post_id, operation: 'render', attempt: 1, outcome: 'fail', error_code: 'RENDER_FAILED', error_message: $json.message, correlation_id: $('Validate — Render Input').first().json.correlation_id }) ] }}"
+        }
+      },
+      "id": "f604b5e7-5ae5-45b5-a554-7f46346a16ce",
+      "name": "DB — Mark Render Failed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2760,
+        500
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "46c10a4f-5197-4214-a588-cb8e65338b9c",
+              "name": "error_code",
+              "value": "RENDER_FAILED",
+              "type": "string"
+            },
+            {
+              "id": "bccafda8-4724-4e8d-a688-112ece9e4f84",
+              "name": "message",
+              "value": "=RENDER_FAILED post {{ $('Validate — Render Input').first().json.post_id }}: {{ $('Validate — Render Response').item.json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "63e9d47e-7f98-4d44-a155-120be38353e8",
+              "name": "workflow_name",
+              "value": "WF-03-Render-Social-Post",
+              "type": "string"
+            },
+            {
+              "id": "63c17a65-8cea-4c00-a39b-2f1558b0cbf0",
+              "name": "workflow_id",
+              "value": "LcWf03Render0000",
+              "type": "string"
+            },
+            {
+              "id": "03bf1d8f-b9df-45ed-a4ef-b2afa9b7b415",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "59f23255-6aff-4c56-a718-b2c168cdea9b",
+              "name": "payload",
+              "value": "={{ { post_id: $('Validate — Render Input').first().json.post_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "a82c33ad-cdc3-4f16-a7ff-063e57839be6",
+      "name": "Render Failed — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3040,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "bed13262-4b91-41fc-a140-61e4f53e5167",
+      "name": "Render Failed — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3320,
+        300
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "92328e21-0645-4684-acf5-3288530b1635",
+              "name": "error_code",
+              "value": "ENGINE_UNAVAILABLE",
+              "type": "string"
+            },
+            {
+              "id": "b8ffd61e-1414-440f-a65f-713d07d1484c",
+              "name": "message",
+              "value": "=ENGINE_UNAVAILABLE ao validar legenda do post {{ $('Validate — Render Input').first().json.post_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c1be87b-4275-4c86-a868-7bf32b8da0c1",
+              "name": "workflow_name",
+              "value": "WF-03-Render-Social-Post",
+              "type": "string"
+            },
+            {
+              "id": "38450d22-61b8-4b03-aafa-6a893fd504fb",
+              "name": "workflow_id",
+              "value": "LcWf03Render0000",
+              "type": "string"
+            },
+            {
+              "id": "002d8449-b060-445f-a3ed-03d14ab58688",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "fa6ec082-71b0-4c32-a228-7144fe6ba3be",
+              "name": "payload",
+              "value": "={{ { post_id: $('Validate — Render Input').first().json.post_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "cf15cf30-5b19-47ab-a63b-0855b3548efb",
+      "name": "Caption Failed — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2760,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "595cacc6-6679-45da-a166-3c2f9ab1443a",
+      "name": "Caption Failed — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3040,
+        700
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ab1b29e7-cb10-44b3-a507-953a0dfea8ad",
+              "name": "error_code",
+              "value": "POST_NOT_FOUND",
+              "type": "string"
+            },
+            {
+              "id": "63ca3b22-1e6b-4629-a0fd-fa34a6a97652",
+              "name": "message",
+              "value": "=POST_NOT_FOUND {{ $('Validate — Render Input').first().json.post_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9ac6f677-ce16-4417-aa8d-d1062b9bf388",
+              "name": "workflow_name",
+              "value": "WF-03-Render-Social-Post",
+              "type": "string"
+            },
+            {
+              "id": "fe62739a-e2b0-45b1-a240-d1680e2d261d",
+              "name": "workflow_id",
+              "value": "LcWf03Render0000",
+              "type": "string"
+            },
+            {
+              "id": "4cec065e-a9c9-4168-acbc-eebdc91580e7",
+              "name": "execution_id",
+              "value": "={{ $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "cf4ae49a-c7cf-4233-a454-bbc0321d386f",
+              "name": "payload",
+              "value": "={{ { post_id: $('Validate — Render Input').first().json.post_id } }}",
+              "type": "object"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "0a65a79d-e6a9-407a-ab7f-cacbdeb6cd80",
+      "name": "Post Not Found — Error Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "LcWf99ErrorHdl00",
+          "mode": "id"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "once",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "e611af57-5b79-44e7-a39a-8e65959f0b54",
+      "name": "Post Not Found — Report Error",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1640,
+        900
+      ],
+      "notes": "Grava em workflow_errors via WF-99 (falha tratada, não derruba o fluxo).",
+      "onError": "continueRegularOutput",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { ok: false, post_id: $('Validate — Render Input').first().json.post_id, status: 'FAILED', error_code: $('Render Failed — Error Payload').isExecuted ? 'RENDER_FAILED' : 'CAPTION_OR_POST_ERROR' } };\n"
+      },
+      "id": "c98226d6-b7e8-46cc-a1a7-340c40ccdc1b",
+      "name": "Return — Render Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        900
+      ]
+    }
+  ],
+  "connections": {
+    "Render Failed — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Render Failed — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Caption Failed — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Caption Failed — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Not Found — Error Payload": {
+      "main": [
+        [
+          {
+            "node": "Post Not Found — Report Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Render Request": {
+      "main": [
+        [
+          {
+            "node": "Validate — Render Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Render Input": {
+      "main": [
+        [
+          {
+            "node": "DB — Load Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Load Post": {
+      "main": [
+        [
+          {
+            "node": "Route — Post Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Post Status": {
+      "main": [
+        [
+          {
+            "node": "Gate — OpenAI Configured?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Claim Render",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Post Not Found — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Nothing To Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post Not Found — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Render Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gate — OpenAI Configured?": {
+      "main": [
+        [
+          {
+            "node": "Caption — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Engine — Fallback Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Fallback Caption": {
+      "main": [
+        [
+          {
+            "node": "DB — Log Caption Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Caption — Attempt State": {
+      "main": [
+        [
+          {
+            "node": "Guard — Caption Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guard — Caption Attempts": {
+      "main": [
+        [
+          {
+            "node": "OpenAI — Generate Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop — Caption Loop Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI — Generate Caption": {
+      "main": [
+        [
+          {
+            "node": "Engine — Finalize Caption",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Engine — Finalize Caption": {
+      "main": [
+        [
+          {
+            "node": "DB — Log Caption Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Log Caption Attempt": {
+      "main": [
+        [
+          {
+            "node": "Route — Caption Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route — Caption Outcome": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Save Caption",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait — Caption Backoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Mark Caption Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Caption Backoff": {
+      "main": [
+        [
+          {
+            "node": "Caption — Attempt State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Mark Caption Failed": {
+      "main": [
+        [
+          {
+            "node": "Caption Failed — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Caption Failed — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Render Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Caption": {
+      "main": [
+        [
+          {
+            "node": "DB — Claim Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Claim Render": {
+      "main": [
+        [
+          {
+            "node": "Render Claim — Acquired?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Claim — Acquired?": {
+      "main": [
+        [
+          {
+            "node": "Renderer — Generate Artwork",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Nothing To Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Renderer — Generate Artwork": {
+      "main": [
+        [
+          {
+            "node": "Validate — Render Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate — Render Response": {
+      "main": [
+        [
+          {
+            "node": "Render — Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render — Valid?": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Media",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DB — Mark Render Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Media": {
+      "main": [
+        [
+          {
+            "node": "Return — Rendered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Mark Render Failed": {
+      "main": [
+        [
+          {
+            "node": "Render Failed — Error Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Failed — Report Error": {
+      "main": [
+        [
+          {
+            "node": "Return — Render Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

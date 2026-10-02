@@ -1,0 +1,25 @@
+# Dependências e builds
+node_modules/
+dist/
+coverage/
+.tmp/
+*.log
+
+# Segredos — NUNCA versionar (o .env.example é a exceção)
+.env
+.env.*
+!.env.example
+credentials*
+!**/credentials.md
+*.secret
+*.pem
+*.key
+secrets/
+
+# Artes geradas localmente
+renders/
+
+# Editor / SO
+.DS_Store
+.idea/
+.vscode/*

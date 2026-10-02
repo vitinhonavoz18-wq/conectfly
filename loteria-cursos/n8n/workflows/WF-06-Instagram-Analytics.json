@@ -1,0 +1,378 @@
+{
+  "id": "LcWf06Insights00",
+  "name": "WF-06-Instagram-Analytics",
+  "description": "Coleta métricas oficiais (Insights) dos posts publicados e grava a série em instagram_insights.",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF-06 — Métricas\n\nMétricas por tipo de mídia vêm de `system_settings.instagram_insight_metrics` (a Meta muda métricas com frequência — ex.: `impressions`/`plays` foram substituídas por `views` em 2025). Métrica recusada pela Meta vira erro registrado, sem derrubar o fluxo.\n\nCompare RESULT × PREDICTION × CHECK na view `v_content_performance_summary`.",
+        "height": 240,
+        "width": 420,
+        "color": 7
+      },
+      "id": "6539525f-319f-4659-a73e-ed850c94d7a9",
+      "name": "Nota 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "12 9 * * *"
+            }
+          ]
+        }
+      },
+      "id": "a7de60bf-1415-4ee8-ac3b-a982f3c3a90b",
+      "name": "Schedule — Daily 09:12",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "40a1f812-ccf3-4f14-a213-40dbad8a1404",
+      "name": "Manual — Run Now",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "ef8cd49d-d390-4ef6-a0c2-b94b1688e156",
+      "name": "Trigger — Insights Request",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        700
+      ],
+      "notes": "Chamado pela ação manual 'insights' do WF-07.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT t.*, s.settings FROM (SELECT lc_settings() AS settings) s,\n  lc_insight_targets(COALESCE((s.settings->>'insights_lookback_days')::int, 30), COALESCE((s.settings->>'insights_min_interval_hours')::int, 20), 50) t",
+        "options": {}
+      },
+      "id": "6306b736-ad93-4da8-a8b4-22d641343949",
+      "name": "DB — Insight Targets",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        520,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "19a78ac3-cf44-4001-a71e-0c185e761d35",
+              "leftValue": "={{ Boolean($json.post_id) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "265cd2cf-f349-4059-ad99-e71232bd4b67",
+      "name": "Targets — Any?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "059b1ae3-bb15-474b-ad68-6580c0abb889",
+      "name": "Loop — Posts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('DB — Insight Targets').first().json.settings.meta_graph_host }}/{{ $('DB — Insight Targets').first().json.settings.meta_graph_api_version }}/{{ $json.instagram_media_id }}/insights",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "metric",
+              "value": "={{ (($('DB — Insight Targets').first().json.settings.instagram_insight_metrics ?? {})[$json.media_type] ?? ['views', 'reach']).join(',') }}"
+            }
+          ]
+        }
+      },
+      "id": "cb3ad0ef-ba1b-4beb-a0d5-1a790c6b9c72",
+      "name": "Meta — Get Media Insights",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "LcMetaCred000001",
+          "name": "Meta — Loteria Cursos"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT lc_save_insight(jsonb_build_object('post_id', $1::uuid, 'instagram_media_id', $2::text, 'http_status', $3::int,\n  'metrics', lc_flatten_insights($4::jsonb), 'error', $5::text)) AS saved",
+        "options": {
+          "queryReplacement": "={{ [ $('Loop — Posts').item.json.post_id, $('Loop — Posts').item.json.instagram_media_id, $json.statusCode ?? null, JSON.stringify($json.body?.data ?? []), $json.statusCode === 200 ? null : String($json.body?.error?.message ?? $json.error?.message ?? 'falha ao coletar métricas').slice(0, 500) ] }}"
+        }
+      },
+      "id": "b74abab5-d9d1-462d-a6f3-b2bd399ec565",
+      "name": "DB — Save Insights",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1640,
+        300
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "LcPostgresCred01",
+          "name": "Postgres — Loteria Cursos"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": "={{ 2 }}",
+        "unit": "seconds"
+      },
+      "id": "e5a51ed7-f368-4bc7-a6c1-84b9583b3b7c",
+      "name": "Wait — Insights Throttle",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        300
+      ],
+      "notes": "Ritmo controlado para respeitar limites da Graph API.",
+      "webhookId": "ea763869-abd8-484e-aa25-cb4288a4aada",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "return [{ json: { ok: true, processed: $input.all().filter((i) => i.json.saved || i.json.post_id).length } }];\n"
+      },
+      "id": "31720540-f176-4fbe-a59a-06c784f0f1f5",
+      "name": "Return — Insights Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        500
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule — Daily 09:12": {
+      "main": [
+        [
+          {
+            "node": "DB — Insight Targets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual — Run Now": {
+      "main": [
+        [
+          {
+            "node": "DB — Insight Targets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger — Insights Request": {
+      "main": [
+        [
+          {
+            "node": "DB — Insight Targets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Insight Targets": {
+      "main": [
+        [
+          {
+            "node": "Targets — Any?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Targets — Any?": {
+      "main": [
+        [
+          {
+            "node": "Loop — Posts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return — Insights Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop — Posts": {
+      "main": [
+        [
+          {
+            "node": "Return — Insights Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Meta — Get Media Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta — Get Media Insights": {
+      "main": [
+        [
+          {
+            "node": "DB — Save Insights",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DB — Save Insights": {
+      "main": [
+        [
+          {
+            "node": "Wait — Insights Throttle",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Insights Throttle": {
+      "main": [
+        [
+          {
+            "node": "Loop — Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bahia",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "LcWf99ErrorHdl00"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "loteriaCursos": {
+      "generatedBy": "n8n/builder",
+      "n8nTargetVersion": "2.41.5"
+    }
+  },
+  "tags": []
+}

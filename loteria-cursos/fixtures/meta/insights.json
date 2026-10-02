@@ -1,0 +1,37 @@
+{
+  "data": [
+    {
+      "name": "views",
+      "period": "lifetime",
+      "values": [
+        {
+          "value": 1520
+        }
+      ],
+      "title": "Views",
+      "id": "17800000000000009/insights/views/lifetime"
+    },
+    {
+      "name": "reach",
+      "period": "lifetime",
+      "values": [
+        {
+          "value": 1100
+        }
+      ],
+      "title": "Reach",
+      "id": "17800000000000009/insights/reach/lifetime"
+    },
+    {
+      "name": "likes",
+      "period": "lifetime",
+      "values": [
+        {
+          "value": 87
+        }
+      ],
+      "title": "Likes",
+      "id": "17800000000000009/insights/likes/lifetime"
+    }
+  ]
+}

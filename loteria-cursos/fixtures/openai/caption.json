@@ -1,0 +1,32 @@
+{
+  "id": "resp_fixture_0001",
+  "object": "response",
+  "created_at": 1790000000,
+  "status": "completed",
+  "model": "gpt-fixture",
+  "output": [
+    {
+      "id": "rs_fixture",
+      "type": "reasoning",
+      "summary": []
+    },
+    {
+      "id": "msg_fixture",
+      "type": "message",
+      "role": "assistant",
+      "status": "completed",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "{\"headline\":\"Resultado fresquinho da Mega-Sena\",\"caption\":\"Saiu o resultado de hoje! Confira as dezenas na arte e compare com o seu jogo. Conteúdo informativo para você acompanhar com a gente.\",\"cta\":\"Comente \\\"EU QUERO\\\" para continuar acompanhando nossos palpites e resultados.\",\"hashtags\":[\"#megasena\",\"#loteria\",\"#resultado\"],\"alt_text\":\"Arte verde com o logotipo Loteria Cursos e as seis dezenas sorteadas da Mega-Sena.\"}",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "usage": {
+    "input_tokens": 420,
+    "output_tokens": 180,
+    "total_tokens": 600
+  }
+}
