@@ -1,11 +1,39 @@
 const PUBLIC_SITE_DOMAIN = "conectfly.com.br";
 const PUBLIC_SITE_URL = `https://${PUBLIC_SITE_DOMAIN}`;
 
-export function getPizzeriaPublicUrl(slug: string, _subdomain?: string | null): string {
-  if (!slug) return PUBLIC_SITE_URL;
-  // Remove trailing slash from base if present, then add /slug
+/**
+ * Nomes que já são páginas do próprio sistema. Uma loja não pode usar um
+ * deles como endereço: o sistema abriria a página interna no lugar da loja.
+ */
+export const RESERVED_SITE_PATHS = [
+  "admin",
+  "dashboard",
+  "settings",
+  "create",
+  "restaurants",
+  "pizzerias",
+  "templates",
+  "configuracoes",
+  "login",
+  "api",
+  "edit",
+  "export",
+  "debug-host",
+  "paulo-ferraro",
+];
+
+/**
+ * Endereço público da loja. Usa o nome curto (ex.: /acaielove) quando a loja
+ * tem um, e cai no endereço longo (slug) só quando não tem. Os dois continuam
+ * abrindo a loja, então links antigos já espalhados não quebram.
+ */
+export function getPizzeriaPublicUrl(slug: string, subdomain?: string | null): string {
+  const short = (subdomain ?? "").trim();
+  const path = short || slug;
+  if (!path) return PUBLIC_SITE_URL;
+  // Remove trailing slash from base if present, then add /path
   const base = PUBLIC_SITE_URL.replace(/\/$/, "");
-  return `${base}/${slug}`;
+  return `${base}/${path}`;
 }
 
 /**

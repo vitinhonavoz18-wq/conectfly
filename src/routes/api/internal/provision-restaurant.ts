@@ -5,6 +5,7 @@ import {
   subdomainify,
   getPizzeriaPublicUrl,
   getMenuSyncEndpoint,
+  RESERVED_SITE_PATHS,
 } from "@/lib/site/format";
 import { seedDefaultDeliveryZonesWithClient } from "@/lib/site/defaultMenu";
 
@@ -48,14 +49,23 @@ async function ensureUniqueSlug(base: string): Promise<string> {
 }
 
 async function ensureUniqueSubdomain(base: string): Promise<string> {
-  let sub = base || `site${Date.now()}`;
-  for (let i = 0; i < 10; i++) {
+  // O endereço curto precisa ser único entre os nomes curtos E entre os
+  // endereços longos (slug) de todas as lojas: a página pública procura nos
+  // dois ao mesmo tempo, e dois resultados derrubariam a loja. Também não
+  // pode ser o nome de uma página interna do sistema.
+  const livre = async (candidate: string) => {
+    if (RESERVED_SITE_PATHS.includes(candidate)) return false;
     const { data } = await supabaseAdmin
       .from("restaurants")
       .select("id")
-      .eq("custom_subdomain", sub)
-      .maybeSingle();
-    if (!data) return sub;
+      .or(`custom_subdomain.eq.${candidate},slug.eq.${candidate}`)
+      .limit(1);
+    return !data || data.length === 0;
+  };
+
+  let sub = base || `site${Date.now()}`;
+  for (let i = 0; i < 10; i++) {
+    if (await livre(sub)) return sub;
     sub = `${base}${Math.random().toString(36).slice(2, 6)}`;
   }
   return `${base}${Date.now()}`;
