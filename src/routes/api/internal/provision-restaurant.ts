@@ -171,7 +171,14 @@ export const Route = createFileRoute("/api/internal/provision-restaurant")({
         }
 
         const baseSlug = slugify(String(body?.slug ?? "") || name) || `site-${Date.now()}`;
-        const baseSub = subdomainify(String(body?.slug ?? "") || name) || `site${Date.now()}`;
+        // O endereço curto nasce do NOME da empresa ("Açaí e Love" → acaielove).
+        // Antes nascia do slug que o painel mandava; quando o slug já estava
+        // ocupado ele vinha com letras aleatórias no fim ("teste-001-5srj") e
+        // o endereço curto herdava a bagunça ("teste0015srj").
+        const baseSub =
+          subdomainify(name) ||
+          subdomainify(String(body?.slug ?? "")) ||
+          `site${Date.now()}`;
         const slug = await ensureUniqueSlug(baseSlug);
         const custom_subdomain = await ensureUniqueSubdomain(baseSub);
 
