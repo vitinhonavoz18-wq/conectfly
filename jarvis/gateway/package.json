@@ -1,0 +1,25 @@
+{
+  "name": "jarvis-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gateway entre o app Jarvis (Android) e o servidor OpenJarvis: pareamento por dispositivo, revogação, limites e ferramentas.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "pair": "tsx src/cli.ts pair",
+    "devices": "tsx src/cli.ts devices",
+    "revoke": "tsx src/cli.ts revoke",
+    "test": "node --import tsx --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "tsx": "^4.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "~6.0.3"
+  }
+}

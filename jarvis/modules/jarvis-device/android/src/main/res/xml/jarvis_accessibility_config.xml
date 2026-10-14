@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sem gestos por coordenada (canPerformGestures=false) e sem captura de tela:
+  o Jarvis só lê a árvore de acessibilidade e aciona elementos pelo significado.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+  android:description="@string/jarvis_accessibility_description"
+  android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
+  android:accessibilityFeedbackType="feedbackGeneric"
+  android:accessibilityFlags="flagReportViewIds"
+  android:canRetrieveWindowContent="true"
+  android:canPerformGestures="false"
+  android:notificationTimeout="200" />

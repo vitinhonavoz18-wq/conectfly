@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="jarvis_accessibility_label">Jarvis – navegação assistida</string>
+  <string name="jarvis_accessibility_description">O Jarvis usa este serviço SOMENTE quando você pede uma tarefa em um aplicativo que você autorizou na tela Configurações do Jarvis. Ele pode ler os textos e botões visíveis desse aplicativo e tocar, rolar, voltar ou preencher campos. Campos de senha nunca são lidos nem preenchidos. Apps bancários e de autenticação são bloqueados. Nada é lido de aplicativos não autorizados. Você pode desligar a qualquer momento nesta tela.</string>
+</resources>
