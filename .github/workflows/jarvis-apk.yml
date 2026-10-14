@@ -1,0 +1,77 @@
+# Gera o APK do app Jarvis no EAS (expo.dev) sem precisar de computador.
+# Não mexe no site: só roda para a pasta jarvis/.
+#
+# Como disparar:
+#  - commit com "[apk]" na mensagem que altere jarvis/ (qualquer branch), ou
+#  - aba Actions → "Jarvis APK" → Run workflow (quando este arquivo estiver no branch principal).
+# Requer o segredo EXPO_TOKEN em Settings → Secrets and variables → Actions.
+name: Jarvis APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Perfil do EAS (preview = APK instalável)
+        default: preview
+        required: true
+  push:
+    paths:
+      - 'jarvis/**'
+      - '.github/workflows/jarvis-apk.yml'
+
+concurrency:
+  group: jarvis-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[apk]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: jarvis
+    steps:
+      - name: Conferir segredo EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        working-directory: .
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Falta o segredo EXPO_TOKEN (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: jarvis/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Verificações (tipos, lint, testes)
+        run: npm run check
+
+      - name: Build no EAS
+        id: eas
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          PROFILE="${{ github.event.inputs.profile || 'preview' }}"
+          npx --yes eas-cli@latest build --platform android --profile "$PROFILE" --non-interactive --wait --json > build.json
+          node -e '
+            const j = JSON.parse(require("fs").readFileSync("build.json","utf8"));
+            const b = Array.isArray(j) ? j[0] : j;
+            const owner = b.project?.ownerAccount?.name ?? "vitinho157s-team";
+            const slug = b.project?.slug ?? "jarvis";
+            const page = `https://expo.dev/accounts/${owner}/projects/${slug}/builds/${b.id}`;
+            const apk = b.artifacts?.buildUrl ?? b.artifacts?.applicationArchiveUrl ?? "(sem arquivo)";
+            const out = `## Jarvis APK\n\n- Status: **${b.status}**\n- Página do build: ${page}\n- Download do APK: ${apk}\n`;
+            require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, out);
+            console.log(out);
+            if (b.status !== "FINISHED") process.exit(1);
+          '

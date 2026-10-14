@@ -9,7 +9,8 @@ import { colors, radius, space } from '../ui/theme';
 import { VoiceOrb } from '../ui/VoiceOrb';
 
 export default function Home() {
-  const { phase, volume, partial, draft, listen, stopListen, cancelAll, connection, messages, progress, notice, dismissNotice } = useJarvis();
+  const { phase, volume, partial, draft, listen, stopListen, cancelAll, connection, messages, progress, notice, dismissNotice, wakeState, conversation, screenWatch } =
+    useJarvis();
   const conn = connectionLabel(connection);
   const lastReply = [...messages].reverse().find((m) => m.role === 'assistant');
   const listening = phase === 'listening';
@@ -18,7 +19,11 @@ export default function Home() {
   return (
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <Screen title="Jarvis" subtitle="Seu assistente por voz">
-        <Pill label={conn.label} tone={conn.tone} />
+        <View style={{ flexDirection: 'row', gap: space.sm, flexWrap: 'wrap' }}>
+          <Pill label={conn.label} tone={conn.tone} />
+          {wakeState !== 'off' ? <Pill label={conversation ? 'Em conversa' : 'Diga “Jarvis”'} tone="cyan" /> : null}
+          {screenWatch ? <Pill label="Assistindo junto" tone="cyan" /> : null}
+        </View>
         {notice ? (
           <Pressable onPress={dismissNotice} accessibilityRole="button" accessibilityHint="Toque para fechar o aviso" style={styles.notice}>
             <Text style={styles.noticeText}>{notice}</Text>

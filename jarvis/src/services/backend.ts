@@ -100,15 +100,22 @@ export async function healthCheck(baseUrl: string): Promise<boolean> {
   }
 }
 
+/** Endereço do cérebro na nuvem (função Supabase "jarvis-brain", IA Gemini). Não é segredo. */
+export const CLOUD_BRAIN_URL = 'https://glyausrubnpkodgxosdj.supabase.co/functions/v1/jarvis-brain';
+
+/** Imagem da tela (JPEG em base64) e textos visíveis, enviados só junto de uma pergunta. */
+export type ScreenContext = { imageBase64?: string; text?: string };
+
 export async function chat(
   baseUrl: string,
   messages: ApiMessage[],
   context: Record<string, unknown>,
   signal?: AbortSignal,
+  screen?: ScreenContext,
 ): Promise<ChatResponse> {
   return call<ChatResponse>(baseUrl, '/v1/chat', {
     method: 'POST',
-    body: JSON.stringify({ messages, context }),
+    body: JSON.stringify(screen ? { messages, context, screen } : { messages, context }),
     timeoutMs: 120_000,
     signal,
   });

@@ -6,7 +6,24 @@
     exported=true é exigido para o sistema se ligar ao serviço; a permissão
     BIND_ACCESSIBILITY_SERVICE garante que só o sistema Android pode fazê-lo.
   -->
+  <!-- Serviços em primeiro plano (Android 14+ exige o tipo declarado). -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
   <application>
+    <!-- Escuta da palavra "Jarvis" (microfone, só com notificação fixa). -->
+    <service
+      android:name="expo.modules.jarvisdevice.JarvisWakeService"
+      android:exported="false"
+      android:foregroundServiceType="microphone" />
+    <!-- "Assistir junto": captura de tela, só depois do aviso do Android. -->
+    <service
+      android:name="expo.modules.jarvisdevice.JarvisScreenService"
+      android:exported="false"
+      android:foregroundServiceType="mediaProjection" />
+
     <service
       android:name="expo.modules.jarvisdevice.JarvisAccessibilityService"
       android:exported="true"

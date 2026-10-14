@@ -16,6 +16,10 @@ export type Settings = {
   allowedUiApps: string[];
   /** Envia nomes dos apps instalados ao backend para ajudar o modelo. */
   shareAppList: boolean;
+  /** Escuta a palavra "Jarvis" em segundo plano (serviço com notificação fixa). */
+  wakeEnabled: boolean;
+  /** Sensibilidade do detector (0,3 = mais exigente; 0,8 = dispara mais fácil). */
+  wakeSensitivity: number;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -24,6 +28,8 @@ export const DEFAULT_SETTINGS: Settings = {
   speakReplies: true,
   allowedUiApps: [],
   shareAppList: false,
+  wakeEnabled: false,
+  wakeSensitivity: 0.6,
 };
 
 const SETTINGS_KEY = 'jarvis.settings.v1';

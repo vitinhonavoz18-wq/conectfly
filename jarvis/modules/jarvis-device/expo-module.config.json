@@ -1,11 +1,14 @@
 {
-  "platforms": ["android"],
+  "platforms": [
+    "android"
+  ],
   "android": {
     "modules": [
       "expo.modules.jarvisdevice.JarvisDeviceModule",
       "expo.modules.jarvisdevice.JarvisSpeechModule",
       "expo.modules.jarvisdevice.JarvisBluetoothModule",
-      "expo.modules.jarvisdevice.JarvisAccessibilityModule"
+      "expo.modules.jarvisdevice.JarvisAccessibilityModule",
+      "expo.modules.jarvisdevice.JarvisAmbientModule"
     ]
   }
 }

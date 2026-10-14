@@ -83,3 +83,26 @@ Anote ✅/❌ e o que apareceu na tela.
 - No app: “Desconectar este celular”. No computador: `npm run devices` mostra “REVOGADO”.
 - Ou revogue pelo computador (`npm run revoke -- <id>`) e toque “Testar conexão” no app:
   esperado “Acesso revogado…”.
+
+## C. Versão 1.1 — nuvem, “Jarvis” sempre ligado, assistir junto (a fazer no celular)
+
+### 13. Cérebro na nuvem (funciona no APK antigo também)
+1. Ajustes → “Usar o cérebro na nuvem (Gemini)” → Salvar e testar → código (JARVIS_PAIRING_CODE) → Autenticar.
+2. Esperado: “IA conectada” com o nome do modelo “(nuvem)”.
+3. Conversa: “Olá, quem é você?” e “Abra o YouTube para mim”.
+
+### 14. “Jarvis” sempre ligado (APK 1.1)
+1. Ajustes → colar AccessKey do Picovoice → Salvar → ligar “Ouvir Jarvis em segundo plano”.
+2. Esperado: notificação fixa “Jarvis está esperando você chamar”.
+3. Minimize o app, diga “Jarvis” → bipe → faça uma pergunta → resposta falada.
+4. Faça outra pergunta sem dizer “Jarvis” (conversa continua).
+5. Diga “valeu bonitão” → despedida e volta a esperar. Teste também “obrigado Jarvis”, “falou”.
+6. Diga “Jarvis, abre o YouTube” → abre e a conversa encerra sozinha.
+7. Fique em silêncio depois de uma resposta → a conversa encerra sem aviso.
+8. Toque “Desligar” na notificação → escuta para.
+
+### 15. Assistir junto (APK 1.1)
+1. Ajustes → ligar “Assistir junto” → aceitar o aviso do Android (tela inteira).
+2. Abra um vídeo no YouTube e diga: “Jarvis, será que esse vídeo tá explicativo demais?”
+3. Esperado: na Conversa aparece “Enviei a tela atual junto da pergunta” e a resposta comenta o que aparece.
+4. Abra um app de banco: a imagem não deve ser enviada (aviso “app protegido”) ou sai preta.

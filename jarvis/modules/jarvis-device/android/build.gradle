@@ -13,3 +13,8 @@ android {
     versionName "1.0.0"
   }
 }
+
+dependencies {
+  // Detector da palavra "Jarvis" 100% no aparelho (Picovoice Porcupine, Maven Central).
+  implementation 'ai.picovoice:porcupine-android:4.0.2'
+}

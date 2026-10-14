@@ -4,7 +4,7 @@ import { Alert, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { JarvisAccessibility, JarvisDevice, type AccessibilityStatus, type LaunchableApp, type PermissionStatus } from '../../modules/jarvis-device';
 import { checkBackendUrl } from '../core/backendUrl';
 import { isBlockedPackage } from '../core/policy';
-import { BackendError, healthCheck, pairDevice } from '../services/backend';
+import { BackendError, CLOUD_BRAIN_URL, healthCheck, pairDevice } from '../services/backend';
 import { listApps } from '../services/executor';
 import { requestMicPermission } from '../services/voice';
 import { useJarvis } from '../state/JarvisProvider';
@@ -14,7 +14,23 @@ import { Screen } from '../ui/Screen';
 import { colors, radius, space } from '../ui/theme';
 
 export default function SettingsScreen() {
-  const { settings, updateSettings, connection, refreshConnection, disconnectBackend, clearHistory, runQuick } = useJarvis();
+  const {
+    settings,
+    updateSettings,
+    connection,
+    refreshConnection,
+    disconnectBackend,
+    clearHistory,
+    runQuick,
+    wakeState,
+    hasPicovoiceKey,
+    savePicovoiceKey,
+    setWakeEnabled,
+    screenWatch,
+    setScreenWatch,
+  } = useJarvis();
+  const [pvKey, setPvKey] = useState('');
+  const [ambientMsg, setAmbientMsg] = useState<string | null>(null);
   const [url, setUrl] = useState(settings.backendUrl);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -44,7 +60,7 @@ export default function SettingsScreen() {
     setBusy('test');
     await updateSettings({ backendUrl: c.url });
     const ok = await healthCheck(c.url);
-    setConnMsg(ok ? 'Gateway encontrado. Agora informe o código de pareamento.' : 'Não encontrei o gateway nesse endereço. Ele está ligado? O celular está no mesmo Wi-Fi?');
+    setConnMsg(ok ? 'Servidor encontrado. Agora informe o código de pareamento.' : 'Não encontrei o servidor nesse endereço. Se for o PC: ele está ligado e no mesmo Wi-Fi? Se for a nuvem: confira a internet.');
     if (ok) await refreshConnection();
     setBusy(null);
   }
@@ -79,11 +95,19 @@ export default function SettingsScreen() {
     <Screen title="Configurações" subtitle="Conexão, voz, permissões e privacidade">
       {/* ---------------- Backend ---------------- */}
       <Card>
-        <SectionTitle>Conexão com o OpenJarvis</SectionTitle>
+        <SectionTitle>Cérebro (IA)</SectionTitle>
         <Row label="Status" value={conn.label} tone={conn.tone === 'neutral' ? undefined : conn.tone} />
         {connection.state === 'online' && connection.model ? <Row label="Modelo" value={connection.model} /> : null}
         {connection.state === 'offline' || connection.state === 'degraded' ? <Body dim>{connection.message}</Body> : null}
-        <Text style={styles.label}>Endereço do gateway</Text>
+        <Button
+          label="Usar o cérebro na nuvem (Gemini)"
+          variant={url === CLOUD_BRAIN_URL ? 'ghost' : 'secondary'}
+          onPress={() => {
+            setUrl(CLOUD_BRAIN_URL);
+            setConnMsg('Endereço da nuvem preenchido. Toque em "Salvar e testar" e depois use o código de pareamento que você cadastrou no Supabase.');
+          }}
+        />
+        <Text style={styles.label}>Endereço do servidor (nuvem ou gateway do PC)</Text>
         <TextInput
           value={url}
           onChangeText={setUrl}
@@ -98,7 +122,7 @@ export default function SettingsScreen() {
         {urlCheck && !urlCheck.ok ? <Text style={styles.err}>{urlCheck.error}</Text> : null}
         {urlCheck && urlCheck.ok && urlCheck.note ? <Text style={styles.warn}>{urlCheck.note}</Text> : null}
         <Button label="Salvar e testar endereço" onPress={() => void saveUrlAndTest()} busy={busy === 'test'} />
-        <Text style={styles.label}>Código de pareamento (gerado no computador com “npm run pair”)</Text>
+        <Text style={styles.label}>Código de pareamento (nuvem: o JARVIS_PAIRING_CODE que você cadastrou · PC: “npm run pair”)</Text>
         <TextInput
           value={code}
           onChangeText={setCode}
@@ -122,7 +146,86 @@ export default function SettingsScreen() {
             }}
           />
         ) : null}
-        <Body dim>O aplicativo funciona sem backend para comandos diretos. A conversa com IA precisa do gateway e do OpenJarvis ligados.</Body>
+        <Body dim>Comandos diretos funcionam sem IA. A conversa precisa da nuvem (Gemini) ou do gateway + OpenJarvis no PC.</Body>
+        {url === CLOUD_BRAIN_URL ? (
+          <Body dim>Na nuvem, o que você pergunta (e a imagem da tela, no modo assistir junto) vai para o Google Gemini. No plano gratuito o Google pode usar esse conteúdo para melhorar os produtos dele.</Body>
+        ) : null}
+      </Card>
+
+
+      {/* ---------------- Sempre ligado ---------------- */}
+      <Card>
+        <SectionTitle>Jarvis sempre ligado</SectionTitle>
+        <Body>
+          Diga “Jarvis” a qualquer momento, mesmo com outro app aberto. Ele responde, continua ouvindo suas próximas falas e encerra quando você se despede
+          (“valeu bonitão”, “obrigado Jarvis”, “falou”…), quando termina uma tarefa ou quando você fica em silêncio.
+        </Body>
+        <Body dim>
+          A palavra “Jarvis” é detectada no próprio celular (Picovoice): nenhum áudio sai do aparelho até você chamar. Fica uma notificação fixa enquanto estiver ligado e
+          gasta um pouco mais de bateria.
+        </Body>
+        <Row label="Escuta de “Jarvis”" value={wakeState === 'listening' ? 'esperando você chamar' : wakeState === 'paused' ? 'em conversa' : wakeState === 'starting' ? 'ligando…' : 'desligada'} tone={wakeState === 'off' ? 'warn' : 'ok'} />
+        <Row label="Chave do Picovoice" value={hasPicovoiceKey ? 'salva neste celular' : 'não informada'} tone={hasPicovoiceKey ? 'ok' : 'warn'} />
+        <Text style={styles.label}>AccessKey do Picovoice (grátis em console.picovoice.ai)</Text>
+        <TextInput
+          value={pvKey}
+          onChangeText={setPvKey}
+          placeholder={hasPicovoiceKey ? '•••••• (já salva — cole outra para trocar)' : 'cole aqui a AccessKey'}
+          placeholderTextColor={colors.textDim}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+          style={styles.input}
+          accessibilityLabel="Chave do Picovoice"
+        />
+        <Button
+          label="Salvar chave"
+          disabled={!pvKey.trim()}
+          onPress={async () => {
+            await savePicovoiceKey(pvKey);
+            setPvKey('');
+            setAmbientMsg('Chave salva no armazenamento seguro do celular.');
+          }}
+        />
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Ouvir “Jarvis” em segundo plano</Text>
+          <Switch
+            value={wakeState !== 'off'}
+            onValueChange={async (v) => setAmbientMsg(await setWakeEnabled(v))}
+            accessibilityLabel="Ouvir Jarvis em segundo plano"
+          />
+        </View>
+        <Text style={styles.label}>Sensibilidade</Text>
+        <View style={{ flexDirection: 'row', gap: space.sm }}>
+          {([
+            ['Exigente', 0.4],
+            ['Normal', 0.6],
+            ['Fácil', 0.8],
+          ] as const).map(([label, val]) => (
+            <Button
+              key={label}
+              label={label}
+              variant={Math.abs(settings.wakeSensitivity - val) < 0.01 ? 'primary' : 'secondary'}
+              style={{ flex: 1 }}
+              onPress={async () => {
+                await updateSettings({ wakeSensitivity: val });
+                setAmbientMsg('Vale na próxima vez que a escuta for ligada.');
+              }}
+            />
+          ))}
+        </View>
+        <Body dim>Se ele disparar sozinho (por exemplo com vídeos tocando), use “Exigente”. Se não ouvir você, use “Fácil”.</Body>
+        <View style={styles.switchRow}>
+          <Text style={styles.switchLabel}>Assistir junto (o Jarvis vê a tela quando você pergunta)</Text>
+          <Switch value={screenWatch} onValueChange={async (v) => setAmbientMsg(await setScreenWatch(v))} accessibilityLabel="Assistir junto" />
+        </View>
+        <Body dim>
+          O Android pede sua autorização e mostra o ícone de transmissão enquanto estiver ligado. O Jarvis guarda só o quadro mais recente na memória e envia uma imagem
+          SÓ quando você faz uma pergunta. Ele vê aquele instante, não ouve o áudio do vídeo. Apps protegidos (bancos, alguns streamings) aparecem pretos. A autorização
+          vale até você desligar ou o Android encerrar (por exemplo, ao bloquear a tela).
+        </Body>
+        <Button label="Evitar que o Android desligue o Jarvis (bateria)" variant="ghost" onPress={() => void runQuick('open_settings', { panel: 'battery' })} />
+        {ambientMsg ? <Body dim>{ambientMsg}</Body> : null}
       </Card>
 
       {/* ---------------- Voz ---------------- */}

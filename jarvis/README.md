@@ -74,7 +74,8 @@ Celular (Jarvis) ──Wi‑Fi/HTTPS──> Gateway ──localhost──> OpenJ
 - **IA offline**: não. A conversa livre depende do computador com OpenJarvis ligado.
 - **Reconhecimento de voz offline**: depende do aparelho. A tela de Configurações mostra se
   o aparelho oferece; o app não promete.
-- **Palavra de ativação (“Ei Jarvis”) e escuta contínua**: não implementadas (ver §9).
+- **Palavra de ativação e escuta contínua**: implementadas na versão 1.1 (ver §2.1), com as
+  limitações descritas lá.
 - **Controle universal de apps**: alguns apps não expõem seus botões para acessibilidade
   ou bloqueiam automação. Nesses casos o Jarvis para e avisa.
 - **Ligar/desligar Bluetooth ou Wi‑Fi sozinho**: o Android moderno não permite a apps
@@ -99,6 +100,57 @@ Celular (Jarvis) ──Wi‑Fi/HTTPS──> Gateway ──localhost──> OpenJ
 - A compilação Android completa (Gradle) não pôde rodar aqui (repositório do Google
   bloqueado). O código Kotlin foi compilado com o compilador Kotlin oficial contra a
   biblioteca do Android 16 — sem erros —, mas o build final acontece no EAS.
+
+---
+
+## 2.1 Novidades: IA na nuvem, “Jarvis” sempre ligado e assistir junto
+
+### Cérebro na nuvem (sem precisar do PC)
+- Função `jarvis-brain` publicada no Supabase (projeto SITECREATORFLY, isolada: não usa
+  tabelas nem dados do site). Endereço:
+  `https://glyausrubnpkodgxosdj.supabase.co/functions/v1/jarvis-brain`
+- IA: Google Gemini (modelo “flash” estável mais novo disponível para a chave).
+- Mesma API do gateway do PC: o app funciona com qualquer um dos dois.
+- Segredos (Supabase → Edge Functions → Secrets): `GEMINI_API_KEY` e
+  `JARVIS_PAIRING_CODE` (código que você inventa, mínimo 8 letras/números).
+  Opcionais: `GEMINI_MODEL`, `JARVIS_REVOKED_DEVICES` (ids separados por vírgula),
+  `JARVIS_TOKEN_VERSION` (trocar derruba todos os celulares), `JARVIS_RATE_LIMIT_PER_MIN`.
+- Código: `cloud/jarvis-brain/` (testes: `npm run test:cloud`). Após mudar regras
+  compartilhadas: `node cloud/sync-shared.mjs`.
+- **Privacidade:** no plano gratuito do Gemini o Google pode usar o conteúdo enviado
+  (perguntas e imagens da tela) para melhorar seus produtos. Use o plano pago ou o
+  OpenJarvis no PC para conteúdo sensível.
+
+### “Jarvis” sempre ligado
+- Detector Picovoice Porcupine com a palavra pronta “Jarvis”, rodando no celular
+  (nenhum áudio sai do aparelho até você chamar). Exige AccessKey gratuita de
+  console.picovoice.ai, salva no armazenamento seguro.
+- Serviço em primeiro plano com notificação fixa (exigência do Android). Só liga com o
+  app aberto na tela; ao reabrir o app, religa sozinho se estava ativo.
+- Conversa contínua: depois de “Jarvis”, ele continua ouvindo até você se despedir
+  (“valeu bonitão”, “obrigado Jarvis”, “falou”, “tchau”, “é isso”, “tamo junto”…),
+  até concluir uma tarefa pedida ou até você ficar em silêncio.
+- Limitações reais: a palavra é treinada em inglês (funciona com “Jarvis” dito em
+  português, mas pode errar); vídeos falando “Jarvis” podem disparar; alguns fabricantes
+  (Xiaomi, Samsung…) matam apps em segundo plano — libere o Jarvis na otimização de
+  bateria; se o Android encerrar o app, a escuta só volta ao abri-lo.
+
+### Assistir junto
+- Captura de tela (MediaProjection) só depois do aviso do próprio Android, com ícone de
+  transmissão e notificação fixa. Guarda apenas o quadro mais recente na memória.
+- Uma imagem é enviada só junto de uma pergunta sua — quando ela fala da tela (“esse
+  vídeo”, “o que é isso”) ou quando outro app está na frente.
+- Vê só aquele instante, **não ouve o áudio do vídeo**. Apps protegidos (bancos, alguns
+  streamings) aparecem pretos. Apps bloqueados pela política nunca são enviados.
+- A autorização acaba quando você desliga ou o Android encerra (ex.: ao bloquear a tela,
+  dependendo da versão); aí é preciso ligar de novo.
+
+### Gerar APK sem o PC (GitHub Actions)
+- Arquivo `.github/workflows/jarvis-apk.yml`. Requer o segredo `EXPO_TOKEN` no GitHub
+  (Settings → Secrets and variables → Actions).
+- Dispara em commits que alterem `jarvis/` com `[apk]` na mensagem (ou manualmente na
+  aba Actions, quando o arquivo estiver no branch principal). O resumo do job mostra o
+  link do build e do APK.
 
 ---
 
@@ -267,10 +319,8 @@ Em todos os casos o gateway continua exigindo o pareamento de cada celular.
 
 ## 9. Evolução futura (documentada, não implementada)
 
-- **Palavra de ativação / escuta contínua**: exige serviço em primeiro plano com
-  notificação permanente, gasta bateria e tem restrições do Android em segundo plano.
-- **Captura de tela (MediaProjection)**: exigiria um consentimento próprio do Android a
-  cada sessão; não usado nesta versão.
+- **Ouvir o áudio do vídeo** no modo assistir junto (AudioPlaybackCapture), quando o app
+  de vídeo permitir.
 - **Adaptadores Bluetooth** para equipamentos com protocolo documentado
   (`src/core/bluetoothAdapters.ts`).
 - **Respostas em streaming** (o OpenJarvis já oferece SSE em `/v1/chat/completions`).

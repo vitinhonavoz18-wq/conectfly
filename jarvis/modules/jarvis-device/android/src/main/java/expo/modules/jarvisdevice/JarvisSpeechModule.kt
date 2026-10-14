@@ -81,7 +81,9 @@ class JarvisSpeechModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     OnActivityEntersBackground {
-      if (recognizer != null) {
+      // Com a escuta de "Jarvis" ligada, a conversa continua com o app minimizado
+      // (o serviço em primeiro plano do microfone mantém a permissão de uso).
+      if (recognizer != null && !JarvisWakeService.running) {
         recognizer?.cancel()
         release()
         sendEvent("onEnd", mapOf("reason" to "background"))

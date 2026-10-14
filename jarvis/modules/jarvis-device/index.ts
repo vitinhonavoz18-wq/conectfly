@@ -7,7 +7,7 @@ import { NativeModule, requireOptionalNativeModule } from 'expo';
  */
 
 export type NativeResult = {
-  status: 'completed' | 'refused' | 'unavailable' | 'failed';
+  status: 'completed' | 'refused' | 'unavailable' | 'failed' | 'cancelled';
   message: string;
   code?: string | null;
   data?: Record<string, unknown> | null;
@@ -128,10 +128,38 @@ type AccessibilityModule = {
   performStep(expectedPackage: string, kind: string, selector: Record<string, string | undefined>, text: string | null): Promise<NativeResult>;
 };
 
+export type AmbientEvents = {
+  onWake: (e: { at: number }) => void;
+  onWakeState: (e: { state: 'listening' | 'off' }) => void;
+  onWakeError: (e: { message: string }) => void;
+  onScreenState: (e: { state: 'on' | 'off' }) => void;
+  onScreenError: (e: { message: string }) => void;
+};
+
+export type AmbientStatus = {
+  wakeRunning: boolean;
+  wakePaused: boolean;
+  screenRunning: boolean;
+  notificationsAllowed: boolean;
+};
+
+declare class AmbientModuleType extends NativeModule<AmbientEvents> {
+  getStatus(): Promise<AmbientStatus>;
+  startWake(accessKey: string, sensitivity: number): Promise<NativeResult>;
+  stopWake(): Promise<boolean>;
+  pauseWake(): Promise<boolean>;
+  resumeWake(): Promise<boolean>;
+  startScreenWatch(): Promise<NativeResult>;
+  stopScreenWatch(): Promise<boolean>;
+  captureScreen(): Promise<string | null>;
+}
+
 export const JarvisDevice = requireOptionalNativeModule<DeviceModule>('JarvisDevice');
 export const JarvisSpeech = requireOptionalNativeModule<SpeechModuleType>('JarvisSpeech');
 export const JarvisBluetooth = requireOptionalNativeModule<BluetoothModule>('JarvisBluetooth');
 export const JarvisAccessibility = requireOptionalNativeModule<AccessibilityModule>('JarvisAccessibility');
+
+export const JarvisAmbient = requireOptionalNativeModule<AmbientModuleType>('JarvisAmbient');
 
 export const nativeAvailable = JarvisDevice !== null;
 

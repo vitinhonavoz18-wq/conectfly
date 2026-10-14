@@ -39,7 +39,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --import tsx --test \"tests/**/*.test.ts\"",
     "doctor": "expo-doctor",
-    "check": "npm run typecheck && npm run lint && npm test"
+    "check": "npm run typecheck && npm run lint && npm test && npm run test:cloud",
+    "test:cloud": "node --import tsx --test \"cloud/test/**/*.test.ts\" && tsc -p cloud/tsconfig.json"
   },
   "private": true
 }

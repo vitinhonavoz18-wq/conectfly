@@ -5,5 +5,5 @@
     "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
-  "exclude": ["node_modules", "gateway"]
+  "exclude": ["node_modules", "gateway", "cloud"]
 }
