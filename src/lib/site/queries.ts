@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { safeInvoke } from "./api-utils";
 import { montarVinculos } from "./adicionaisDaCategoria";
+import { looksLikeStoreAddress } from "./storeAddress";
 import type {
   ComboGroupRow,
   ComboRow,
@@ -30,6 +31,13 @@ const debugLog = (...args: any[]) => {
     console.log("SLUG RECEIVED:", identifier);
     console.log("NORMALIZED SLUG:", normalizedIdentifier);
 
+    // Só letras, números e traço chegam ao banco: o filtro abaixo é montado
+    // com esse texto, e uma vírgula ou parêntese mudaria o sentido dele.
+    if (!looksLikeStoreAddress(normalizedIdentifier)) {
+      console.warn(`[fetchSiteBySlug] Identificador com caracteres inválidos: "${normalizedIdentifier}"`);
+      return null;
+    }
+
     // Buscamos apenas os dados públicos da view segura.
     // Priorizamos custom_subdomain, depois slug.
     console.log(`[fetchSiteBySlug] Querying pizzerias_public where slug or custom_subdomain = "${normalizedIdentifier}"`);
@@ -51,6 +59,18 @@ const debugLog = (...args: any[]) => {
     }
 
     if (!data) {
+      // Pode ser um endereço que a loja usava antes de trocar de nome. Ele
+      // continua dela (caderno store_addresses) e leva ao endereço atual.
+      const atual = await resolvePreviousStoreAddress(normalizedIdentifier);
+      if (atual && atual !== normalizedIdentifier) {
+        const { data: loja, error: erroLoja } = await supabase
+          .from("pizzerias_public")
+          .select("*")
+          .or(`custom_subdomain.eq.${atual},slug.eq.${atual}`)
+          .maybeSingle();
+        if (erroLoja) throw erroLoja;
+        if (loja) return fetchSiteByRestaurant(loja as unknown as RestaurantRow);
+      }
       console.warn(`[fetchSiteBySlug] Restaurante não encontrado para o identificador: "${normalizedIdentifier}"`);
       return null;
     }
@@ -58,6 +78,25 @@ const debugLog = (...args: any[]) => {
     debugLog(`[fetchSiteBySlug] Sucesso: Restaurante "${data.name}" encontrado.`);
     return fetchSiteByRestaurant(data as unknown as RestaurantRow);
  }
+
+/**
+ * Endereço ATUAL da loja que usava `address` antes. Nulo quando ninguém usou,
+ * a loja não está publicada, ou o banco ainda não tem o caderno de endereços
+ * (aí o site se comporta exatamente como antes).
+ */
+async function resolvePreviousStoreAddress(address: string): Promise<string | null> {
+  try {
+    const { data, error } = await (supabase as any).rpc("resolve_store_address", {
+      p_address: address,
+    });
+    if (error) return null;
+    const linha = Array.isArray(data) ? data[0] : data;
+    const atual = typeof linha === "string" ? linha : linha?.current_address;
+    return typeof atual === "string" && atual.trim() ? atual.trim().toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
 
  export async function fetchSiteByRestaurant(
    restaurant: RestaurantRow,

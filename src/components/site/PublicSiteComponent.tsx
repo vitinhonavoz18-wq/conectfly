@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { storeRedirectTarget } from "@/lib/site/storeAddress";
+import { getPizzeriaPublicUrl } from "@/lib/site/format";
 import { fetchSiteBySlug } from "@/lib/site/queries";
 import type { SiteData } from "@/lib/site/types";
 import { DeliverySite } from "@/components/site/DeliverySite";
@@ -18,8 +20,20 @@ export function PublicSiteComponent({ routeSlug }: Props) {
     setMounted(true);
   }, []);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!mounted) return;
+
+    // Acabamos de trocar a barra de endereço para o endereço atual desta
+    // mesma loja (ver abaixo): o cardápio já está na tela, não busca de novo.
+    if (
+      data &&
+      typeof data === "object" &&
+      storeRedirectTarget(detectedIdentifier, data.restaurant) === null
+    ) {
+      return;
+    }
 
     // LOGS OBRIGATÓRIOS (Conforme solicitado)
     console.log("--- DEBUG PUBLIC SITE ---");
@@ -46,6 +60,9 @@ export function PublicSiteComponent({ routeSlug }: Props) {
     return () => {
       alive = false;
     };
+    // `data` fica de fora de propósito: a busca só deve rodar quando o
+    // endereço muda, não quando o cardápio chega.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detectedIdentifier, mounted]);
 
   // Update document title and canonical from restaurant
@@ -53,8 +70,27 @@ export function PublicSiteComponent({ routeSlug }: Props) {
     if (data && typeof data === "object" && "restaurant" in data) {
       document.title = data.restaurant.name;
       
+      // Chegou por um endereço que não é o atual da loja (o longo de teste,
+      // ou um nome que ela usava antes)? Mostra a loja e troca a barra de
+      // endereço para o nome atual, mantendo o resto (?mesa=..., #...).
+      // É o cartaz antigo na porta com "mudamos para cá": quem chega pelo
+      // endereço velho entra do mesmo jeito.
+      const destino = storeRedirectTarget(detectedIdentifier, data.restaurant);
+      if (destino && routeSlug) {
+        void navigate({
+          to: "/$slug",
+          params: { slug: destino },
+          search: (anterior: any) => anterior,
+          hash: (anterior: any) => anterior,
+          replace: true,
+        } as any);
+      }
+
       // Handle canonical link
-      const canonicalUrl = `https://conectfly.com.br/${data.restaurant.slug}`;
+      const canonicalUrl = getPizzeriaPublicUrl(
+        data.restaurant.slug,
+        data.restaurant.custom_subdomain,
+      );
       let link: HTMLLinkElement | null = document.querySelector("link[rel='canonical']");
       if (!link) {
         link = document.createElement("link");
@@ -63,7 +99,7 @@ export function PublicSiteComponent({ routeSlug }: Props) {
       }
       link.href = canonicalUrl;
     }
-  }, [data]);
+  }, [data, detectedIdentifier, navigate, routeSlug]);
 
   if (!mounted) {
     return <div className="min-h-screen bg-background" />;
