@@ -1,15 +1,14 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
- * ID do projeto no expo.dev. Não é segredo, mas é da SUA conta — por isso fica
- * vazio até você rodar `npx eas-cli init` e colar aqui o id mostrado (ver README §4).
+ * ID do projeto no expo.dev (gerado pelo `eas init` em 14/10/2026). Não é segredo.
  * A variável de ambiente EAS_PROJECT_ID, se existir, tem prioridade.
  */
-const EAS_PROJECT_ID = '';
+const EAS_PROJECT_ID = '5e95a940-45e0-4043-a21c-092b2927b332';
 
 const projectId = process.env.EAS_PROJECT_ID || EAS_PROJECT_ID || undefined;
-// Usuário/organização no expo.dev (opcional).
-const owner = process.env.EXPO_OWNER || undefined;
+// Conta/equipe dona do projeto no expo.dev (mostrada pelo `eas init`).
+const owner = process.env.EXPO_OWNER || 'vitinho157s-team';
 // Nenhuma chave secreta deve ser colocada em variáveis EXPO_PUBLIC_*: elas vão para dentro do APK.
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
