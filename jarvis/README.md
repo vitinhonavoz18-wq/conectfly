@@ -124,7 +124,9 @@ Celular (Jarvis) ──Wi‑Fi/HTTPS──> Gateway ──localhost──> OpenJ
 ### “Jarvis” sempre ligado
 - Detector Picovoice Porcupine com a palavra pronta “Jarvis”, rodando no celular
   (nenhum áudio sai do aparelho até você chamar). Exige AccessKey gratuita de
-  console.picovoice.ai, salva no armazenamento seguro.
+  console.picovoice.ai, salva no armazenamento seguro. Atenção: o cadastro do
+  Picovoice recusa e-mails gratuitos (Gmail, Hotmail…) e exige e-mail com domínio
+  próprio. Sem a chave, todo o resto do app funciona; só a palavra “Jarvis” fica desligada.
 - Serviço em primeiro plano com notificação fixa (exigência do Android). Só liga com o
   app aberto na tela; ao reabrir o app, religa sozinho se estava ativo.
 - Conversa contínua: depois de “Jarvis”, ele continua ouvindo até você se despedir
