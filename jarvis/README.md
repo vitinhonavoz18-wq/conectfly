@@ -92,8 +92,8 @@ Celular (Jarvis) ──Wi‑Fi/HTTPS──> Gateway ──localhost──> OpenJ
 
 ### Pendências reais desta entrega
 
-- O **APK ainda não foi gerado**: o ambiente onde o código foi escrito bloqueia `expo.dev`
-  e o login na sua conta Expo. Os comandos estão na seção 4.
+- Primeiro APK (perfil preview) gerado com sucesso no EAS em 14/10/2026:
+  https://expo.dev/accounts/vitinho157s-team/projects/jarvis/builds/379eaf96-c81f-496b-bd3a-84b1e3ae3ad1
 - Nenhum teste foi feito em **celular físico** ainda. Roteiro em
   [`docs/ROTEIRO-DE-TESTE.md`](docs/ROTEIRO-DE-TESTE.md).
 - A compilação Android completa (Gradle) não pôde rodar aqui (repositório do Google

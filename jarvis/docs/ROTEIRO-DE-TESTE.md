@@ -13,7 +13,7 @@
 | Geração do projeto Android + plugin | `npx expo prebuild -p android` | manifesto com permissões, `<queries>` e rede local corretos; módulo `jarvis-device` reconhecido pelo autolinking (4 módulos) |
 | Empacotamento do JavaScript para Android | `npx expo export -p android` | bundle Hermes gerado (3,3 MB) |
 | Compilação do Kotlin | compilador Kotlin 2.1.20 contra a biblioteca do Android 16 (API 36) e as assinaturas do expo-modules-core 57 | sem erros nem avisos |
-| Build Gradle completo / APK | `eas build -p android --profile preview` | **não executado** (expo.dev e repositório Maven do Google bloqueados no ambiente) |
+| Build Gradle completo / APK | `eas build -p android --profile preview` | concluído no EAS em 14/10/2026 (build `379eaf96-c81f-496b-bd3a-84b1e3ae3ad1`) |
 
 Nada abaixo foi testado em aparelho ainda.
 
