@@ -8,6 +8,9 @@ import {
   RESERVED_SITE_PATHS,
 } from "@/lib/site/format";
 import { seedDefaultDeliveryZonesWithClient } from "@/lib/site/defaultMenu";
+import { addressIsFree, type AddressDb } from "@/lib/site/storeAddress.server";
+
+const addressDb = () => supabaseAdmin as unknown as AddressDb;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -35,14 +38,12 @@ function generateSyncToken(): string {
 }
 
 async function ensureUniqueSlug(base: string): Promise<string> {
+  // Confere também o caderno de endereços (store_addresses): um nome que outra
+  // loja usava antes continua reservado para ela, e o banco recusaria a loja
+  // nova se o slug batesse com ele.
   let slug = base || `site-${Date.now()}`;
   for (let i = 0; i < 10; i++) {
-    const { data } = await supabaseAdmin
-      .from("restaurants")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
-    if (!data) return slug;
+    if (await addressIsFree(addressDb(), slug)) return slug;
     slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
   }
   return `${base}-${Date.now()}`;
@@ -53,14 +54,11 @@ async function ensureUniqueSubdomain(base: string): Promise<string> {
   // endereços longos (slug) de todas as lojas: a página pública procura nos
   // dois ao mesmo tempo, e dois resultados derrubariam a loja. Também não
   // pode ser o nome de uma página interna do sistema.
+  // Nomes antigos de outras lojas (store_addresses) também contam como
+  // ocupados.
   const livre = async (candidate: string) => {
     if (RESERVED_SITE_PATHS.includes(candidate)) return false;
-    const { data } = await supabaseAdmin
-      .from("restaurants")
-      .select("id")
-      .or(`custom_subdomain.eq.${candidate},slug.eq.${candidate}`)
-      .limit(1);
-    return !data || data.length === 0;
+    return addressIsFree(addressDb(), candidate);
   };
 
   let sub = base || `site${Date.now()}`;

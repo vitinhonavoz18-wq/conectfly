@@ -21,6 +21,7 @@ import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedExportIdRouteImport } from './routes/_authenticated.export.$id'
 import { Route as ApiInternalDeprovisionRestaurantRouteImport } from './routes/api/internal/deprovision-restaurant'
 import { Route as ApiInternalProvisionRestaurantRouteImport } from './routes/api/internal/provision-restaurant'
+import { Route as ApiInternalStoreAddressRouteImport } from './routes/api/internal/store-address'
 import { Route as ApiMenuSyncSplatRouteImport } from './routes/api/menu-sync.$'
 import { Route as ApiPublicCheckTableSessionRouteImport } from './routes/api/public/check-table-session'
 import { Route as ApiPublicFlycontrolTableClosedRouteImport } from './routes/api/public/flycontrol-table-closed'
@@ -91,6 +92,11 @@ const ApiInternalProvisionRestaurantRoute =
     path: '/api/internal/provision-restaurant',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiInternalStoreAddressRoute = ApiInternalStoreAddressRouteImport.update({
+  id: '/api/internal/store-address',
+  path: '/api/internal/store-address',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMenuSyncSplatRoute = ApiMenuSyncSplatRouteImport.update({
   id: '/$',
   path: '/$',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/internal/deprovision-restaurant': typeof ApiInternalDeprovisionRestaurantRoute
   '/api/internal/provision-restaurant': typeof ApiInternalProvisionRestaurantRoute
+  '/api/internal/store-address': typeof ApiInternalStoreAddressRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/export/$id': typeof AuthenticatedExportIdRoute
   '/api/internal/deprovision-restaurant': typeof ApiInternalDeprovisionRestaurantRoute
   '/api/internal/provision-restaurant': typeof ApiInternalProvisionRestaurantRoute
+  '/api/internal/store-address': typeof ApiInternalStoreAddressRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/_authenticated/export/$id': typeof AuthenticatedExportIdRoute
   '/api/internal/deprovision-restaurant': typeof ApiInternalDeprovisionRestaurantRoute
   '/api/internal/provision-restaurant': typeof ApiInternalProvisionRestaurantRoute
+  '/api/internal/store-address': typeof ApiInternalStoreAddressRoute
   '/api/menu-sync/$': typeof ApiMenuSyncSplatRoute
   '/api/public/check-table-session': typeof ApiPublicCheckTableSessionRoute
   '/api/public/flycontrol-table-closed': typeof ApiPublicFlycontrolTableClosedRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/export/$id'
     | '/api/internal/deprovision-restaurant'
     | '/api/internal/provision-restaurant'
+    | '/api/internal/store-address'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
     | '/api/public/flycontrol-table-closed'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/export/$id'
     | '/api/internal/deprovision-restaurant'
     | '/api/internal/provision-restaurant'
+    | '/api/internal/store-address'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
     | '/api/public/flycontrol-table-closed'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/_authenticated/export/$id'
     | '/api/internal/deprovision-restaurant'
     | '/api/internal/provision-restaurant'
+    | '/api/internal/store-address'
     | '/api/menu-sync/$'
     | '/api/public/check-table-session'
     | '/api/public/flycontrol-table-closed'
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   ApiUploadImageRoute: typeof ApiUploadImageRoute
   ApiInternalDeprovisionRestaurantRoute: typeof ApiInternalDeprovisionRestaurantRoute
   ApiInternalProvisionRestaurantRoute: typeof ApiInternalProvisionRestaurantRoute
+  ApiInternalStoreAddressRoute: typeof ApiInternalStoreAddressRoute
   ApiPublicCheckTableSessionRoute: typeof ApiPublicCheckTableSessionRoute
   ApiPublicFlycontrolTableClosedRoute: typeof ApiPublicFlycontrolTableClosedRoute
   ApiPublicOpenTableSessionRoute: typeof ApiPublicOpenTableSessionRoute
@@ -373,6 +386,13 @@ declare module '@tanstack/react-router' {
       path: '/api/internal/provision-restaurant'
       fullPath: '/api/internal/provision-restaurant'
       preLoaderRoute: typeof ApiInternalProvisionRestaurantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/internal/store-address': {
+      id: '/api/internal/store-address'
+      path: '/api/internal/store-address'
+      fullPath: '/api/internal/store-address'
+      preLoaderRoute: typeof ApiInternalStoreAddressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/menu-sync/$': {
@@ -472,6 +492,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUploadImageRoute: ApiUploadImageRoute,
   ApiInternalDeprovisionRestaurantRoute: ApiInternalDeprovisionRestaurantRoute,
   ApiInternalProvisionRestaurantRoute: ApiInternalProvisionRestaurantRoute,
+  ApiInternalStoreAddressRoute: ApiInternalStoreAddressRoute,
   ApiPublicCheckTableSessionRoute: ApiPublicCheckTableSessionRoute,
   ApiPublicFlycontrolTableClosedRoute: ApiPublicFlycontrolTableClosedRoute,
   ApiPublicOpenTableSessionRoute: ApiPublicOpenTableSessionRoute,
