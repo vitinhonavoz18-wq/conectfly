@@ -94,6 +94,8 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               showButton={r.site_settings?.show_hero_button !== false}
               hasCombos={hasCombos}
               combosVisibility={combosVisibility}
+              isOpen={r.is_open}
+              hours={r.hours}
             />
           </div>
         );
@@ -196,7 +198,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
   return (
     <div className="min-h-screen bg-[hsl(var(--site-bg))] pb-safe-extra text-[hsl(var(--site-fg))]">
       <main>
-        <div className="mx-auto flex max-w-6xl justify-center px-4 pt-6">
+        <div className="mx-auto flex max-w-6xl justify-center px-4 pt-6 empty:hidden">
           <TableQrScanButton restaurant={r} />
         </div>
 

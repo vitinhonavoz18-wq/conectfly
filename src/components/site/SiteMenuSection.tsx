@@ -4,6 +4,8 @@ import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, Beverage
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
 import { SiteBeverageSection } from "./SiteBeverageSection";
+import { MenuCategoriasNav } from "./MenuCategoriasNav";
+import { ancoraDaCategoria } from "@/lib/site/ancoraDaCategoria";
 import { dividirTitulo, resolverTextos } from "@/lib/site/menuTexts";
 import {
   MODO_PADRAO_GLOBAL,
@@ -88,16 +90,15 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
     restaurant.site_settings?.show_categories_section !== false && clickableCategories.length > 0;
 
   const cabecalho = mostrarCabecalho ? (
-    <div className="text-center mb-10 sm:mb-16">
-      <span className="inline-block px-4 py-1.5 rounded-full bg-[hsl(var(--site-primary)/0.15)] text-[hsl(var(--site-primary))] text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase mb-4 border border-[hsl(var(--site-primary)/0.25)]">
+    <div className="text-center mb-6 sm:mb-8">
+      <span className="inline-block px-3 py-1 rounded-full bg-[hsl(var(--site-primary)/0.12)] text-[hsl(var(--site-primary))] text-[11px] sm:text-xs font-bold tracking-[0.12em] uppercase mb-3 border border-[hsl(var(--site-primary)/0.25)]">
         {textos.menu_badge}
       </span>
-      <h2 className="text-4xl sm:text-6xl font-black tracking-tighter uppercase mb-4 text-[hsl(var(--site-fg))] drop-shadow-sm">
+      <h2 className="text-3xl sm:text-5xl font-black tracking-tight uppercase mb-3 text-[hsl(var(--site-fg))] text-balance">
         {tituloDoCardapio.inicio}
         <span className="text-[hsl(var(--site-primary))]">{tituloDoCardapio.destaque}</span>
       </h2>
-      <div className="h-1 w-20 bg-[hsl(var(--site-primary))] mx-auto mb-6 rounded-full opacity-80" />
-      <p className="text-[hsl(var(--site-muted-fg))] mt-2 max-w-xl mx-auto italic text-sm sm:text-base leading-relaxed opacity-90 px-4">
+      <p className="text-[hsl(var(--site-muted-fg))] max-w-xl mx-auto text-sm sm:text-base leading-relaxed px-2">
         {current ? `Explorando a seleção premium de ${current.name}` : textos.menu_description}
       </p>
     </div>
@@ -391,13 +392,23 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
   // clicar em nada para ver o cardápio inteiro — é o cardápio de papel aberto
   // em cima da mesa, e não o cardápio digital que pede para escolher a página.
   if (modo === "direct") {
+    const BEBIDAS_ANCORA = "acompanhamentos";
+    const abasDaNav = [
+      ...directCategories.map((c) => ({ id: c.id, rotulo: `${c.icon ? `${c.icon} ` : ""}${c.name}` })),
+      ...(hasBeverages ? [{ id: BEBIDAS_ANCORA, rotulo: "Acompanhamentos" }] : []),
+    ];
+    // Ao pular para uma categoria, o título dela para logo abaixo da barra
+    // presa no topo (e da tarja de "fechado", se houver) — não escondido atrás.
+    const respiroDaAncora = "scroll-mt-[calc(var(--site-topo-fixo,0px)+4.5rem)]";
+
     return (
-      <section id="cardapio" className="py-12 sm:py-20 px-4">
+      <section id="cardapio" className="pt-8 pb-12 sm:pt-12 sm:pb-20 px-4">
         <div className="max-w-6xl mx-auto">
           {cabecalho}
-          <div className="space-y-16 sm:space-y-24">
+          <MenuCategoriasNav categorias={abasDaNav} />
+          <div className="space-y-12 sm:space-y-16">
             {directCategories.map(cat => (
-              <div key={cat.id} className="space-y-6 sm:space-y-10">
+              <div key={cat.id} id={ancoraDaCategoria(cat.id)} className={`space-y-5 sm:space-y-8 ${respiroDaAncora}`}>
                 <div className="flex items-center gap-4 sm:gap-6 px-2">
                   <div className="h-[2px] flex-1 bg-gradient-to-r from-transparent via-[hsl(var(--site-border))] to-[hsl(var(--site-primary)/0.3)]" />
                   <h3 className="min-w-0 text-center text-xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight text-[hsl(var(--site-fg))] [overflow-wrap:anywhere]">
@@ -411,7 +422,7 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                     Nenhum produto disponível nesta categoria.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8 h-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 h-full">
                     {cat.items.map((it) => (
                       <div key={it.id} className="h-full">
                         <SiteMenuItemCard item={it} restaurant={restaurant} adicionaisCategory={adicionaisCategory}
@@ -422,7 +433,11 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                 )}
               </div>
             ))}
-            {hasBeverages && secaoDeBebidas("Acompanhamentos")}
+            {hasBeverages && (
+              <div id={ancoraDaCategoria(BEBIDAS_ANCORA)} className={respiroDaAncora}>
+                {secaoDeBebidas("Acompanhamentos")}
+              </div>
+            )}
           </div>
         </div>
       </section>
