@@ -113,31 +113,31 @@ export function TableQrScanButton({ restaurant, className }: Props) {
       {validatedTable ? (
         <div
           role="status"
-          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[hsl(var(--site-primary))] px-5 text-[13px] font-extrabold uppercase tracking-[0.1em] text-[hsl(var(--site-primary-fg))] shadow-[0_10px_24px_-10px_hsl(var(--site-primary)/0.7)] ring-1 ring-inset ring-white/15 sm:min-h-12 sm:px-6 sm:text-sm"
+          className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-[hsl(var(--site-primary))] px-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--site-primary-fg))] shadow-[0_6px_16px_-8px_hsl(var(--site-primary)/0.8)] ring-1 ring-inset ring-white/15 sm:min-h-10 sm:px-4 sm:text-xs"
         >
           <Utensils
-            className="h-[18px] w-[18px] sm:h-5 sm:w-5"
+            className="h-[15px] w-[15px] sm:h-4 sm:w-4"
             strokeWidth={2.25}
             aria-hidden="true"
           />
           Mesa {validatedTable.number} identificada
         </div>
       ) : (
-        // Mesma pílula na cor da loja de sempre, com acabamento de app: altura
-        // de dedo (44px no celular, 48px no computador), letra legível, ícone
-        // nítido e sombra na cor da marca. O "aumentar ao passar o mouse" só
+        // Pílula pequena na cor da loja, presa no alto da capa: um selo que se
+        // vê sem competir com a logo (36px no celular, 40px no computador —
+        // ainda confortável para o dedo). O "aumentar ao passar o mouse" só
         // acontece para quem não pediu ao sistema para reduzir movimento.
         <button
           type="button"
           onClick={() => setScanning(true)}
           disabled={validating}
-          className="inline-flex min-h-11 items-center justify-center gap-2.5 rounded-full bg-[hsl(var(--site-primary))] px-5 text-[13px] font-extrabold uppercase tracking-[0.1em] text-[hsl(var(--site-primary-fg))] shadow-[0_10px_24px_-10px_hsl(var(--site-primary)/0.7)] ring-1 ring-inset ring-white/15 transition-transform duration-200 motion-safe:hover:scale-[1.04] active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--site-primary))] focus-visible:ring-offset-[hsl(var(--site-bg))] sm:min-h-12 sm:px-6 sm:text-sm"
+          className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[hsl(var(--site-primary))] px-3.5 text-[11px] font-bold uppercase tracking-[0.08em] text-[hsl(var(--site-primary-fg))] shadow-[0_6px_16px_-8px_hsl(var(--site-primary)/0.8)] ring-1 ring-inset ring-white/15 transition-transform duration-200 motion-safe:hover:scale-[1.04] active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--site-primary))] focus-visible:ring-offset-[hsl(var(--site-bg))] sm:min-h-10 sm:px-4 sm:text-xs"
         >
           {validating ? (
-            <Loader2 className="h-[18px] w-[18px] animate-spin sm:h-5 sm:w-5" aria-hidden="true" />
+            <Loader2 className="h-[15px] w-[15px] animate-spin sm:h-4 sm:w-4" aria-hidden="true" />
           ) : (
             <QrCode
-              className="h-[18px] w-[18px] sm:h-5 sm:w-5"
+              className="h-[15px] w-[15px] sm:h-4 sm:w-4"
               strokeWidth={2.25}
               aria-hidden="true"
             />
