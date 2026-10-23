@@ -198,12 +198,13 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
           via <FloatingCartButton />. Do not re-add it per template. */}
 
       <main>
-        <div className="max-w-6xl mx-auto px-4 pt-4 flex justify-center">
-          <TableQrScanButton restaurant={r} />
-        </div>
         {/* Compact Hero */}
         <div className="relative overflow-hidden bg-gradient-to-b from-[hsl(var(--site-primary)/0.1)] to-transparent">
           <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12 flex flex-col items-center text-center">
+            {/* Botão da mesa dentro da capa, sem faixa vazia acima dela. */}
+            <div className="mb-4 flex justify-center empty:hidden sm:mb-6">
+              <TableQrScanButton restaurant={r} />
+            </div>
             {/* Prominent restaurant logo — universal branding block. */}
             <SiteBrandLogo
               name={r.name}

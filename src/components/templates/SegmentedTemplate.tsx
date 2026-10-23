@@ -94,6 +94,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               showButton={r.site_settings?.show_hero_button !== false}
               hasCombos={hasCombos}
               combosVisibility={combosVisibility}
+              topo={<TableQrScanButton restaurant={r} />}
             />
           </div>
         );
@@ -196,9 +197,13 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
   return (
     <div className="min-h-screen bg-[hsl(var(--site-bg))] pb-safe-extra text-[hsl(var(--site-fg))]">
       <main>
-        <div className="mx-auto flex max-w-6xl justify-center px-4 pt-6 empty:hidden">
-          <TableQrScanButton restaurant={r} />
-        </div>
+        {/* O botão da mesa mora dentro da capa. Só quando o layout não tem
+            capa ele volta a ficar aqui em cima — senão sumiria. */}
+        {!layout.ordem.includes("capa") && (
+          <div className="mx-auto flex max-w-6xl justify-center px-4 pt-6 empty:hidden">
+            <TableQrScanButton restaurant={r} />
+          </div>
+        )}
 
         {layout.ordem.map(montar)}
       </main>

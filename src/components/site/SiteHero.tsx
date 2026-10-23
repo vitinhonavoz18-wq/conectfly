@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, type ReactNode } from "react";
 import { SiteBrandLogo } from "./SiteBrandLogo";
 import { useCapaDoHero } from "@/lib/site/useCapaDoHero";
 
@@ -19,6 +19,12 @@ interface Props {
    * Sem ele, vale a capa fixa de sempre — nenhuma loja antiga muda.
    */
   siteSettings?: unknown;
+  /**
+   * O que fica preso no alto da capa, por cima da foto — hoje, o botão de
+   * escanear o QR da mesa. Antes ele ficava numa faixa própria ACIMA da capa,
+   * e essa faixa virava um vão vazio entre a tarja e a foto.
+   */
+  topo?: ReactNode;
 }
 
 export function SiteHero({
@@ -34,6 +40,7 @@ export function SiteHero({
   hasCombos = false,
   combosVisibility = "auto",
   siteSettings,
+  topo,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
@@ -96,6 +103,11 @@ export function SiteHero({
 
   return (
     <div className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden pt-12 sm:pt-16">
+      {topo && (
+        <div className="absolute inset-x-0 top-3 z-20 flex justify-center px-4 empty:hidden sm:top-5">
+          {topo}
+        </div>
+      )}
       <div className="absolute inset-0">
         {showVideo ? (
           <video
