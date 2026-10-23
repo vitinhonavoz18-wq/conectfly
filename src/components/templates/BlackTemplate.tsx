@@ -72,8 +72,6 @@ export function BlackTemplate({ data }: { data: SiteData }) {
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
             combosVisibility={combosVisibility}
-            isOpen={r.is_open}
-            hours={r.hours}
           />
         </div>
 
