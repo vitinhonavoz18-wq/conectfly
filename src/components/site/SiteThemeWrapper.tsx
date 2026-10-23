@@ -1,6 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import {
   apagadoSobre,
+  ehEscuro,
   bordaSobre,
   letraLegivelSobre,
   receitaDeCor,
@@ -153,6 +154,20 @@ export function SiteThemeWrapper({
     themeTokens.secondary = escolhidaSecundaria;
   }
 
+  // O véu da capa. Em fundo escuro, o véu de sempre (escurece a foto e a letra
+  // clara aparece). Em fundo claro, aquele mesmo véu pintava a foto de branco
+  // — era a foto vista através de uma cortina de renda. Ali o véu fica bem
+  // mais leve, e as letras ganham um contorno discreto da cor do fundo, para
+  // continuarem legíveis sobre a foto agora nítida.
+  const fundoClaro = !ehEscuro(themeTokens.bg);
+  const veu = fundoClaro
+    ? {
+        topo: "0.08",
+        meio: "0.3",
+        contorno: `0 0 2px hsl(${themeTokens.bg} / 0.95), 0 0 10px hsl(${themeTokens.bg} / 0.9), 0 0 22px hsl(${themeTokens.bg} / 0.8)`,
+      }
+    : { topo: "0.4", meio: "0.7", contorno: "none" };
+
   const style: CSSProperties = {
     ["--site-bg" as string]: themeTokens.bg,
     ["--site-fg" as string]: themeTokens.fg,
@@ -167,6 +182,9 @@ export function SiteThemeWrapper({
     ["--site-danger" as string]: themeTokens.danger,
     ["--site-header-bg" as string]: themeTokens.headerBg,
     ["--site-header-fg" as string]: themeTokens.headerFg,
+    ["--site-veu-topo" as string]: veu.topo,
+    ["--site-veu-meio" as string]: veu.meio,
+    ["--site-hero-contorno" as string]: veu.contorno,
 
     // Nomes curtos, apontando para os mesmos valores. Deixam explícita a
     // separação de papéis — fundo da página, card, texto, marca — sem

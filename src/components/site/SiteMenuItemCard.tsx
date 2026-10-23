@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, ImageIcon, Check } from "lucide-react";
 import type { MenuItemRow, MenuCategoryRow, Size, RestaurantRow } from "@/lib/site/types";
 import { formatBRL } from "@/lib/site/format";
 import { useCart } from "./CartContext";
@@ -99,11 +99,14 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
   }, [itemName, nameExpanded]);
 
   return (
-     <div className="rounded-2xl border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col overflow-hidden shadow-sm [@media(hover:hover)]:hover:shadow-md [@media(hover:hover)]:hover:border-[hsl(var(--site-primary)/0.5)] transition-[box-shadow,border-color] duration-200 group relative h-full">
+     <div className="rounded-2xl sm:rounded-[2rem] border border-[hsl(var(--site-border))] bg-[hsl(var(--site-card))] flex flex-col gap-0 hover:border-[hsl(var(--site-primary)/0.6)] transition-colors duration-200 overflow-hidden shadow-xl group relative h-full">
+       {/* Brilho de hover: só existe em tela com mouse. No celular ninguém
+           passa o mouse, e a camada ficaria sendo pintada à toa em cada card. */}
+       <div className="hidden [@media(hover:hover)]:block absolute inset-0 bg-gradient-to-br from-[hsl(var(--site-primary)/0.08)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
        {(restaurant?.show_item_images ?? true) && item.image_url && (
          <div
            data-foto
-           className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-[hsl(var(--site-muted))] shrink-0"
+           className="relative aspect-[16/9] sm:aspect-[16/10] overflow-hidden bg-[hsl(var(--site-muted))] shrink-0"
          >
            <img
              src={item.image_url}
@@ -115,20 +118,21 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
              // diferença entre a lista ficar parada e os produtos pularem de
              // lugar bem na hora em que o cliente vai tocar num deles.
              width={800}
-             height={500}
-             className="absolute inset-0 w-full h-full object-cover [@media(hover:hover)]:motion-safe:group-hover:scale-105 [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
+             height={450}
+             className="absolute inset-0 w-full h-full object-cover [@media(hover:hover)]:group-hover:scale-110 [@media(hover:hover)]:transition-transform [@media(hover:hover)]:duration-500"
              onError={(e) => {
                const foto = (e.target as HTMLImageElement).closest("[data-foto]");
                if (foto) (foto as HTMLElement).style.display = "none";
              }}
            />
+           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
          </div>
        )}
-       <div className="p-4 sm:p-5 flex flex-col gap-2 flex-1">
-         <div className="flex items-start justify-between gap-3">
+       <div className="p-3.5 sm:p-6 flex flex-col gap-2.5 sm:gap-4 flex-1 relative z-10">
+         <div className="flex items-start justify-between gap-2 sm:gap-3">
             <div className="flex flex-col min-w-0">
               {itemCode && (
-                <span className="text-[11px] font-bold text-[hsl(var(--site-primary))] tracking-wider uppercase mb-0.5">
+                <span className="text-[8px] sm:text-[10px] font-bold text-[hsl(var(--site-primary))] tracking-widest uppercase mb-0.5 sm:mb-1">
                   [{itemCode}]
                 </span>
               )}
@@ -138,7 +142,7 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                   mais" abaixo mostra o nome inteiro. */}
               <h3
                 ref={nameRef}
-                className={`font-bold text-base sm:text-lg leading-snug tracking-tight text-[hsl(var(--site-fg))] [overflow-wrap:anywhere] ${
+                className={`font-black text-base sm:text-xl tracking-tighter uppercase group-hover:text-[hsl(var(--site-primary))] transition-colors leading-tight [overflow-wrap:anywhere] ${
                   nameExpanded ? "" : "line-clamp-2"
                 }`}
               >
@@ -148,39 +152,33 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                 <button
                   type="button"
                   onClick={() => setNameExpanded((v) => !v)}
-                  aria-expanded={nameExpanded}
-                  className="self-start text-xs font-semibold text-[hsl(var(--site-primary))] mt-0.5 underline underline-offset-2"
+                  className="self-start text-[10px] sm:text-xs font-black text-[hsl(var(--site-primary))] mt-0.5"
                 >
                   {nameExpanded ? "ver menos" : "ver mais"}
                 </button>
               )}
             </div>
-            <span className="shrink-0 text-[hsl(var(--site-primary))] font-extrabold text-base sm:text-lg tabular-nums leading-snug">
-              {showConsult ? "Consultar" : formatBRL(price)}
-            </span>
+            <div className="flex flex-col items-end shrink-0">
+              <span className="text-[hsl(var(--site-primary))] font-black text-base sm:text-xl tracking-tighter">
+                {showConsult ? "CONSULTAR" : formatBRL(price)}
+              </span>
+            </div>
          </div>
          {item.description && (
-           <p className="text-[13px] sm:text-sm text-[hsl(var(--site-muted-fg))] leading-relaxed line-clamp-2">
+           <p className="text-[10px] sm:text-xs text-[hsl(var(--site-muted-fg))] leading-relaxed italic line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">
              {item.description}
            </p>
          )}
-
-         {/* Tudo que é escolha + o botão ficam juntos no pé do card. Assim o
-             botão "Adicionar" cai sempre na mesma altura numa fileira de
-             cards, tenha o produto descrição longa, curta ou nenhuma. */}
-         <div className="mt-auto flex flex-col gap-2.5 pt-1">
           {sizes.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 sm:gap-2" role="group" aria-label="Tamanho">
+            <div className="flex flex-wrap gap-1 sm:gap-2 mt-auto">
               {sizes.map((s) => (
                 <button
                   key={s.label}
-                  type="button"
-                  aria-pressed={selected?.label === s.label}
                   onClick={() => setSelected(s)}
-                  className={`min-h-9 px-3 sm:px-4 text-xs sm:text-sm font-semibold rounded-lg border transition-colors ${
+                  className={`px-2.5 sm:px-4 py-1 sm:py-1.5 text-[8px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg sm:rounded-xl border transition-all ${
                     selected?.label === s.label
-                      ? "site-btn-primary border-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))]"
-                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] hover:border-[hsl(var(--site-primary)/0.4)] text-[hsl(var(--site-fg))]"
+                      ? "site-btn-primary border-[hsl(var(--site-primary)/0.5)] text-[hsl(var(--site-primary-fg))] shadow-lg scale-105"
+                       : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] hover:border-[hsl(var(--site-primary)/0.3)] text-[hsl(var(--site-muted-fg))]"
                   }`}
                 >
                   {s.label}
@@ -189,24 +187,24 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
             </div>
           )}
           {extras.length > 0 && !showConsult && (
-            <div>
+            <div className={sizes.length === 0 ? 'mt-auto' : ''}>
               <button
                 type="button"
                 onClick={() => setShowExtras((v) => !v)}
                 aria-expanded={showExtras}
-                className="w-full min-h-9 flex items-center justify-between gap-2 text-xs sm:text-sm font-semibold text-[hsl(var(--site-primary))]"
+                className="w-full flex items-center justify-between gap-2 py-1.5 text-[9px] sm:text-[11px] font-black uppercase tracking-widest text-[hsl(var(--site-primary))]"
               >
                 <span>
                   + Adicionais
                   {chosenExtras.length > 0 &&
                     ` (${chosenExtras.length}${limiteDeAdicionais != null ? `/${limiteDeAdicionais}` : ""})`}
                 </span>
-                <span className="text-[hsl(var(--site-muted-fg))] font-medium">
-                  {showExtras ? "fechar" : "ver opções"}
+                <span className="text-[hsl(var(--site-muted-fg))] normal-case tracking-normal font-bold">
+                  {showExtras ? "fechar" : "ver"}
                 </span>
               </button>
               {showExtras && (
-                <div className="flex flex-wrap gap-1.5 pb-1">
+                <div className="flex flex-wrap gap-1 sm:gap-1.5 pb-1">
                   {extras.map((e) => {
                     const active = selectedExtraIds.includes(e.id);
                     const travado = !active && limiteAtingido;
@@ -218,21 +216,21 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
                         aria-disabled={travado}
                         disabled={travado}
                         onClick={() => alternarExtra(e.id)}
-                        className={`min-h-9 px-2.5 text-xs font-medium rounded-lg border transition-colors ${
+                        className={`px-2 sm:px-2.5 py-1 text-[8px] sm:text-[10px] font-bold rounded-lg border transition-all ${
                           active
                             ? "border-[hsl(var(--site-primary))] bg-[hsl(var(--site-primary)/0.12)] text-[hsl(var(--site-primary))]"
                             : travado
                               ? "cursor-not-allowed border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))] opacity-40"
-                              : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-fg))] hover:border-[hsl(var(--site-primary)/0.4)]"
+                              : "border-[hsl(var(--site-border))] bg-[hsl(var(--site-muted))] text-[hsl(var(--site-muted-fg))] hover:border-[hsl(var(--site-primary)/0.4)]"
                         }`}
                       >
-                        {active && <Check className="inline h-3 w-3 mr-0.5" aria-hidden="true" />}
+                        {active && <Check className="inline h-2.5 w-2.5 mr-0.5" />}
                         {e.name} +{formatBRL(e.price)}
                       </button>
                     );
                   })}
                   {limiteAtingido && (
-                    <p className="w-full text-xs text-[hsl(var(--site-muted-fg))]">
+                    <p className="w-full text-[9px] sm:text-[10px] text-[hsl(var(--site-muted-fg))]">
                       Máximo de {limiteDeAdicionais} adicion
                       {limiteDeAdicionais === 1 ? "al" : "ais"} atingido.
                     </p>
@@ -242,29 +240,29 @@ export function SiteMenuItemCard({ item, restaurant, adicionaisCategory, vinculo
             </div>
           )}
           <button
-            type="button"
             onClick={handleAdd}
             disabled={showConsult || isAdding}
-            aria-label={`Adicionar ${itemName} ao pedido`}
             // Transição só do que de fato muda no botão: a cor (fica verde ao
             // adicionar) e o afundar do toque. `transition-all` mandaria o
             // navegador ficar de olho em toda propriedade animável de cada um
             // dos 200 botões da lista.
-            className={`site-btn-primary min-h-11 rounded-xl flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-70 disabled:scale-100 active:scale-95 transition-[background-color,transform] duration-200 ${isAdding ? 'bg-green-600 border-green-500' : ''}`}
+            className={`mt-1.5 sm:mt-2 site-btn-primary py-2 sm:py-3.5 rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-70 disabled:scale-100 shadow-xl active:scale-95 transition-[background-color,transform] duration-200 group/btn ${sizes.length === 0 ? 'mt-auto' : ''} ${isAdding ? 'bg-green-600 border-green-500 shadow-green-900/20' : ''}`}
           >
             {isAdding ? (
               <>
-                <Check className="h-4 w-4 text-white" aria-hidden="true" />
-                <span className="text-white">Adicionado!</span>
+                <div className="h-3.5 w-3.5 sm:h-4 sm:w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-black text-white">Adicionado!</span>
               </>
             ) : (
               <>
-                <Plus className="h-4 w-4 text-[hsl(var(--site-primary-fg))]" aria-hidden="true" />
-                <span>Adicionar</span>
+                <Plus className="h-3 sm:h-4 w-3 sm:w-4 text-[hsl(var(--site-primary-fg))] group-hover/btn:rotate-90 transition-transform" />
+                <span className="text-[8px] sm:text-[10px] uppercase tracking-[0.2em] font-black">
+                  <span className="hidden xs:inline">Adicionar ao pedido</span>
+                  <span className="xs:hidden">Adicionar</span>
+                </span>
               </>
             )}
           </button>
-         </div>
        </div>
      </div>
   );

@@ -1,4 +1,3 @@
-import { useEffect, useRef } from "react";
 import { horarioLegivel } from "@/lib/site/capaDaLoja";
 
 /**
@@ -22,29 +21,9 @@ import { horarioLegivel } from "@/lib/site/capaDaLoja";
 
 export function SiteClosedBanner({ hours }: { hours?: string | null }) {
   const horario = horarioLegivel(hours) ?? "";
-  const ref = useRef<HTMLDivElement>(null);
-
-  // A tarja fica presa no topo. A barra de categorias, que também fica presa
-  // no topo, precisa saber a altura dela para parar logo abaixo — senão uma
-  // cobre a outra. A altura muda com a largura da tela (o texto quebra em mais
-  // linhas no celular), por isso ela é medida e não chutada.
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const raiz = document.documentElement;
-    const publicar = () => raiz.style.setProperty("--site-topo-fixo", `${el.offsetHeight}px`);
-    publicar();
-    const observador = new ResizeObserver(publicar);
-    observador.observe(el);
-    return () => {
-      observador.disconnect();
-      raiz.style.removeProperty("--site-topo-fixo");
-    };
-  }, []);
 
   return (
     <div
-      ref={ref}
       role="status"
       className="sticky top-0 z-50 w-full border-b border-black/10 bg-[#B42318] px-4 py-3 text-center text-white shadow-md"
     >
