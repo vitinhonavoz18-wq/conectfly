@@ -50,9 +50,11 @@ export function SiteCartDrawer(props: Props) {
         onClick={onClose}
       />
        <aside
-          className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-[hsl(var(--site-card))] shadow-[0_0_80px_rgba(0,0,0,0.15)] flex flex-col transition-transform duration-500 ${
-            open ? "translate-x-0" : "translate-x-full"
+          className={`fixed top-0 right-0 bottom-0 w-full max-w-md z-50 bg-[hsl(var(--site-card))] flex flex-col transition-transform duration-500 ${
+            // Sombra só aberta: fechada, ela vazava pela borda direita da tela.
+            open ? "translate-x-0 shadow-[0_0_80px_rgba(0,0,0,0.15)]" : "translate-x-full shadow-none"
           }`}
+          inert={!open}
         >
           <div className="flex items-center justify-between p-4 border-b border-[hsl(var(--site-border))]">
             <div className="flex items-center gap-3">

@@ -55,7 +55,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans pb-safe-extra">
       <main>
-        <div className="max-w-6xl mx-auto px-4 pt-6 flex justify-center">
+        <div className="max-w-6xl mx-auto px-4 pt-6 empty:hidden flex justify-center">
           <TableQrScanButton restaurant={r} />
         </div>
         <div className="site-hero-section">
@@ -72,6 +72,8 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
             showButton={r.site_settings?.show_hero_button !== false}
             hasCombos={hasCombos}
             combosVisibility={combosVisibility}
+            isOpen={r.is_open}
+            hours={r.hours}
           />
         </div>
         {entryMode === "cards" ? (

@@ -103,8 +103,14 @@ export function SiteCheckoutCentral(props: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Seu pedido"
-        className={`fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full max-w-[820px] flex-col overflow-hidden rounded-t-3xl bg-[hsl(var(--site-bg))] shadow-[0_-10px_60px_rgba(0,0,0,0.35)] transition-transform duration-300 ease-out ${
-          open ? "translate-y-0" : "translate-y-full"
+        // Fechada, a folha só está escondida abaixo da tela. Sem `inert`, quem
+        // navega pelo teclado (Tab) entrava nela e se perdia em botões
+        // invisíveis — como um garçom anotando pedido de uma mesa vazia.
+        inert={!open}
+        className={`fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[92dvh] w-full max-w-[820px] flex-col overflow-hidden rounded-t-3xl bg-[hsl(var(--site-bg))] transition-transform duration-300 ease-out ${
+          // A sombra só existe com a folha aberta: fechada, ela fica logo
+          // abaixo da tela e a sombra subia, manchando o pé da página.
+          open ? "translate-y-0 shadow-[0_-10px_60px_rgba(0,0,0,0.35)]" : "translate-y-full shadow-none"
         }`}
       >
         {/* Barrinha de arrastar, centralizada no topo — o sinal visual de que

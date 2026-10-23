@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Clock } from "lucide-react";
 import { SiteBrandLogo } from "./SiteBrandLogo";
 import { useCapaDoHero } from "@/lib/site/useCapaDoHero";
+import { apresentacaoCorrida, horarioLegivel } from "@/lib/site/capaDaLoja";
 
 interface Props {
   name: string;
@@ -19,8 +21,46 @@ interface Props {
    * Sem ele, vale a capa fixa de sempre — nenhuma loja antiga muda.
    */
   siteSettings?: unknown;
+  /**
+   * Aberta ou fechada, do jeito que o banco respondeu. Só vira selo quando a
+   * resposta é explícita: sem o campo, a capa não afirma nada — dizer
+   * "aberto" sem saber é como pendurar a placa sem olhar se a cozinha ligou.
+   */
+  isOpen?: boolean | null;
+  /** O horário escrito no painel. Aparece no selo quando existe. */
+  hours?: string | null;
 }
 
+/** Quem pediu ao sistema para reduzir animações não ganha rolagem animada. */
+function comportamentoDeRolagem(): ScrollBehavior {
+  if (typeof window === "undefined" || !window.matchMedia) return "smooth";
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+}
+
+/**
+ * A CAPA DO CARDÁPIO — a primeira coisa que o cliente vê.
+ *
+ * O QUE ELA PRECISA RESOLVER EM TRÊS SEGUNDOS
+ *
+ * "Que loja é essa? Está aberta? Onde eu peço?" A capa antiga ocupava a tela
+ * inteira com uma logo enorme e um texto longo, e o cardápio ficava lá
+ * embaixo, fora da vista. Era a vitrine tão grande que escondia a porta.
+ *
+ * Agora a altura é a do conteúdo, a logo é do tamanho de uma placa de
+ * fachada, a apresentação mostra só as primeiras linhas (com "ler mais") e o
+ * botão de pedir aparece logo na primeira tela, inclusive no celular.
+ *
+ * A FOTO DE FUNDO
+ *
+ * Antes, a foto era coberta por uma névoa da cor do fundo da página. Em loja
+ * de fundo claro, isso deixava a foto lavada, quase branca. Agora a foto
+ * aparece com a cor dela e ganha um véu escuro suave por cima — só o
+ * suficiente para a letra branca ser lida sobre qualquer foto, clara ou
+ * escura. Sem foto, a capa usa as cores da própria loja.
+ *
+ * Tudo sai das variáveis de cor da loja (`--site-*`), então a mesma capa
+ * serve a confeitaria rosa e a hamburgueria preta sem nenhuma cor fixa.
+ */
 export function SiteHero({
   name,
   tagline,
@@ -34,6 +74,8 @@ export function SiteHero({
   hasCombos = false,
   combosVisibility = "auto",
   siteSettings,
+  isOpen,
+  hours,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const showCombos = combosVisibility === "always" || (combosVisibility === "auto" && hasCombos);
@@ -48,6 +90,30 @@ export function SiteHero({
 
   const showVideo = capa.tipo === "video" && !!capa.url;
   const urlDaImagem = capa.tipo === "imagem" ? capa.url || null : heroImageUrl;
+  const temMidia = showVideo || !!urlDaImagem;
+
+  const horario = horarioLegivel(hours);
+  const mostrarSelo = typeof isOpen === "boolean" || !!horario;
+
+  // A apresentação mostra as primeiras linhas; "ler mais" abre o resto, com
+  // as quebras de parágrafo que o lojista escreveu.
+  const resumo = apresentacaoCorrida(description);
+  const [apresentacaoAberta, setApresentacaoAberta] = useState(false);
+  const [apresentacaoCortada, setApresentacaoCortada] = useState(false);
+  const apresentacaoRef = useRef<HTMLParagraphElement>(null);
+
+  // Mede depois de pintar se o texto passou do limite de linhas. Só aí o
+  // "ler mais" aparece — em apresentação curta ele nem existe.
+  useLayoutEffect(() => {
+    if (apresentacaoAberta) return;
+    const medir = () => {
+      const el = apresentacaoRef.current;
+      if (el) setApresentacaoCortada(el.scrollHeight > el.clientHeight + 1);
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [resumo, apresentacaoAberta]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -61,9 +127,8 @@ export function SiteHero({
     const attemptPlay = async () => {
       try {
         await video.play();
-        console.log("Hero video started playing successfully");
-      } catch (error) {
-        console.log("Hero video autoplay blocked or failed, using poster fallback:", error);
+      } catch {
+        // Autoplay bloqueado pelo navegador: fica a imagem de capa (poster).
       }
     };
 
@@ -75,7 +140,7 @@ export function SiteHero({
   const scrollTo = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     let targetId = id;
-    
+
     // If we're looking for pizzas but it doesn't exist, try cardapio
     if (id === "pizzas" && !document.getElementById("pizzas")) {
       targetId = "cardapio";
@@ -83,115 +148,171 @@ export function SiteHero({
 
     const element = document.getElementById(targetId);
     if (element) {
-      const offset = 80;
+      const offset = 72;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
 
       window.scrollTo({
         top: offsetPosition,
-        behavior: "smooth",
+        behavior: comportamentoDeRolagem(),
       });
     }
   };
 
+  // Sobre foto, a letra é sempre branca (o véu garante o contraste). Sem
+  // foto, a letra segue as cores da loja.
+  const corDoNome = temMidia ? "text-white" : "text-[hsl(var(--site-fg))]";
+  const corDoSlogan = temMidia ? "text-white/90" : "text-[hsl(var(--site-primary))]";
+  const corDoTexto = temMidia ? "text-white/85" : "text-[hsl(var(--site-muted-fg))]";
+
+  const botao =
+    "inline-flex min-h-12 items-center justify-center rounded-full px-7 py-3 text-sm sm:text-base font-bold tracking-wide site-btn-primary shadow-lg transition-transform motion-safe:hover:scale-[1.03] active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--site-primary))]";
+
   return (
-    <div className="relative min-h-[70vh] sm:min-h-[85vh] flex items-center justify-center overflow-hidden pt-12 sm:pt-16">
-      <div className="absolute inset-0">
-        {showVideo ? (
-          <video
-            // A chave amarra o elemento ao endereço: quando a capa programada
-            // troca, o navegador monta um vídeo novo em vez de tentar remendar
-            // o antigo, que às vezes fica congelado no último quadro.
-            key={capa.url}
-            ref={videoRef}
-            src={capa.url}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            controls={false}
-            poster={heroImageUrl ?? undefined}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ pointerEvents: 'none' }}
-          />
-        ) : urlDaImagem ? (
-          <div
-            key={urlDaImagem}
-            className="absolute inset-0 bg-cover bg-center motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
-            style={{ backgroundImage: `url(${urlDaImagem})` }}
-          />
-        ) : null}
-      </div>
-       <div className="absolute inset-0 bg-gradient-to-b from-[hsl(var(--site-bg)/0.4)] via-[hsl(var(--site-bg)/0.7)] to-[hsl(var(--site-bg))]" />
-       <div className="absolute inset-0 bg-radial-at-c from-primary/5 to-transparent opacity-40" />
-       <div className="relative z-10 text-center px-4 py-12 sm:py-20 max-w-5xl mx-auto">
-         {logoUrl ? (
-           <div className="relative group inline-block mb-6 sm:mb-8">
-             <div className="absolute inset-0 bg-primary/10 blur-[80px] group-hover:bg-primary/30 transition-all rounded-full" />
-             <div className="relative mx-auto">
-               <SiteBrandLogo
-                 name={name}
-                 logoUrl={logoUrl}
-                 variant="hero"
-                 priority
-                 className="mx-auto drop-shadow-[0_0_25px_rgba(255,122,0,0.2)] group-hover:scale-105 transition-transform duration-700"
-               />
-             </div>
-           </div>
-         ) : (
-          <h1 className="text-4xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-6 sm:mb-8 bg-gradient-to-r from-[hsl(var(--site-primary))] via-[hsl(var(--site-primary)/0.8)] to-[hsl(var(--site-fg)/0.6)] bg-clip-text text-transparent drop-shadow-lg">
-             {name}
-           </h1>
-         )}
-         {tagline && (
-           <p className="text-xl sm:text-3xl font-black text-[hsl(var(--site-primary))] mb-3 sm:mb-4 uppercase tracking-[0.1em] sm:tracking-[0.15em] leading-tight">
-             {tagline}
-           </p>
-         )}
-         {description && (
-           <p className="max-w-xl mx-auto text-base sm:text-xl text-[hsl(var(--site-muted-fg))] leading-relaxed font-medium px-2">
-             {description}
-           </p>
-         )}
-          {(showHeroButton || showCombos) && (
-            <div className="mt-12 flex gap-5 justify-center flex-wrap">
-              {showCombos && (
-                <a
-                  href="#combos"
-                  onClick={(e) => scrollTo(e, "combos")}
-                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_12px_40px_hsl(var(--site-primary)/0.4)] active:scale-95 shadow-2xl uppercase tracking-widest border border-[hsl(var(--site-border))]"
-                >
-                  Combos Premium
-                </a>
-              )}
-              {showHeroButton && (
-                <a
-                  href="#pizzas"
-                  onClick={(e) => scrollTo(e, "pizzas")}
-                  className="px-10 py-5 rounded-full site-btn-primary font-extrabold text-lg transition-all transform hover:scale-105 hover:shadow-[0_15px_45px_hsl(var(--site-primary)/0.5)] active:scale-95 shadow-2xl uppercase tracking-widest border border-[hsl(var(--site-border))]"
-                >
-                  {buttonText}
-                </a>
-              )}
-            </div>
-          )}
-        <div 
-          onClick={() => {
-            const el = document.getElementById("pizzas") || document.getElementById("cardapio");
-            if (el) {
-              const offset = 80;
-              const elementPosition = el.getBoundingClientRect().top;
-              const offsetPosition = elementPosition + window.pageYOffset - offset;
-              window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-            }
-          }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden sm:flex flex-col items-center gap-1 text-[hsl(var(--site-muted-fg))] animate-bounce cursor-pointer group z-20"
-        >
-          <span className="text-[10px] uppercase tracking-[0.2em]">Role</span>
-          <span className="block w-px h-6 bg-[hsl(var(--site-muted-fg))]" />
+    <section aria-label={`Apresentação de ${name}`} className="relative isolate overflow-hidden">
+      {temMidia ? (
+        <div className="absolute inset-0 -z-10" aria-hidden="true">
+          {showVideo ? (
+            <video
+              // A chave amarra o elemento ao endereço: quando a capa programada
+              // troca, o navegador monta um vídeo novo em vez de tentar remendar
+              // o antigo, que às vezes fica congelado no último quadro.
+              key={capa.url}
+              ref={videoRef}
+              src={capa.url}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              controls={false}
+              poster={heroImageUrl ?? undefined}
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ pointerEvents: "none" }}
+            />
+          ) : urlDaImagem ? (
+            <img
+              key={urlDaImagem}
+              src={urlDaImagem}
+              alt=""
+              // É a imagem mais importante da primeira tela: o navegador a
+              // busca antes das fotos dos produtos, que ficam mais abaixo.
+              fetchPriority="high"
+              decoding="async"
+              className="absolute inset-0 h-full w-full object-cover motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
+            />
+          ) : null}
+          {/* O véu: escuro o bastante para ler, claro o bastante para ver a foto. */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/45 to-black/65" />
+          {/* Um toque da cor da loja, para a capa conversar com o resto do site. */}
+          <div className="absolute inset-0 bg-[hsl(var(--site-primary)/0.14)] mix-blend-multiply" />
         </div>
+      ) : (
+        <div
+          className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,hsl(var(--site-primary)/0.12),transparent_65%)]"
+          aria-hidden="true"
+        />
+      )}
+
+      <div className="mx-auto flex max-w-3xl flex-col items-center px-4 pb-8 pt-7 text-center sm:pb-12 sm:pt-10 lg:pb-14 lg:pt-12">
+        {logoUrl && (
+          <SiteBrandLogo
+            name={name}
+            logoUrl={logoUrl}
+            variant="capa"
+            priority
+            className="mb-3 drop-shadow-[0_6px_18px_rgba(0,0,0,0.25)] sm:mb-4"
+          />
+        )}
+
+        <h1
+          className={`max-w-full text-balance text-[1.65rem] font-extrabold leading-tight tracking-tight [overflow-wrap:anywhere] sm:text-4xl lg:text-[2.75rem] ${corDoNome} ${temMidia ? "drop-shadow-[0_2px_8px_rgba(0,0,0,0.35)]" : ""}`}
+        >
+          {name}
+        </h1>
+
+        {tagline && (
+          <p
+            className={`mt-1.5 text-balance text-base font-semibold leading-snug sm:mt-2 sm:text-xl ${corDoSlogan}`}
+          >
+            {tagline}
+          </p>
+        )}
+
+        {mostrarSelo && (
+          <p
+            className={`mt-3 inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full px-3.5 py-1.5 text-xs font-semibold sm:text-sm ${
+              temMidia
+                ? "bg-black/35 text-white ring-1 ring-white/20 backdrop-blur-sm"
+                : "bg-[hsl(var(--site-card))] text-[hsl(var(--site-fg))] ring-1 ring-[hsl(var(--site-border))]"
+            }`}
+          >
+            {typeof isOpen === "boolean" && (
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  aria-hidden="true"
+                  className={`h-2 w-2 rounded-full ${isOpen ? "bg-emerald-400" : "bg-red-500"}`}
+                />
+                {isOpen ? "Aberto agora" : "Fechado agora"}
+              </span>
+            )}
+            {typeof isOpen === "boolean" && horario && (
+              <span aria-hidden="true" className="opacity-50">
+                •
+              </span>
+            )}
+            {horario && (
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 opacity-80" aria-hidden="true" />
+                <span className="sr-only">Horário de funcionamento: </span>
+                {horario}
+              </span>
+            )}
+          </p>
+        )}
+
+        {resumo && (
+          <div className="mt-3 max-w-xl sm:mt-4">
+            <p
+              ref={apresentacaoRef}
+              id="apresentacao-da-loja"
+              className={`text-sm leading-relaxed sm:text-base ${corDoTexto} ${
+                apresentacaoAberta ? "whitespace-pre-line" : "line-clamp-3 sm:line-clamp-2"
+              }`}
+            >
+              {apresentacaoAberta ? description?.trim() : resumo}
+            </p>
+            {(apresentacaoCortada || apresentacaoAberta) && (
+              <button
+                type="button"
+                onClick={() => setApresentacaoAberta((v) => !v)}
+                aria-expanded={apresentacaoAberta}
+                aria-controls="apresentacao-da-loja"
+                className={`mt-1 min-h-8 px-2 text-xs font-semibold underline underline-offset-4 sm:text-sm ${
+                  temMidia ? "text-white" : "text-[hsl(var(--site-primary))]"
+                }`}
+              >
+                {apresentacaoAberta ? "Ler menos" : "Ler mais"}
+              </button>
+            )}
+          </div>
+        )}
+
+        {(showHeroButton || showCombos) && (
+          <div className="mt-5 flex flex-wrap justify-center gap-3 sm:mt-6">
+            {showHeroButton && (
+              <a href="#pizzas" onClick={(e) => scrollTo(e, "pizzas")} className={botao}>
+                {buttonText}
+              </a>
+            )}
+            {showCombos && (
+              <a href="#combos" onClick={(e) => scrollTo(e, "combos")} className={botao}>
+                Combos Premium
+              </a>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </section>
   );
 }
