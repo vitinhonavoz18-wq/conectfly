@@ -2,7 +2,7 @@ import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, Sh
 import { AceiteOfertas } from "./checkout/AceiteOfertas";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
-import { QrScanner } from "./QrScanner";
+import { QrScannerSobDemanda } from "./QrScannerSobDemanda";
 import { useCheckoutCore } from "./checkout/useCheckoutCore";
 
 interface Props {
@@ -550,7 +550,7 @@ export function SiteCartDrawer(props: Props) {
 
         {isScanning && (
           <div className="relative">
-            <QrScanner 
+            <QrScannerSobDemanda 
               onScan={onQrScan} 
               onClose={() => {
                 setIsScanning(false);

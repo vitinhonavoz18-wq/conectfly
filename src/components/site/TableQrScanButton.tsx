@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Loader2, QrCode, Utensils } from "lucide-react";
 import { toast } from "sonner";
 import { useCart, isValidTableNumber } from "./CartContext";
-import { QrScanner } from "./QrScanner";
+import { QrScannerSobDemanda } from "./QrScannerSobDemanda";
 import type { RestaurantRow } from "@/lib/site/types";
 
 interface Props {
@@ -111,23 +111,43 @@ export function TableQrScanButton({ restaurant, className }: Props) {
   return (
     <div className={className}>
       {validatedTable ? (
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] font-black uppercase text-[10px] sm:text-xs shadow-lg">
-          <Utensils className="h-3.5 w-3.5" />
+        <div
+          role="status"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[hsl(var(--site-primary))] px-5 text-[13px] font-extrabold uppercase tracking-[0.1em] text-[hsl(var(--site-primary-fg))] shadow-[0_10px_24px_-10px_hsl(var(--site-primary)/0.7)] ring-1 ring-inset ring-white/15 sm:min-h-12 sm:px-6 sm:text-sm"
+        >
+          <Utensils
+            className="h-[18px] w-[18px] sm:h-5 sm:w-5"
+            strokeWidth={2.25}
+            aria-hidden="true"
+          />
           Mesa {validatedTable.number} identificada
         </div>
       ) : (
+        // Mesma pílula na cor da loja de sempre, com acabamento de app: altura
+        // de dedo (44px no celular, 48px no computador), letra legível, ícone
+        // nítido e sombra na cor da marca. O "aumentar ao passar o mouse" só
+        // acontece para quem não pediu ao sistema para reduzir movimento.
         <button
+          type="button"
           onClick={() => setScanning(true)}
           disabled={validating}
-          className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[hsl(var(--site-primary))] text-[hsl(var(--site-primary-fg))] font-black uppercase text-xs tracking-widest shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center gap-2.5 rounded-full bg-[hsl(var(--site-primary))] px-5 text-[13px] font-extrabold uppercase tracking-[0.1em] text-[hsl(var(--site-primary-fg))] shadow-[0_10px_24px_-10px_hsl(var(--site-primary)/0.7)] ring-1 ring-inset ring-white/15 transition-transform duration-200 motion-safe:hover:scale-[1.04] active:scale-95 disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[hsl(var(--site-primary))] focus-visible:ring-offset-[hsl(var(--site-bg))] sm:min-h-12 sm:px-6 sm:text-sm"
         >
-          {validating ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-          Scanear QR da Mesa
+          {validating ? (
+            <Loader2 className="h-[18px] w-[18px] animate-spin sm:h-5 sm:w-5" aria-hidden="true" />
+          ) : (
+            <QrCode
+              className="h-[18px] w-[18px] sm:h-5 sm:w-5"
+              strokeWidth={2.25}
+              aria-hidden="true"
+            />
+          )}
+          Escanear QR da mesa
         </button>
       )}
 
       {scanning && (
-        <QrScanner
+        <QrScannerSobDemanda
           onScan={handleScan}
           onClose={() => setScanning(false)}
           identifying={validating}
