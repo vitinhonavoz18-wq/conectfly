@@ -79,6 +79,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
               categories={cardsCategories}
               restaurant={r}
               adicionaisCategory={adicionaisCategory}
+              bordasCategory={bordasCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
               entryMode="cards"
               beverages={data.beverages ?? []}
@@ -110,6 +111,7 @@ export function BlackTemplate({ data }: { data: SiteData }) {
                 categories={nonPizzaCategories}
                 restaurant={r}
                 adicionaisCategory={adicionaisCategory}
+                bordasCategory={bordasCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
                 entryMode={entryMode}
                 beverages={!hasPizzas ? (data.beverages ?? []) : []}

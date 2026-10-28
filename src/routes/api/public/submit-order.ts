@@ -352,6 +352,47 @@ export const Route = createFileRoute("/api/public/submit-order")({
             }
           }
 
+          // PIZZARIA PREMIUM — O PREÇO DA PIZZA É CONFERIDO AQUI, NO SERVIDOR.
+          //
+          // O navegador calcula o preço para mostrar ao cliente, mas quem
+          // decide o que vale é o cardápio do banco. Pizza montada no
+          // configurador (item com `montagem`) é refeita do zero; se o preço
+          // mudou no meio do caminho, o pedido volta para o cliente confirmar
+          // o valor novo em vez de seguir com o valor errado.
+          if (!isTest && Array.isArray(payload.order?.items)) {
+            const { conferirItensDePizza } = await import("@/lib/site/pizza/conferirPedido");
+            const { carregarCatalogoDaCategoria } = await import(
+              "@/lib/site/pizza/carregarCatalogo.server"
+            );
+            const conferencia = await conferirItensDePizza({
+              itens: payload.order.items,
+              subtotalEnviado: Number(payload.order.subtotal) || 0,
+              carregarCatalogo: (categoriaId) => carregarCatalogoDaCategoria(r.id, categoriaId),
+            });
+            if (!conferencia.ok) {
+              console.warn(`[SUBMIT-ORDER] 🍕 Pizza recusada na conferência: ${conferencia.motivo}`);
+              const mensagens: Record<string, string> = {
+                preco_mudou:
+                  "O preço de uma ou mais pizzas mudou enquanto você montava. Confira o valor atualizado no carrinho e envie de novo.",
+                montagem_invalida:
+                  "Uma das pizzas tem uma escolha que não está mais disponível. Monte de novo, por favor.",
+                subtotal_inconsistente: "O valor do pedido não confere com os itens. Atualize a página e tente de novo.",
+                cardapio_indisponivel: "Não foi possível conferir o cardápio agora. Tente de novo em instantes.",
+              };
+              return new Response(
+                JSON.stringify({
+                  success: false,
+                  error: mensagens[conferencia.motivo],
+                  pizza_conferencia: conferencia,
+                }),
+                // 422, e não 409: o checkout lê 409 como "mesa encerrada" e
+                // derrubaria a sessão da mesa por causa de um preço.
+                { status: conferencia.motivo === "cardapio_indisponivel" ? 503 : 422, headers },
+              );
+            }
+            payload.order.items = conferencia.itens;
+          }
+
           payload.api_key = key;
 
           const idempotencyKey = request.headers.get("x-idempotency-key") || payload.order?.id || "";

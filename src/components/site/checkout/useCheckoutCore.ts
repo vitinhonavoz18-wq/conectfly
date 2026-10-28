@@ -35,7 +35,7 @@ export interface CheckoutCoreParams {
 }
 
 export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName, deliveryZones = [], restaurant }: CheckoutCoreParams) {
-  const { items, updateQty, removeLine, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, sessionHydrating, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession, validateAndOpenTable } = useCart();
+  const { items, updateQty, removeLine, applyServerPizzaPrices, totalPrice, clear, validatedTable, setValidatedTable, sessionConsumed, sessionOrderCount, addSessionOrder, sessionClosed: ctxSessionClosed, sessionHydrating, terminateSession: ctxTerminateSession, clearSessionClosed, revalidateSession, validateAndOpenTable } = useCart();
   const [step, setStep] = useState<"cart" | "checkout" | "confirmation">("cart");
   const [orderType, setOrderType] = useState<"delivery" | "pickup" | "table">("delivery");
   const [tableNumber, setTableNumber] = useState<string | null>(null);
@@ -864,6 +864,21 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
 
     } catch (err: any) {
       console.error("CHECKOUT_SEND_ERROR:", err);
+      // O servidor conferiu as pizzas com o cardápio oficial e recusou. Não
+      // é problema de mesa nem de conexão: mostra o motivo e, se foi preço,
+      // já coloca o valor novo no carrinho para o cliente conferir e enviar
+      // de novo — ninguém paga um preço que não viu.
+      if (err?.pizzaConferencia) {
+        const conf = err.pizzaConferencia as { motivo?: string; diferencas?: { indice: number; preco_atual_centavos: number }[] };
+        if (conf.motivo === "preco_mudou" && Array.isArray(conf.diferencas)) {
+          applyServerPizzaPrices(conf.diferencas);
+          setStep("cart");
+        }
+        const msg = err.message || "Não foi possível conferir as pizzas do pedido.";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
       // CORREÇÃO 4: se o FlyControl reportou sessão encerrada durante o
       // submit-order, destruir toda a sessão local imediatamente.
       const raw = `${err?.message || ""}`.toLowerCase();

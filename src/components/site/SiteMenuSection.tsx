@@ -3,6 +3,7 @@ import { ImageIcon, ArrowLeft } from "lucide-react";
 import type { MenuCategoryRow, MenuItemRow, RestaurantRow, BeverageRow, BeverageCatalogRow } from "@/lib/site/types";
 import { SiteMenuItemCard } from "./SiteMenuItemCard";
 import { SitePizzaBuilder } from "./SitePizzaBuilder";
+import { isBordasCategory } from "@/lib/site/categoryKinds";
 import { SiteBeverageSection } from "./SiteBeverageSection";
 import { dividirTitulo, resolverTextos } from "@/lib/site/menuTexts";
 import {
@@ -24,6 +25,8 @@ interface Props {
   entryMode?: ModoDeNavegacao;
   adicionaisCategory?: MenuCategoryRow & { items: MenuItemRow[] };
   vinculosDeAdicional?: VinculosDeAdicional;
+  /** Categoria das bordas, para o montador de pizza oferecer a borda também neste layout. */
+  bordasCategory?: MenuCategoryRow & { items: MenuItemRow[] };
   beverages?: BeverageRow[];
   beverageCatalogs?: BeverageCatalogRow[];
 }
@@ -41,7 +44,8 @@ interface Props {
  * - `navigation` → grade de categorias; escolhe uma e troca pela barra.
  * - `direct`     → tudo numa rolagem só, categoria após categoria.
  */
-export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRAO_GLOBAL, adicionaisCategory, vinculosDeAdicional, beverages, beverageCatalogs }: Props) {
+export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRAO_GLOBAL, adicionaisCategory, vinculosDeAdicional, bordasCategory: bordasRecebidas, beverages, beverageCatalogs }: Props) {
+  const bordasCategory = bordasRecebidas ?? categories.find(isBordasCategory);
   // Os textos institucionais do cardápio. Vêm das configurações desta loja;
   // se ela nunca personalizou, `resolverTextos` devolve exatamente as frases
   // que já estavam no ar — nenhum cardápio existente muda sozinho.
@@ -361,6 +365,9 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                 <SitePizzaBuilder
                   category={selectedCat}
                   restaurant={restaurant}
+                  bordasCategory={bordasCategory}
+                  adicionaisCategory={adicionaisCategory}
+                  vinculosDeAdicional={vinculosDeAdicional}
                   beverages={beverages}
                   beverageCatalogs={beverageCatalogs}
                 />
@@ -574,6 +581,9 @@ export function SiteMenuSection({ categories, restaurant, entryMode = MODO_PADRA
                   <SitePizzaBuilder
                     category={current}
                     restaurant={restaurant}
+                    bordasCategory={bordasCategory}
+                    adicionaisCategory={adicionaisCategory}
+                    vinculosDeAdicional={vinculosDeAdicional}
                     beverages={beverages}
                     beverageCatalogs={beverageCatalogs}
                   />

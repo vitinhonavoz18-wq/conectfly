@@ -1,4 +1,5 @@
 import type { VinculosDeAdicional } from "./adicionaisDaCategoria";
+import type { MontagemDePizza } from "./pizza/motorDePreco";
 
 export type Size = { label: string; price: number };
 
@@ -38,6 +39,12 @@ export interface MenuItemRow {
    is_active?: boolean;
    /** Máximo de adicionais que o cliente pode escolher neste item. Vazio/nulo = sem limite. */
    max_extras?: number | null;
+   /** Preço do sabor (ou da borda/adicional) por tamanho, em centavos: `{ "grande": 5900 }`. */
+   pizza_size_prices_cents?: Record<string, number> | null;
+   /** Ingredientes do sabor que o cliente pode pedir para tirar. */
+   ingredients?: string[] | null;
+   /** Quantas vezes o adicional pode ir na mesma pizza (padrão 1). */
+   max_quantity?: number | null;
 }
 
 export interface MenuCategoryRow {
@@ -238,6 +245,14 @@ export interface CartLine {
   flavors?: string[];
   specialFlavors?: string[];
   extras?: number;
+  /**
+   * Pizza montada no configurador: a receita (tamanho, sabores, borda…).
+   * É com ela que o servidor confere o preço e que o cliente edita a pizza
+   * depois de colocada no carrinho.
+   */
+  montagem?: MontagemDePizza;
+  /** Categoria de pizza (o cardápio) de onde a montagem saiu. */
+  pizzaCategoryId?: string;
 }
 
 export interface DeliveryZoneRow {

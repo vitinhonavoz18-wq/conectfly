@@ -163,6 +163,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               categories={entryMode === "cards" ? categoriasDeProduto : nonPizzaCategories}
               restaurant={r}
               adicionaisCategory={adicionaisCategory}
+              bordasCategory={bordasCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
               entryMode={entryMode}
               beverages={!hasPizzas ? (data.beverages ?? []) : []}
