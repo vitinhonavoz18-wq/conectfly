@@ -70,7 +70,16 @@ export function buildOrderMessage(order: OrderData, version: "compact" | "comple
           line += `\n${flavorTitle}\n${item.flavors.map(f => `* ${f}`).join("\n")}`;
         }
        
-       if (item.description) {
+       if (item.montagem && item.description) {
+         // Pizza do configurador: os sabores (com a fração) já foram
+         // listados acima; aqui vai o resto, uma informação por linha, para
+         // a cozinha não confundir "sem cebola" com "cebola extra".
+         const detalhes = item.description
+           .split(" • ")
+           .map((d) => d.trim())
+           .filter((d) => d && !/^Sabor(es)?:/.test(d));
+         if (detalhes.length > 0) line += `\n✨ Detalhes:\n${detalhes.map((d) => `* ${d}`).join("\n")}`;
+       } else if (item.description) {
          if (isCombo || item.description.includes(",") || item.description.includes("\n")) {
            const extras = item.description.split(/[•,\n\+]/).map(e => e.trim()).filter(Boolean);
            line += `\n${isCombo ? "📦 Composição:" : "✨ Opções:"}\n${extras.map(e => `* ${e}`).join("\n")}`;

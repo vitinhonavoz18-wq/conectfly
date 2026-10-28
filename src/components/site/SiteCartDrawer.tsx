@@ -1,9 +1,23 @@
-import { X, Minus, Plus, Trash2, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2, QrCode, Camera, AlertCircle, Loader2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, Pencil, MapPin, CreditCard, Banknote, MessageSquare, ShoppingBag, ChevronRight, ArrowLeft, Store, Utensils, Ticket, CheckCircle2, QrCode, Camera, AlertCircle, Loader2 } from "lucide-react";
 import { AceiteOfertas } from "./checkout/AceiteOfertas";
 import { formatBRL, formatPhoneMask } from "@/lib/site/format";
 import type { DeliveryZoneRow, RestaurantRow } from "@/lib/site/types";
 import { QrScannerSobDemanda } from "./QrScannerSobDemanda";
 import { useCheckoutCore } from "./checkout/useCheckoutCore";
+import { EVENTO_EDITAR_PIZZA, type PedidoDeEdicao } from "./SitePizzaBuilder";
+import { toast } from "sonner";
+import type { CartLine } from "@/lib/site/types";
+
+/**
+ * Reabre a pizza no montador. Se o montador daquela categoria não estiver na
+ * tela (o cliente está em outra categoria), avisa em vez de não fazer nada.
+ */
+function editarPizza(linha: CartLine, fechar: () => void) {
+  const pedido: PedidoDeEdicao = { linha };
+  window.dispatchEvent(new CustomEvent(EVENTO_EDITAR_PIZZA, { detail: pedido }));
+  if (pedido.atendido) fechar();
+  else toast.info("Abra a categoria desta pizza no cardápio para editá-la.");
+}
 
 interface Props {
   open: boolean;
@@ -150,7 +164,11 @@ export function SiteCartDrawer(props: Props) {
                             {l.name}
                             {l.sizeLabel ? <span className="text-[9px] text-[hsl(var(--site-primary))] ml-2 font-black bg-[hsl(var(--site-primary)/0.1)] px-1.5 py-0.5 rounded border border-[hsl(var(--site-primary)/0.2)]">({l.sizeLabel})</span> : ""}
                           </p>
-                          {l.flavors && l.flavors.length > 0 ? (
+                          {l.montagem && l.description ? (
+                            <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1 leading-relaxed font-medium">
+                              {l.description}
+                            </p>
+                          ) : l.flavors && l.flavors.length > 0 ? (
                             <p className="text-xs text-[hsl(var(--site-muted-fg))] mt-1 leading-relaxed font-medium">
                               Sabores: {l.flavors.join(" + ")}
                             </p>
@@ -160,6 +178,15 @@ export function SiteCartDrawer(props: Props) {
                             </p>
                           ) : null}
                         </div>
+                        {l.montagem && (
+                          <button
+                            onClick={() => editarPizza(l, onClose)}
+                            aria-label="Editar pizza"
+                            className="p-2 text-[hsl(var(--site-muted-fg))] hover:text-[hsl(var(--site-primary))] hover:bg-[hsl(var(--site-primary)/0.1)] rounded-xl transition-all"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => removeLine(l.itemId, l.sizeLabel)}
                           className="p-2 text-[hsl(var(--site-muted-fg))] hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"

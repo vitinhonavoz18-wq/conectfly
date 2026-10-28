@@ -4,6 +4,7 @@ import { openTableSession, type OpenTableSessionPayload } from "@/lib/site/flyco
 import { newTraceId, traceLog, traceWarn } from "@/lib/site/closeDebug";
 import { checkTableSession as svcCheckTableSession } from "@/services/tableSessionService";
 import { supabase } from "@/integrations/supabase/client";
+import { aplicarPrecosDoServidor, type DiferencaRecebida } from "@/lib/site/pizza/linhaDoCarrinho";
 
 export interface ValidatedTable {
   id: string;
@@ -24,6 +25,17 @@ interface CartCtx {
   addLine: (line: Omit<CartLine, "quantity">, qty?: number) => void;
   updateQty: (itemId: string, sizeLabel: string | undefined, qty: number) => void;
   removeLine: (itemId: string, sizeLabel?: string) => void;
+  /**
+   * Troca uma linha por outra (edição de pizza). Se a pizza editada ficar
+   * igual a outra que já está no carrinho, as duas viram uma linha só.
+   */
+  replaceLine: (
+    old: { itemId: string; sizeLabel?: string },
+    line: Omit<CartLine, "quantity">,
+    qty: number,
+  ) => void;
+  /** Preços novos que o servidor devolveu ao recusar o pedido (ver `aplicarPrecosDoServidor`). */
+  applyServerPizzaPrices: (diferencas: DiferencaRecebida[]) => void;
   clear: () => void;
   totalItems: number;
   totalPrice: number;
@@ -710,6 +722,32 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
     );
   };
 
+  const replaceLine: CartCtx["replaceLine"] = (old, line, qty) => {
+    if (sessionClosed || sessionHydrating) {
+      console.warn("CART_CTX_REPLACELINE_BLOCKED_SESSION_CLOSED");
+      return;
+    }
+    setItems((cur) => {
+      const oldKey = keyOf(old.itemId, old.sizeLabel);
+      const newKey = keyOf(line.itemId, line.sizeLabel);
+      const idx = cur.findIndex((l) => keyOf(l.itemId, l.sizeLabel) === oldKey);
+      const copy = [...cur];
+      if (idx >= 0) copy.splice(idx, 1);
+      const igual = copy.findIndex((l) => keyOf(l.itemId, l.sizeLabel) === newKey);
+      if (igual >= 0) {
+        copy[igual] = { ...copy[igual], quantity: copy[igual].quantity + qty };
+        return copy;
+      }
+      // Mantém a pizza editada no mesmo lugar da lista.
+      copy.splice(idx >= 0 ? idx : copy.length, 0, { ...line, quantity: qty });
+      return copy;
+    });
+  };
+
+  const applyServerPizzaPrices: CartCtx["applyServerPizzaPrices"] = (diferencas) => {
+    setItems((cur) => aplicarPrecosDoServidor(cur, diferencas));
+  };
+
   const value = useMemo<CartCtx>(() => {
     const totalItems = items.reduce((s, l) => s + l.quantity, 0);
     const totalPrice = items.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
@@ -718,6 +756,8 @@ export function CartProvider({ children, namespace }: { children: ReactNode; nam
       addLine,
       updateQty,
       removeLine,
+      replaceLine,
+      applyServerPizzaPrices,
       clear: () => setItems([]),
       totalItems,
       totalPrice,

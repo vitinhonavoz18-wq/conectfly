@@ -128,7 +128,12 @@ export function buildOrderPayload(args: {
          quantity: Number(l.quantity) || 0,
          unit_price: Number(l.unitPrice) || 0,
          total_price: (Number(l.unitPrice) || 0) * (Number(l.quantity) || 0),
-         notes: (l.description || "").trim()
+         notes: (l.description || "").trim(),
+         // Pizza do configurador: vai a receita, não só o preço. O servidor
+         // refaz a conta com o cardápio oficial e grava a fotografia dela.
+         ...(l.montagem && l.pizzaCategoryId
+           ? { montagem: l.montagem, pizza_category_id: l.pizzaCategoryId }
+           : {}),
        };
      } else if (isCombo) {
        return {
@@ -459,8 +464,19 @@ export async function sendOrderToFlycontrol(
     if (!response.ok || data?.success === false) {
       const errorMsg = data?.error || data?.message || `HTTP ${status}: ${responseText}`;
       console.error("CHECKOUT_SEND_ERROR:", errorMsg);
-      const err = new Error(errorMsg) as Error & { sessionClosed?: boolean; httpStatus?: number };
+      const err = new Error(errorMsg) as Error & {
+        sessionClosed?: boolean;
+        httpStatus?: number;
+        pizzaConferencia?: unknown;
+      };
       err.httpStatus = status;
+      // Recusa da conferência de preço das pizzas: não tem nada a ver com a
+      // mesa. Volta para o checkout mostrar o motivo e atualizar o carrinho.
+      if (data?.pizza_conferencia) {
+        err.pizzaConferencia = data.pizza_conferencia;
+        err.sessionClosed = false;
+        throw err;
+      }
       const raw = `${errorMsg} ${JSON.stringify(data ?? {})}`.toLowerCase();
       err.sessionClosed =
         data?.closed === true ||
