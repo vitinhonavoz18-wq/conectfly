@@ -371,11 +371,31 @@ export const Route = createFileRoute("/api/menu-sync/$")({
 
           const dataWithOwnership: any = { ...mappedData, [cfg.ownerField]: restaurant.id };
 
+          // A bebida criada a partir de um registro local pode ser reenviada após falha de rede.
+          const localDrinkId = type === "beverage" && isUuid(body.source_product_id) ? body.source_product_id : null;
+          delete dataWithOwnership.source_product_id;
+          delete mappedData.source_product_id;
+          if (localDrinkId) {
+            dataWithOwnership.id = localDrinkId;
+            dataWithOwnership.external_id = localDrinkId;
+          }
           const { data: result, error } = await (supabaseAdmin.from(cfg.table as any) as any)
             .insert(dataWithOwnership)
             .select()
             .single();
 
+          if (localDrinkId && error?.code === "23505") {
+            const { data: existing, error: lookupError } = await supabaseAdmin.from("pizzeria_beverages")
+              .select("id").eq("id", localDrinkId).eq("external_id", localDrinkId)
+              .eq("pizzeria_id", restaurant.id!).maybeSingle();
+            if (lookupError) throw lookupError;
+            if (existing) {
+              const { data: updated, error: updateError } = await supabaseAdmin.from("pizzeria_beverages")
+                .update(mappedData).eq("id", localDrinkId).eq("pizzeria_id", restaurant.id!).select("id").single();
+              if (updateError) throw updateError;
+              return json({ success: true, data: updated }, 200, corsHeaders);
+            }
+          }
           if (error) throw error;
 
           // Os vínculos só podem ser gravados DEPOIS que o item existe: eles

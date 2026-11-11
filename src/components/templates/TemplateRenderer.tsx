@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import type { SiteData } from "@/lib/site/types";
+import { publicBeverageMenu } from "@/lib/site/publicBeverageMenu";
 import { BlackTemplate } from "./BlackTemplate";
 import { WhiteTemplate } from "./WhiteTemplate";
 import { PizzaRedTemplate } from "./PizzaRedTemplate";
@@ -38,7 +39,8 @@ interface TemplateRendererProps {
  * Nenhuma loja que está no ar muda de cara sozinha. É a diferença entre
  * oferecer uma reforma e aparecer com o pedreiro na porta.
  */
-export function TemplateRenderer({ data }: TemplateRendererProps) {
+export function TemplateRenderer({ data: source }: TemplateRendererProps) {
+  const data = publicBeverageMenu(source);
   const template = data.restaurant.selected_template || "black";
   const layoutEscolhido = data.restaurant.site_settings?.menu_layout;
 

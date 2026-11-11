@@ -4,7 +4,6 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
-import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCheckout } from "../site/checkout/SiteCheckout";
 import { SiteFooter } from "../site/SiteFooter";
 import type { SiteData } from "@/lib/site/types";
@@ -20,22 +19,8 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   const { isCartOpen, setCartOpen } = useCart();
   const r = data.restaurant;
 
-  const isBeverage = (c: any) => {
-    const name = c.name.toLowerCase();
-    const isBev =
-      name.includes("bebida") ||
-      name.includes("beverage") ||
-      name.includes("drink") ||
-      name.includes("refrigerante") ||
-      name.includes("catálogo") ||
-      c.type === "beverage" ||
-      c.type === "BEVERAGE";
-    return isBev;
-  };
-
-  const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter(
-    (c) => !c.is_pizza && !isBeverage(c) && !isExtrasCategory(c),
+    (c) => !c.is_pizza && !isExtrasCategory(c),
   );
   const bordasCategory = data.categories.find(isBordasCategory);
   const adicionaisCategory = data.categories.find(isAdicionaisCategory);
@@ -48,9 +33,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
   // nicho a consultar aqui.
   const entryMode = resolverModoDeNavegacao(r.site_settings);
 
-  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
-  const beveragesPosition = r.site_settings?.beverages_position || "end";
-  const cardsCategories = data.categories.filter((c) => !isExtrasCategory(c) && !isBeverage(c));
+  const cardsCategories = data.categories.filter((c) => !isExtrasCategory(c));
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] font-sans pb-safe-extra">
@@ -94,7 +77,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
                 bordasCategory={bordasCategory}
                 adicionaisCategory={adicionaisCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
-                beverages={data.beverages ?? []}
+                beverages={[]}
                 beverageCatalogs={data.beverageCatalogs}
               />
             </div>
@@ -113,7 +96,7 @@ export function PizzaRedTemplate({ data }: { data: SiteData }) {
                 bordasCategory={bordasCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
                 entryMode={entryMode}
-                beverages={!hasPizzas ? (data.beverages ?? []) : []}
+                beverages={data.beverages ?? []}
                 beverageCatalogs={data.beverageCatalogs}
               />
             </div>

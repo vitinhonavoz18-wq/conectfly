@@ -157,21 +157,6 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     }
   };
 
-  const isBeverage = (c: any) => {
-    const name = c.name.toLowerCase();
-    const type = c.type?.toLowerCase();
-    return (
-      name.includes("bebida") ||
-      name.includes("beverage") ||
-      name.includes("drink") ||
-      name.includes("refrigerante") ||
-      name.includes("cerveja") ||
-      name.includes("vinho") ||
-      name.includes("cocktail") ||
-      type === "beverage"
-    );
-  };
-
   // Adicionais deixaram de ser uma seção do cardápio: agora aparecem como
   // escolha dentro de cada produto. Bordas seguem como seção AQUI de
   // propósito — este modelo não tem montador de pizza, então escondê-las as
@@ -180,17 +165,15 @@ export function BarPrimeTemplate({ data }: { data: SiteData }) {
     (c) => c.show_on_public_site !== false && !isAdicionaisCategory(c),
   );
   const adicionaisCategory = data.categories.find(isAdicionaisCategory);
-  const beverageCategories = allCategories.filter(isBeverage);
-  const foodCategories = allCategories.filter((c) => !isBeverage(c) && !c.is_pizza);
 
   // Dynamic categories for the quick nav, excluding beverages as they have their own section
   const navCategories = allCategories.filter(
-    (c) => c.items && c.items.length > 0 && !isBeverage(c),
+    (c) => c.items && c.items.length > 0,
   );
 
   const beveragesVisible = r.site_settings?.beverages_visibility !== false;
   const entryMode = resolverModoDeNavegacao(r.site_settings);
-  const cardsCategories = allCategories.filter((c) => !isBeverage(c));
+  const cardsCategories = allCategories;
 
   return (
     <div className="min-h-screen text-[hsl(var(--site-fg))] bg-[hsl(var(--site-bg))] pb-safe-extra font-sans">

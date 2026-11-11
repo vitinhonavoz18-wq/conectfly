@@ -4,12 +4,11 @@ import { SiteHero } from "../site/SiteHero";
 import { SiteComboSection } from "../site/SiteComboSection";
 import { SiteMenuSection } from "../site/SiteMenuSection";
 import { SitePizzaSection } from "../site/SitePizzaSection";
-import { SiteBeverageSection } from "../site/SiteBeverageSection";
 import { SiteCheckout } from "../site/checkout/SiteCheckout";
 import { SiteFooter } from "../site/SiteFooter";
 import { MenuBusca } from "../site/MenuBusca";
 import { MenuDestaques } from "../site/MenuDestaques";
-import type { MenuCategoryRow, SiteData } from "@/lib/site/types";
+import type { SiteData } from "@/lib/site/types";
 import { getPrimaryButtonText } from "@/lib/site/format";
 import { isAdicionaisCategory, isBordasCategory, isExtrasCategory } from "@/lib/site/categoryKinds";
 import { resolverLayout, type BlocoDoCardapio } from "@/lib/site/menuLayout";
@@ -40,24 +39,9 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
   const r = data.restaurant;
   const layout = resolverLayout(r);
 
-  // A separação de categorias é a mesma dos modelos que já existiam — copiar
-  // a regra seria arriscar dois cardápios discordarem sobre o que é bebida.
-  const isBeverage = (c: MenuCategoryRow & { type?: string }) => {
-    const name = c.name.toLowerCase();
-    return (
-      name.includes("bebida") ||
-      name.includes("beverage") ||
-      name.includes("drink") ||
-      name.includes("refrigerante") ||
-      name.includes("catálogo") ||
-      c.type === "beverage" ||
-      c.type === "BEVERAGE"
-    );
-  };
-
   const hasPizzas = data.categories.some((c) => c.is_pizza && (c.pizza_sizes?.length ?? 0) > 0);
   const nonPizzaCategories = data.categories.filter(
-    (c) => !c.is_pizza && !isBeverage(c) && !isExtrasCategory(c),
+    (c) => !c.is_pizza && !isExtrasCategory(c),
   );
   const bordasCategory = data.categories.find(isBordasCategory);
   const adicionaisCategory = data.categories.find(isAdicionaisCategory);
@@ -69,7 +53,6 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
   // cliente escolha a categoria antes de ver produto. Mas é SUGESTÃO — se o
   // lojista escolheu na aba Comportamento, a escolha dele passa por cima.
   const entryMode = resolverModoDeNavegacao(r.site_settings, layout.modoDeNavegacaoPadrao);
-  const beveragesVisible = r.site_settings?.beverages_visibility !== false;
 
   // As categorias que a busca e os destaques varrem: tudo que é produto de
   // verdade. Adicionais e bordas ficam de fora — ninguém procura "borda de
@@ -133,7 +116,7 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               bordasCategory={bordasCategory}
               adicionaisCategory={adicionaisCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
-              beverages={data.beverages ?? []}
+              beverages={[]}
               beverageCatalogs={data.beverageCatalogs}
             />
           </div>
@@ -166,29 +149,16 @@ export function SegmentedTemplate({ data }: { data: SiteData }) {
               bordasCategory={bordasCategory}
               vinculosDeAdicional={data.vinculosDeAdicional}
               entryMode={entryMode}
-              beverages={!hasPizzas ? (data.beverages ?? []) : []}
+              beverages={data.beverages ?? []}
               beverageCatalogs={data.beverageCatalogs}
             />
           </div>
         );
       }
 
-      case "bebidas": {
-        // O cardápio de bebidas já entra dentro do bloco de produtos quando a
-        // loja não tem pizza. Repetir aqui mostraria a mesma lista duas vezes.
-        if (!beveragesVisible || !hasPizzas) return null;
-        const bebidas = data.beverages ?? [];
-        if (bebidas.length === 0) return null;
-        return (
-          <div key="bebidas">
-            <SiteBeverageSection
-              beverages={bebidas}
-              catalogs={data.beverageCatalogs}
-              restaurant={r}
-            />
-          </div>
-        );
-      }
+      case "bebidas":
+        // As bebidas já estão acessíveis pelo bloco do cardápio.
+        return null;
 
       default:
         return null;
