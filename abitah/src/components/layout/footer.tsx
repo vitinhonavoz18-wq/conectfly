@@ -1,3 +1,4 @@
+import { ConnectflySignature } from "./ConnectflySignature";
 import Link from "next/link";
 import { Instagram, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
@@ -115,6 +116,9 @@ export function Footer() {
         <div className="container-page flex flex-col items-center justify-between gap-3 py-5 text-center sm:flex-row sm:text-left">
           <p className="text-xs text-smoke-400">
             © {year} {siteConfig.legalName}. Todos os direitos reservados.
+          </p>
+          <p className="text-xs text-smoke-400 empty:hidden">
+            <ConnectflySignature />
           </p>
           <p className="text-xs text-smoke-400">
             <Link href="/politicas/privacidade" className="hover:text-neon-400">
