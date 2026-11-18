@@ -1,3 +1,4 @@
+import { ConnectflySignature } from "./ConnectflySignature";
 import { Instagram } from "lucide-react";
 import { isPendente, navegacao, perfil, rodape } from "../content";
 import { scrollToAnchor } from "../navigation";
@@ -152,6 +153,8 @@ export function PFFooter() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-[var(--pf-fg-subtle)]" style={{ fontSize: "var(--pf-text-xs)" }}>
               {rodape.copyright}
+              <br />
+              <ConnectflySignature />
             </span>
             <span
               className="text-[var(--pf-fg-subtle)]"
