@@ -4,7 +4,7 @@ import { useSelectedLayoutSegment } from "next/navigation";
 
 export function ConnectflySignature() {
   const segment = useSelectedLayoutSegment();
-  if (!["", "sobre", "contato", "lancamentos", "loja"].includes(segment ?? "")) return null;
+  if (!["", "sobre", "lancamentos", "loja", "produto"].includes(segment ?? "")) return null;
 
   return (
     <span>
