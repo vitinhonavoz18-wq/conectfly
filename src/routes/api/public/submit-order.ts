@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 const ALLOWED_ORIGINS = [
   "https://conectfly.com.br",
   "https://www.conectfly.com.br",
+  "https://cardapio.flydelivery.app",
   "https://conectfly.lovable.app",
 ];
 

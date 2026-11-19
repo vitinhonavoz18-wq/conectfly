@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { useCart, isValidTableNumber } from "./CartContext";
 import { QrScannerSobDemanda } from "./QrScannerSobDemanda";
 import type { RestaurantRow } from "@/lib/site/types";
+import { isMenuHost } from "@/lib/site/publicDomain";
 
 interface Props {
   restaurant: RestaurantRow;
@@ -32,7 +33,7 @@ function extractTableQrData(qrValue: string, fallbackSlug?: string | null) {
     const isUrl = cleaned.startsWith("http") || cleaned.includes("?");
     const urlStr = isUrl ? cleaned : `https://dummy.com/${cleaned.startsWith("/") ? cleaned.slice(1) : cleaned}`;
     const url = new URL(urlStr);
-    if (url.hostname.includes("conectfly.com.br") || url.hostname === "localhost") {
+    if (isMenuHost(url.hostname)) {
       const parts = url.pathname.split("/").filter(Boolean);
       if (parts.length > 0 && !["mesa", "table", "m"].includes(parts[0].toLowerCase())) {
         slug = parts[0];

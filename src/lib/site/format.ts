@@ -1,5 +1,7 @@
-const PUBLIC_SITE_DOMAIN = "conectfly.com.br";
-const PUBLIC_SITE_URL = `https://${PUBLIC_SITE_DOMAIN}`;
+import { API_ORIGIN, MENU_ORIGIN } from "./publicDomain";
+
+// Endereço oficial dos cardápios — definido em publicDomain.ts.
+const PUBLIC_SITE_URL = MENU_ORIGIN;
 
 /**
  * Nomes que já são páginas do próprio sistema. Uma loja não pode usar um
@@ -91,7 +93,8 @@ export function getMenuSyncEndpoint(
   menuSyncToken: string | null | undefined,
 ): string | null {
   if (!slug || !menuSyncToken) return null;
-  const base = PUBLIC_SITE_URL.replace(/\/$/, "");
+  // API: servidor com servidor, continua no endereço de sempre (publicDomain.ts).
+  const base = API_ORIGIN.replace(/\/$/, "");
   return `${base}/api/public/menu-sync/${slug}/${menuSyncToken}`;
 }
 

@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { FEATURES } from "@/lib/features";
 import { supabase } from "@/integrations/supabase/client";
 import { descontoAceiteOf, valorDoDescontoAceite } from "@/lib/site/descontoAceite";
+import { isMenuHost } from "@/lib/site/publicDomain";
 
 export interface CheckoutCoreParams {
   open: boolean;
@@ -212,8 +213,8 @@ export function useCheckoutCore({ open, onClose, whatsappNumber, restaurantName,
       
       console.log("QR_PARSING_URL:", url.toString());
 
-      // Extrair slug da URL se for conectfly.com.br/SLUG
-      if (url.hostname.includes("conectfly.com.br") || url.hostname === "localhost") {
+      // Extrair slug da URL se for um endereço de cardápio (novo ou antigo)/SLUG
+      if (isMenuHost(url.hostname)) {
         const pathParts = url.pathname.split("/").filter(Boolean);
         if (pathParts.length > 0 && !["mesa", "table", "m"].includes(pathParts[0].toLowerCase())) {
           slug = pathParts[0];

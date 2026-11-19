@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import type { RestaurantTableRow, TableSessionRow, RestaurantRow } from "@/lib/site/types";
 import { QRCodeSVG } from "qrcode.react";
 import { resolveTablesUrl } from "@/lib/site/flycontrol";
+import { MENU_ORIGIN, PRODUCT_ORIGIN } from "@/lib/site/publicDomain";
 
 interface Props {
   restaurant: RestaurantRow;
@@ -25,7 +26,7 @@ export function TableManager({ restaurant }: Props) {
 
   const getTableUrl = (token: string) => {
     const slug = restaurant.slug || "restaurante";
-    return `https://conectfly.com.br/${slug}?mode=table&table_token=${token}`;
+    return `${MENU_ORIGIN}/${slug}?mode=table&table_token=${token}`;
   };
 
   const printQrCode = (table: RestaurantTableRow) => {
@@ -102,7 +103,7 @@ export function TableManager({ restaurant }: Props) {
 
         <div className="flex items-center gap-2">
           <a
-            href="https://flycontrol-dash.lovable.app"
+            href={PRODUCT_ORIGIN}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto btn-premium px-6 py-3 rounded-xl flex items-center justify-center gap-2 group"
@@ -132,7 +133,7 @@ export function TableManager({ restaurant }: Props) {
           <p className="text-muted-foreground font-medium">As mesas e QR Codes são gerenciados diretamente no FlyControl.</p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-2">O SiteCreatorFly identifica mesas via QR Code com token e número.</p>
           <a 
-            href="https://flycontrol-dash.lovable.app" 
+            href={PRODUCT_ORIGIN} 
             target="_blank" 
             rel="noopener noreferrer"
             className="mt-6 inline-flex items-center gap-2 btn-premium px-6 py-3 rounded-xl uppercase text-[10px] font-black tracking-widest"
@@ -145,7 +146,7 @@ export function TableManager({ restaurant }: Props) {
           <CheckCircle2 className="h-12 w-12 text-white/10 mx-auto mb-4" />
           <p className="text-muted-foreground font-medium">O monitoramento de comandas está disponível no FlyControl.</p>
           <a 
-            href="https://flycontrol-dash.lovable.app" 
+            href={PRODUCT_ORIGIN} 
             target="_blank" 
             rel="noopener noreferrer"
             className="mt-6 inline-flex items-center gap-2 btn-premium px-6 py-3 rounded-xl uppercase text-[10px] font-black tracking-widest"

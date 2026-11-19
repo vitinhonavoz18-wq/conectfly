@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/admin/BrandLogo";
+import { MENU_HOST } from "@/lib/site/publicDomain";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -347,7 +348,7 @@ function Dashboard() {
                        </h3>
                         <p className="text-sm text-muted-foreground/60 truncate flex items-center gap-1.5">
                           <Globe className="h-3 w-3" />
-                          {`conectfly.com.br/${r.slug}`}
+                          {`${MENU_HOST}/${r.slug}`}
                         </p>
                      </div>
                   </div>

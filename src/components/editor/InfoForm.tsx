@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { RestaurantRow } from "@/lib/site/types";
-import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl } from "@/lib/site/format";
+import { formatPhoneMask, slugify, subdomainify, getPizzeriaPublicUrl, getMenuSyncEndpoint } from "@/lib/site/format";
+import { API_ORIGIN, MENU_HOST } from "@/lib/site/publicDomain";
 import { generateApiKey, registerPizzeriaInFlycontrol, sendUnifiedOrderToFiqon, type FlycontrolOrderPayload } from "@/lib/site/flycontrol";
 import { updateRestaurant, getRestaurantById } from "@/lib/site/queries";
 import { safeInvoke } from "@/lib/site/api-utils";
@@ -221,7 +222,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
         return;
       }
       // O link correto agora é via /api/public/menu-sync/:slug/:token
-      const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${token}`;
+      const url = getMenuSyncEndpoint(r.slug, token) ?? "";
       navigator.clipboard.writeText(url);
       setMsg("Link de sincronização copiado!");
       toast.success("Link de sincronização copiado com sucesso.");
@@ -267,7 +268,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
     const fetchSyncPreview = async () => {
       setLoadingSync(true);
       try {
-        const url = `https://conectfly.com.br/api/public/menu-sync/${r.slug}/${r.menu_sync_token}`;
+        const url = getMenuSyncEndpoint(r.slug, r.menu_sync_token) ?? "";
         const resp = await fetch(url);
         const data = await resp.json();
         setSyncData(data);
@@ -418,7 +419,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
             ))}
           </select>
         </Field>
-        <Field label="Identificador URL (slug)" hint="Caminho após conectfly.com.br/">
+        <Field label="Identificador URL (slug)" hint={`Caminho após ${MENU_HOST}/`}>
           <div className="flex gap-2 items-center">
             <input
               value={r.slug}
@@ -1307,7 +1308,7 @@ export function InfoForm({ restaurant, onChange }: Props) {
                <div className="flex gap-2">
                  <input
                    readOnly
-                   value={`https://conectfly.com.br/api/public/menu-sync/${r.slug}/${r.menu_sync_token || ''}`}
+                   value={getMenuSyncEndpoint(r.slug, r.menu_sync_token) ?? `${API_ORIGIN}/api/public/menu-sync/${r.slug}/`}
                    className="input text-xs flex-1 bg-black/20"
                  />
                  <button

@@ -4,4 +4,11 @@
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  // Cardápios: endereço oficial é cardapio.flydelivery.app (src/lib/site/publicDomain.ts).
+  // "true"  → conectfly.com.br/<loja> redireciona (301) para cardapio.flydelivery.app/<loja>.
+  // "false" → o endereço antigo volta a abrir o cardápio direto (botão de voltar atrás).
+  // Não é segredo; segredos ficam em "Settings → Variables and Secrets" na Cloudflare.
+  "vars": {
+    "MENU_LEGACY_REDIRECT": "true",
+  },
 }

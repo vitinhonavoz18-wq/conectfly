@@ -149,7 +149,7 @@ describe("troca do endereço", () => {
       ok: true,
       address: "acai-e-love",
       previous: "acaielove",
-      public_url: "https://conectfly.com.br/acai-e-love",
+      public_url: "https://cardapio.flydelivery.app/acai-e-love",
     });
     expect(f.caderno.get("acaielove")).toBe("acai");
     expect(f.caderno.get("acai-e-love")).toBe("acai");
