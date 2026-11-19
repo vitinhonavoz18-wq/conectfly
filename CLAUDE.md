@@ -41,3 +41,13 @@ Regras:
 
 São dois sistemas separados, com bancos de dados separados, que conversam por
 internet.
+
+## Endereço dos cardápios
+
+Oficial: `https://cardapio.flydelivery.app/<loja>`. O antigo
+`conectfly.com.br/<loja>` redireciona (301) para ele, mantendo os parâmetros
+do QR Code da mesa. Todo endereço sai de `src/lib/site/publicDomain.ts` —
+nunca escreva `conectfly.com.br` ou `cardapio.flydelivery.app` à mão em outro
+arquivo. `/api/*` e o editor continuam em `conectfly.com.br`. Mapa completo,
+publicação e como voltar atrás: `docs/MIGRACAO-CARDAPIOS-FLYDELIVERY.md` no
+repositório `flycontrol-dash`.

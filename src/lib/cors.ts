@@ -8,6 +8,10 @@ const STATIC_ALLOWED_ORIGINS = new Set<string>([
   "https://flycontrol.conectfly.com.br",
   "https://conectfly.com.br",
   "https://www.conectfly.com.br",
+  // FlyDelivery: cardápios (endereço oficial) e painel — ver lib/site/publicDomain.ts
+  "https://cardapio.flydelivery.app",
+  "https://flydelivery.app",
+  "https://www.flydelivery.app",
   // FlyControl dashboards / staging
   "https://flycontrol-dash.lovable.app",
   // Local development

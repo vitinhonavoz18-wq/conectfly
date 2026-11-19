@@ -9,6 +9,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { API_ORIGIN } from "@/lib/site/publicDomain";
 
 interface Props {
   restaurantId: string;
@@ -41,7 +42,7 @@ export function MenuSyncDebug({ restaurantId }: Props) {
       // Call the sync endpoint
       // We use the absolute URL to ensure we hit the edge function correctly
       const baseUrl = window.location.origin.includes('localhost') 
-        ? 'https://conectfly.com.br' // Use production for sync testing
+        ? API_ORIGIN // Use production for sync testing
         : window.location.origin;
       
       const syncUrl = `${baseUrl}/api/public/menu-sync/${slug}/${token}`;

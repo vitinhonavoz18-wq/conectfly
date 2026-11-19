@@ -45,18 +45,20 @@ export const Route = createRootRoute({
         content:
           "width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover",
       },
-      { title: "CONECTFLY EMPRESARIAL" },
-      { name: "description", content: "O futuro começa aqui" },
-      { name: "author", content: "SiteCreatorFly" },
-      { property: "og:title", content: "CONECTFLY EMPRESARIAL" },
-      { property: "og:description", content: "O futuro começa aqui" },
+      // Prévia padrão (antes de o cardápio da loja carregar, e quando o link é
+      // colado no WhatsApp). O nome da loja entra por cima ao abrir.
+      { title: "FlyDelivery — Cardápio digital" },
+      { name: "description", content: "Peça direto pelo cardápio digital da loja, com entrega ou retirada." },
+      { name: "author", content: "FlyDelivery" },
+      { property: "og:site_name", content: "FlyDelivery" },
+      { property: "og:title", content: "FlyDelivery — Cardápio digital" },
+      { property: "og:description", content: "Peça direto pelo cardápio digital da loja, com entrega ou retirada." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "CONECTFLY EMPRESARIAL" },
-      { name: "twitter:description", content: "O futuro começa aqui" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/75e080c6-c0b8-42da-bc3d-fd2c3abf4b64/id-preview-d7ba83c7--eeff7af8-ac85-41f1-a86d-80cbb25eeee0.lovable.app-1777036804868.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/75e080c6-c0b8-42da-bc3d-fd2c3abf4b64/id-preview-d7ba83c7--eeff7af8-ac85-41f1-a86d-80cbb25eeee0.lovable.app-1777036804868.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "FlyDelivery — Cardápio digital" },
+      { name: "twitter:description", content: "Peça direto pelo cardápio digital da loja, com entrega ou retirada." },
+      { property: "og:image", content: "https://flydelivery.app/flydelivery-social-preview.jpg" },
+      { name: "twitter:image", content: "https://flydelivery.app/flydelivery-social-preview.jpg" },
     ],
     links: [
       {
